@@ -1,40 +1,57 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"net/http"
-	"os"
+	"os/signal"
+	"syscall"
 	"time"
+
+	"github.com/kyleaupton/snaggle/backend/internal/config"
+	"github.com/kyleaupton/snaggle/backend/internal/db"
+	"github.com/kyleaupton/snaggle/backend/internal/http"
+	"github.com/kyleaupton/snaggle/backend/internal/logger"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	// Load config
+	cfg := config.Load()
 
-	// Basic health route
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "ok")
-	})
+	// Logger
+	logg := logger.New(cfg.Env)
 
-	// Dummy route to show it’s alive
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Snaggle dummy API is running on %s\n", port)
-	})
+	// DB
+	pool, err := db.Open(cfg.DatabaseURL)
+	if err != nil { logg.Fatal().Err(err).Msg("open db") }
+	defer pool.Close()
 
-	// Background ticker just to prove logs are flowing
+	// Migrations (run on startup; idempotent)
+	// if err := db.ApplyMigrations(pool, "db/migrations"); err != nil {
+	// 	logg.Fatal().Err(err).Msg("migrate")
+	// }
+
+	// Jobs
+	// jobRunner := jobs.NewRunner(logg)
+	// jobRunner.Start()
+
+	// HTTP
+	e := http.NewServer(cfg, logg, pool)
 	go func() {
-		for {
-			log.Printf("[snaggle] still alive at %s", time.Now().Format(time.RFC3339))
-			time.Sleep(10 * time.Second)
+		logg.Info().Str("port", cfg.Port).Msg("http listen")
+		if err := e.Start(":" + cfg.Port); err != nil {
+			log.Println("server stopped:", err)
 		}
 	}()
 
-	log.Printf("Starting dummy API on :%s ...", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatalf("server failed: %v", err)
-	}
+	// Graceful shutdown
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	<-ctx.Done()
+	stop()
+
+	shCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// jobRunner.Stop()
+	_ = e.Shutdown(shCtx)
+	logg.Info().Msg("bye")
 }
