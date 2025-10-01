@@ -1,0 +1,8 @@
+services:
+  media:
+    image: ghcr.io/kyleaupton/snaggle:0.0.1
+    ports:
+      - "8484:8484"
+    volumes:
+      - media_data:/data
+    restart: unless-stopped
