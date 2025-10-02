@@ -4,6 +4,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kyleaupton/snaggle/backend/internal/config"
 	"github.com/kyleaupton/snaggle/backend/internal/http/handlers"
+	"github.com/kyleaupton/snaggle/backend/internal/http/middlewares"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 
@@ -27,9 +28,11 @@ func NewServer(cfg config.Config, log zerolog.Logger, pool *pgxpool.Pool) *echo.
 	// Routes
 	api := e.Group("/api")
 	v1 := api.Group("/v1")
+	protected := v1.Group("", middlewares.JWT(cfg.JWTSecret))
 
 	health.Register(e)
-	auth.Register(v1)
+	auth.RegisterPublic(v1)
+	auth.RegisterProtected(protected)
 
 	return e
 }

@@ -18,6 +18,15 @@ type Auth struct {
 	svc  *service.Services
 }
 
+func (h *Auth) RegisterPublic(v1 *echo.Group) {
+	v1.POST("/auth/login", h.Login)
+}
+
+func (h *Auth) RegisterProtected(v1 *echo.Group) {
+	v1.GET("/auth/me", h.Me)
+	v1.GET("/auth/test", h.Test)
+}
+
 func NewAuth(cfg config.Config, log zerolog.Logger, pool *pgxpool.Pool, svc *service.Services) *Auth {
 	return &Auth{cfg: cfg, log: log, pool: pool, svc: svc}
 }
@@ -86,8 +95,10 @@ func (h *Auth) Me(c echo.Context) error {
 	})
 }
 
-// Register attaches auth routes to the provided group (versioned path etc.).
-func (h *Auth) Register(v1 *echo.Group) {
-	v1.POST("/auth/login", h.Login)
-	v1.GET("/auth/me", h.Me)
+func (h *Auth) Test(c echo.Context) error {
+	claims, _ := c.Get("claims").(jwt.MapClaims)
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"ok":     true,
+		"claims": claims,
+	})
 }
