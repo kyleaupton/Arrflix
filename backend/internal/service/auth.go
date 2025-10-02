@@ -2,11 +2,10 @@ package service
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	pw "github.com/kyleaupton/snaggle/backend/internal/password"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
 
@@ -25,9 +24,16 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 		return "", err
 	}
 
-	sum := sha256.Sum256([]byte(password))
-	if user.PasswordHash == nil || *user.PasswordHash != hex.EncodeToString(sum[:]) {
+	ok, err := pw.Verify(password, deref(user.PasswordHash))
+	if err != nil || !ok {
 		return "", ErrInvalidCredentials
+	}
+
+	// Opportunistically upgrade hash format/cost
+	if pw.NeedsRehash(deref(user.PasswordHash)) {
+		if newHash, err := pw.Hash(password); err == nil {
+			_ = s.repo.UpdateUserPassword(ctx, user.ID, newHash)
+		}
 	}
 
 	claims := jwt.MapClaims{
@@ -42,3 +48,10 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 }
 
 var ErrInvalidCredentials = jwt.ErrInvalidKey
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}

@@ -1,4 +1,3 @@
--- 0002_seed_roles_permissions.sql
 insert into role (name, description, built_in) values
   ('admin','Full control',true),
   ('manager','Manage libraries and requests',true),

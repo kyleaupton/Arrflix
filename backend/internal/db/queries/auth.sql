@@ -13,3 +13,8 @@ ON CONFLICT (provider, subject) DO UPDATE
 SET user_id=EXCLUDED.user_id, username=EXCLUDED.username, access_token=EXCLUDED.access_token,
     refresh_token=EXCLUDED.refresh_token, token_expires_at=EXCLUDED.token_expires_at, raw=EXCLUDED.raw
 RETURNING *;
+
+-- name: UpdateUserPassword :exec
+UPDATE app_user
+SET password_hash = $2, updated_at = now()
+WHERE id = $1;

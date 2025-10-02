@@ -59,6 +59,22 @@ func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (AppUser, er
 	return i, err
 }
 
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE app_user
+SET password_hash = $2, updated_at = now()
+WHERE id = $1
+`
+
+type UpdateUserPasswordParams struct {
+	ID           pgtype.UUID `json:"id"`
+	PasswordHash *string     `json:"password_hash"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.db.Exec(ctx, updateUserPassword, arg.ID, arg.PasswordHash)
+	return err
+}
+
 const upsertIdentity = `-- name: UpsertIdentity :one
 INSERT INTO user_identity (user_id, provider, subject, username, access_token, refresh_token, token_expires_at, raw)
 VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8,'{}'::jsonb))
