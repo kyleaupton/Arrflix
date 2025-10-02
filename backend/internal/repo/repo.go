@@ -6,13 +6,13 @@ import (
 )
 
 type Repository struct {
-    Pool *pgxpool.Pool
-    Q    *dbgen.Queries
+	Pool *pgxpool.Pool
+	Q    *dbgen.Queries
 }
 
 func New(pool *pgxpool.Pool) *Repository {
-    return &Repository{
-        Pool: pool,
-        Q:    dbgen.New(pool),
-    }
+	return &Repository{
+		Pool: pool,
+		Q:    dbgen.New(pool),
+	}
 }

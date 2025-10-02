@@ -65,3 +65,5 @@ from role r
 join permission p on p.key in ('library.read','media.read')
 where r.name='guest'
 on conflict do nothing;
+
+

@@ -5,25 +5,28 @@ import (
 )
 
 type Services struct {
-    Auth *AuthService
+	Auth *AuthService
 }
 
 func New(r *repo.Repository, opts ...Option) *Services {
-    cfg := &config{}
-    for _, o := range opts { o.apply(cfg) }
+	cfg := &config{}
+	for _, o := range opts {
+		o.apply(cfg)
+	}
 
-    return &Services{
-        Auth: NewAuthService(r, cfg),
-    }
+	return &Services{
+		Auth: NewAuthService(r, cfg),
+	}
 }
 
 type config struct {
-    jwtSecret string
+	jwtSecret string
 }
 
 type Option interface{ apply(*config) }
 
 type withJWT string
+
 func (w withJWT) apply(c *config) { c.jwtSecret = string(w) }
 
 func WithJWTSecret(secret string) Option { return withJWT(secret) }

@@ -102,3 +102,5 @@ create table if not exists auth_audit (
   detail jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
+
+

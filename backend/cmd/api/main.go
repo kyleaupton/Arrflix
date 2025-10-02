@@ -22,13 +22,15 @@ func main() {
 
 	// DB
 	pool, err := db.Open(cfg.DatabaseURL)
-	if err != nil { logg.Fatal().Err(err).Msg("open db") }
+	if err != nil {
+		logg.Fatal().Err(err).Msg("open db")
+	}
 	defer pool.Close()
 
-	// Migrations (run on startup; idempotent)
-	// if err := db.ApplyMigrations(pool, "db/migrations"); err != nil {
-	// 	logg.Fatal().Err(err).Msg("migrate")
-	// }
+	// Migrations (run on startup; idempotent, using embedded files)
+	if err := db.ApplyMigrations(cfg.DatabaseURL); err != nil {
+		logg.Fatal().Err(err).Msg("migrate")
+	}
 
 	// HTTP
 	e := http.NewServer(cfg, logg, pool)

@@ -7,10 +7,9 @@ import (
 )
 
 type AuthRepo interface {
-    GetUserByEmail(ctx context.Context, email string) (dbgen.AppUser, error)
+	GetUserByEmail(ctx context.Context, email string) (dbgen.AppUser, error)
 }
 
 func (r *Repository) GetUserByEmail(ctx context.Context, email string) (dbgen.AppUser, error) {
-    return r.Q.GetUserByEmail(ctx, email)
+	return r.Q.GetUserByEmail(ctx, email)
 }
-
