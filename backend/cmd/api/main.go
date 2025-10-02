@@ -30,10 +30,6 @@ func main() {
 	// 	logg.Fatal().Err(err).Msg("migrate")
 	// }
 
-	// Jobs
-	// jobRunner := jobs.NewRunner(logg)
-	// jobRunner.Start()
-
 	// HTTP
 	e := http.NewServer(cfg, logg, pool)
 	go func() {
@@ -51,7 +47,6 @@ func main() {
 	shCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// jobRunner.Stop()
 	_ = e.Shutdown(shCtx)
 	logg.Info().Msg("bye")
 }

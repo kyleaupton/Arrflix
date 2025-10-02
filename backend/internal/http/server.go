@@ -4,8 +4,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kyleaupton/snaggle/backend/internal/config"
 	"github.com/kyleaupton/snaggle/backend/internal/http/handlers"
+	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	"github.com/kyleaupton/snaggle/backend/internal/service"
 
-	// "github.com/kyleaupton/snaggle/backend/internal/http/handlers"
 	// "github.com/kyleaupton/snaggle/backend/internal/jobs"
 	"github.com/labstack/echo/v4"
 	// "github.com/labstack/echo/v4/middleware"
@@ -26,21 +27,21 @@ func NewServer(cfg config.Config, log zerolog.Logger, pool *pgxpool.Pool) *echo.
 	// 	AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.PATCH, echo.DELETE, echo.OPTIONS},
 	// }))
 
-	// Handlers
-	health := handlers.NewHealth()
-	// queue := handlers.NewQueue(log, jr)
-	// media := handlers.NewMedia(log, pool)
+    // Layers
+    r := repo.New(pool)
+    services := service.New(r, service.WithJWTSecret(cfg.JWTSecret))
 
-	// Routes
-	// api := e.Group("/api")
-	// v1 := api.Group("/v1")
+    // Handlers
+    health := handlers.NewHealth()
+    auth := handlers.NewAuth(cfg, log, pool, services)
 
-	e.GET("/health", health.Health)
-	// v1.GET("/queue", queue.List)
-	// v1.POST("/request", queue.Enqueue)
-	// v1.GET("/events", queue.Events) // SSE (optional)
-	// v1.GET("/media/:id", media.Get)
-	// v1.POST("/media", media.Create)
+    // Routes
+    api := e.Group("/api")
+    v1 := api.Group("/v1")
+
+    e.GET("/health", health.Health)
+    v1.POST("/auth/login", auth.Login)
+    v1.GET("/auth/me", auth.Me)
 
 	return e
 }
