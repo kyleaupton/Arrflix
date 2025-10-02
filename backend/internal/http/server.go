@@ -24,6 +24,7 @@ func NewServer(cfg config.Config, log zerolog.Logger, pool *pgxpool.Pool) *echo.
 	// Handlers
 	health := handlers.NewHealth()
 	auth := handlers.NewAuth(cfg, log, pool, services)
+	settings := handlers.NewSettings(services)
 
 	// Routes
 	api := e.Group("/api")
@@ -33,6 +34,7 @@ func NewServer(cfg config.Config, log zerolog.Logger, pool *pgxpool.Pool) *echo.
 	health.Register(e)
 	auth.RegisterPublic(v1)
 	auth.RegisterProtected(protected)
+	settings.RegisterProtected(protected)
 
 	return e
 }

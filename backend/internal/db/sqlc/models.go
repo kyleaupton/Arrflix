@@ -137,6 +137,14 @@ func (ns NullGrantSubject) Value() (driver.Value, error) {
 	return string(ns.GrantSubject), nil
 }
 
+type AppSetting struct {
+	Key       string             `json:"key"`
+	Type      string             `json:"type"`
+	ValueJson []byte             `json:"value_json"`
+	Version   int32              `json:"version"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
 type AppUser struct {
 	ID           pgtype.UUID        `json:"id"`
 	Email        *string            `json:"email"`
