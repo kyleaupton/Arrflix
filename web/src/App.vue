@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useLayoutStore } from './stores/layout'
-
-import AppHeader from './components/AppHeader.vue'
-import AppSidebar from './components/sidebar/AppSidebar.vue'
-import './main.css'
+import { useRoute } from 'vue-router'
+import { useLayoutStore } from '@/stores/layout'
+import AppHeader from '@/components/AppHeader.vue'
+import AppSidebar from '@/components/sidebar/AppSidebar.vue'
+import '@/main.css'
 
 const mobileSidebarVisible = ref(false)
+const route = useRoute()
 
-onMounted(() => {
+onMounted(async () => {
   const layoutStore = useLayoutStore()
 
   // watch window resize
@@ -21,11 +22,14 @@ onMounted(() => {
 <template>
   <!-- <Toast /> -->
 
-  <div class="app-shell">
-    <AppSidebar v-model:mobileVisible="mobileSidebarVisible" />
+  <div class="app-shell" :class="{ auth: route.meta.layout === 'auth' }">
+    <AppSidebar v-if="route.meta.layout !== 'auth'" v-model:mobileVisible="mobileSidebarVisible" />
 
     <div class="app-body">
-      <AppHeader @toggle-sidebar="mobileSidebarVisible = true" />
+      <AppHeader
+        v-if="route.meta.layout !== 'auth'"
+        @toggle-sidebar="mobileSidebarVisible = true"
+      />
 
       <main class="app-main">
         <RouterView />
@@ -67,5 +71,10 @@ onMounted(() => {
 
 .brand {
   font-weight: 600;
+}
+
+.auth .app-body {
+  max-width: 100%;
+  margin: 0 auto;
 }
 </style>

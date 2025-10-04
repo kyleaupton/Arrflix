@@ -2,7 +2,7 @@
 import Drawer from 'primevue/drawer'
 import AppSidebarMenu from './AppSidebarMenu.vue'
 
-const mobileVisible = defineModel<boolean>('mobileVisible')
+const mobileVisible = defineModel<boolean>('mobileVisible', { default: false })
 </script>
 
 <template>

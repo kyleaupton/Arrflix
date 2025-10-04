@@ -24,24 +24,30 @@ func (h *Auth) RegisterPublic(v1 *echo.Group) {
 
 func (h *Auth) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/auth/me", h.Me)
-	v1.GET("/auth/test", h.Test)
 }
 
 func NewAuth(cfg config.Config, log zerolog.Logger, pool *pgxpool.Pool, svc *service.Services) *Auth {
 	return &Auth{cfg: cfg, log: log, pool: pool, svc: svc}
 }
 
-type loginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
-type loginResponse struct {
-	Token string `json:"token"`
+type LoginResponse struct {
+	Token string `json:"token" validate:"required"`
 }
 
+// @Summary Login
+// @Tags    auth
+// @Accept  json
+// @Produce json
+// @Param   payload body LoginRequest true "Login request"
+// @Success 200 {object} LoginResponse
+// @Router  /v1/auth/login [post]
 func (h *Auth) Login(c echo.Context) error {
-	var req loginRequest
+	var req LoginRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}
@@ -54,13 +60,13 @@ func (h *Auth) Login(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
 	}
-	return c.JSON(http.StatusOK, loginResponse{Token: signed})
+	return c.JSON(http.StatusOK, LoginResponse{Token: signed})
 }
 
-type meResponse struct {
-	ID          string  `json:"id"`
-	Email       *string `json:"email"`
-	DisplayName *string `json:"display_name"`
+type MeResponse struct {
+	ID          string  `json:"id" validate:"required"`
+	Email       *string `json:"email" validate:"required"`
+	DisplayName *string `json:"display_name" validate:"required"`
 }
 
 func (h *Auth) Me(c echo.Context) error {
@@ -92,13 +98,5 @@ func (h *Auth) Me(c echo.Context) error {
 		"sub":   sub,
 		"email": claims["email"],
 		"name":  claims["name"],
-	})
-}
-
-func (h *Auth) Test(c echo.Context) error {
-	claims, _ := c.Get("claims").(jwt.MapClaims)
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"ok":     true,
-		"claims": claims,
 	})
 }
