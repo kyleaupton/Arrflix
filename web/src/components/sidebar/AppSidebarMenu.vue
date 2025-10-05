@@ -15,22 +15,22 @@ const items = ref([
   {
     label: 'Movies',
     icon: 'pi pi-video',
-    to: '/movies',
+    // to: '/movies',
   },
   {
     label: 'Shows',
     icon: 'pi pi-desktop',
-    to: '/shows',
+    // to: '/shows',
   },
   {
     label: 'Requests',
     icon: 'pi pi-clock',
-    to: '/requests',
+    // to: '/requests',
   },
   {
     label: 'Users',
     icon: 'pi pi-users',
-    to: '/users',
+    // to: '/users',
   },
   {
     label: 'Settings',
@@ -67,7 +67,7 @@ const items = ref([
       </template>
 
       <template #item="{ item, props }">
-        <a class="flex items-center" v-bind="props.action">
+        <RouterLink class="flex items-center" v-bind="props.action" :to="item.to ?? '/'">
           <span :class="item.icon" />
           <span>{{ item.label }}</span>
           <Badge v-if="item.badge" class="ml-auto" :value="item.badge" />
@@ -76,7 +76,7 @@ const items = ref([
             class="ml-auto border border-surface rounded bg-emphasis text-muted-color text-xs p-1"
             >{{ item.shortcut }}</span
           >
-        </a>
+        </RouterLink>
       </template>
     </Menu>
   </div>

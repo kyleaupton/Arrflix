@@ -39,6 +39,62 @@
                     }
                 }
             }
+        },
+        "/v1/settings": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "List settings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SettingsListResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Update a setting",
+                "parameters": [
+                    {
+                        "description": "Patch request",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -67,6 +123,19 @@
                     "type": "string"
                 }
             }
+        },
+        "handlers.PatchRequest": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "value": {}
+            }
+        },
+        "handlers.SettingsListResponse": {
+            "type": "object",
+            "additionalProperties": {}
         }
     }
 }

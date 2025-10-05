@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { PostV1AuthLoginData, PostV1AuthLoginResponses } from './types.gen';
+import type { GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -24,6 +24,30 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export const postV1AuthLogin = <ThrowOnError extends boolean = false>(options: Options<PostV1AuthLoginData, ThrowOnError>) => {
     return (options.client ?? client).post<PostV1AuthLoginResponses, unknown, ThrowOnError>({
         url: '/v1/auth/login',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * List settings
+ */
+export const getV1Settings = <ThrowOnError extends boolean = false>(options?: Options<GetV1SettingsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1SettingsResponses, unknown, ThrowOnError>({
+        url: '/v1/settings',
+        ...options
+    });
+};
+
+/**
+ * Update a setting
+ */
+export const patchV1Settings = <ThrowOnError extends boolean = false>(options: Options<PatchV1SettingsData, ThrowOnError>) => {
+    return (options.client ?? client).patch<PatchV1SettingsResponses, PatchV1SettingsErrors, ThrowOnError>({
+        url: '/v1/settings',
         ...options,
         headers: {
             'Content-Type': 'application/json',

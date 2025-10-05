@@ -13,6 +13,15 @@ export type HandlersLoginResponse = {
     token: string;
 };
 
+export type HandlersPatchRequest = {
+    key?: string;
+    value?: unknown;
+};
+
+export type HandlersSettingsListResponse = {
+    [key: string]: unknown;
+};
+
 export type PostV1AuthLoginData = {
     /**
      * Login request
@@ -31,3 +40,49 @@ export type PostV1AuthLoginResponses = {
 };
 
 export type PostV1AuthLoginResponse = PostV1AuthLoginResponses[keyof PostV1AuthLoginResponses];
+
+export type GetV1SettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/settings';
+};
+
+export type GetV1SettingsResponses = {
+    /**
+     * OK
+     */
+    200: HandlersSettingsListResponse;
+};
+
+export type GetV1SettingsResponse = GetV1SettingsResponses[keyof GetV1SettingsResponses];
+
+export type PatchV1SettingsData = {
+    /**
+     * Patch request
+     */
+    body: HandlersPatchRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/settings';
+};
+
+export type PatchV1SettingsErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PatchV1SettingsError = PatchV1SettingsErrors[keyof PatchV1SettingsErrors];
+
+export type PatchV1SettingsResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type PatchV1SettingsResponse = PatchV1SettingsResponses[keyof PatchV1SettingsResponses];

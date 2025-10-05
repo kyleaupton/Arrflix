@@ -16,6 +16,17 @@ func (h *Settings) RegisterProtected(v1 *echo.Group) {
 	v1.PATCH("/settings", h.Patch)
 }
 
+// SettingsListResponse represents a map of setting keys to their values.
+// Values may be string, bool, number, or object depending on the registered type.
+type SettingsListResponse map[string]any
+
+// List returns all settings with defaults applied.
+//
+// @Summary List settings
+// @Tags    settings
+// @Produce json
+// @Success 200 {object} handlers.SettingsListResponse
+// @Router  /v1/settings [get]
 func (h *Settings) List(c echo.Context) error {
 	ctx := c.Request().Context()
 	out, err := h.svc.Settings.GetAll(ctx)
@@ -25,13 +36,24 @@ func (h *Settings) List(c echo.Context) error {
 	return c.JSON(http.StatusOK, out)
 }
 
-type patchRequest struct {
+// PatchRequest updates a single setting value.
+// The type of value must match the server-side registry for the given key.
+type PatchRequest struct {
 	Key   string      `json:"key"`
 	Value interface{} `json:"value"`
 }
 
+// Patch updates a single setting value.
+//
+// @Summary Update a setting
+// @Tags    settings
+// @Accept  json
+// @Param   payload body  handlers.PatchRequest true "Patch request"
+// @Success 204  {string} string ""
+// @Failure 400  {object} map[string]string
+// @Router  /v1/settings [patch]
 func (h *Settings) Patch(c echo.Context) error {
-	var req patchRequest
+	var req PatchRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}

@@ -17,6 +17,15 @@ definitions:
     required:
     - token
     type: object
+  handlers.PatchRequest:
+    properties:
+      key:
+        type: string
+      value: {}
+    type: object
+  handlers.SettingsListResponse:
+    additionalProperties: {}
+    type: object
 info:
   contact: {}
   title: Snaggle API
@@ -43,4 +52,40 @@ paths:
       summary: Login
       tags:
       - auth
+  /v1/settings:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.SettingsListResponse'
+      summary: List settings
+      tags:
+      - settings
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Patch request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PatchRequest'
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a setting
+      tags:
+      - settings
 swagger: "2.0"

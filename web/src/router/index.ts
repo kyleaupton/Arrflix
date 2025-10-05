@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Discover from '../views/Discover.vue'
-import Login from '../views/Login.vue'
-import AuthCallback from '../views/AuthCallback.vue'
+import Discover from '@/views/Discover.vue'
+import Login from '@/views/Login.vue'
+import AuthCallback from '@/views/AuthCallback.vue'
+import Settings from '@/views/Settings.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
@@ -10,6 +11,10 @@ const router = createRouter({
     {
       path: '/',
       component: Discover,
+    },
+    {
+      path: '/settings',
+      component: Settings,
     },
     {
       path: '/login',
