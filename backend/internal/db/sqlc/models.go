@@ -164,6 +164,16 @@ type AuthAudit struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type Library struct {
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	Type      string             `json:"type"`
+	RootPath  string             `json:"root_path"`
+	Enabled   bool               `json:"enabled"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Permission struct {
 	ID          pgtype.UUID `json:"id"`
 	Key         string      `json:"key"`

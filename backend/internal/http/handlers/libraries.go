@@ -1,0 +1,150 @@
+package handlers
+
+import (
+	"net/http"
+
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/kyleaupton/snaggle/backend/internal/service"
+	"github.com/labstack/echo/v4"
+)
+
+type Libraries struct{ svc *service.Services }
+
+func NewLibraries(s *service.Services) *Libraries { return &Libraries{svc: s} }
+
+func (h *Libraries) RegisterProtected(v1 *echo.Group) {
+	v1.GET("/libraries", h.List)
+	v1.POST("/libraries", h.Create)
+	v1.GET("/libraries/:id", h.Get)
+	v1.PUT("/libraries/:id", h.Update)
+	v1.DELETE("/libraries/:id", h.Delete)
+}
+
+// librarySwagger is a minimal type used only for Swagger schemas.
+// It mirrors fields of dbgen.Library without importing it here.
+type librarySwagger struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	RootPath  string `json:"root_path"`
+	Enabled   bool   `json:"enabled"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+// LibraryCreateRequest payload
+type LibraryCreateRequest struct {
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	RootPath string `json:"root_path"`
+	Enabled  bool   `json:"enabled"`
+}
+
+// LibraryUpdateRequest payload
+type LibraryUpdateRequest struct {
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	RootPath string `json:"root_path"`
+	Enabled  bool   `json:"enabled"`
+}
+
+// List libraries
+// @Summary List libraries
+// @Tags    libraries
+// @Produce json
+// @Success 200 {array} handlers.librarySwagger
+// @Router  /v1/libraries [get]
+func (h *Libraries) List(c echo.Context) error {
+	ctx := c.Request().Context()
+	out, err := h.svc.Libraries.List(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list"})
+	}
+	return c.JSON(http.StatusOK, out)
+}
+
+// Create library
+// @Summary Create library
+// @Tags    libraries
+// @Accept  json
+// @Produce json
+// @Param   payload body handlers.LibraryCreateRequest true "Create library"
+// @Success 201 {object} handlers.librarySwagger
+// @Failure 400 {object} map[string]string
+// @Router  /v1/libraries [post]
+func (h *Libraries) Create(c echo.Context) error {
+	var req LibraryCreateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
+	}
+	ctx := c.Request().Context()
+	lib, err := h.svc.Libraries.Create(ctx, req.Name, req.Type, req.RootPath, req.Enabled)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusCreated, lib)
+}
+
+// Get library
+// @Summary Get library
+// @Tags    libraries
+// @Produce json
+// @Success 200 {object} handlers.librarySwagger
+// @Router  /v1/libraries/{id} [get]
+func (h *Libraries) Get(c echo.Context) error {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
+	}
+	ctx := c.Request().Context()
+	lib, err := h.svc.Libraries.Get(ctx, id)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "not found"})
+	}
+	return c.JSON(http.StatusOK, lib)
+}
+
+// Update library
+// @Summary Update library
+// @Tags    libraries
+// @Accept  json
+// @Produce json
+// @Param   id path string true "Library ID"
+// @Param   payload body handlers.LibraryUpdateRequest true "Update library"
+// @Success 200 {object} handlers.librarySwagger
+// @Failure 400 {object} map[string]string
+// @Router  /v1/libraries/{id} [put]
+func (h *Libraries) Update(c echo.Context) error {
+	var req LibraryUpdateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
+	}
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
+	}
+	ctx := c.Request().Context()
+	lib, err := h.svc.Libraries.Update(ctx, id, req.Name, req.Type, req.RootPath, req.Enabled)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, lib)
+}
+
+// Delete library
+// @Summary Delete library
+// @Tags    libraries
+// @Param   id path string true "Library ID"
+// @Success 204 {string} string ""
+// @Router  /v1/libraries/{id} [delete]
+func (h *Libraries) Delete(c echo.Context) error {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
+	}
+	ctx := c.Request().Context()
+	if err := h.svc.Libraries.Delete(ctx, id); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to delete"})
+	}
+	return c.NoContent(http.StatusNoContent)
+}

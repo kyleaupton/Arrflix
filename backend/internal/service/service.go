@@ -5,8 +5,9 @@ import (
 )
 
 type Services struct {
-	Auth     *AuthService
-	Settings *SettingsService
+	Auth      *AuthService
+	Settings  *SettingsService
+	Libraries *LibrariesService
 }
 
 func New(r *repo.Repository, opts ...Option) *Services {
@@ -16,8 +17,9 @@ func New(r *repo.Repository, opts ...Option) *Services {
 	}
 
 	return &Services{
-		Auth:     NewAuthService(r, cfg),
-		Settings: NewSettingsService(r),
+		Auth:      NewAuthService(r, cfg),
+		Settings:  NewSettingsService(r),
+		Libraries: NewLibrariesService(r),
 	}
 }
 

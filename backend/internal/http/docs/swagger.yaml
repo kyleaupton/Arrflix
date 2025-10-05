@@ -1,5 +1,27 @@
 basePath: /api
 definitions:
+  handlers.LibraryCreateRequest:
+    properties:
+      enabled:
+        type: boolean
+      name:
+        type: string
+      root_path:
+        type: string
+      type:
+        type: string
+    type: object
+  handlers.LibraryUpdateRequest:
+    properties:
+      enabled:
+        type: boolean
+      name:
+        type: string
+      root_path:
+        type: string
+      type:
+        type: string
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -25,6 +47,23 @@ definitions:
     type: object
   handlers.SettingsListResponse:
     additionalProperties: {}
+    type: object
+  handlers.librarySwagger:
+    properties:
+      created_at:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      root_path:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
     type: object
 info:
   contact: {}
@@ -52,6 +91,104 @@ paths:
       summary: Login
       tags:
       - auth
+  /v1/libraries:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.librarySwagger'
+            type: array
+      summary: List libraries
+      tags:
+      - libraries
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create library
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LibraryCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.librarySwagger'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create library
+      tags:
+      - libraries
+  /v1/libraries/{id}:
+    delete:
+      parameters:
+      - description: Library ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Delete library
+      tags:
+      - libraries
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.librarySwagger'
+      summary: Get library
+      tags:
+      - libraries
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Library ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update library
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LibraryUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.librarySwagger'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update library
+      tags:
+      - libraries
   /v1/settings:
     get:
       produces:
