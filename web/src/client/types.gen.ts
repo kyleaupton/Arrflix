@@ -4,6 +4,20 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}/api` | (string & {});
 };
 
+export type HandlersLibraryCreateRequest = {
+    enabled?: boolean;
+    name?: string;
+    root_path?: string;
+    type?: string;
+};
+
+export type HandlersLibraryUpdateRequest = {
+    enabled?: boolean;
+    name?: string;
+    root_path?: string;
+    type?: string;
+};
+
 export type HandlersLoginRequest = {
     email: string;
     password: string;
@@ -20,6 +34,16 @@ export type HandlersPatchRequest = {
 
 export type HandlersSettingsListResponse = {
     [key: string]: unknown;
+};
+
+export type HandlersLibrarySwagger = {
+    created_at?: string;
+    enabled?: boolean;
+    id?: string;
+    name?: string;
+    root_path?: string;
+    type?: string;
+    updated_at?: string;
 };
 
 export type PostV1AuthLoginData = {
@@ -40,6 +64,124 @@ export type PostV1AuthLoginResponses = {
 };
 
 export type PostV1AuthLoginResponse = PostV1AuthLoginResponses[keyof PostV1AuthLoginResponses];
+
+export type GetV1LibrariesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/libraries';
+};
+
+export type GetV1LibrariesResponses = {
+    /**
+     * OK
+     */
+    200: Array<HandlersLibrarySwagger>;
+};
+
+export type GetV1LibrariesResponse = GetV1LibrariesResponses[keyof GetV1LibrariesResponses];
+
+export type PostV1LibrariesData = {
+    /**
+     * Create library
+     */
+    body: HandlersLibraryCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/libraries';
+};
+
+export type PostV1LibrariesErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1LibrariesError = PostV1LibrariesErrors[keyof PostV1LibrariesErrors];
+
+export type PostV1LibrariesResponses = {
+    /**
+     * Created
+     */
+    201: HandlersLibrarySwagger;
+};
+
+export type PostV1LibrariesResponse = PostV1LibrariesResponses[keyof PostV1LibrariesResponses];
+
+export type DeleteV1LibrariesByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Library ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/libraries/{id}';
+};
+
+export type DeleteV1LibrariesByIdResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type DeleteV1LibrariesByIdResponse = DeleteV1LibrariesByIdResponses[keyof DeleteV1LibrariesByIdResponses];
+
+export type GetV1LibrariesByIdData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/libraries/{id}';
+};
+
+export type GetV1LibrariesByIdResponses = {
+    /**
+     * OK
+     */
+    200: HandlersLibrarySwagger;
+};
+
+export type GetV1LibrariesByIdResponse = GetV1LibrariesByIdResponses[keyof GetV1LibrariesByIdResponses];
+
+export type PutV1LibrariesByIdData = {
+    /**
+     * Update library
+     */
+    body: HandlersLibraryUpdateRequest;
+    path: {
+        /**
+         * Library ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/libraries/{id}';
+};
+
+export type PutV1LibrariesByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PutV1LibrariesByIdError = PutV1LibrariesByIdErrors[keyof PutV1LibrariesByIdErrors];
+
+export type PutV1LibrariesByIdResponses = {
+    /**
+     * OK
+     */
+    200: HandlersLibrarySwagger;
+};
+
+export type PutV1LibrariesByIdResponse = PutV1LibrariesByIdResponses[keyof PutV1LibrariesByIdResponses];
 
 export type GetV1SettingsData = {
     body?: never;

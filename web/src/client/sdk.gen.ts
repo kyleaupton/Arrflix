@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses } from './types.gen';
+import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -24,6 +24,64 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export const postV1AuthLogin = <ThrowOnError extends boolean = false>(options: Options<PostV1AuthLoginData, ThrowOnError>) => {
     return (options.client ?? client).post<PostV1AuthLoginResponses, unknown, ThrowOnError>({
         url: '/v1/auth/login',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * List libraries
+ */
+export const getV1Libraries = <ThrowOnError extends boolean = false>(options?: Options<GetV1LibrariesData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1LibrariesResponses, unknown, ThrowOnError>({
+        url: '/v1/libraries',
+        ...options
+    });
+};
+
+/**
+ * Create library
+ */
+export const postV1Libraries = <ThrowOnError extends boolean = false>(options: Options<PostV1LibrariesData, ThrowOnError>) => {
+    return (options.client ?? client).post<PostV1LibrariesResponses, PostV1LibrariesErrors, ThrowOnError>({
+        url: '/v1/libraries',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Delete library
+ */
+export const deleteV1LibrariesById = <ThrowOnError extends boolean = false>(options: Options<DeleteV1LibrariesByIdData, ThrowOnError>) => {
+    return (options.client ?? client).delete<DeleteV1LibrariesByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/libraries/{id}',
+        ...options
+    });
+};
+
+/**
+ * Get library
+ */
+export const getV1LibrariesById = <ThrowOnError extends boolean = false>(options?: Options<GetV1LibrariesByIdData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1LibrariesByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/libraries/{id}',
+        ...options
+    });
+};
+
+/**
+ * Update library
+ */
+export const putV1LibrariesById = <ThrowOnError extends boolean = false>(options: Options<PutV1LibrariesByIdData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1LibrariesByIdResponses, PutV1LibrariesByIdErrors, ThrowOnError>({
+        url: '/v1/libraries/{id}',
         ...options,
         headers: {
             'Content-Type': 'application/json',

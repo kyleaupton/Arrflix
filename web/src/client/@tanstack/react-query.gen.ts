@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { getV1Settings, type Options, patchV1Settings, postV1AuthLogin } from '../sdk.gen';
-import type { GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse } from '../types.gen';
+import { deleteV1LibrariesById, getV1Libraries, getV1LibrariesById, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Libraries, putV1LibrariesById } from '../sdk.gen';
+import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse } from '../types.gen';
 
 /**
  * Login
@@ -56,6 +56,97 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     return [
         params
     ];
+};
+
+export const getV1LibrariesQueryKey = (options?: Options<GetV1LibrariesData>) => createQueryKey('getV1Libraries', options);
+
+/**
+ * List libraries
+ */
+export const getV1LibrariesOptions = (options?: Options<GetV1LibrariesData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1Libraries({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1LibrariesQueryKey(options)
+    });
+};
+
+/**
+ * Create library
+ */
+export const postV1LibrariesMutation = (options?: Partial<Options<PostV1LibrariesData>>): UseMutationOptions<PostV1LibrariesResponse, PostV1LibrariesError, Options<PostV1LibrariesData>> => {
+    const mutationOptions: UseMutationOptions<PostV1LibrariesResponse, PostV1LibrariesError, Options<PostV1LibrariesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postV1Libraries({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete library
+ */
+export const deleteV1LibrariesByIdMutation = (options?: Partial<Options<DeleteV1LibrariesByIdData>>): UseMutationOptions<DeleteV1LibrariesByIdResponse, DefaultError, Options<DeleteV1LibrariesByIdData>> => {
+    const mutationOptions: UseMutationOptions<DeleteV1LibrariesByIdResponse, DefaultError, Options<DeleteV1LibrariesByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteV1LibrariesById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getV1LibrariesByIdQueryKey = (options?: Options<GetV1LibrariesByIdData>) => createQueryKey('getV1LibrariesById', options);
+
+/**
+ * Get library
+ */
+export const getV1LibrariesByIdOptions = (options?: Options<GetV1LibrariesByIdData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1LibrariesById({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1LibrariesByIdQueryKey(options)
+    });
+};
+
+/**
+ * Update library
+ */
+export const putV1LibrariesByIdMutation = (options?: Partial<Options<PutV1LibrariesByIdData>>): UseMutationOptions<PutV1LibrariesByIdResponse, PutV1LibrariesByIdError, Options<PutV1LibrariesByIdData>> => {
+    const mutationOptions: UseMutationOptions<PutV1LibrariesByIdResponse, PutV1LibrariesByIdError, Options<PutV1LibrariesByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await putV1LibrariesById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
 };
 
 export const getV1SettingsQueryKey = (options?: Options<GetV1SettingsData>) => createQueryKey('getV1Settings', options);
