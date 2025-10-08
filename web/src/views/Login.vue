@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
@@ -8,6 +8,7 @@ import Card from 'primevue/card'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 const email = ref('')
@@ -16,7 +17,11 @@ const password = ref('')
 async function onSubmit() {
   const ok = await auth.loginWithPassword(email.value, password.value)
   if (ok) {
-    router.replace({ path: '/' })
+    const redirectParam = route.query.redirect
+    const redirectValue = Array.isArray(redirectParam) ? redirectParam[0] : redirectParam
+    const target =
+      typeof redirectValue === 'string' && redirectValue.startsWith('/') ? redirectValue : '/'
+    router.replace(target)
   }
 }
 
