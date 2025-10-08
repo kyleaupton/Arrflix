@@ -173,33 +173,10 @@ When importing completed downloads:
 1. Verify the client has finalized the file.
 2. **If same filesystem:**
    - Attempt **hardlink** (`os.Link(src, dst)`).
-   - If hardlink fails, attempt **rename** (safe only if not seeding).
 3. **If cross-filesystem:**
    - Attempt **reflink** (copy-on-write).
    - Fallback to **copy** with verification.
 4. Update `media_file` record and trigger refresh.
-
-Example Go sketch:
-
-```go
-func tryImport(src, dst string) error {
-    if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil { return err }
-
-    sameFS := func(a, b string) bool {
-        var sa, sb syscall.Stat_t
-        if err := syscall.Stat(a, &sa); err != nil { return false }
-        if err := syscall.Stat(filepath.Dir(b), &sb); err != nil { return false }
-        return sa.Dev == sb.Dev
-    }
-
-    if sameFS(src, dst) {
-        if err := os.Link(src, dst); err == nil { return nil }
-        if err := os.Rename(src, dst); err == nil { return nil }
-    }
-
-    return copyFile(src, dst)
-}
-```
 
 ---
 

@@ -8,6 +8,7 @@ type Services struct {
 	Auth      *AuthService
 	Settings  *SettingsService
 	Libraries *LibrariesService
+	Media     *MediaService
 }
 
 func New(r *repo.Repository, opts ...Option) *Services {
@@ -20,6 +21,7 @@ func New(r *repo.Repository, opts ...Option) *Services {
 		Auth:      NewAuthService(r, cfg),
 		Settings:  NewSettingsService(r),
 		Libraries: NewLibrariesService(r),
+		Media:     NewMediaService(r),
 	}
 }
 
