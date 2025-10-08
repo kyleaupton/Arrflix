@@ -1,126 +1,52 @@
-# Snaggle Blueprint (v2.1)
+# Snaggle Blueprint (v2.2)
 
 ## Overview
-Snaggle is a self-hosted media management platform designed to unify the best features of Sonarr, Radarr, and Overseerr — with a simpler, more transparent design.  
-The system emphasizes **user control**, **job transparency**, and **extensibility** over full automation.
+
+Snaggle is a self-hosted media management platform that unifies the best parts of Sonarr, Radarr, and Overseerr — but with more transparency, flexibility, and developer-first clarity.
+
+The system supports both **movies** and **series**, with **per-episode monitoring**, **interactive acquisitions**, and a **hardlink-first import strategy** to optimize filesystem usage.
 
 ---
 
 ## Core Philosophy
+
 - Filesystem is the source of truth.
-- Postgres maintains metadata, jobs, and user settings.
-- Acquisition is flexible: either fully automatic (profiles) or manual (“requires attention” queue).
-- Everything runs inside one container: Nginx + Go backend + Postgres + Redis (for caching).
+- Database tracks metadata, jobs, and user settings.
+- Discovery is user-controllable: automatic or interactive.
+- Avoid unnecessary file copies — prefer hardlinks and renames.
+- Multi-level monitoring: series, season, or episode.
 
 ---
 
 ## System Architecture
 
-### Components
-| Component | Description |
-|------------|--------------|
-| **Backend (Go + Echo)** | Core API, job queue, acquisition logic. |
-| **Frontend (Vue 3 SPA)** | User interface served by Nginx. |
-| **Database (Postgres)** | Persistent data (users, libraries, media, jobs). |
-| **Cache (Redis)** | Temporary storage for discovery candidates and ephemeral data. |
-| **Worker (in-proc)** | Handles background jobs: scanning, discovery, download, import, refresh. |
+| Component                | Description                                                |
+| ------------------------ | ---------------------------------------------------------- |
+| **Backend (Go + Echo)**  | API, job runner, and orchestration logic.                  |
+| **Frontend (Vue 3 SPA)** | Web UI for managing media and downloads.                   |
+| **Database (Postgres)**  | Persistent store for users, libraries, and jobs.           |
+| **Cache (Redis)**        | Ephemeral store for discovery results and transient state. |
+| **Worker (in-proc)**     | Handles scanning, discovery, import, and refresh jobs.     |
 
 ---
 
-## Key Concepts
+## Hierarchy Overview
 
-### Library
-A root folder on disk that Snaggle monitors. Each library has:
-- Type: `movie` or `series`
-- Root path (validated)
-- Enabled flag
-- Last scan date
-
-### Media Item
-Represents a single movie or series tracked by Snaggle.
-
-### Monitored Item
-A “wanted” media entity (movie or episode) that triggers acquisition.
-
-### Discovery
-The process of finding possible releases for a monitored item from one or more sources.
-
-### Candidate
-A potential release (torrent/NZB). **Ephemeral** — stored in Redis, not persisted long-term.
-
-### Selection
-Represents a chosen candidate (manual or automatic).
-
-### Download Task
-Tracks a job submitted to a download client.
-
-### Import Job
-Moves a completed download into the library and updates the database using a **hardlink-first** strategy (details below).
-
-### Refresh Job
-Triggers Plex/Jellyfin refresh after import.
+```
+Library → Media Item (Movie or Series)
+Series → Season → Episode
+Episode ↔ Monitored Item ↔ Candidate ↔ Selection → Download → Import → File
+```
 
 ---
 
-## Acquisition Flow
+## Schema Overview
 
-### 1. Discovery
-- Triggered manually or periodically.
-- Queries provider APIs (Torznab, Prowlarr, etc.).
-- Normalizes and scores results.
-- Filters out rejected/banned releases.
-- **Auto mode:** immediately picks best candidate and proceeds to download.
-- **Manual mode:** caches top candidates in Redis for interactive selection.
+### Libraries
 
-### 2. Selection
-- **Manual:** user chooses from cached list (`POST /api/v1/selections`).  
-- **Auto:** chosen automatically based on quality profile rules.
-
-### 3. Download
-- Selected release sent to download client (qBittorrent, SABnzbd, etc.).
-- Progress tracked by polling or webhook.
-- On completion → triggers Import job.
-
-### 4. Import (Hardlink-first strategy)
-- **Goal:** keep seeding intact when desired, avoid copies, and be safe across filesystems.
-- **Algorithm (pseudocode):**
-  1. Ensure source file is finalized by the client (not a temp/incomplete name).  
-  2. If source and destination are on the **same filesystem**:
-     - Try **hardlink** `src → dst` (preserves inode; seeding continues).  
-     - If hardlink fails (permissions/policy), try **rename** `src → dst` (atomic; same inode; only if not seeding).  
-  3. If cross-filesystem (EXDEV) or previous steps fail:
-     - Try **reflink** (CoW clone) if supported.  
-     - Fallback to **copy** with checksum verification.  
-  4. Update DB (`media_file`) and fire **Refresh** job.
-- **Implications:**
-  - Hardlinks require same filesystem; chmod/chown affect all links (same inode).  
-  - Rename preserves inode but breaks seeding unless the client is aware.  
-  - Reflink gives instant clones but uses a new inode (requires CoW FS).  
-  - Copy is universal but slow and uses space.
-
-### 5. Refresh
-- If Plex/Jellyfin integrations are configured, refresh library.
-
----
-
-## Filesystem Layout (recommended)
-- Host: `/srv/media` (single filesystem).  
-- Container: bind to `/data`.  
-- Paths: `/data/downloads/complete/...` and `/data/library/...` on **the same mount** to enable hardlinks/renames.
-
----
-
-## Database Schema (Core)
+Represents folders being managed and scanned.
 
 ```sql
-create table app_user (
-  id uuid primary key,
-  email text unique not null,
-  password_hash text,
-  role text not null check (role in ('admin','user')),
-  created_at timestamptz not null default now()
-);
-
 create table library (
   id uuid primary key,
   name text not null,
@@ -129,93 +55,98 @@ create table library (
   enabled boolean not null default true,
   created_at timestamptz not null default now()
 );
+```
 
+### Media Items (Movies or Series)
+
+```sql
 create table media_item (
   id uuid primary key,
   library_id uuid not null references library(id) on delete cascade,
-  type text not null,
+  type text not null check (type in ('movie','series')),
   title text not null,
   year int,
   tmdb_id int,
   created_at timestamptz not null default now()
 );
+```
 
+### Seasons and Episodes
+
+```sql
+create table media_season (
+  id uuid primary key,
+  media_id uuid not null references media_item(id) on delete cascade,
+  season_number int not null,
+  title text,
+  air_date date,
+  unique (media_id, season_number)
+);
+
+create table media_episode (
+  id uuid primary key,
+  season_id uuid not null references media_season(id) on delete cascade,
+  episode_number int not null,
+  title text,
+  air_date date,
+  tmdb_id bigint,
+  tvdb_id bigint,
+  unique (season_id, episode_number)
+);
+```
+
+### Media Files
+
+```sql
 create table media_file (
   id uuid primary key,
   media_id uuid not null references media_item(id) on delete cascade,
+  season_id uuid references media_season(id) on delete set null,
+  episode_id uuid references media_episode(id) on delete set null,
   path text not null unique,
   size_bytes bigint,
   resolution text,
   added_at timestamptz not null default now()
 );
+```
 
+### Monitored Items (multi-level support)
+
+```sql
 create table monitored_item (
   id uuid primary key,
   media_id uuid not null references media_item(id) on delete cascade,
-  type text not null check (type in ('movie','series','episode')),
+  season_id uuid references media_season(id) on delete cascade,
+  episode_id uuid references media_episode(id) on delete cascade,
   desired_profile_id uuid,
   is_active boolean not null default true,
-  created_at timestamptz not null default now()
-);
-
-create table selection (
-  id uuid primary key,
-  monitored_id uuid not null references monitored_item(id) on delete cascade,
-  candidate_title text not null,
-  candidate_link text not null,
-  mode text not null check (mode in ('manual','auto')),
-  decided_by uuid references app_user(id),
-  decided_at timestamptz not null default now()
-);
-
-create table download_task (
-  id uuid primary key,
-  selection_id uuid not null references selection(id) on delete cascade,
-  client text not null,
-  client_task_id text,
-  state text not null check (state in ('queued','downloading','completed','failed')),
-  progress numeric(5,2) default 0,
-  error text,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  constraint monitored_target_oneof check (
+    (episode_id is not null and season_id is not null and media_id is not null) or
+    (episode_id is null and season_id is not null and media_id is not null) or
+    (episode_id is null and season_id is null and media_id is not null)
+  )
 );
 ```
 
 ---
 
-## APIs
+## Import Flow (Hardlink-first)
 
-### Libraries
-- `POST /api/v1/libraries`
-- `GET /api/v1/libraries`
-- `DELETE /api/v1/libraries/:id`
-- `POST /api/v1/libraries/:id/scan`
+When importing completed downloads:
 
-### Media
-- `GET /api/v1/library`
-- `GET /api/v1/media/:id`
+1. Verify the client has finalized the file.
+2. **If same filesystem:**
+   - Attempt **hardlink** (`os.Link(src, dst)`).
+   - If hardlink fails, attempt **rename** (safe only if not seeding).
+3. **If cross-filesystem:**
+   - Attempt **reflink** (copy-on-write).
+   - Fallback to **copy** with verification.
+4. Update `media_file` record and trigger refresh.
 
-### Monitored Items
-- `POST /api/v1/monitored`
-- `GET /api/v1/monitored`
-- `DELETE /api/v1/monitored/:id`
+Example Go sketch:
 
-### Discovery & Selection
-- `POST /api/v1/monitored/:id/discover`
-- `GET /api/v1/discoveries/:id/candidates`
-- `POST /api/v1/selections`
-- `POST /api/v1/monitored/:id/ignore`
-
-### Downloads & Jobs
-- `GET /api/v1/downloads`
-- `GET /api/v1/jobs`
-- `GET /api/v1/events` (SSE stream)
-
----
-
-## Import Helper (Go sketch)
 ```go
-// tryImport does: hardlink → rename → reflink → copy
 func tryImport(src, dst string) error {
     if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil { return err }
 
@@ -227,75 +158,89 @@ func tryImport(src, dst string) error {
     }
 
     if sameFS(src, dst) {
-        if err := os.Link(src, dst); err == nil { return nil }           // hardlink
-        if err := os.Rename(src, dst); err == nil { return nil }         // rename (breaks seeding)
+        if err := os.Link(src, dst); err == nil { return nil }
+        if err := os.Rename(src, dst); err == nil { return nil }
     }
 
-    // TODO: try reflink (ioctl FICLONE) when supported; else copy
     return copyFile(src, dst)
 }
 ```
 
 ---
 
-## Ephemeral Candidate Storage
-- Candidates stored in Redis for ~1 hour (configurable TTL).
-- Key: `candidates:{monitored_id}` → array of candidates.
-- Value structure:
-  ```json
-  {
-    "title": "Dune.2021.2160p.WEB-DL",
-    "quality": "2160p",
-    "sizeBytes": 3200000000,
-    "seeders": 123,
-    "indexer": "Torznab@Jackett",
-    "score": 87,
-    "link": "magnet:?xt=urn:btih:..."
-  }
-  ```
-- Only **selections** and downstream artifacts are persisted.
+## Monitoring Flow
+
+| Level       | Behavior                                |
+| ----------- | --------------------------------------- |
+| **Series**  | Tracks all future and missing episodes. |
+| **Season**  | Tracks only that season's episodes.     |
+| **Episode** | Tracks a single episode.                |
+
+Each monitored item spawns discovery jobs scoped by its level:
+
+- Series → all missing episodes.
+- Season → missing episodes in that season.
+- Episode → exactly one item.
 
 ---
 
-## Jobs Overview
-| Job | Description |
-|------|--------------|
-| **scan** | Walks library, parses filenames, upserts media records. |
-| **discover** | Searches providers, normalizes results, caches candidates. |
-| **download** | Sends torrent/NZB to client and monitors progress. |
-| **import** | **Hardlink-first** move into library, upserts `media_file`. |
-| **refresh** | Triggers Plex/Jellyfin refresh if configured. |
+## Discovery & Selection
+
+Candidates are ephemeral and stored in Redis for about 1 hour.  
+Each discovery job can operate at any monitoring level (series, season, or episode).
+
+- **Auto mode**: pick highest score candidate and proceed.
+- **Manual mode**: cache top N results and flag monitored item as `requires_attention`.
+
+Redis key format: `candidates:{monitored_id}`
+
+---
+
+## Job Overview
+
+| Job          | Description                                            |
+| ------------ | ------------------------------------------------------ |
+| **scan**     | Walk library and update media/seasons/episodes/files.  |
+| **discover** | Query providers, normalize results, store in Redis.    |
+| **download** | Send selected release to client.                       |
+| **import**   | Hardlink-first move into library, upsert `media_file`. |
+| **refresh**  | Notify Plex/Jellyfin.                                  |
 
 ---
 
 ## Milestones
 
-### Milestone 1 — Core Foundations
-- User auth (JWT, admin seed).
-- Libraries CRUD.
-- Filesystem scan job.
+### Milestone 1 — Core System
 
-### Milestone 2 — Monitored Items & Discovery
-- Add monitored table + discovery logic.
-- Integrate with 1 provider (Torznab).
+- Auth & settings store.
+- Library CRUD + scanning job.
 
-### Milestone 3 — Manual Selection
-- Redis caching for candidates.
-- Selection API + download task creation.
+### Milestone 2 — Series Support
 
-### Milestone 4 — Import & Refresh (Hardlink-first)
-- Implement hardlink-first importer with safe fallbacks.
-- Import job updates media_file and triggers Plex/Jellyfin refresh.
+- Add `media_season` and `media_episode`.
+- Extend scanner to populate per-episode records.
 
-### Milestone 5 — UI / UX
-- Vue UI for browsing, requests, queue, requires-attention.
+### Milestone 3 — Monitoring & Discovery
+
+- Multi-level monitoring.
+- Candidate caching & discovery logic.
+
+### Milestone 4 — Import & Refresh
+
+- Hardlink-first import system.
+- Plex/Jellyfin integration.
+
+### Milestone 5 — UI/UX
+
+- Unified dashboard for media, queue, and attention items.
 
 ---
 
 ## Future Extensions
+
 - Quality profiles (auto mode).
-- Multi-provider aggregation.
-- Episode-level tracking.
-- Advanced file rename templates.
+- Season pack handling.
+- Multi-provider merging.
+- Advanced file renaming.
 - Notifications (Discord/webhook).
 - Mobile-friendly dashboard.
