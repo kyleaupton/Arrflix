@@ -174,6 +174,48 @@ type Library struct {
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
+type MediaEpisode struct {
+	ID            pgtype.UUID        `json:"id"`
+	SeasonID      pgtype.UUID        `json:"season_id"`
+	EpisodeNumber int32              `json:"episode_number"`
+	Title         *string            `json:"title"`
+	AirDate       pgtype.Date        `json:"air_date"`
+	TmdbID        *int64             `json:"tmdb_id"`
+	TvdbID        *int64             `json:"tvdb_id"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+type MediaFile struct {
+	ID         pgtype.UUID        `json:"id"`
+	MediaID    pgtype.UUID        `json:"media_id"`
+	SeasonID   pgtype.UUID        `json:"season_id"`
+	EpisodeID  pgtype.UUID        `json:"episode_id"`
+	Path       string             `json:"path"`
+	SizeBytes  *int64             `json:"size_bytes"`
+	Resolution *string            `json:"resolution"`
+	AddedAt    pgtype.Timestamptz `json:"added_at"`
+}
+
+type MediaItem struct {
+	ID        pgtype.UUID        `json:"id"`
+	LibraryID pgtype.UUID        `json:"library_id"`
+	Type      string             `json:"type"`
+	Title     string             `json:"title"`
+	Year      *int32             `json:"year"`
+	TmdbID    *int32             `json:"tmdb_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type MediaSeason struct {
+	ID           pgtype.UUID        `json:"id"`
+	MediaID      pgtype.UUID        `json:"media_id"`
+	SeasonNumber int32              `json:"season_number"`
+	Title        *string            `json:"title"`
+	AirDate      pgtype.Date        `json:"air_date"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
 type Permission struct {
 	ID          pgtype.UUID `json:"id"`
 	Key         string      `json:"key"`
