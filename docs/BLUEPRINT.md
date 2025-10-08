@@ -1,4 +1,4 @@
-# Snaggle Blueprint (v2.2)
+# Snaggle Blueprint
 
 ## Overview
 
@@ -131,6 +131,41 @@ create table monitored_item (
 
 ---
 
+## APIs
+
+### Libraries
+
+- `POST /api/v1/libraries`
+- `GET /api/v1/libraries`
+- `DELETE /api/v1/libraries/:id`
+- `POST /api/v1/libraries/:id/scan`
+
+### Media
+
+- `GET /api/v1/library`
+- `GET /api/v1/media/:id`
+
+### Monitored Items
+
+- `POST /api/v1/monitored`
+- `GET /api/v1/monitored`
+- `DELETE /api/v1/monitored/:id`
+
+### Discovery & Selection
+
+- `POST /api/v1/monitored/:id/discover`
+- `GET /api/v1/discoveries/:id/candidates`
+- `POST /api/v1/selections`
+- `POST /api/v1/monitored/:id/ignore`
+
+### Downloads & Jobs
+
+- `GET /api/v1/downloads`
+- `GET /api/v1/jobs`
+- `GET /api/v1/events` (SSE stream)
+
+---
+
 ## Import Flow (Hardlink-first)
 
 When importing completed downloads:
@@ -244,3 +279,46 @@ Redis key format: `candidates:{monitored_id}`
 - Advanced file renaming.
 - Notifications (Discord/webhook).
 - Mobile-friendly dashboard.
+
+---
+
+## 🧰 Developer Workflow
+
+These commands describe how to regenerate backend and frontend code for Snaggle.
+
+### 1. Generate SQLC Code
+
+SQLC turns your SQL queries into Go structs and type-safe methods.
+
+```bash
+cd backend
+sqlc generate
+```
+
+This reads `sqlc.yaml` (or `sqlc.yml`) and regenerates Go code for database access.
+
+---
+
+### 2. Generate Swagger Spec (OpenAPI)
+
+Generates the OpenAPI spec from annotated Echo handlers.
+
+```bash
+cd backend/internal/http
+swag init
+```
+
+This outputs an `backend/internal/http/docs/swagger.yaml` (or `.json`) for API client generation and UI docs.
+
+---
+
+### 3. Generate API Client (TypeScript)
+
+Generates a fully typed API client for your Vue frontend.
+
+```bash
+cd web
+npm run openapi-ts
+```
+
+This generates code in `web/src/client`.
