@@ -65,6 +65,25 @@ definitions:
       updated_at:
         type: string
     type: object
+  handlers.mediaItemSwagger:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      library_id:
+        type: string
+      title:
+        type: string
+      tmdb_id:
+        type: integer
+      type:
+        type: string
+      updated_at:
+        type: string
+      year:
+        type: integer
+    type: object
 info:
   contact: {}
   title: Snaggle API
@@ -189,6 +208,20 @@ paths:
       summary: Update library
       tags:
       - libraries
+  /v1/library:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.mediaItemSwagger'
+            type: array
+      summary: List media items
+      tags:
+      - media
   /v1/settings:
     get:
       produces:

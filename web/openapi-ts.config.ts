@@ -8,5 +8,5 @@ const input = path.join(dirname, '..', 'backend/internal/http/docs/swagger.json'
 export default defineConfig({
   input,
   output: 'src/client',
-  plugins: ['@tanstack/react-query'],
+  plugins: ['@tanstack/vue-query'],
 })

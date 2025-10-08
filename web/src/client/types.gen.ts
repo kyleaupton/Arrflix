@@ -46,6 +46,17 @@ export type HandlersLibrarySwagger = {
     updated_at?: string;
 };
 
+export type HandlersMediaItemSwagger = {
+    created_at?: string;
+    id?: string;
+    library_id?: string;
+    title?: string;
+    tmdb_id?: number;
+    type?: string;
+    updated_at?: string;
+    year?: number;
+};
+
 export type PostV1AuthLoginData = {
     /**
      * Login request
@@ -182,6 +193,22 @@ export type PutV1LibrariesByIdResponses = {
 };
 
 export type PutV1LibrariesByIdResponse = PutV1LibrariesByIdResponses[keyof PutV1LibrariesByIdResponses];
+
+export type GetV1LibraryData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/library';
+};
+
+export type GetV1LibraryResponses = {
+    /**
+     * OK
+     */
+    200: Array<HandlersMediaItemSwagger>;
+};
+
+export type GetV1LibraryResponse = GetV1LibraryResponses[keyof GetV1LibraryResponses];
 
 export type GetV1SettingsData = {
     body?: never;

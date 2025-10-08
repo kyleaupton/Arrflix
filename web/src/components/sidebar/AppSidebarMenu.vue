@@ -1,43 +1,43 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 import Menu from 'primevue/menu'
 import Badge from 'primevue/badge'
+import { PrimeIcons } from '@/icons'
+
+const route = useRoute()
 
 const items = ref([
   {
     separator: true,
   },
   {
-    label: 'Discover',
-    icon: 'pi pi-sparkles',
+    label: 'Library',
+    icon: PrimeIcons.VIDEO,
     to: '/',
   },
   {
-    label: 'Movies',
-    icon: 'pi pi-video',
-    // to: '/movies',
-  },
-  {
-    label: 'Shows',
-    icon: 'pi pi-desktop',
-    // to: '/shows',
-  },
-  {
     label: 'Requests',
-    icon: 'pi pi-clock',
-    // to: '/requests',
+    icon: PrimeIcons.CLOCK,
+    to: '/requests',
   },
   {
     label: 'Users',
-    icon: 'pi pi-users',
-    // to: '/users',
+    icon: PrimeIcons.USERS,
+    to: '/users',
   },
   {
     label: 'Settings',
-    icon: 'pi pi-cog',
+    icon: PrimeIcons.COG,
     to: '/settings',
   },
 ])
+
+const isActive = (to: string): boolean => {
+  if (!to) return false
+  if (to === '/') return route.path === '/'
+  return route.path.startsWith(to)
+}
 </script>
 
 <template>
@@ -67,7 +67,11 @@ const items = ref([
       </template>
 
       <template #item="{ item, props }">
-        <RouterLink class="flex items-center" v-bind="props.action" :to="item.to ?? '/'">
+        <RouterLink
+          :class="['flex items-center', { 'bg-emphasis text-primary': isActive(item.to) }]"
+          v-bind="props.action"
+          :to="item.to"
+        >
           <span :class="item.icon" />
           <span>{{ item.label }}</span>
           <Badge v-if="item.badge" class="ml-auto" :value="item.badge" />
