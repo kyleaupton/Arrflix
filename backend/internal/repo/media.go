@@ -11,13 +11,14 @@ type MediaRepo interface {
 	// Media items
 	ListMediaItems(ctx context.Context) ([]dbgen.MediaItem, error)
 	GetMediaItem(ctx context.Context, id pgtype.UUID) (dbgen.MediaItem, error)
+	GetMediaItemByTmdbID(ctx context.Context, tmdbID int64) (dbgen.MediaItem, error)
 	CreateMediaItem(ctx context.Context, libraryID pgtype.UUID, typ, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error)
 	UpdateMediaItem(ctx context.Context, id pgtype.UUID, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error)
 	DeleteMediaItem(ctx context.Context, id pgtype.UUID) error
 
 	// Seasons
-	ListSeasonsForMedia(ctx context.Context, mediaID pgtype.UUID) ([]dbgen.MediaSeason, error)
-	UpsertSeason(ctx context.Context, mediaID pgtype.UUID, seasonNumber int32, title *string, airDate pgtype.Date) (dbgen.MediaSeason, error)
+	ListSeasonsForMedia(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.MediaSeason, error)
+	UpsertSeason(ctx context.Context, mediaItemID pgtype.UUID, seasonNumber int32, airDate pgtype.Date) (dbgen.MediaSeason, error)
 
 	// Episodes
 	ListEpisodesForSeason(ctx context.Context, seasonID pgtype.UUID) ([]dbgen.MediaEpisode, error)
@@ -25,7 +26,7 @@ type MediaRepo interface {
 
 	// Files
 	GetMediaFileByPath(ctx context.Context, path string) (dbgen.MediaFile, error)
-	CreateMediaFile(ctx context.Context, mediaID, seasonID, episodeID pgtype.UUID, path string, sizeBytes *int64, resolution *string) (dbgen.MediaFile, error)
+	CreateMediaFile(ctx context.Context, mediaItemID pgtype.UUID, seasonID, episodeID *pgtype.UUID, path string) (dbgen.MediaFile, error)
 	DeleteMediaFile(ctx context.Context, id pgtype.UUID) error
 }
 
@@ -37,7 +38,11 @@ func (r *Repository) GetMediaItem(ctx context.Context, id pgtype.UUID) (dbgen.Me
 	return r.Q.GetMediaItem(ctx, id)
 }
 
-func (r *Repository) CreateMediaItem(ctx context.Context, libraryID pgtype.UUID, typ, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error) {
+func (r *Repository) GetMediaItemByTmdbID(ctx context.Context, tmdbID int64) (dbgen.MediaItem, error) {
+	return r.Q.GetMediaItemByTmdbID(ctx, &tmdbID)
+}
+
+func (r *Repository) CreateMediaItem(ctx context.Context, libraryID pgtype.UUID, typ, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error) {
 	return r.Q.CreateMediaItem(ctx, dbgen.CreateMediaItemParams{
 		LibraryID: libraryID,
 		Type:      typ,
@@ -47,7 +52,7 @@ func (r *Repository) CreateMediaItem(ctx context.Context, libraryID pgtype.UUID,
 	})
 }
 
-func (r *Repository) UpdateMediaItem(ctx context.Context, id pgtype.UUID, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error) {
+func (r *Repository) UpdateMediaItem(ctx context.Context, id pgtype.UUID, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error) {
 	return r.Q.UpdateMediaItem(ctx, dbgen.UpdateMediaItemParams{
 		ID:     id,
 		Title:  title,
@@ -64,11 +69,10 @@ func (r *Repository) ListSeasonsForMedia(ctx context.Context, mediaID pgtype.UUI
 	return r.Q.ListSeasonsForMedia(ctx, mediaID)
 }
 
-func (r *Repository) UpsertSeason(ctx context.Context, mediaID pgtype.UUID, seasonNumber int32, title *string, airDate pgtype.Date) (dbgen.MediaSeason, error) {
+func (r *Repository) UpsertSeason(ctx context.Context, mediaItemID pgtype.UUID, seasonNumber int32, airDate pgtype.Date) (dbgen.MediaSeason, error) {
 	return r.Q.UpsertSeason(ctx, dbgen.UpsertSeasonParams{
-		MediaID:      mediaID,
+		MediaItemID:  mediaItemID,
 		SeasonNumber: seasonNumber,
-		Title:        title,
 		AirDate:      airDate,
 	})
 }
@@ -92,14 +96,19 @@ func (r *Repository) GetMediaFileByPath(ctx context.Context, path string) (dbgen
 	return r.Q.GetMediaFileByPath(ctx, path)
 }
 
-func (r *Repository) CreateMediaFile(ctx context.Context, mediaID, seasonID, episodeID pgtype.UUID, path string, sizeBytes *int64, resolution *string) (dbgen.MediaFile, error) {
+func (r *Repository) CreateMediaFile(ctx context.Context, mediaItemID pgtype.UUID, seasonID, episodeID *pgtype.UUID, path string) (dbgen.MediaFile, error) {
+	var season, episode pgtype.UUID
+	if seasonID != nil {
+		season = *seasonID
+	} // else zero value => NULL
+	if episodeID != nil {
+		episode = *episodeID
+	}
 	return r.Q.CreateMediaFile(ctx, dbgen.CreateMediaFileParams{
-		MediaID:    mediaID,
-		SeasonID:   seasonID,
-		EpisodeID:  episodeID,
-		Path:       path,
-		SizeBytes:  sizeBytes,
-		Resolution: resolution,
+		MediaItemID: mediaItemID,
+		SeasonID:    season,
+		EpisodeID:   episode,
+		Path:        path,
 	})
 }
 

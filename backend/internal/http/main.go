@@ -5,6 +5,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/config"
 	"github.com/kyleaupton/snaggle/backend/internal/http/handlers"
 	"github.com/kyleaupton/snaggle/backend/internal/http/middlewares"
+	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 
@@ -12,20 +13,19 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog"
 )
 
-// @title			Snaggle API
+// @title		Snaggle API
 // @version		0.0.1
 // @BasePath	/api
-func NewServer(cfg config.Config, log zerolog.Logger, pool *pgxpool.Pool) *echo.Echo {
+func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, services *service.Services, repo *repo.Repository) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
 
 	// Layers
-	r := repo.New(pool)
-	services := service.New(r, service.WithJWTSecret(cfg.JWTSecret))
+	// r := repo.New(pool)
+	// services := service.New(r, service.WithJWTSecret(cfg.JWTSecret))
 
 	// Handlers
 	health := handlers.NewHealth()

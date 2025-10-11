@@ -1,17 +1,19 @@
 package service
 
 import (
+	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
 
 type Services struct {
 	Auth      *AuthService
-	Settings  *SettingsService
 	Libraries *LibrariesService
 	Media     *MediaService
+	Scanner   *ScannerService
+	Settings  *SettingsService
 }
 
-func New(r *repo.Repository, opts ...Option) *Services {
+func New(r *repo.Repository, l *logger.Logger, opts ...Option) *Services {
 	cfg := &config{}
 	for _, o := range opts {
 		o.apply(cfg)
@@ -19,9 +21,10 @@ func New(r *repo.Repository, opts ...Option) *Services {
 
 	return &Services{
 		Auth:      NewAuthService(r, cfg),
-		Settings:  NewSettingsService(r),
 		Libraries: NewLibrariesService(r),
 		Media:     NewMediaService(r),
+		Scanner:   NewScannerService(r, l),
+		Settings:  NewSettingsService(r),
 	}
 }
 

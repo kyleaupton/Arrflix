@@ -8,6 +8,10 @@ order by created_at desc;
 select * from media_item
 where id = $1;
 
+-- name: GetMediaItemByTmdbID :one
+select * from media_item
+where tmdb_id = $1;
+
 -- name: CreateMediaItem :one
 insert into media_item (library_id, type, title, year, tmdb_id)
 values (sqlc.arg(library_id), sqlc.arg(type), sqlc.arg(title), sqlc.arg(year), sqlc.arg(tmdb_id))
@@ -29,14 +33,14 @@ delete from media_item where id = $1;
 
 -- name: ListSeasonsForMedia :many
 select * from media_season
-where media_id = $1
+where media_item_id = $1
 order by season_number asc;
 
 -- name: UpsertSeason :one
-insert into media_season (media_id, season_number, title, air_date)
-values (sqlc.arg(media_id), sqlc.arg(season_number), sqlc.arg(title), sqlc.arg(air_date))
-on conflict (media_id, season_number)
-do update set title = excluded.title, air_date = excluded.air_date
+insert into media_season (media_item_id, season_number, air_date)
+values (sqlc.arg(media_item_id), sqlc.arg(season_number), sqlc.arg(air_date))
+on conflict (media_item_id, season_number)
+do update set air_date = excluded.air_date
 returning *;
 
 -- Episodes
@@ -62,8 +66,8 @@ returning *;
 select * from media_file where path = $1;
 
 -- name: CreateMediaFile :one
-insert into media_file (media_id, season_id, episode_id, path, size_bytes, resolution)
-values (sqlc.arg(media_id), sqlc.arg(season_id), sqlc.arg(episode_id), sqlc.arg(path), sqlc.arg(size_bytes), sqlc.arg(resolution))
+insert into media_file (media_item_id, season_id, episode_id, path)
+values (sqlc.arg(media_item_id), sqlc.arg(season_id), sqlc.arg(episode_id), sqlc.arg(path))
 returning *;
 
 -- name: DeleteMediaFile :exec

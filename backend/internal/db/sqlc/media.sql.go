@@ -12,38 +12,32 @@ import (
 )
 
 const createMediaFile = `-- name: CreateMediaFile :one
-insert into media_file (media_id, season_id, episode_id, path, size_bytes, resolution)
-values ($1, $2, $3, $4, $5, $6)
-returning id, media_id, season_id, episode_id, path, size_bytes, resolution, added_at
+insert into media_file (media_item_id, season_id, episode_id, path)
+values ($1, $2, $3, $4)
+returning id, media_item_id, season_id, episode_id, path, added_at
 `
 
 type CreateMediaFileParams struct {
-	MediaID    pgtype.UUID `json:"media_id"`
-	SeasonID   pgtype.UUID `json:"season_id"`
-	EpisodeID  pgtype.UUID `json:"episode_id"`
-	Path       string      `json:"path"`
-	SizeBytes  *int64      `json:"size_bytes"`
-	Resolution *string     `json:"resolution"`
+	MediaItemID pgtype.UUID `json:"media_item_id"`
+	SeasonID    pgtype.UUID `json:"season_id"`
+	EpisodeID   pgtype.UUID `json:"episode_id"`
+	Path        string      `json:"path"`
 }
 
 func (q *Queries) CreateMediaFile(ctx context.Context, arg CreateMediaFileParams) (MediaFile, error) {
 	row := q.db.QueryRow(ctx, createMediaFile,
-		arg.MediaID,
+		arg.MediaItemID,
 		arg.SeasonID,
 		arg.EpisodeID,
 		arg.Path,
-		arg.SizeBytes,
-		arg.Resolution,
 	)
 	var i MediaFile
 	err := row.Scan(
 		&i.ID,
-		&i.MediaID,
+		&i.MediaItemID,
 		&i.SeasonID,
 		&i.EpisodeID,
 		&i.Path,
-		&i.SizeBytes,
-		&i.Resolution,
 		&i.AddedAt,
 	)
 	return i, err
@@ -60,7 +54,7 @@ type CreateMediaItemParams struct {
 	Type      string      `json:"type"`
 	Title     string      `json:"title"`
 	Year      *int32      `json:"year"`
-	TmdbID    *int32      `json:"tmdb_id"`
+	TmdbID    *int64      `json:"tmdb_id"`
 }
 
 func (q *Queries) CreateMediaItem(ctx context.Context, arg CreateMediaItemParams) (MediaItem, error) {
@@ -105,7 +99,7 @@ func (q *Queries) DeleteMediaItem(ctx context.Context, id pgtype.UUID) error {
 
 const getMediaFileByPath = `-- name: GetMediaFileByPath :one
 
-select id, media_id, season_id, episode_id, path, size_bytes, resolution, added_at from media_file where path = $1
+select id, media_item_id, season_id, episode_id, path, added_at from media_file where path = $1
 `
 
 // Files
@@ -114,12 +108,10 @@ func (q *Queries) GetMediaFileByPath(ctx context.Context, path string) (MediaFil
 	var i MediaFile
 	err := row.Scan(
 		&i.ID,
-		&i.MediaID,
+		&i.MediaItemID,
 		&i.SeasonID,
 		&i.EpisodeID,
 		&i.Path,
-		&i.SizeBytes,
-		&i.Resolution,
 		&i.AddedAt,
 	)
 	return i, err
@@ -132,6 +124,27 @@ where id = $1
 
 func (q *Queries) GetMediaItem(ctx context.Context, id pgtype.UUID) (MediaItem, error) {
 	row := q.db.QueryRow(ctx, getMediaItem, id)
+	var i MediaItem
+	err := row.Scan(
+		&i.ID,
+		&i.LibraryID,
+		&i.Type,
+		&i.Title,
+		&i.Year,
+		&i.TmdbID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getMediaItemByTmdbID = `-- name: GetMediaItemByTmdbID :one
+select id, library_id, type, title, year, tmdb_id, created_at, updated_at from media_item
+where tmdb_id = $1
+`
+
+func (q *Queries) GetMediaItemByTmdbID(ctx context.Context, tmdbID *int64) (MediaItem, error) {
+	row := q.db.QueryRow(ctx, getMediaItemByTmdbID, tmdbID)
 	var i MediaItem
 	err := row.Scan(
 		&i.ID,
@@ -221,14 +234,14 @@ func (q *Queries) ListMediaItems(ctx context.Context) ([]MediaItem, error) {
 
 const listSeasonsForMedia = `-- name: ListSeasonsForMedia :many
 
-select id, media_id, season_number, title, air_date, created_at from media_season
-where media_id = $1
+select id, media_item_id, season_number, air_date, created_at from media_season
+where media_item_id = $1
 order by season_number asc
 `
 
 // Seasons
-func (q *Queries) ListSeasonsForMedia(ctx context.Context, mediaID pgtype.UUID) ([]MediaSeason, error) {
-	rows, err := q.db.Query(ctx, listSeasonsForMedia, mediaID)
+func (q *Queries) ListSeasonsForMedia(ctx context.Context, mediaItemID pgtype.UUID) ([]MediaSeason, error) {
+	rows, err := q.db.Query(ctx, listSeasonsForMedia, mediaItemID)
 	if err != nil {
 		return nil, err
 	}
@@ -238,9 +251,8 @@ func (q *Queries) ListSeasonsForMedia(ctx context.Context, mediaID pgtype.UUID) 
 		var i MediaSeason
 		if err := rows.Scan(
 			&i.ID,
-			&i.MediaID,
+			&i.MediaItemID,
 			&i.SeasonNumber,
-			&i.Title,
 			&i.AirDate,
 			&i.CreatedAt,
 		); err != nil {
@@ -268,7 +280,7 @@ type UpdateMediaItemParams struct {
 	ID     pgtype.UUID `json:"id"`
 	Title  string      `json:"title"`
 	Year   *int32      `json:"year"`
-	TmdbID *int32      `json:"tmdb_id"`
+	TmdbID *int64      `json:"tmdb_id"`
 }
 
 func (q *Queries) UpdateMediaItem(ctx context.Context, arg UpdateMediaItemParams) (MediaItem, error) {
@@ -336,33 +348,26 @@ func (q *Queries) UpsertEpisode(ctx context.Context, arg UpsertEpisodeParams) (M
 }
 
 const upsertSeason = `-- name: UpsertSeason :one
-insert into media_season (media_id, season_number, title, air_date)
-values ($1, $2, $3, $4)
-on conflict (media_id, season_number)
-do update set title = excluded.title, air_date = excluded.air_date
-returning id, media_id, season_number, title, air_date, created_at
+insert into media_season (media_item_id, season_number, air_date)
+values ($1, $2, $3)
+on conflict (media_item_id, season_number)
+do update set air_date = excluded.air_date
+returning id, media_item_id, season_number, air_date, created_at
 `
 
 type UpsertSeasonParams struct {
-	MediaID      pgtype.UUID `json:"media_id"`
+	MediaItemID  pgtype.UUID `json:"media_item_id"`
 	SeasonNumber int32       `json:"season_number"`
-	Title        *string     `json:"title"`
 	AirDate      pgtype.Date `json:"air_date"`
 }
 
 func (q *Queries) UpsertSeason(ctx context.Context, arg UpsertSeasonParams) (MediaSeason, error) {
-	row := q.db.QueryRow(ctx, upsertSeason,
-		arg.MediaID,
-		arg.SeasonNumber,
-		arg.Title,
-		arg.AirDate,
-	)
+	row := q.db.QueryRow(ctx, upsertSeason, arg.MediaItemID, arg.SeasonNumber, arg.AirDate)
 	var i MediaSeason
 	err := row.Scan(
 		&i.ID,
-		&i.MediaID,
+		&i.MediaItemID,
 		&i.SeasonNumber,
-		&i.Title,
 		&i.AirDate,
 		&i.CreatedAt,
 	)

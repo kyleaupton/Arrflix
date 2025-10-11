@@ -6,14 +6,14 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kyleaupton/snaggle/backend/internal/config"
+	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog"
 )
 
 type Auth struct {
 	cfg  config.Config
-	log  zerolog.Logger
+	log  *logger.Logger
 	pool *pgxpool.Pool
 	svc  *service.Services
 }
@@ -26,7 +26,7 @@ func (h *Auth) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/auth/me", h.Me)
 }
 
-func NewAuth(cfg config.Config, log zerolog.Logger, pool *pgxpool.Pool, svc *service.Services) *Auth {
+func NewAuth(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, svc *service.Services) *Auth {
 	return &Auth{cfg: cfg, log: log, pool: pool, svc: svc}
 }
 

@@ -11,6 +11,9 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/db"
 	"github.com/kyleaupton/snaggle/backend/internal/http"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
+	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	"github.com/kyleaupton/snaggle/backend/internal/service"
+	"github.com/kyleaupton/snaggle/backend/internal/tmdb"
 )
 
 func main() {
@@ -32,8 +35,17 @@ func main() {
 		logg.Fatal().Err(err).Msg("migrate")
 	}
 
+	// TMDB
+	tmdb.InitTmdb()
+
+	// Repo
+	repo := repo.New(pool)
+
+	// Services
+	services := service.New(repo, logg, service.WithJWTSecret(cfg.JWTSecret))
+
 	// HTTP
-	e := http.NewServer(cfg, logg, pool)
+	e := http.NewServer(cfg, logg, pool, services, repo)
 	go func() {
 		logg.Info().Str("port", cfg.Port).Msg("http listen")
 		if err := e.Start(":" + cfg.Port); err != nil {

@@ -2,14 +2,31 @@ package logger
 
 import (
 	"os"
+	"time"
 
 	"github.com/rs/zerolog"
 )
 
-func New(env string) zerolog.Logger {
-	l := zerolog.New(os.Stdout).With().Timestamp().Logger()
+type Logger = zerolog.Logger
+
+func New(env string) *Logger {
 	if env == "dev" {
-		zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
+		cw := zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: "15:04:05.000", // hh:mm:ss.mmm
+		}
+
+		l := zerolog.New(cw).
+			With().
+			Timestamp().
+			Caller().
+			Logger()
+
+		// Prefer a readable time in dev
+		zerolog.TimeFieldFormat = time.RFC3339Nano
+		return &l
 	}
-	return l
+
+	l := zerolog.New(os.Stdout).With().Timestamp().Logger()
+	return &l
 }
