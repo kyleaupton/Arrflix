@@ -14,7 +14,7 @@ type AuthService struct {
 	jwtSecret string
 }
 
-func NewAuthService(r *repo.Repository, cfg *config) *AuthService {
+func NewAuthService(r *repo.Repository, cfg *cfg) *AuthService {
 	return &AuthService{repo: r, jwtSecret: cfg.jwtSecret}
 }
 

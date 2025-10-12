@@ -199,6 +199,31 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/libraries/{id}/scan": {
+            "post": {
+                "tags": [
+                    "libraries"
+                ],
+                "summary": "Scan library",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Library ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/library": {
             "get": {
                 "produces": [

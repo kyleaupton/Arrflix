@@ -137,6 +137,18 @@ func (ns NullGrantSubject) Value() (driver.Value, error) {
 	return string(ns.GrantSubject), nil
 }
 
+type ApiCache struct {
+	ID          pgtype.UUID        `json:"id"`
+	Key         string             `json:"key"`
+	Category    *string            `json:"category"`
+	Response    []byte             `json:"response"`
+	Status      int32              `json:"status"`
+	ContentType *string            `json:"content_type"`
+	Headers     []byte             `json:"headers"`
+	StoredAt    pgtype.Timestamptz `json:"stored_at"`
+	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
+}
+
 type AppSetting struct {
 	Key       string             `json:"key"`
 	Type      string             `json:"type"`

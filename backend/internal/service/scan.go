@@ -13,16 +13,16 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/identity"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
-	"github.com/kyleaupton/snaggle/backend/internal/tmdb"
 )
 
 type ScannerService struct {
 	repo   *repo.Repository
 	logger *logger.Logger
+	tmdb   *TmdbService
 }
 
-func NewScannerService(r *repo.Repository, l *logger.Logger) *ScannerService {
-	return &ScannerService{repo: r, logger: l}
+func NewScannerService(r *repo.Repository, l *logger.Logger, tmdb *TmdbService) *ScannerService {
+	return &ScannerService{repo: r, logger: l, tmdb: tmdb}
 }
 
 type ScanStats struct {
@@ -79,27 +79,23 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 			// If we got an identity, but no tmdb id, we'll need to convert to one.
 			// This is a best effort to get a tmdb id. If we don't get one, we'll skip the file.
 			var id string
-			var urlOptions map[string]string
+			var provider string
 
 			if identity.TvdbID != nil {
 				id = strconv.FormatInt(*identity.TvdbID, 10)
-				urlOptions = map[string]string{
-					"external_source": "tvdb_id",
-				}
+				provider = "tvdb_id"
 			} else if identity.ImdbID != nil {
 				id = *identity.ImdbID
-				urlOptions = map[string]string{
-					"external_source": "imdb_id",
-				}
+				provider = "imdb_id"
 			}
 
-			s.logger.Debug().Str("path", path).Str("provider", urlOptions["external_source"]).Str("id", id).Msg("Identity has no tmdb id, converting to tmdb id")
+			s.logger.Debug().Str("path", path).Str("provider", provider).Str("id", id).Msg("Identity has no tmdb id, converting to tmdb id")
 
 			// This is like a general "search for this external id" type of thing.
 			// It will return a list of results categorized by the type of media it is.
 			// For now, we'll just grab the first item from the right category and use that.
 			// TODO: We should probably do something more intelligent here.
-			res, err := tmdb.Client.GetFindByID(id, urlOptions)
+			res, err := s.tmdb.FindByID(ctx, id, provider)
 			if err != nil {
 				s.logger.Error().Str("path", path).Err(err).Msg("Error getting find by id")
 				return nil
@@ -153,9 +149,10 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 
 			switch library.Type {
 			case "movie":
-				movie, err := tmdb.Client.GetMovieDetails(int(*identity.TmdbID), map[string]string{})
+				movie, err := s.tmdb.GetMovieDetails(ctx, *identity.TmdbID)
 				if err != nil {
-					return err
+					s.logger.Error().Str("path", path).Err(err).Msg("Error getting movie details")
+					return nil
 				}
 
 				title = movie.Title
@@ -164,14 +161,16 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 				// cast to int
 				year64, err := strconv.ParseInt(yearStr, 10, 32)
 				if err != nil {
-					return err
+					s.logger.Error().Str("path", path).Err(err).Msg("Error getting movie details")
+					return nil
 				}
 
 				year = int32(year64)
 			case "series":
-				tv, err := tmdb.Client.GetTVDetails(int(*identity.TmdbID), map[string]string{})
+				tv, err := s.tmdb.GetSeriesDetails(ctx, *identity.TmdbID)
 				if err != nil {
-					return err
+					s.logger.Error().Str("path", path).Err(err).Msg("Error getting series details")
+					return nil
 				}
 
 				title = tv.Name
@@ -180,7 +179,8 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 				// cast to int
 				year64, err := strconv.ParseInt(yearStr, 10, 32)
 				if err != nil {
-					return err
+					s.logger.Error().Str("path", path).Err(err).Msg("Error getting episode details")
+					return nil
 				}
 
 				year = int32(year64)
@@ -216,7 +216,7 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 
 				if identity.Episode != nil {
 					// grab the episode details from tmdb
-					episode, err := tmdb.Client.GetTVEpisodeDetails(int(*identity.TmdbID), int(*identity.Season), int(*identity.Episode), map[string]string{})
+					episode, err := s.tmdb.GetEpisodeDetails(ctx, *identity.TmdbID, int64(*identity.Season), int64(*identity.Episode))
 					if err != nil {
 						return err
 					}

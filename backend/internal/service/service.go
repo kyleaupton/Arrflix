@@ -11,31 +11,35 @@ type Services struct {
 	Media     *MediaService
 	Scanner   *ScannerService
 	Settings  *SettingsService
+	Tmdb      *TmdbService
 }
 
 func New(r *repo.Repository, l *logger.Logger, opts ...Option) *Services {
-	cfg := &config{}
+	cfg := &cfg{}
 	for _, o := range opts {
 		o.apply(cfg)
 	}
+
+	tmdb := NewTmdbService(r, l)
 
 	return &Services{
 		Auth:      NewAuthService(r, cfg),
 		Libraries: NewLibrariesService(r),
 		Media:     NewMediaService(r),
-		Scanner:   NewScannerService(r, l),
+		Scanner:   NewScannerService(r, l, tmdb),
 		Settings:  NewSettingsService(r),
+		Tmdb:      tmdb,
 	}
 }
 
-type config struct {
+type cfg struct {
 	jwtSecret string
 }
 
-type Option interface{ apply(*config) }
+type Option interface{ apply(*cfg) }
 
 type withJWT string
 
-func (w withJWT) apply(c *config) { c.jwtSecret = string(w) }
+func (w withJWT) apply(c *cfg) { c.jwtSecret = string(w) }
 
 func WithJWTSecret(secret string) Option { return withJWT(secret) }

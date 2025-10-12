@@ -13,7 +13,6 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
-	"github.com/kyleaupton/snaggle/backend/internal/tmdb"
 )
 
 func main() {
@@ -34,9 +33,6 @@ func main() {
 	if err := db.ApplyMigrations(cfg.DatabaseURL); err != nil {
 		logg.Fatal().Err(err).Msg("migrate")
 	}
-
-	// TMDB
-	tmdb.InitTmdb()
 
 	// Repo
 	repo := repo.New(pool)

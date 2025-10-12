@@ -194,6 +194,27 @@ export type PutV1LibrariesByIdResponses = {
 
 export type PutV1LibrariesByIdResponse = PutV1LibrariesByIdResponses[keyof PutV1LibrariesByIdResponses];
 
+export type PostV1LibrariesByIdScanData = {
+    body?: never;
+    path: {
+        /**
+         * Library ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/libraries/{id}/scan';
+};
+
+export type PostV1LibrariesByIdScanResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type PostV1LibrariesByIdScanResponse = PostV1LibrariesByIdScanResponses[keyof PostV1LibrariesByIdScanResponses];
+
 export type GetV1LibraryData = {
     body?: never;
     path?: never;

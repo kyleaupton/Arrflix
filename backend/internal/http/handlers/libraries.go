@@ -18,6 +18,8 @@ func (h *Libraries) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/libraries/:id", h.Get)
 	v1.PUT("/libraries/:id", h.Update)
 	v1.DELETE("/libraries/:id", h.Delete)
+
+	v1.POST("/libraries/:id/scan", h.Scan)
 }
 
 // librarySwagger is a minimal type used only for Swagger schemas.
@@ -145,6 +147,24 @@ func (h *Libraries) Delete(c echo.Context) error {
 	ctx := c.Request().Context()
 	if err := h.svc.Libraries.Delete(ctx, id); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to delete"})
+	}
+	return c.NoContent(http.StatusNoContent)
+}
+
+// Scan library
+// @Summary Scan library
+// @Tags    libraries
+// @Param   id path string true "Library ID"
+// @Success 204 {string} string ""
+// @Router  /v1/libraries/{id}/scan [post]
+func (h *Libraries) Scan(c echo.Context) error {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
+	}
+	ctx := c.Request().Context()
+	if _, err := h.svc.Scanner.StartScan(ctx, id); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to scan"})
 	}
 	return c.NoContent(http.StatusNoContent)
 }

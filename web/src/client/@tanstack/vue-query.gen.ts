@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { deleteV1LibrariesById, getV1Libraries, getV1LibrariesById, getV1Library, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Libraries, putV1LibrariesById } from '../sdk.gen';
-import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse } from '../types.gen';
+import { deleteV1LibrariesById, getV1Libraries, getV1LibrariesById, getV1Library, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Libraries, postV1LibrariesByIdScan, putV1LibrariesById } from '../sdk.gen';
+import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse } from '../types.gen';
 
 /**
  * Login
@@ -139,6 +139,23 @@ export const putV1LibrariesByIdMutation = (options?: Partial<Options<PutV1Librar
     const mutationOptions: UseMutationOptions<PutV1LibrariesByIdResponse, PutV1LibrariesByIdError, Options<PutV1LibrariesByIdData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await putV1LibrariesById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Scan library
+ */
+export const postV1LibrariesByIdScanMutation = (options?: Partial<Options<PostV1LibrariesByIdScanData>>): UseMutationOptions<PostV1LibrariesByIdScanResponse, DefaultError, Options<PostV1LibrariesByIdScanData>> => {
+    const mutationOptions: UseMutationOptions<PostV1LibrariesByIdScanResponse, DefaultError, Options<PostV1LibrariesByIdScanData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postV1LibrariesByIdScan({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

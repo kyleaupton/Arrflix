@@ -20,6 +20,7 @@ import {
   postV1Libraries,
   putV1LibrariesById,
   deleteV1LibrariesById,
+  postV1LibrariesByIdScan,
 } from '@/client/sdk.gen'
 
 defineOptions({ name: 'AppSettingsView' })
@@ -167,6 +168,11 @@ async function removeLib(id: string) {
   await deleteV1LibrariesById<true>({ throwOnError: true, path: { id } })
   libraries.value = libraries.value.filter((l) => l.id !== id)
 }
+
+async function scanLib(lib: Library) {
+  if (!lib.id) return
+  await postV1LibrariesByIdScan({ throwOnError: true, path: { id: lib.id } })
+}
 </script>
 
 <template>
@@ -294,6 +300,7 @@ async function removeLib(id: string) {
                         <span class="text-sm text-muted-color">({{ lib.type }})</span>
                       </div>
                       <div class="flex items-center gap-2">
+                        <Button size="small" label="Scan" @click="scanLib(lib)" />
                         <Button size="small" label="Edit" @click="startEdit(lib)" />
                         <Button
                           size="small"
