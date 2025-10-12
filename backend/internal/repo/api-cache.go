@@ -3,7 +3,6 @@ package repo
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -53,9 +52,6 @@ func (r *Repository) GetApiCache(ctx context.Context, key string) (CacheEntry, b
 func (r *Repository) UpsertApiCache(ctx context.Context, key string, category *string, response []byte, status int, contentType *string, headers []byte, ttl time.Duration) error {
 	expires := pgtype.Timestamptz{}
 	_ = expires.Scan(time.Now().Add(ttl))
-
-	fmt.Println("key", key)
-	fmt.Println("expires", expires)
 
 	return r.Q.UpsertApiCache(ctx, dbgen.UpsertApiCacheParams{
 		Key:         key,

@@ -12,6 +12,12 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
 
+// TTL for static data (7 days)
+const STATIC_TTL = (24 * time.Hour) * 7
+
+// TTL for dynamic data (1 hour)
+const DYNAMIC_TTL = time.Hour
+
 type TmdbService struct {
 	repo   *repo.Repository
 	client *tmdb.Client
@@ -85,26 +91,26 @@ func (s *TmdbService) FindByID(ctx context.Context, id, source string) (tmdb.Fin
 		return s.client.GetFindByID(id, map[string]string{
 			"external_source": source,
 		})
-	}, 1*time.Hour)
+	}, STATIC_TTL)
 }
 
 func (s *TmdbService) GetMovieDetails(ctx context.Context, id int64) (tmdb.MovieDetails, error) {
 	cacheKey := fmt.Sprintf("tmdb_movie_details_%d", id)
 	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MovieDetails, error) {
 		return s.client.GetMovieDetails(int(id), map[string]string{})
-	}, 1*time.Hour)
+	}, STATIC_TTL)
 }
 
 func (s *TmdbService) GetSeriesDetails(ctx context.Context, id int64) (tmdb.TVDetails, error) {
 	cacheKey := fmt.Sprintf("tmdb_series_details_%d", id)
 	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVDetails, error) {
 		return s.client.GetTVDetails(int(id), map[string]string{})
-	}, 1*time.Hour)
+	}, STATIC_TTL)
 }
 
 func (s *TmdbService) GetEpisodeDetails(ctx context.Context, id int64, season int64, episode int64) (tmdb.TVEpisodeDetails, error) {
 	cacheKey := fmt.Sprintf("tmdb_episode_details_%d_%d_%d", id, season, episode)
 	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVEpisodeDetails, error) {
 		return s.client.GetTVEpisodeDetails(int(id), int(season), int(episode), map[string]string{})
-	}, 1*time.Hour)
+	}, STATIC_TTL)
 }

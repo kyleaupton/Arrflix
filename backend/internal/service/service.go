@@ -25,7 +25,7 @@ func New(r *repo.Repository, l *logger.Logger, opts ...Option) *Services {
 	return &Services{
 		Auth:      NewAuthService(r, cfg),
 		Libraries: NewLibrariesService(r),
-		Media:     NewMediaService(r),
+		Media:     NewMediaService(r, l, tmdb),
 		Scanner:   NewScannerService(r, l, tmdb),
 		Settings:  NewSettingsService(r),
 		Tmdb:      tmdb,

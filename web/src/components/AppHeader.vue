@@ -5,7 +5,7 @@
     <div class="search-wrap">
       <InputText
         v-model="query"
-        placeholder="Search library..."
+        placeholder="Search for movies, TV shows, etc."
         class="search-input"
         @keyup.enter="emit('search', query)"
       />

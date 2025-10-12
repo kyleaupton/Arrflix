@@ -84,6 +84,25 @@ definitions:
       year:
         type: integer
     type: object
+  model.Movie:
+    properties:
+      releaseDate:
+        type: string
+      title:
+        type: string
+      tmdbId:
+        description: General movie details
+        type: integer
+    type: object
+  model.Series:
+    properties:
+      releaseDate:
+        type: string
+      title:
+        type: string
+      tmdbId:
+        type: integer
+    type: object
 info:
   contact: {}
   title: Snaggle API
@@ -236,6 +255,42 @@ paths:
               $ref: '#/definitions/handlers.mediaItemSwagger'
             type: array
       summary: List media items
+      tags:
+      - media
+  /v1/movie/{id}:
+    get:
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Movie'
+      summary: Get movie
+      tags:
+      - media
+  /v1/series/{id}:
+    get:
+      parameters:
+      - description: Series ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Series'
+      summary: Get series
       tags:
       - media
   /v1/settings:

@@ -57,6 +57,21 @@ export type HandlersMediaItemSwagger = {
     year?: number;
 };
 
+export type ModelMovie = {
+    releaseDate?: string;
+    title?: string;
+    /**
+     * General movie details
+     */
+    tmdbId?: number;
+};
+
+export type ModelSeries = {
+    releaseDate?: string;
+    title?: string;
+    tmdbId?: number;
+};
+
 export type PostV1AuthLoginData = {
     /**
      * Login request
@@ -230,6 +245,48 @@ export type GetV1LibraryResponses = {
 };
 
 export type GetV1LibraryResponse = GetV1LibraryResponses[keyof GetV1LibraryResponses];
+
+export type GetV1MovieByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Movie ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1/movie/{id}';
+};
+
+export type GetV1MovieByIdResponses = {
+    /**
+     * OK
+     */
+    200: ModelMovie;
+};
+
+export type GetV1MovieByIdResponse = GetV1MovieByIdResponses[keyof GetV1MovieByIdResponses];
+
+export type GetV1SeriesByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Series ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1/series/{id}';
+};
+
+export type GetV1SeriesByIdResponses = {
+    /**
+     * OK
+     */
+    200: ModelSeries;
+};
+
+export type GetV1SeriesByIdResponse = GetV1SeriesByIdResponses[keyof GetV1SeriesByIdResponses];
 
 export type GetV1SettingsData = {
     body?: never;

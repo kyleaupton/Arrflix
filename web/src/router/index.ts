@@ -1,10 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Library from '@/views/Library.vue'
-import Requests from '@/views/Requests.vue'
-import Users from '@/views/Users.vue'
-import Login from '@/views/Login.vue'
-import Settings from '@/views/Settings.vue'
-import AuthCallback from '@/views/AuthCallback.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
@@ -12,29 +6,43 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: Library,
+      component: () => import('@/views/Home.vue'),
+    },
+    {
+      path: '/library',
+      component: () => import('@/views/Library.vue'),
     },
     {
       path: '/requests',
-      component: Requests,
+      component: () => import('@/views/Requests.vue'),
     },
     {
       path: '/users',
-      component: Users,
+      component: () => import('@/views/Users.vue'),
     },
     {
       path: '/settings',
-      component: Settings,
+      component: () => import('@/views/Settings.vue'),
     },
     {
       path: '/login',
-      component: Login,
+      component: () => import('@/views/Login.vue'),
       meta: { public: true, layout: 'auth' },
     },
     {
       path: '/auth/callback',
-      component: AuthCallback,
+      component: () => import('@/views/AuthCallback.vue'),
       meta: { public: true, layout: 'auth' },
+    },
+
+    // Media
+    {
+      path: '/movie/:id',
+      component: () => import('@/views/Movie.vue'),
+    },
+    {
+      path: '/series/:id',
+      component: () => import('@/views/Series.vue'),
     },
   ],
 })

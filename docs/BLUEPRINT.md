@@ -281,8 +281,8 @@ This reads `sqlc.yaml` (or `sqlc.yml`) and regenerates Go code for database acce
 Generates the OpenAPI spec from annotated Echo handlers.
 
 ```bash
-cd backend/internal/http
-swag init
+cd backend
+swag init -g **/**/*.go
 ```
 
 This outputs an `backend/internal/http/docs/swagger.yaml` (or `.json`) for API client generation and UI docs.

@@ -1,10 +1,13 @@
 #/bin/bash
 set -euo pipefail
 
-project_root=$(pwd)
+# better way of atomically getting the project root?
+project_root=$(git rev-parse --show-toplevel)
 
-cd $project_root/backend/internal/http
-swag init
+# ensure we're in the backend directory
+cd $project_root/backend
+
+swag init -g internal/http/main.go -o internal/http/docs
 
 cd $project_root/web
 npm run openapi-ts

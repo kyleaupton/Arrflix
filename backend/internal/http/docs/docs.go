@@ -246,6 +246,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/movie/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "media"
+                ],
+                "summary": "Get movie",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Movie"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/series/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "media"
+                ],
+                "summary": "Get series",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Series ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Series"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/settings": {
             "get": {
                 "produces": [
@@ -428,6 +484,35 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Movie": {
+            "type": "object",
+            "properties": {
+                "releaseDate": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "description": "General movie details",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Series": {
+            "type": "object",
+            "properties": {
+                "releaseDate": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tmdbId": {
                     "type": "integer"
                 }
             }

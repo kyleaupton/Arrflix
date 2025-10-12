@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { deleteV1LibrariesById, getV1Libraries, getV1LibrariesById, getV1Library, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Libraries, postV1LibrariesByIdScan, putV1LibrariesById } from '../sdk.gen';
-import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse } from '../types.gen';
+import { deleteV1LibrariesById, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1SeriesById, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Libraries, postV1LibrariesByIdScan, putV1LibrariesById } from '../sdk.gen';
+import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1MovieByIdData, GetV1SeriesByIdData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse } from '../types.gen';
 
 /**
  * Login
@@ -183,6 +183,46 @@ export const getV1LibraryOptions = (options?: Options<GetV1LibraryData>) => {
             return data;
         },
         queryKey: getV1LibraryQueryKey(options)
+    });
+};
+
+export const getV1MovieByIdQueryKey = (options: Options<GetV1MovieByIdData>) => createQueryKey('getV1MovieById', options);
+
+/**
+ * Get movie
+ */
+export const getV1MovieByIdOptions = (options: Options<GetV1MovieByIdData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1MovieById({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1MovieByIdQueryKey(options)
+    });
+};
+
+export const getV1SeriesByIdQueryKey = (options: Options<GetV1SeriesByIdData>) => createQueryKey('getV1SeriesById', options);
+
+/**
+ * Get series
+ */
+export const getV1SeriesByIdOptions = (options: Options<GetV1SeriesByIdData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1SeriesById({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1SeriesByIdQueryKey(options)
     });
 };
 

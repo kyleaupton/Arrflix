@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses } from './types.gen';
+import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -106,6 +106,26 @@ export const postV1LibrariesByIdScan = <ThrowOnError extends boolean = false>(op
 export const getV1Library = <ThrowOnError extends boolean = false>(options?: Options<GetV1LibraryData, ThrowOnError>) => {
     return (options?.client ?? client).get<GetV1LibraryResponses, unknown, ThrowOnError>({
         url: '/v1/library',
+        ...options
+    });
+};
+
+/**
+ * Get movie
+ */
+export const getV1MovieById = <ThrowOnError extends boolean = false>(options: Options<GetV1MovieByIdData, ThrowOnError>) => {
+    return (options.client ?? client).get<GetV1MovieByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/movie/{id}',
+        ...options
+    });
+};
+
+/**
+ * Get series
+ */
+export const getV1SeriesById = <ThrowOnError extends boolean = false>(options: Options<GetV1SeriesByIdData, ThrowOnError>) => {
+    return (options.client ?? client).get<GetV1SeriesByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/series/{id}',
         ...options
     });
 };

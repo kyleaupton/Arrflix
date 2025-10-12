@@ -12,9 +12,14 @@ const items = ref([
     separator: true,
   },
   {
+    label: 'Home',
+    icon: PrimeIcons.HOME,
+    to: '/',
+  },
+  {
     label: 'Library',
     icon: PrimeIcons.VIDEO,
-    to: '/',
+    to: '/library',
   },
   {
     label: 'Requests',
