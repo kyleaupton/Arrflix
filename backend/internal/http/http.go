@@ -10,7 +10,6 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 
 	_ "github.com/kyleaupton/snaggle/backend/internal/http/docs"
-	echoSwagger "github.com/swaggo/echo-swagger"
 
 	"github.com/labstack/echo/v4"
 )
@@ -23,30 +22,28 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	e.HideBanner = true
 	e.HidePort = true
 
-	// Layers
-	// r := repo.New(pool)
-	// services := service.New(r, service.WithJWTSecret(cfg.JWTSecret))
-
 	// Handlers
-	health := handlers.NewHealth()
 	auth := handlers.NewAuth(cfg, log, pool, services)
-	settings := handlers.NewSettings(services)
+	health := handlers.NewHealth()
 	libraries := handlers.NewLibraries(services)
 	media := handlers.NewMedia(services)
+	rails := handlers.NewRails(services)
+	settings := handlers.NewSettings(services)
 
-	// Routes
 	api := e.Group("/api")
 	v1 := api.Group("/v1")
 	protected := v1.Group("", middlewares.JWT(cfg.JWTSecret))
 
-	v1.GET("/swagger/*", echoSwagger.WrapHandler)
-
-	health.Register(e)
+	// Public routes
 	auth.RegisterPublic(v1)
+	health.RegisterPublic(e)
+
+	// Protected routes
 	auth.RegisterProtected(protected)
-	settings.RegisterProtected(protected)
 	libraries.RegisterProtected(protected)
 	media.RegisterProtected(protected)
+	rails.RegisterProtected(protected)
+	settings.RegisterProtected(protected)
 
 	return e
 }

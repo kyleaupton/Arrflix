@@ -58,6 +58,7 @@ export type HandlersMediaItemSwagger = {
 };
 
 export type ModelMovie = {
+    posterPath?: string;
     releaseDate?: string;
     title?: string;
     /**
@@ -66,7 +67,16 @@ export type ModelMovie = {
     tmdbId?: number;
 };
 
+export type ModelRail = {
+    id?: string;
+    movies?: Array<ModelMovie>;
+    series?: Array<ModelSeries>;
+    title?: string;
+    type?: string;
+};
+
 export type ModelSeries = {
+    posterPath?: string;
     releaseDate?: string;
     title?: string;
     tmdbId?: number;
@@ -90,6 +100,22 @@ export type PostV1AuthLoginResponses = {
 };
 
 export type PostV1AuthLoginResponse = PostV1AuthLoginResponses[keyof PostV1AuthLoginResponses];
+
+export type GetV1HomeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/home';
+};
+
+export type GetV1HomeResponses = {
+    /**
+     * OK
+     */
+    200: Array<ModelRail>;
+};
+
+export type GetV1HomeResponse = GetV1HomeResponses[keyof GetV1HomeResponses];
 
 export type GetV1LibrariesData = {
     body?: never;

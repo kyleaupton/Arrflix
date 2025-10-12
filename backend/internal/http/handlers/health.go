@@ -11,6 +11,6 @@ func (h *Health) Health(c echo.Context) error {
 }
 
 // Register attaches the health route to the router.
-func (h *Health) Register(e *echo.Echo) {
+func (h *Health) RegisterPublic(e *echo.Echo) {
 	e.GET("/health", h.Health)
 }

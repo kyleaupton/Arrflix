@@ -9,6 +9,7 @@ type Services struct {
 	Auth      *AuthService
 	Libraries *LibrariesService
 	Media     *MediaService
+	Rails     *RailsService
 	Scanner   *ScannerService
 	Settings  *SettingsService
 	Tmdb      *TmdbService
@@ -26,6 +27,7 @@ func New(r *repo.Repository, l *logger.Logger, opts ...Option) *Services {
 		Auth:      NewAuthService(r, cfg),
 		Libraries: NewLibrariesService(r),
 		Media:     NewMediaService(r, l, tmdb),
+		Rails:     NewRailsService(r, tmdb),
 		Scanner:   NewScannerService(r, l, tmdb),
 		Settings:  NewSettingsService(r),
 		Tmdb:      tmdb,

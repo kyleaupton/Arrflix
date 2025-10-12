@@ -48,6 +48,28 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/home": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "home"
+                ],
+                "summary": "Get rails",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Rail"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/libraries": {
             "get": {
                 "produces": [
@@ -491,6 +513,9 @@ const docTemplate = `{
         "model.Movie": {
             "type": "object",
             "properties": {
+                "posterPath": {
+                    "type": "string"
+                },
                 "releaseDate": {
                     "type": "string"
                 },
@@ -503,9 +528,38 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Rail": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "movies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Movie"
+                    }
+                },
+                "series": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Series"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Series": {
             "type": "object",
             "properties": {
+                "posterPath": {
+                    "type": "string"
+                },
                 "releaseDate": {
                     "type": "string"
                 },

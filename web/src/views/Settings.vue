@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, defineOptions } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
@@ -22,8 +22,6 @@ import {
   deleteV1LibrariesById,
   postV1LibrariesByIdScan,
 } from '@/client/sdk.gen'
-
-defineOptions({ name: 'AppSettingsView' })
 
 type SettingsMap = Record<string, unknown>
 

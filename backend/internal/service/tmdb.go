@@ -37,6 +37,50 @@ func NewTmdbService(r *repo.Repository, l *logger.Logger) *TmdbService {
 	}
 }
 
+func (s *TmdbService) FindByID(ctx context.Context, id, source string) (tmdb.FindByID, error) {
+	cacheKey := fmt.Sprintf("tmdb_find_by_id_%s_%s", id, source)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.FindByID, error) {
+		return s.client.GetFindByID(id, map[string]string{
+			"external_source": source,
+		})
+	}, STATIC_TTL)
+}
+
+func (s *TmdbService) GetMovieDetails(ctx context.Context, id int64) (tmdb.MovieDetails, error) {
+	cacheKey := fmt.Sprintf("tmdb_movie_details_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MovieDetails, error) {
+		return s.client.GetMovieDetails(int(id), map[string]string{})
+	}, STATIC_TTL)
+}
+
+func (s *TmdbService) GetSeriesDetails(ctx context.Context, id int64) (tmdb.TVDetails, error) {
+	cacheKey := fmt.Sprintf("tmdb_series_details_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVDetails, error) {
+		return s.client.GetTVDetails(int(id), map[string]string{})
+	}, STATIC_TTL)
+}
+
+func (s *TmdbService) GetEpisodeDetails(ctx context.Context, id int64, season int64, episode int64) (tmdb.TVEpisodeDetails, error) {
+	cacheKey := fmt.Sprintf("tmdb_episode_details_%d_%d_%d", id, season, episode)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVEpisodeDetails, error) {
+		return s.client.GetTVEpisodeDetails(int(id), int(season), int(episode), map[string]string{})
+	}, STATIC_TTL)
+}
+
+func (s *TmdbService) GetTrendingMovies(ctx context.Context) (tmdb.Trending, error) {
+	cacheKey := "tmdb_trending_movies"
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.Trending, error) {
+		return s.client.GetTrending("movie", "day", map[string]string{})
+	}, DYNAMIC_TTL)
+}
+
+func (s *TmdbService) GetTrendingSeries(ctx context.Context) (tmdb.Trending, error) {
+	cacheKey := "tmdb_trending_series"
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.Trending, error) {
+		return s.client.GetTrending("tv", "day", map[string]string{})
+	}, DYNAMIC_TTL)
+}
+
 // getOrFetchFromCache encapsulates the pattern of:
 // 1) checking API cache
 // 2) calling the provided fetch function on cache miss
@@ -83,34 +127,4 @@ func getOrFetchFromCache[T any](ctx context.Context, r *repo.Repository, l *logg
 		return zero, err
 	}
 	return out, nil
-}
-
-func (s *TmdbService) FindByID(ctx context.Context, id, source string) (tmdb.FindByID, error) {
-	cacheKey := fmt.Sprintf("tmdb_find_by_id_%s_%s", id, source)
-	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.FindByID, error) {
-		return s.client.GetFindByID(id, map[string]string{
-			"external_source": source,
-		})
-	}, STATIC_TTL)
-}
-
-func (s *TmdbService) GetMovieDetails(ctx context.Context, id int64) (tmdb.MovieDetails, error) {
-	cacheKey := fmt.Sprintf("tmdb_movie_details_%d", id)
-	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MovieDetails, error) {
-		return s.client.GetMovieDetails(int(id), map[string]string{})
-	}, STATIC_TTL)
-}
-
-func (s *TmdbService) GetSeriesDetails(ctx context.Context, id int64) (tmdb.TVDetails, error) {
-	cacheKey := fmt.Sprintf("tmdb_series_details_%d", id)
-	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVDetails, error) {
-		return s.client.GetTVDetails(int(id), map[string]string{})
-	}, STATIC_TTL)
-}
-
-func (s *TmdbService) GetEpisodeDetails(ctx context.Context, id int64, season int64, episode int64) (tmdb.TVEpisodeDetails, error) {
-	cacheKey := fmt.Sprintf("tmdb_episode_details_%d_%d_%d", id, season, episode)
-	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVEpisodeDetails, error) {
-		return s.client.GetTVEpisodeDetails(int(id), int(season), int(episode), map[string]string{})
-	}, STATIC_TTL)
 }

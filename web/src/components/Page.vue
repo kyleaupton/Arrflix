@@ -52,6 +52,7 @@ interface PageProps {
   loading?: boolean
   isEmpty?: boolean
   contentClass?: string
+  error?: string
 }
 
 const props = defineProps<PageProps>()
