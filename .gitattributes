@@ -1,0 +1,4 @@
+# Ignore machine generated files in language stats
+web/src/client/* linguist-generated=true
+backend/internal/http/docs/* linguist-generated=true
+backend/internal/db/sqlc/* linguist-generated=true
