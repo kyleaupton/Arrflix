@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, GetV1HomeData, GetV1HomeResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses } from './types.gen';
+import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, GetHealthData, GetHealthResponses, GetV1HomeData, GetV1HomeResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -16,6 +16,16 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      * used to access values that aren't defined as part of the SDK function.
      */
     meta?: Record<string, unknown>;
+};
+
+/**
+ * Health check
+ */
+export const getHealth = <ThrowOnError extends boolean = false>(options?: Options<GetHealthData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetHealthResponses, unknown, ThrowOnError>({
+        url: '/health',
+        ...options
+    });
 };
 
 /**

@@ -1,74 +1,9 @@
 basePath: /api
 definitions:
-  handlers.LibraryCreateRequest:
-    properties:
-      enabled:
-        type: boolean
-      name:
-        type: string
-      root_path:
-        type: string
-      type:
-        type: string
-    type: object
-  handlers.LibraryUpdateRequest:
-    properties:
-      enabled:
-        type: boolean
-      name:
-        type: string
-      root_path:
-        type: string
-      type:
-        type: string
-    type: object
-  handlers.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  handlers.LoginResponse:
-    properties:
-      token:
-        type: string
-    required:
-    - token
-    type: object
-  handlers.PatchRequest:
-    properties:
-      key:
-        type: string
-      value: {}
-    type: object
-  handlers.SettingsListResponse:
-    additionalProperties: {}
-    type: object
-  handlers.librarySwagger:
+  github_com_kyleaupton_snaggle_backend_internal_db_sqlc.MediaItem:
     properties:
       created_at:
-        type: string
-      enabled:
-        type: boolean
-      id:
-        type: string
-      name:
-        type: string
-      root_path:
-        type: string
-      type:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  handlers.mediaItemSwagger:
-    properties:
-      created_at:
-        type: string
+        $ref: '#/definitions/pgtype.Timestamptz'
       id:
         type: string
       library_id:
@@ -80,12 +15,23 @@ definitions:
       type:
         type: string
       updated_at:
-        type: string
+        $ref: '#/definitions/pgtype.Timestamptz'
       year:
         type: integer
+    required:
+    - created_at
+    - id
+    - library_id
+    - title
+    - tmdb_id
+    - type
+    - updated_at
+    - year
     type: object
-  model.Movie:
+  github_com_kyleaupton_snaggle_backend_internal_model.Movie:
     properties:
+      backdropPath:
+        type: string
       posterPath:
         type: string
       releaseDate:
@@ -95,26 +41,40 @@ definitions:
       tmdbId:
         description: General movie details
         type: integer
+    required:
+    - backdropPath
+    - posterPath
+    - releaseDate
+    - title
+    - tmdbId
     type: object
-  model.Rail:
+  github_com_kyleaupton_snaggle_backend_internal_model.Rail:
     properties:
       id:
         type: string
       movies:
         items:
-          $ref: '#/definitions/model.Movie'
+          $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Movie'
         type: array
       series:
         items:
-          $ref: '#/definitions/model.Series'
+          $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Series'
         type: array
       title:
         type: string
       type:
         type: string
+    required:
+    - id
+    - movies
+    - series
+    - title
+    - type
     type: object
-  model.Series:
+  github_com_kyleaupton_snaggle_backend_internal_model.Series:
     properties:
+      backdropPath:
+        type: string
       posterPath:
         type: string
       releaseDate:
@@ -123,12 +83,136 @@ definitions:
         type: string
       tmdbId:
         type: integer
+    required:
+    - backdropPath
+    - posterPath
+    - releaseDate
+    - title
+    - tmdbId
+    type: object
+  internal_http_handlers.LibraryCreateRequest:
+    properties:
+      enabled:
+        type: boolean
+      name:
+        type: string
+      root_path:
+        type: string
+      type:
+        type: string
+    required:
+    - enabled
+    - name
+    - root_path
+    - type
+    type: object
+  internal_http_handlers.LibraryUpdateRequest:
+    properties:
+      enabled:
+        type: boolean
+      name:
+        type: string
+      root_path:
+        type: string
+      type:
+        type: string
+    required:
+    - enabled
+    - name
+    - root_path
+    - type
+    type: object
+  internal_http_handlers.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_http_handlers.LoginResponse:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
+  internal_http_handlers.PatchRequest:
+    properties:
+      key:
+        type: string
+      value: {}
+    required:
+    - key
+    - value
+    type: object
+  internal_http_handlers.SettingsListResponse:
+    additionalProperties: {}
+    type: object
+  internal_http_handlers.librarySwagger:
+    properties:
+      created_at:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      root_path:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - created_at
+    - enabled
+    - id
+    - name
+    - root_path
+    - type
+    - updated_at
+    type: object
+  pgtype.InfinityModifier:
+    enum:
+    - 1
+    - 0
+    - -1
+    format: int32
+    type: integer
+    x-enum-varnames:
+    - Infinity
+    - Finite
+    - NegativeInfinity
+  pgtype.Timestamptz:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        type: string
+      valid:
+        type: boolean
     type: object
 info:
   contact: {}
   title: Snaggle API
   version: 0.0.1
 paths:
+  /health:
+    get:
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - health
   /v1/auth/login:
     post:
       consumes:
@@ -139,14 +223,14 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/handlers.LoginRequest'
+          $ref: '#/definitions/internal_http_handlers.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.LoginResponse'
+            $ref: '#/definitions/internal_http_handlers.LoginResponse'
       summary: Login
       tags:
       - auth
@@ -159,7 +243,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/model.Rail'
+              $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Rail'
             type: array
       summary: Get rails
       tags:
@@ -173,7 +257,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/handlers.librarySwagger'
+              $ref: '#/definitions/internal_http_handlers.librarySwagger'
             type: array
       summary: List libraries
       tags:
@@ -187,14 +271,14 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/handlers.LibraryCreateRequest'
+          $ref: '#/definitions/internal_http_handlers.LibraryCreateRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/handlers.librarySwagger'
+            $ref: '#/definitions/internal_http_handlers.librarySwagger'
         "400":
           description: Bad Request
           schema:
@@ -227,7 +311,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.librarySwagger'
+            $ref: '#/definitions/internal_http_handlers.librarySwagger'
       summary: Get library
       tags:
       - libraries
@@ -245,14 +329,14 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/handlers.LibraryUpdateRequest'
+          $ref: '#/definitions/internal_http_handlers.LibraryUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.librarySwagger'
+            $ref: '#/definitions/internal_http_handlers.librarySwagger'
         "400":
           description: Bad Request
           schema:
@@ -287,7 +371,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/handlers.mediaItemSwagger'
+              $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_db_sqlc.MediaItem'
             type: array
       summary: List media items
       tags:
@@ -306,7 +390,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Movie'
+            $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Movie'
       summary: Get movie
       tags:
       - media
@@ -324,7 +408,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Series'
+            $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Series'
       summary: Get series
       tags:
       - media
@@ -336,7 +420,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.SettingsListResponse'
+            $ref: '#/definitions/internal_http_handlers.SettingsListResponse'
       summary: List settings
       tags:
       - settings
@@ -349,7 +433,7 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/handlers.PatchRequest'
+          $ref: '#/definitions/internal_http_handlers.PatchRequest'
       responses:
         "204":
           description: No Content

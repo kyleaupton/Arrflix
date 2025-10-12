@@ -30,9 +30,11 @@ func (s *MediaService) GetMovie(ctx context.Context, id int64) (model.Movie, err
 	}
 
 	return model.Movie{
-		TmdbID:      tmdbDetails.ID,
-		Title:       tmdbDetails.Title,
-		ReleaseDate: tmdbDetails.ReleaseDate,
+		TmdbID:       tmdbDetails.ID,
+		Title:        tmdbDetails.Title,
+		ReleaseDate:  tmdbDetails.ReleaseDate,
+		PosterPath:   tmdbDetails.PosterPath,
+		BackdropPath: tmdbDetails.BackdropPath,
 	}, nil
 }
 
@@ -43,8 +45,10 @@ func (s *MediaService) GetSeries(ctx context.Context, id int64) (model.Series, e
 	}
 
 	return model.Series{
-		TmdbID:      tmdbDetails.ID,
-		Title:       tmdbDetails.Name,
-		ReleaseDate: tmdbDetails.FirstAirDate,
+		TmdbID:       tmdbDetails.ID,
+		Title:        tmdbDetails.Name,
+		ReleaseDate:  tmdbDetails.FirstAirDate,
+		PosterPath:   tmdbDetails.PosterPath,
+		BackdropPath: tmdbDetails.BackdropPath,
 	}, nil
 }

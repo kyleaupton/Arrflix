@@ -21,7 +21,9 @@ app.use(PrimeVue, {
     },
   },
 })
-app.use(VueQueryPlugin)
+app.use(VueQueryPlugin, {
+  enableDevtoolsV6Plugin: import.meta.env.DEV,
+})
 
 // Redirect to login on any 401 response
 client.interceptors.response.use(async (response) => {
@@ -39,7 +41,7 @@ client.interceptors.response.use(async (response) => {
 // Force dark mode globally
 document.documentElement.classList.add('dark')
 
-// rehydrate auth before mount so guards/UI have token
+// Rehydrate auth before mount so guards/UI have token
 const auth = useAuthStore()
 await auth.rehydrate()
 

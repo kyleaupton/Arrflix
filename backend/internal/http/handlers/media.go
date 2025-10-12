@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	_ "github.com/jackc/pgx/v5/pgtype"
+	_ "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
 	_ "github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 	"github.com/labstack/echo/v4"
@@ -19,23 +21,11 @@ func (h *Media) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/series/:id", h.GetSeries)
 }
 
-// mediaItemSwagger mirrors fields of dbgen.MediaItem for Swagger without importing it here.
-type mediaItemSwagger struct {
-	ID        string `json:"id"`
-	LibraryID string `json:"library_id"`
-	Type      string `json:"type"`
-	Title     string `json:"title"`
-	Year      *int32 `json:"year"`
-	TmdbID    *int32 `json:"tmdb_id"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
-
 // List media items
 // @Summary List media items
 // @Tags    media
 // @Produce json
-// @Success 200 {array} handlers.mediaItemSwagger
+// @Success 200 {array} dbgen.MediaItem
 // @Router  /v1/library [get]
 func (h *Media) List(c echo.Context) error {
 	ctx := c.Request().Context()

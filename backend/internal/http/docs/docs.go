@@ -15,6 +15,25 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/health": {
+            "get": {
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/auth/login": {
             "post": {
                 "consumes": [
@@ -34,7 +53,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.LoginRequest"
+                            "$ref": "#/definitions/internal_http_handlers.LoginRequest"
                         }
                     }
                 ],
@@ -42,7 +61,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.LoginResponse"
+                            "$ref": "#/definitions/internal_http_handlers.LoginResponse"
                         }
                     }
                 }
@@ -63,7 +82,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/model.Rail"
+                                "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Rail"
                             }
                         }
                     }
@@ -85,7 +104,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/handlers.librarySwagger"
+                                "$ref": "#/definitions/internal_http_handlers.librarySwagger"
                             }
                         }
                     }
@@ -109,7 +128,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.LibraryCreateRequest"
+                            "$ref": "#/definitions/internal_http_handlers.LibraryCreateRequest"
                         }
                     }
                 ],
@@ -117,7 +136,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/handlers.librarySwagger"
+                            "$ref": "#/definitions/internal_http_handlers.librarySwagger"
                         }
                     },
                     "400": {
@@ -145,7 +164,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.librarySwagger"
+                            "$ref": "#/definitions/internal_http_handlers.librarySwagger"
                         }
                     }
                 }
@@ -175,7 +194,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.LibraryUpdateRequest"
+                            "$ref": "#/definitions/internal_http_handlers.LibraryUpdateRequest"
                         }
                     }
                 ],
@@ -183,7 +202,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.librarySwagger"
+                            "$ref": "#/definitions/internal_http_handlers.librarySwagger"
                         }
                     },
                     "400": {
@@ -261,7 +280,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/handlers.mediaItemSwagger"
+                                "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_db_sqlc.MediaItem"
                             }
                         }
                     }
@@ -290,7 +309,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Movie"
+                            "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Movie"
                         }
                     }
                 }
@@ -318,7 +337,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Series"
+                            "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Series"
                         }
                     }
                 }
@@ -337,7 +356,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.SettingsListResponse"
+                            "$ref": "#/definitions/internal_http_handlers.SettingsListResponse"
                         }
                     }
                 }
@@ -357,7 +376,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.PatchRequest"
+                            "$ref": "#/definitions/internal_http_handlers.PatchRequest"
                         }
                     }
                 ],
@@ -382,110 +401,21 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handlers.LibraryCreateRequest": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "root_path": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.LibraryUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "root_path": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.LoginRequest": {
+        "github_com_kyleaupton_snaggle_backend_internal_db_sqlc.MediaItem": {
             "type": "object",
             "required": [
-                "email",
-                "password"
+                "created_at",
+                "id",
+                "library_id",
+                "title",
+                "tmdb_id",
+                "type",
+                "updated_at",
+                "year"
             ],
             "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.LoginResponse": {
-            "type": "object",
-            "required": [
-                "token"
-            ],
-            "properties": {
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.PatchRequest": {
-            "type": "object",
-            "properties": {
-                "key": {
-                    "type": "string"
-                },
-                "value": {}
-            }
-        },
-        "handlers.SettingsListResponse": {
-            "type": "object",
-            "additionalProperties": {}
-        },
-        "handlers.librarySwagger": {
-            "type": "object",
-            "properties": {
                 "created_at": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "root_path": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.mediaItemSwagger": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
+                    "$ref": "#/definitions/pgtype.Timestamptz"
                 },
                 "id": {
                     "type": "string"
@@ -503,16 +433,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "type": "string"
+                    "$ref": "#/definitions/pgtype.Timestamptz"
                 },
                 "year": {
                     "type": "integer"
                 }
             }
         },
-        "model.Movie": {
+        "github_com_kyleaupton_snaggle_backend_internal_model.Movie": {
             "type": "object",
+            "required": [
+                "backdropPath",
+                "posterPath",
+                "releaseDate",
+                "title",
+                "tmdbId"
+            ],
             "properties": {
+                "backdropPath": {
+                    "type": "string"
+                },
                 "posterPath": {
                     "type": "string"
                 },
@@ -528,8 +468,15 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Rail": {
+        "github_com_kyleaupton_snaggle_backend_internal_model.Rail": {
             "type": "object",
+            "required": [
+                "id",
+                "movies",
+                "series",
+                "title",
+                "type"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -537,13 +484,13 @@ const docTemplate = `{
                 "movies": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Movie"
+                        "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Movie"
                     }
                 },
                 "series": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Series"
+                        "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Series"
                     }
                 },
                 "title": {
@@ -554,9 +501,19 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Series": {
+        "github_com_kyleaupton_snaggle_backend_internal_model.Series": {
             "type": "object",
+            "required": [
+                "backdropPath",
+                "posterPath",
+                "releaseDate",
+                "title",
+                "tmdbId"
+            ],
             "properties": {
+                "backdropPath": {
+                    "type": "string"
+                },
                 "posterPath": {
                     "type": "string"
                 },
@@ -568,6 +525,158 @@ const docTemplate = `{
                 },
                 "tmdbId": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_http_handlers.LibraryCreateRequest": {
+            "type": "object",
+            "required": [
+                "enabled",
+                "name",
+                "root_path",
+                "type"
+            ],
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "root_path": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http_handlers.LibraryUpdateRequest": {
+            "type": "object",
+            "required": [
+                "enabled",
+                "name",
+                "root_path",
+                "type"
+            ],
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "root_path": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http_handlers.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http_handlers.LoginResponse": {
+            "type": "object",
+            "required": [
+                "token"
+            ],
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http_handlers.PatchRequest": {
+            "type": "object",
+            "required": [
+                "key",
+                "value"
+            ],
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "value": {}
+            }
+        },
+        "internal_http_handlers.SettingsListResponse": {
+            "type": "object",
+            "additionalProperties": {}
+        },
+        "internal_http_handlers.librarySwagger": {
+            "type": "object",
+            "required": [
+                "created_at",
+                "enabled",
+                "id",
+                "name",
+                "root_path",
+                "type",
+                "updated_at"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "root_path": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "pgtype.InfinityModifier": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+                1,
+                0,
+                -1
+            ],
+            "x-enum-varnames": [
+                "Infinity",
+                "Finite",
+                "NegativeInfinity"
+            ]
+        },
+        "pgtype.Timestamptz": {
+            "type": "object",
+            "properties": {
+                "infinityModifier": {
+                    "$ref": "#/definitions/pgtype.InfinityModifier"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
                 }
             }
         }

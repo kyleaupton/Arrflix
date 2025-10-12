@@ -4,89 +4,115 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}/api` | (string & {});
 };
 
-export type HandlersLibraryCreateRequest = {
-    enabled?: boolean;
-    name?: string;
-    root_path?: string;
-    type?: string;
+export type GithubComKyleauptonSnaggleBackendInternalDbSqlcMediaItem = {
+    created_at: PgtypeTimestamptz;
+    id: string;
+    library_id: string;
+    title: string;
+    tmdb_id: number;
+    type: string;
+    updated_at: PgtypeTimestamptz;
+    year: number;
 };
 
-export type HandlersLibraryUpdateRequest = {
-    enabled?: boolean;
-    name?: string;
-    root_path?: string;
-    type?: string;
+export type GithubComKyleauptonSnaggleBackendInternalModelMovie = {
+    backdropPath: string;
+    posterPath: string;
+    releaseDate: string;
+    title: string;
+    /**
+     * General movie details
+     */
+    tmdbId: number;
 };
 
-export type HandlersLoginRequest = {
+export type GithubComKyleauptonSnaggleBackendInternalModelRail = {
+    id: string;
+    movies: Array<GithubComKyleauptonSnaggleBackendInternalModelMovie>;
+    series: Array<GithubComKyleauptonSnaggleBackendInternalModelSeries>;
+    title: string;
+    type: string;
+};
+
+export type GithubComKyleauptonSnaggleBackendInternalModelSeries = {
+    backdropPath: string;
+    posterPath: string;
+    releaseDate: string;
+    title: string;
+    tmdbId: number;
+};
+
+export type InternalHttpHandlersLibraryCreateRequest = {
+    enabled: boolean;
+    name: string;
+    root_path: string;
+    type: string;
+};
+
+export type InternalHttpHandlersLibraryUpdateRequest = {
+    enabled: boolean;
+    name: string;
+    root_path: string;
+    type: string;
+};
+
+export type InternalHttpHandlersLoginRequest = {
     email: string;
     password: string;
 };
 
-export type HandlersLoginResponse = {
+export type InternalHttpHandlersLoginResponse = {
     token: string;
 };
 
-export type HandlersPatchRequest = {
-    key?: string;
-    value?: unknown;
+export type InternalHttpHandlersPatchRequest = {
+    key: string;
+    value: unknown;
 };
 
-export type HandlersSettingsListResponse = {
+export type InternalHttpHandlersSettingsListResponse = {
     [key: string]: unknown;
 };
 
-export type HandlersLibrarySwagger = {
-    created_at?: string;
-    enabled?: boolean;
-    id?: string;
-    name?: string;
-    root_path?: string;
-    type?: string;
-    updated_at?: string;
+export type InternalHttpHandlersLibrarySwagger = {
+    created_at: string;
+    enabled: boolean;
+    id: string;
+    name: string;
+    root_path: string;
+    type: string;
+    updated_at: string;
 };
 
-export type HandlersMediaItemSwagger = {
-    created_at?: string;
-    id?: string;
-    library_id?: string;
-    title?: string;
-    tmdb_id?: number;
-    type?: string;
-    updated_at?: string;
-    year?: number;
+export type PgtypeInfinityModifier = 1 | 0 | -1;
+
+export type PgtypeTimestamptz = {
+    infinityModifier?: PgtypeInfinityModifier;
+    time?: string;
+    valid?: boolean;
 };
 
-export type ModelMovie = {
-    posterPath?: string;
-    releaseDate?: string;
-    title?: string;
+export type GetHealthData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/health';
+};
+
+export type GetHealthResponses = {
     /**
-     * General movie details
+     * ok
      */
-    tmdbId?: number;
+    200: string;
 };
 
-export type ModelRail = {
-    id?: string;
-    movies?: Array<ModelMovie>;
-    series?: Array<ModelSeries>;
-    title?: string;
-    type?: string;
-};
-
-export type ModelSeries = {
-    posterPath?: string;
-    releaseDate?: string;
-    title?: string;
-    tmdbId?: number;
-};
+export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses];
 
 export type PostV1AuthLoginData = {
     /**
      * Login request
      */
-    body: HandlersLoginRequest;
+    body: InternalHttpHandlersLoginRequest;
     path?: never;
     query?: never;
     url: '/v1/auth/login';
@@ -96,7 +122,7 @@ export type PostV1AuthLoginResponses = {
     /**
      * OK
      */
-    200: HandlersLoginResponse;
+    200: InternalHttpHandlersLoginResponse;
 };
 
 export type PostV1AuthLoginResponse = PostV1AuthLoginResponses[keyof PostV1AuthLoginResponses];
@@ -112,7 +138,7 @@ export type GetV1HomeResponses = {
     /**
      * OK
      */
-    200: Array<ModelRail>;
+    200: Array<GithubComKyleauptonSnaggleBackendInternalModelRail>;
 };
 
 export type GetV1HomeResponse = GetV1HomeResponses[keyof GetV1HomeResponses];
@@ -128,7 +154,7 @@ export type GetV1LibrariesResponses = {
     /**
      * OK
      */
-    200: Array<HandlersLibrarySwagger>;
+    200: Array<InternalHttpHandlersLibrarySwagger>;
 };
 
 export type GetV1LibrariesResponse = GetV1LibrariesResponses[keyof GetV1LibrariesResponses];
@@ -137,7 +163,7 @@ export type PostV1LibrariesData = {
     /**
      * Create library
      */
-    body: HandlersLibraryCreateRequest;
+    body: InternalHttpHandlersLibraryCreateRequest;
     path?: never;
     query?: never;
     url: '/v1/libraries';
@@ -158,7 +184,7 @@ export type PostV1LibrariesResponses = {
     /**
      * Created
      */
-    201: HandlersLibrarySwagger;
+    201: InternalHttpHandlersLibrarySwagger;
 };
 
 export type PostV1LibrariesResponse = PostV1LibrariesResponses[keyof PostV1LibrariesResponses];
@@ -195,7 +221,7 @@ export type GetV1LibrariesByIdResponses = {
     /**
      * OK
      */
-    200: HandlersLibrarySwagger;
+    200: InternalHttpHandlersLibrarySwagger;
 };
 
 export type GetV1LibrariesByIdResponse = GetV1LibrariesByIdResponses[keyof GetV1LibrariesByIdResponses];
@@ -204,7 +230,7 @@ export type PutV1LibrariesByIdData = {
     /**
      * Update library
      */
-    body: HandlersLibraryUpdateRequest;
+    body: InternalHttpHandlersLibraryUpdateRequest;
     path: {
         /**
          * Library ID
@@ -230,7 +256,7 @@ export type PutV1LibrariesByIdResponses = {
     /**
      * OK
      */
-    200: HandlersLibrarySwagger;
+    200: InternalHttpHandlersLibrarySwagger;
 };
 
 export type PutV1LibrariesByIdResponse = PutV1LibrariesByIdResponses[keyof PutV1LibrariesByIdResponses];
@@ -267,7 +293,7 @@ export type GetV1LibraryResponses = {
     /**
      * OK
      */
-    200: Array<HandlersMediaItemSwagger>;
+    200: Array<GithubComKyleauptonSnaggleBackendInternalDbSqlcMediaItem>;
 };
 
 export type GetV1LibraryResponse = GetV1LibraryResponses[keyof GetV1LibraryResponses];
@@ -288,7 +314,7 @@ export type GetV1MovieByIdResponses = {
     /**
      * OK
      */
-    200: ModelMovie;
+    200: GithubComKyleauptonSnaggleBackendInternalModelMovie;
 };
 
 export type GetV1MovieByIdResponse = GetV1MovieByIdResponses[keyof GetV1MovieByIdResponses];
@@ -309,7 +335,7 @@ export type GetV1SeriesByIdResponses = {
     /**
      * OK
      */
-    200: ModelSeries;
+    200: GithubComKyleauptonSnaggleBackendInternalModelSeries;
 };
 
 export type GetV1SeriesByIdResponse = GetV1SeriesByIdResponses[keyof GetV1SeriesByIdResponses];
@@ -325,7 +351,7 @@ export type GetV1SettingsResponses = {
     /**
      * OK
      */
-    200: HandlersSettingsListResponse;
+    200: InternalHttpHandlersSettingsListResponse;
 };
 
 export type GetV1SettingsResponse = GetV1SettingsResponses[keyof GetV1SettingsResponses];
@@ -334,7 +360,7 @@ export type PatchV1SettingsData = {
     /**
      * Patch request
      */
-    body: HandlersPatchRequest;
+    body: InternalHttpHandlersPatchRequest;
     path?: never;
     query?: never;
     url: '/v1/settings';

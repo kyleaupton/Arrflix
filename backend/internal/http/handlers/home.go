@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	_ "github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 	"github.com/labstack/echo/v4"
 )

@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.84.4",
+    "@tanstack/eslint-plugin-query": "^5.91.0",
     "@tsconfig/node22": "^22.0.2",
     "@types/node": "^22.18.6",
     "@vitejs/plugin-vue": "^6.0.1",
