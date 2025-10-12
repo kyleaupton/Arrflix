@@ -36,7 +36,6 @@ const emit = defineEmits<{
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--p-surface-0);
   display: flex;
   align-items: center;
   gap: 1rem;

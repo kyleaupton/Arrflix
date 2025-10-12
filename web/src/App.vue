@@ -42,6 +42,7 @@ onMounted(async () => {
 .app-shell {
   min-height: 100vh;
   display: flex;
+  overflow-x: hidden; /* prevent stray horizontal scroll from flex gaps or sticky elements */
 }
 
 .app-header {
@@ -52,13 +53,15 @@ onMounted(async () => {
 
 .app-main {
   flex: 1 1 auto;
+  min-width: 0; /* allow children to shrink without forcing horizontal scroll */
 }
 
 .app-body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  width: 100%;
+  flex: 1 1 auto; /* take remaining width next to sidebar without overflowing */
+  min-width: 0; /* critical for flex layouts to avoid overflow */
   padding: 0.75rem;
 }
 

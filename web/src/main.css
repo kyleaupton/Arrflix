@@ -10,6 +10,12 @@
   box-sizing: inherit;
 }
 
+:root {
+  --bg-dark: oklch(0.1 0 264);
+  --bg: oklch(0.2 0 264);
+  --bg-light: oklch(0.3 0 264);
+}
+
 html,
 body,
 #app {
@@ -18,7 +24,7 @@ body,
 
 body {
   margin: 0;
-  background: var(--p-surface-0);
+  background: var(--bg-dark);
   color: var(--p-content-color);
   font-family:
     -apple-system,

@@ -36,6 +36,9 @@ client.interceptors.response.use(async (response) => {
   return response
 })
 
+// Force dark mode globally
+document.documentElement.classList.add('dark')
+
 // rehydrate auth before mount so guards/UI have token
 const auth = useAuthStore()
 await auth.rehydrate()

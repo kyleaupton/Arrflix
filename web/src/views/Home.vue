@@ -2,7 +2,7 @@
   <Page>
     <div v-if="isLoading">Loading...</div>
     <div v-else-if="isError">Error</div>
-    <div v-else-if="data">
+    <div v-else-if="data" class="flex flex-col gap-4">
       <Rail v-for="rail in data" :key="rail.id" :rail="rail" />
     </div>
   </Page>
