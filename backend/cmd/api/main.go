@@ -16,11 +16,11 @@ import (
 )
 
 func main() {
-	// Load config
-	cfg := config.Load()
+	// Logger// Logger
+	logg := logger.New(true)
 
-	// Logger
-	logg := logger.New(cfg.Env)
+	// Load config
+	cfg := config.Load(logg)
 
 	// DB
 	pool, err := db.Open(cfg.DatabaseURL)

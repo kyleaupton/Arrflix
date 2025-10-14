@@ -19,7 +19,7 @@ FROM debian:stable-slim AS prod-runtime
 
 # install deps: nginx, curl, dumb-init, postgres, and supervisor
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends nginx postgresql postgresql-contrib ca-certificates dumb-init curl supervisor && \
+    apt-get install -y --no-install-recommends nginx postgresql postgresql-contrib ca-certificates dumb-init curl supervisor wget xz-utils tar jq && \
     rm -rf /var/lib/apt/lists/*
 
 # Make Postgres client/server binaries easy to find on PATH
@@ -49,6 +49,18 @@ COPY ops/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ops/scripts/wait-for-db.sh /usr/local/bin/wait-for-db.sh
 COPY ops/scripts/run-postgres.sh /usr/local/bin/run-postgres.sh
 RUN chmod +x /usr/local/bin/wait-for-db.sh /usr/local/bin/run-postgres.sh
+COPY ops/scripts/wait-for-jackett.sh /usr/local/bin/wait-for-jackett.sh
+RUN chmod +x /usr/local/bin/wait-for-jackett.sh
+COPY ops/scripts/jacket-print-apikey.sh /usr/local/bin/jacket-print-apikey.sh
+RUN chmod +x /usr/local/bin/jacket-print-apikey.sh
+
+# Install Jackett (Linux AMD64). Place under /opt/jackett
+RUN set -eux; \
+    mkdir -p /opt/jackett && cd /opt/jackett && \
+    curl -fsSL https://github.com/Jackett/Jackett/releases/download/v0.24.131/Jackett.Binaries.LinuxAMDx64.tar.gz -o jackett.tar.gz && \
+    tar -xzf jackett.tar.gz --strip-components=1 && \
+    rm jackett.tar.gz && \
+    ln -sf /opt/jackett/jackett /usr/local/bin/jackett
 
 # Prepare Postgres data directory
 RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql
@@ -64,7 +76,7 @@ FROM golang:1.24 AS dev-runtime
 
 # install deps: nginx, curl, dumb-init, postgres, supervisor, build tools, node
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends nginx postgresql postgresql-contrib ca-certificates dumb-init curl supervisor git build-essential wget && \
+    apt-get install -y --no-install-recommends nginx postgresql postgresql-contrib ca-certificates dumb-init curl supervisor git build-essential wget xz-utils tar jq && \
     rm -rf /var/lib/apt/lists/*
 
 # Node 20 via NodeSource
@@ -108,6 +120,18 @@ COPY ops/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ops/scripts/wait-for-db.sh /usr/local/bin/wait-for-db.sh
 COPY ops/scripts/run-postgres.sh /usr/local/bin/run-postgres.sh
 RUN chmod +x /usr/local/bin/wait-for-db.sh /usr/local/bin/run-postgres.sh
+COPY ops/scripts/wait-for-jackett.sh /usr/local/bin/wait-for-jackett.sh
+RUN chmod +x /usr/local/bin/wait-for-jackett.sh
+COPY ops/scripts/jacket-print-apikey.sh /usr/local/bin/jacket-print-apikey.sh
+RUN chmod +x /usr/local/bin/jacket-print-apikey.sh
+
+# Install Jackett (Linux AMD64) into dev image as well
+RUN set -eux; \
+    mkdir -p /opt/jackett && cd /opt/jackett && \
+    curl -fsSL https://github.com/Jackett/Jackett/releases/download/v0.24.131/Jackett.Binaries.LinuxAMDx64.tar.gz -o jackett.tar.gz && \
+    tar -xzf jackett.tar.gz --strip-components=1 && \
+    rm jackett.tar.gz && \
+    ln -sf /opt/jackett/jackett /usr/local/bin/jackett
 
 # Prepare dirs and volumes
 RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql
@@ -117,6 +141,7 @@ VOLUME ["/var/lib/postgresql/data", "/data"]
 WORKDIR /app
 
 EXPOSE 8484
+EXPOSE 9117
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["/entrypoint.sh"]

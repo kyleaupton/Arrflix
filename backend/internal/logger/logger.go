@@ -9,8 +9,8 @@ import (
 
 type Logger = zerolog.Logger
 
-func New(env string) *Logger {
-	if env == "dev" {
+func New(dev bool) *Logger {
+	if dev {
 		cw := zerolog.ConsoleWriter{
 			Out:        os.Stdout,
 			TimeFormat: "15:04:05.000", // hh:mm:ss.mmm

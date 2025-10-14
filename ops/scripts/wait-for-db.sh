@@ -13,6 +13,7 @@ for i in {1..60}; do
     echo "[wait-for-db] Postgres is ready."
     exit 0
   fi
+  echo "[wait-for-db] Postgres is not ready."
   sleep 1
 done
 

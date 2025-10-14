@@ -25,7 +25,7 @@ type TmdbService struct {
 }
 
 func NewTmdbService(r *repo.Repository, l *logger.Logger) *TmdbService {
-	client, err := tmdb.Init(config.Load().TmdbAPIKey)
+	client, err := tmdb.Init(config.Load(l).TmdbAPIKey)
 	if err != nil {
 		panic(err)
 	}
