@@ -3,9 +3,9 @@ set -euo pipefail
 
 # ----- Defaults (can be overridden by container envs) -----
 : "${PORT:=8080}"                              # internal API port
-: "${POSTGRES_DB:=media}"
-: "${POSTGRES_USER:=media}"
-: "${POSTGRES_PASSWORD:=media}"
+: "${POSTGRES_DB:=snaggle}"
+: "${POSTGRES_USER:=snaggle}"
+: "${POSTGRES_PASSWORD:=snagglepw}"
 : "${SSE_ALLOW_ORIGIN:=*}"
 # If DATABASE_URL not provided, derive one that talks to local Postgres
 : "${DATABASE_URL:=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:5432/${POSTGRES_DB}?sslmode=disable}"

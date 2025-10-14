@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -24,10 +23,9 @@ func envOr(k, d string) string {
 }
 
 func Load() Config {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// Best effort to load .env file
+	godotenv.Load()
+
 	return Config{
 		Env:         envOr("ENV", "dev"),
 		Port:        envOr("PORT", "8080"),
