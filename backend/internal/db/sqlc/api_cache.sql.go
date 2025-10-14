@@ -7,8 +7,7 @@ package dbgen
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 const deleteExpiredApiCache = `-- name: DeleteExpiredApiCache :exec
@@ -28,14 +27,14 @@ where key = $1
 `
 
 type GetApiCacheRow struct {
-	Key         string             `json:"key"`
-	Category    *string            `json:"category"`
-	Response    []byte             `json:"response"`
-	Status      int32              `json:"status"`
-	ContentType *string            `json:"content_type"`
-	Headers     []byte             `json:"headers"`
-	StoredAt    pgtype.Timestamptz `json:"stored_at"`
-	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
+	Key         string    `json:"key"`
+	Category    *string   `json:"category"`
+	Response    []byte    `json:"response"`
+	Status      int32     `json:"status"`
+	ContentType *string   `json:"content_type"`
+	Headers     []byte    `json:"headers"`
+	StoredAt    time.Time `json:"stored_at"`
+	ExpiresAt   time.Time `json:"expires_at"`
 }
 
 func (q *Queries) GetApiCache(ctx context.Context, key string) (GetApiCacheRow, error) {
@@ -69,13 +68,13 @@ do update set
 `
 
 type UpsertApiCacheParams struct {
-	Key         string             `json:"key"`
-	Category    *string            `json:"category"`
-	Response    []byte             `json:"response"`
-	Status      int32              `json:"status"`
-	ContentType *string            `json:"content_type"`
-	Headers     []byte             `json:"headers"`
-	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
+	Key         string    `json:"key"`
+	Category    *string   `json:"category"`
+	Response    []byte    `json:"response"`
+	Status      int32     `json:"status"`
+	ContentType *string   `json:"content_type"`
+	Headers     []byte    `json:"headers"`
+	ExpiresAt   time.Time `json:"expires_at"`
 }
 
 func (q *Queries) UpsertApiCache(ctx context.Context, arg UpsertApiCacheParams) error {

@@ -7,6 +7,7 @@ package dbgen
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -85,14 +86,14 @@ RETURNING id, user_id, provider, subject, username, access_token, refresh_token,
 `
 
 type UpsertIdentityParams struct {
-	UserID         pgtype.UUID        `json:"user_id"`
-	Provider       AuthProvider       `json:"provider"`
-	Subject        string             `json:"subject"`
-	Username       *string            `json:"username"`
-	AccessToken    *string            `json:"access_token"`
-	RefreshToken   *string            `json:"refresh_token"`
-	TokenExpiresAt pgtype.Timestamptz `json:"token_expires_at"`
-	Column8        interface{}        `json:"column_8"`
+	UserID         pgtype.UUID  `json:"user_id"`
+	Provider       AuthProvider `json:"provider"`
+	Subject        string       `json:"subject"`
+	Username       *string      `json:"username"`
+	AccessToken    *string      `json:"access_token"`
+	RefreshToken   *string      `json:"refresh_token"`
+	TokenExpiresAt time.Time    `json:"token_expires_at"`
+	Column8        interface{}  `json:"column_8"`
 }
 
 func (q *Queries) UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) (UserIdentity, error) {

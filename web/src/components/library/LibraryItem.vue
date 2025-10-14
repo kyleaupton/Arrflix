@@ -11,10 +11,9 @@
 
 <script setup lang="ts">
 import Card from 'primevue/card'
-import type { HandlersMediaItemSwagger } from '@/client/types.gen'
 
-const props = defineProps<{
-  item: HandlersMediaItemSwagger
+defineProps<{
+  item: any // eslint-disable-line @typescript-eslint/no-explicit-any
 }>()
 </script>
 

@@ -1,9 +1,9 @@
 basePath: /api
 definitions:
-  github_com_kyleaupton_snaggle_backend_internal_db_sqlc.MediaItem:
+  dbgen.MediaItem:
     properties:
       created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       id:
         type: string
       library_id:
@@ -15,7 +15,7 @@ definitions:
       type:
         type: string
       updated_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       year:
         type: integer
     required:
@@ -28,69 +28,7 @@ definitions:
     - updated_at
     - year
     type: object
-  github_com_kyleaupton_snaggle_backend_internal_model.Movie:
-    properties:
-      backdropPath:
-        type: string
-      posterPath:
-        type: string
-      releaseDate:
-        type: string
-      title:
-        type: string
-      tmdbId:
-        description: General movie details
-        type: integer
-    required:
-    - backdropPath
-    - posterPath
-    - releaseDate
-    - title
-    - tmdbId
-    type: object
-  github_com_kyleaupton_snaggle_backend_internal_model.Rail:
-    properties:
-      id:
-        type: string
-      movies:
-        items:
-          $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Movie'
-        type: array
-      series:
-        items:
-          $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Series'
-        type: array
-      title:
-        type: string
-      type:
-        type: string
-    required:
-    - id
-    - movies
-    - series
-    - title
-    - type
-    type: object
-  github_com_kyleaupton_snaggle_backend_internal_model.Series:
-    properties:
-      backdropPath:
-        type: string
-      posterPath:
-        type: string
-      releaseDate:
-        type: string
-      title:
-        type: string
-      tmdbId:
-        type: integer
-    required:
-    - backdropPath
-    - posterPath
-    - releaseDate
-    - title
-    - tmdbId
-    type: object
-  internal_http_handlers.LibraryCreateRequest:
+  handlers.LibraryCreateRequest:
     properties:
       enabled:
         type: boolean
@@ -106,7 +44,7 @@ definitions:
     - root_path
     - type
     type: object
-  internal_http_handlers.LibraryUpdateRequest:
+  handlers.LibraryUpdateRequest:
     properties:
       enabled:
         type: boolean
@@ -122,7 +60,7 @@ definitions:
     - root_path
     - type
     type: object
-  internal_http_handlers.LoginRequest:
+  handlers.LoginRequest:
     properties:
       email:
         type: string
@@ -132,14 +70,14 @@ definitions:
     - email
     - password
     type: object
-  internal_http_handlers.LoginResponse:
+  handlers.LoginResponse:
     properties:
       token:
         type: string
     required:
     - token
     type: object
-  internal_http_handlers.PatchRequest:
+  handlers.PatchRequest:
     properties:
       key:
         type: string
@@ -148,10 +86,10 @@ definitions:
     - key
     - value
     type: object
-  internal_http_handlers.SettingsListResponse:
+  handlers.SettingsListResponse:
     additionalProperties: {}
     type: object
-  internal_http_handlers.librarySwagger:
+  handlers.librarySwagger:
     properties:
       created_at:
         type: string
@@ -176,25 +114,254 @@ definitions:
     - type
     - updated_at
     type: object
-  pgtype.InfinityModifier:
-    enum:
-    - 1
-    - 0
-    - -1
-    format: int32
-    type: integer
-    x-enum-varnames:
-    - Infinity
-    - Finite
-    - NegativeInfinity
-  pgtype.Timestamptz:
+  model.Genre:
     properties:
-      infinityModifier:
-        $ref: '#/definitions/pgtype.InfinityModifier'
-      time:
+      name:
         type: string
-      valid:
+      tmdbId:
+        type: integer
+    required:
+    - name
+    - tmdbId
+    type: object
+  model.Movie:
+    properties:
+      backdropPath:
+        type: string
+      originCountry:
+        items:
+          type: string
+        type: array
+      originalLanguage:
+        type: string
+      overview:
+        type: string
+      posterPath:
+        type: string
+      productionCompanies:
+        items:
+          $ref: '#/definitions/model.ProductionCompany'
+        type: array
+      productionCountries:
+        items:
+          $ref: '#/definitions/model.ProductionCountry'
+        type: array
+      releaseDate:
+        type: string
+      runtime:
+        type: integer
+      status:
+        description: Stats
+        type: string
+      tagline:
+        type: string
+      title:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - backdropPath
+    - originCountry
+    - originalLanguage
+    - overview
+    - posterPath
+    - productionCompanies
+    - productionCountries
+    - releaseDate
+    - runtime
+    - status
+    - tagline
+    - title
+    - tmdbId
+    type: object
+  model.MovieRail:
+    properties:
+      overview:
+        type: string
+      posterPath:
+        type: string
+      releaseDate:
+        type: string
+      title:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - overview
+    - posterPath
+    - releaseDate
+    - title
+    - tmdbId
+    type: object
+  model.Network:
+    properties:
+      logoPath:
+        type: string
+      name:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - logoPath
+    - name
+    - tmdbId
+    type: object
+  model.Person:
+    properties:
+      name:
+        type: string
+      profilePath:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - name
+    - profilePath
+    - tmdbId
+    type: object
+  model.ProductionCompany:
+    properties:
+      logoPath:
+        type: string
+      name:
+        type: string
+      originCountry:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - logoPath
+    - name
+    - originCountry
+    - tmdbId
+    type: object
+  model.ProductionCountry:
+    properties:
+      iso3166_1:
+        type: string
+      name:
+        type: string
+    required:
+    - iso3166_1
+    - name
+    type: object
+  model.Rail:
+    properties:
+      id:
+        type: string
+      movies:
+        items:
+          $ref: '#/definitions/model.MovieRail'
+        type: array
+      series:
+        items:
+          $ref: '#/definitions/model.SeriesRail'
+        type: array
+      title:
+        type: string
+      type:
+        type: string
+    required:
+    - id
+    - movies
+    - series
+    - title
+    - type
+    type: object
+  model.Season:
+    properties:
+      airDate:
+        type: string
+      overview:
+        type: string
+      posterPath:
+        type: string
+      seasonNumber:
+        type: integer
+      title:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - airDate
+    - overview
+    - posterPath
+    - seasonNumber
+    - title
+    - tmdbId
+    type: object
+  model.Series:
+    properties:
+      backdropPath:
+        type: string
+      createdBy:
+        items:
+          $ref: '#/definitions/model.Person'
+        type: array
+      firstAirDate:
+        type: string
+      genres:
+        items:
+          $ref: '#/definitions/model.Genre'
+        type: array
+      inProduction:
         type: boolean
+      lastAirDate:
+        type: string
+      networks:
+        items:
+          $ref: '#/definitions/model.Network'
+        type: array
+      overview:
+        type: string
+      posterPath:
+        type: string
+      seasons:
+        items:
+          $ref: '#/definitions/model.Season'
+        type: array
+      status:
+        type: string
+      tagline:
+        type: string
+      title:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - backdropPath
+    - createdBy
+    - firstAirDate
+    - genres
+    - inProduction
+    - lastAirDate
+    - networks
+    - overview
+    - posterPath
+    - seasons
+    - status
+    - tagline
+    - title
+    - tmdbId
+    type: object
+  model.SeriesRail:
+    properties:
+      overview:
+        type: string
+      posterPath:
+        type: string
+      releaseDate:
+        type: string
+      title:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - overview
+    - posterPath
+    - releaseDate
+    - title
+    - tmdbId
     type: object
 info:
   contact: {}
@@ -223,14 +390,14 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/internal_http_handlers.LoginRequest'
+          $ref: '#/definitions/handlers.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_http_handlers.LoginResponse'
+            $ref: '#/definitions/handlers.LoginResponse'
       summary: Login
       tags:
       - auth
@@ -243,7 +410,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Rail'
+              $ref: '#/definitions/model.Rail'
             type: array
       summary: Get rails
       tags:
@@ -257,7 +424,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/internal_http_handlers.librarySwagger'
+              $ref: '#/definitions/handlers.librarySwagger'
             type: array
       summary: List libraries
       tags:
@@ -271,14 +438,14 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/internal_http_handlers.LibraryCreateRequest'
+          $ref: '#/definitions/handlers.LibraryCreateRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/internal_http_handlers.librarySwagger'
+            $ref: '#/definitions/handlers.librarySwagger'
         "400":
           description: Bad Request
           schema:
@@ -311,7 +478,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_http_handlers.librarySwagger'
+            $ref: '#/definitions/handlers.librarySwagger'
       summary: Get library
       tags:
       - libraries
@@ -329,14 +496,14 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/internal_http_handlers.LibraryUpdateRequest'
+          $ref: '#/definitions/handlers.LibraryUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_http_handlers.librarySwagger'
+            $ref: '#/definitions/handlers.librarySwagger'
         "400":
           description: Bad Request
           schema:
@@ -371,7 +538,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_db_sqlc.MediaItem'
+              $ref: '#/definitions/dbgen.MediaItem'
             type: array
       summary: List media items
       tags:
@@ -390,7 +557,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Movie'
+            $ref: '#/definitions/model.Movie'
       summary: Get movie
       tags:
       - media
@@ -408,7 +575,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Series'
+            $ref: '#/definitions/model.Series'
       summary: Get series
       tags:
       - media
@@ -420,7 +587,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_http_handlers.SettingsListResponse'
+            $ref: '#/definitions/handlers.SettingsListResponse'
       summary: List settings
       tags:
       - settings
@@ -433,7 +600,7 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/internal_http_handlers.PatchRequest'
+          $ref: '#/definitions/handlers.PatchRequest'
       responses:
         "204":
           description: No Content

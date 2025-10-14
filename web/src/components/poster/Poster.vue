@@ -1,46 +1,12 @@
 <template>
-  <RouterLink v-if="to" :to="to" class="poster-link" @click="test">
-    <div
-      class="poster-wrap"
-      :class="{
-        'poster--sm w-36': size === 'small',
-        'poster--md w-48': size === 'medium',
-        'poster--lg w-60': size === 'large',
-      }"
-    >
-      <img
-        class="poster"
-        :class="{ 'is-loaded': !isLoading }"
-        :src="posterPath"
-        :alt="item.title"
-        draggable="false"
-        loading="lazy"
-        decoding="async"
-        @dragstart.prevent
-        @load="onLoad"
-        @error="onError"
-      />
-      <Skeleton v-if="isLoading" class="poster-skeleton" />
-    </div>
-  </RouterLink>
-  <div
-    v-else
-    class="poster-wrap"
-    :class="{
-      'poster--sm w-36': size === 'small',
-      'poster--md w-48': size === 'medium',
-      'poster--lg w-60': size === 'large',
-    }"
-  >
+  <div class="poster-wrap" :class="sizeClass">
     <img
       class="poster"
       :class="{ 'is-loaded': !isLoading }"
       :src="posterPath"
       :alt="item.title"
-      draggable="false"
       loading="lazy"
       decoding="async"
-      @dragstart.prevent
       @load="onLoad"
       @error="onError"
     />
@@ -51,18 +17,17 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import Skeleton from 'primevue/skeleton'
-import { type ModelMovie, type ModelSeries } from '@/client/types.gen'
-import type { RouteLocationRaw } from 'vue-router'
-
-const test = () => {
-  console.log('test')
-}
+import {
+  type ModelMovie,
+  type ModelMovieRail,
+  type ModelSeries,
+  type ModelSeriesRail,
+} from '@/client/types.gen'
 
 const props = withDefaults(
   defineProps<{
-    item: ModelMovie | ModelSeries
+    item: ModelMovie | ModelSeries | ModelMovieRail | ModelSeriesRail
     size?: 'small' | 'medium' | 'large'
-    to?: RouteLocationRaw
   }>(),
   {
     size: 'medium',
@@ -70,7 +35,13 @@ const props = withDefaults(
 )
 
 const posterPath = computed(() => {
-  return `https://image.tmdb.org/t/p/${tmdbSize.value}/${props.item.posterPath}`
+  return `https://image.tmdb.org/t/p/w342/${props.item.posterPath}`
+})
+
+const sizeClass = computed(() => {
+  if (props.size === 'small') return 'poster--sm'
+  if (props.size === 'large') return 'poster--lg'
+  return 'poster--md'
 })
 
 const isLoading = ref(true)
@@ -80,19 +51,13 @@ const onLoad = () => {
 const onError = () => {
   isLoading.value = false
 }
-
-const tmdbSize = computed(() => {
-  if (props.size === 'small') return 'w154'
-  if (props.size === 'large') return 'w500'
-  return 'w342'
-})
 </script>
 
 <style scoped></style>
 <style scoped>
 .poster-wrap {
-  display: inline-block;
-  flex: 0 0 auto;
+  display: block;
+  width: 100%;
   aspect-ratio: 2 / 3; /* common movie/TV poster ratio */
   position: relative;
   border-radius: 8px;
@@ -108,8 +73,6 @@ const tmdbSize = computed(() => {
   object-fit: cover;
   opacity: 0;
   transition: opacity 150ms ease;
-  -webkit-user-drag: none; /* Safari */
-  user-select: none;
 }
 
 .poster.is-loaded {
@@ -121,5 +84,17 @@ const tmdbSize = computed(() => {
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.poster--sm {
+  max-width: 154px; /* roughly TMDB w154 */
+}
+
+.poster--md {
+  max-width: 342px; /* roughly TMDB w342 */
+}
+
+.poster--lg {
+  max-width: 500px; /* roughly TMDB w500 */
 }
 </style>

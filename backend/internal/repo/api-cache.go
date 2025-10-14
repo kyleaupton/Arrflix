@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
 )
 
@@ -17,8 +16,8 @@ type CacheEntry struct {
 	Status      int32
 	ContentType *string
 	Headers     []byte
-	StoredAt    pgtype.Timestamptz
-	ExpiresAt   pgtype.Timestamptz
+	StoredAt    time.Time
+	ExpiresAt   time.Time
 }
 
 func (r *Repository) GetApiCache(ctx context.Context, key string) (CacheEntry, bool, error) {
@@ -33,7 +32,8 @@ func (r *Repository) GetApiCache(ctx context.Context, key string) (CacheEntry, b
 		return CacheEntry{}, false, err
 	}
 
-	if row.ExpiresAt.Time.Before(time.Now()) {
+	// cache miss: expired
+	if !row.ExpiresAt.After(time.Now()) {
 		return CacheEntry{}, false, nil
 	}
 
@@ -50,8 +50,7 @@ func (r *Repository) GetApiCache(ctx context.Context, key string) (CacheEntry, b
 }
 
 func (r *Repository) UpsertApiCache(ctx context.Context, key string, category *string, response []byte, status int, contentType *string, headers []byte, ttl time.Duration) error {
-	expires := pgtype.Timestamptz{}
-	_ = expires.Scan(time.Now().Add(ttl))
+	expires := time.Now().Add(ttl)
 
 	return r.Q.UpsertApiCache(ctx, dbgen.UpsertApiCacheParams{
 		Key:         key,

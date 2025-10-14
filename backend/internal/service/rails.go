@@ -25,11 +25,12 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		return nil, err
 	}
 
-	movies := []model.Movie{}
+	movies := []model.MovieRail{}
 	for _, movie := range moviesRes.Results {
-		movies = append(movies, model.Movie{
+		movies = append(movies, model.MovieRail{
 			TmdbID:      movie.ID,
 			Title:       movie.Title,
+			Overview:    movie.Overview,
 			PosterPath:  movie.PosterPath,
 			ReleaseDate: movie.ReleaseDate,
 		})
@@ -47,11 +48,12 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		return nil, err
 	}
 
-	series := []model.Series{}
+	series := []model.SeriesRail{}
 	for _, s := range seriesRes.Results {
-		series = append(series, model.Series{
+		series = append(series, model.SeriesRail{
 			TmdbID:      s.ID,
 			Title:       s.Title,
+			Overview:    s.Overview,
 			PosterPath:  s.PosterPath,
 			ReleaseDate: s.ReleaseDate,
 		})

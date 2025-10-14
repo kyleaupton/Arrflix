@@ -7,6 +7,7 @@ package dbgen
 import (
 	"database/sql/driver"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -138,91 +139,91 @@ func (ns NullGrantSubject) Value() (driver.Value, error) {
 }
 
 type ApiCache struct {
-	ID          pgtype.UUID        `json:"id"`
-	Key         string             `json:"key"`
-	Category    *string            `json:"category"`
-	Response    []byte             `json:"response"`
-	Status      int32              `json:"status"`
-	ContentType *string            `json:"content_type"`
-	Headers     []byte             `json:"headers"`
-	StoredAt    pgtype.Timestamptz `json:"stored_at"`
-	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
+	ID          pgtype.UUID `json:"id"`
+	Key         string      `json:"key"`
+	Category    *string     `json:"category"`
+	Response    []byte      `json:"response"`
+	Status      int32       `json:"status"`
+	ContentType *string     `json:"content_type"`
+	Headers     []byte      `json:"headers"`
+	StoredAt    time.Time   `json:"stored_at"`
+	ExpiresAt   time.Time   `json:"expires_at"`
 }
 
 type AppSetting struct {
-	Key       string             `json:"key"`
-	Type      string             `json:"type"`
-	ValueJson []byte             `json:"value_json"`
-	Version   int32              `json:"version"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	Key       string    `json:"key"`
+	Type      string    `json:"type"`
+	ValueJson []byte    `json:"value_json"`
+	Version   int32     `json:"version"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type AppUser struct {
-	ID           pgtype.UUID        `json:"id"`
-	Email        *string            `json:"email"`
-	DisplayName  *string            `json:"display_name"`
-	AvatarUrl    *string            `json:"avatar_url"`
-	PasswordHash *string            `json:"password_hash"`
-	IsActive     bool               `json:"is_active"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ID           pgtype.UUID `json:"id"`
+	Email        *string     `json:"email"`
+	DisplayName  *string     `json:"display_name"`
+	AvatarUrl    *string     `json:"avatar_url"`
+	PasswordHash *string     `json:"password_hash"`
+	IsActive     bool        `json:"is_active"`
+	CreatedAt    time.Time   `json:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at"`
 }
 
 type AuthAudit struct {
-	ID        pgtype.UUID        `json:"id"`
-	UserID    pgtype.UUID        `json:"user_id"`
-	Event     string             `json:"event"`
-	Detail    []byte             `json:"detail"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ID        pgtype.UUID `json:"id"`
+	UserID    pgtype.UUID `json:"user_id"`
+	Event     string      `json:"event"`
+	Detail    []byte      `json:"detail"`
+	CreatedAt time.Time   `json:"created_at"`
 }
 
 type Library struct {
-	ID        pgtype.UUID        `json:"id"`
-	Name      string             `json:"name"`
-	Type      string             `json:"type"`
-	RootPath  string             `json:"root_path"`
-	Enabled   bool               `json:"enabled"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID        pgtype.UUID `json:"id"`
+	Name      string      `json:"name"`
+	Type      string      `json:"type"`
+	RootPath  string      `json:"root_path"`
+	Enabled   bool        `json:"enabled"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
 }
 
 type MediaEpisode struct {
-	ID            pgtype.UUID        `json:"id"`
-	SeasonID      pgtype.UUID        `json:"season_id"`
-	EpisodeNumber int32              `json:"episode_number"`
-	Title         *string            `json:"title"`
-	AirDate       pgtype.Date        `json:"air_date"`
-	TmdbID        *int64             `json:"tmdb_id"`
-	TvdbID        *int64             `json:"tvdb_id"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	ID            pgtype.UUID `json:"id"`
+	SeasonID      pgtype.UUID `json:"season_id"`
+	EpisodeNumber int32       `json:"episode_number"`
+	Title         *string     `json:"title"`
+	AirDate       pgtype.Date `json:"air_date"`
+	TmdbID        *int64      `json:"tmdb_id"`
+	TvdbID        *int64      `json:"tvdb_id"`
+	CreatedAt     time.Time   `json:"created_at"`
 }
 
 type MediaFile struct {
-	ID          pgtype.UUID        `json:"id"`
-	MediaItemID pgtype.UUID        `json:"media_item_id"`
-	SeasonID    pgtype.UUID        `json:"season_id"`
-	EpisodeID   pgtype.UUID        `json:"episode_id"`
-	Path        string             `json:"path"`
-	AddedAt     pgtype.Timestamptz `json:"added_at"`
+	ID          pgtype.UUID `json:"id"`
+	MediaItemID pgtype.UUID `json:"media_item_id"`
+	SeasonID    pgtype.UUID `json:"season_id"`
+	EpisodeID   pgtype.UUID `json:"episode_id"`
+	Path        string      `json:"path"`
+	AddedAt     time.Time   `json:"added_at"`
 }
 
 type MediaItem struct {
-	ID        pgtype.UUID        `json:"id"`
-	LibraryID pgtype.UUID        `json:"library_id"`
-	Type      string             `json:"type"`
-	Title     string             `json:"title"`
-	Year      *int32             `json:"year"`
-	TmdbID    *int64             `json:"tmdb_id"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID        pgtype.UUID `json:"id"`
+	LibraryID pgtype.UUID `json:"library_id"`
+	Type      string      `json:"type"`
+	Title     string      `json:"title"`
+	Year      *int32      `json:"year"`
+	TmdbID    *int64      `json:"tmdb_id"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
 }
 
 type MediaSeason struct {
-	ID           pgtype.UUID        `json:"id"`
-	MediaItemID  pgtype.UUID        `json:"media_item_id"`
-	SeasonNumber int32              `json:"season_number"`
-	AirDate      pgtype.Date        `json:"air_date"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	ID           pgtype.UUID `json:"id"`
+	MediaItemID  pgtype.UUID `json:"media_item_id"`
+	SeasonNumber int32       `json:"season_number"`
+	AirDate      pgtype.Date `json:"air_date"`
+	CreatedAt    time.Time   `json:"created_at"`
 }
 
 type Permission struct {
@@ -232,39 +233,39 @@ type Permission struct {
 }
 
 type PermissionGrant struct {
-	ID            pgtype.UUID        `json:"id"`
-	SubjectType   GrantSubject       `json:"subject_type"`
-	SubjectID     pgtype.UUID        `json:"subject_id"`
-	PermissionKey string             `json:"permission_key"`
-	ResourceType  *string            `json:"resource_type"`
-	ResourceID    pgtype.UUID        `json:"resource_id"`
-	Effect        GrantEffect        `json:"effect"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	ID            pgtype.UUID  `json:"id"`
+	SubjectType   GrantSubject `json:"subject_type"`
+	SubjectID     pgtype.UUID  `json:"subject_id"`
+	PermissionKey string       `json:"permission_key"`
+	ResourceType  *string      `json:"resource_type"`
+	ResourceID    pgtype.UUID  `json:"resource_id"`
+	Effect        GrantEffect  `json:"effect"`
+	CreatedAt     time.Time    `json:"created_at"`
 }
 
 type Role struct {
-	ID          pgtype.UUID        `json:"id"`
-	Name        string             `json:"name"`
-	Description *string            `json:"description"`
-	BuiltIn     bool               `json:"built_in"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	ID          pgtype.UUID `json:"id"`
+	Name        string      `json:"name"`
+	Description *string     `json:"description"`
+	BuiltIn     bool        `json:"built_in"`
+	CreatedAt   time.Time   `json:"created_at"`
 }
 
 type UserIdentity struct {
-	ID             pgtype.UUID        `json:"id"`
-	UserID         pgtype.UUID        `json:"user_id"`
-	Provider       AuthProvider       `json:"provider"`
-	Subject        string             `json:"subject"`
-	Username       *string            `json:"username"`
-	AccessToken    *string            `json:"access_token"`
-	RefreshToken   *string            `json:"refresh_token"`
-	TokenExpiresAt pgtype.Timestamptz `json:"token_expires_at"`
-	Raw            []byte             `json:"raw"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	ID             pgtype.UUID  `json:"id"`
+	UserID         pgtype.UUID  `json:"user_id"`
+	Provider       AuthProvider `json:"provider"`
+	Subject        string       `json:"subject"`
+	Username       *string      `json:"username"`
+	AccessToken    *string      `json:"access_token"`
+	RefreshToken   *string      `json:"refresh_token"`
+	TokenExpiresAt time.Time    `json:"token_expires_at"`
+	Raw            []byte       `json:"raw"`
+	CreatedAt      time.Time    `json:"created_at"`
 }
 
 type UserRole struct {
-	UserID    pgtype.UUID        `json:"user_id"`
-	RoleID    pgtype.UUID        `json:"role_id"`
-	GrantedAt pgtype.Timestamptz `json:"granted_at"`
+	UserID    pgtype.UUID `json:"user_id"`
+	RoleID    pgtype.UUID `json:"role_id"`
+	GrantedAt time.Time   `json:"granted_at"`
 }

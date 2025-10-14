@@ -53,7 +53,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers.LoginRequest"
+                            "$ref": "#/definitions/handlers.LoginRequest"
                         }
                     }
                 ],
@@ -61,7 +61,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers.LoginResponse"
+                            "$ref": "#/definitions/handlers.LoginResponse"
                         }
                     }
                 }
@@ -82,7 +82,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Rail"
+                                "$ref": "#/definitions/model.Rail"
                             }
                         }
                     }
@@ -104,7 +104,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_http_handlers.librarySwagger"
+                                "$ref": "#/definitions/handlers.librarySwagger"
                             }
                         }
                     }
@@ -128,7 +128,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers.LibraryCreateRequest"
+                            "$ref": "#/definitions/handlers.LibraryCreateRequest"
                         }
                     }
                 ],
@@ -136,7 +136,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers.librarySwagger"
+                            "$ref": "#/definitions/handlers.librarySwagger"
                         }
                     },
                     "400": {
@@ -164,7 +164,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers.librarySwagger"
+                            "$ref": "#/definitions/handlers.librarySwagger"
                         }
                     }
                 }
@@ -194,7 +194,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers.LibraryUpdateRequest"
+                            "$ref": "#/definitions/handlers.LibraryUpdateRequest"
                         }
                     }
                 ],
@@ -202,7 +202,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers.librarySwagger"
+                            "$ref": "#/definitions/handlers.librarySwagger"
                         }
                     },
                     "400": {
@@ -280,7 +280,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_db_sqlc.MediaItem"
+                                "$ref": "#/definitions/dbgen.MediaItem"
                             }
                         }
                     }
@@ -309,7 +309,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Movie"
+                            "$ref": "#/definitions/model.Movie"
                         }
                     }
                 }
@@ -337,7 +337,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Series"
+                            "$ref": "#/definitions/model.Series"
                         }
                     }
                 }
@@ -356,7 +356,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers.SettingsListResponse"
+                            "$ref": "#/definitions/handlers.SettingsListResponse"
                         }
                     }
                 }
@@ -376,7 +376,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers.PatchRequest"
+                            "$ref": "#/definitions/handlers.PatchRequest"
                         }
                     }
                 ],
@@ -401,7 +401,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_kyleaupton_snaggle_backend_internal_db_sqlc.MediaItem": {
+        "dbgen.MediaItem": {
             "type": "object",
             "required": [
                 "created_at",
@@ -415,7 +415,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -433,102 +433,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "year": {
                     "type": "integer"
                 }
             }
         },
-        "github_com_kyleaupton_snaggle_backend_internal_model.Movie": {
-            "type": "object",
-            "required": [
-                "backdropPath",
-                "posterPath",
-                "releaseDate",
-                "title",
-                "tmdbId"
-            ],
-            "properties": {
-                "backdropPath": {
-                    "type": "string"
-                },
-                "posterPath": {
-                    "type": "string"
-                },
-                "releaseDate": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "tmdbId": {
-                    "description": "General movie details",
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_kyleaupton_snaggle_backend_internal_model.Rail": {
-            "type": "object",
-            "required": [
-                "id",
-                "movies",
-                "series",
-                "title",
-                "type"
-            ],
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "movies": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Movie"
-                    }
-                },
-                "series": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_kyleaupton_snaggle_backend_internal_model.Series"
-                    }
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_kyleaupton_snaggle_backend_internal_model.Series": {
-            "type": "object",
-            "required": [
-                "backdropPath",
-                "posterPath",
-                "releaseDate",
-                "title",
-                "tmdbId"
-            ],
-            "properties": {
-                "backdropPath": {
-                    "type": "string"
-                },
-                "posterPath": {
-                    "type": "string"
-                },
-                "releaseDate": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "tmdbId": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_http_handlers.LibraryCreateRequest": {
+        "handlers.LibraryCreateRequest": {
             "type": "object",
             "required": [
                 "enabled",
@@ -551,7 +463,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_http_handlers.LibraryUpdateRequest": {
+        "handlers.LibraryUpdateRequest": {
             "type": "object",
             "required": [
                 "enabled",
@@ -574,7 +486,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_http_handlers.LoginRequest": {
+        "handlers.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -589,7 +501,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_http_handlers.LoginResponse": {
+        "handlers.LoginResponse": {
             "type": "object",
             "required": [
                 "token"
@@ -600,7 +512,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_http_handlers.PatchRequest": {
+        "handlers.PatchRequest": {
             "type": "object",
             "required": [
                 "key",
@@ -613,11 +525,11 @@ const docTemplate = `{
                 "value": {}
             }
         },
-        "internal_http_handlers.SettingsListResponse": {
+        "handlers.SettingsListResponse": {
             "type": "object",
             "additionalProperties": {}
         },
-        "internal_http_handlers.librarySwagger": {
+        "handlers.librarySwagger": {
             "type": "object",
             "required": [
                 "created_at",
@@ -652,31 +564,356 @@ const docTemplate = `{
                 }
             }
         },
-        "pgtype.InfinityModifier": {
-            "type": "integer",
-            "format": "int32",
-            "enum": [
-                1,
-                0,
-                -1
-            ],
-            "x-enum-varnames": [
-                "Infinity",
-                "Finite",
-                "NegativeInfinity"
-            ]
-        },
-        "pgtype.Timestamptz": {
+        "model.Genre": {
             "type": "object",
+            "required": [
+                "name",
+                "tmdbId"
+            ],
             "properties": {
-                "infinityModifier": {
-                    "$ref": "#/definitions/pgtype.InfinityModifier"
-                },
-                "time": {
+                "name": {
                     "type": "string"
                 },
-                "valid": {
+                "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Movie": {
+            "type": "object",
+            "required": [
+                "backdropPath",
+                "originCountry",
+                "originalLanguage",
+                "overview",
+                "posterPath",
+                "productionCompanies",
+                "productionCountries",
+                "releaseDate",
+                "runtime",
+                "status",
+                "tagline",
+                "title",
+                "tmdbId"
+            ],
+            "properties": {
+                "backdropPath": {
+                    "type": "string"
+                },
+                "originCountry": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "originalLanguage": {
+                    "type": "string"
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "posterPath": {
+                    "type": "string"
+                },
+                "productionCompanies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProductionCompany"
+                    }
+                },
+                "productionCountries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProductionCountry"
+                    }
+                },
+                "releaseDate": {
+                    "type": "string"
+                },
+                "runtime": {
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "Stats",
+                    "type": "string"
+                },
+                "tagline": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.MovieRail": {
+            "type": "object",
+            "required": [
+                "overview",
+                "posterPath",
+                "releaseDate",
+                "title",
+                "tmdbId"
+            ],
+            "properties": {
+                "overview": {
+                    "type": "string"
+                },
+                "posterPath": {
+                    "type": "string"
+                },
+                "releaseDate": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Network": {
+            "type": "object",
+            "required": [
+                "logoPath",
+                "name",
+                "tmdbId"
+            ],
+            "properties": {
+                "logoPath": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Person": {
+            "type": "object",
+            "required": [
+                "name",
+                "profilePath",
+                "tmdbId"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "profilePath": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ProductionCompany": {
+            "type": "object",
+            "required": [
+                "logoPath",
+                "name",
+                "originCountry",
+                "tmdbId"
+            ],
+            "properties": {
+                "logoPath": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "originCountry": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ProductionCountry": {
+            "type": "object",
+            "required": [
+                "iso3166_1",
+                "name"
+            ],
+            "properties": {
+                "iso3166_1": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Rail": {
+            "type": "object",
+            "required": [
+                "id",
+                "movies",
+                "series",
+                "title",
+                "type"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "movies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.MovieRail"
+                    }
+                },
+                "series": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.SeriesRail"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Season": {
+            "type": "object",
+            "required": [
+                "airDate",
+                "overview",
+                "posterPath",
+                "seasonNumber",
+                "title",
+                "tmdbId"
+            ],
+            "properties": {
+                "airDate": {
+                    "type": "string"
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "posterPath": {
+                    "type": "string"
+                },
+                "seasonNumber": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Series": {
+            "type": "object",
+            "required": [
+                "backdropPath",
+                "createdBy",
+                "firstAirDate",
+                "genres",
+                "inProduction",
+                "lastAirDate",
+                "networks",
+                "overview",
+                "posterPath",
+                "seasons",
+                "status",
+                "tagline",
+                "title",
+                "tmdbId"
+            ],
+            "properties": {
+                "backdropPath": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Person"
+                    }
+                },
+                "firstAirDate": {
+                    "type": "string"
+                },
+                "genres": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Genre"
+                    }
+                },
+                "inProduction": {
                     "type": "boolean"
+                },
+                "lastAirDate": {
+                    "type": "string"
+                },
+                "networks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Network"
+                    }
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "posterPath": {
+                    "type": "string"
+                },
+                "seasons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Season"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tagline": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.SeriesRail": {
+            "type": "object",
+            "required": [
+                "overview",
+                "posterPath",
+                "releaseDate",
+                "title",
+                "tmdbId"
+            ],
+            "properties": {
+                "overview": {
+                    "type": "string"
+                },
+                "posterPath": {
+                    "type": "string"
+                },
+                "releaseDate": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
                 }
             }
         }
