@@ -12,7 +12,17 @@ set -euo pipefail
 
 export PORT POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD SSE_ALLOW_ORIGIN DATABASE_URL
 
+:
+: "${RUNTIME_MODE:=prod}"
 echo "[entrypoint] Using DATABASE_URL=${DATABASE_URL}"
-echo "[entrypoint] Starting supervisord (Postgres -> wait-for-db -> API -> Nginx)"
+echo "[entrypoint] RUNTIME_MODE=${RUNTIME_MODE}"
 
-exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
+if [ "$RUNTIME_MODE" = "dev" ]; then
+  echo "[entrypoint] Using dev supervisor + nginx configs"
+  # Replace default nginx config with dev proxy
+  cp -f /etc/nginx/conf.d/default.dev.conf /etc/nginx/conf.d/default.conf || true
+  exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.dev.conf
+else
+  echo "[entrypoint] Using prod supervisor + nginx configs"
+  exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
+fi
