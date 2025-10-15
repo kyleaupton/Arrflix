@@ -22,7 +22,21 @@ const router = createRouter({
     },
     {
       path: '/settings',
-      component: () => import('@/views/Settings.vue'),
+      component: () => import('@/views/settings/SettingsLayout.vue'),
+      children: [
+        {
+          path: '',
+          redirect: '/settings/general',
+        },
+        {
+          path: 'general',
+          component: () => import('@/views/settings/GeneralSettings.vue'),
+        },
+        {
+          path: 'libraries',
+          component: () => import('@/views/settings/LibrarySettings.vue'),
+        },
+      ],
     },
     {
       path: '/login',

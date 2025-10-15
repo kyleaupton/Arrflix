@@ -23,18 +23,16 @@ onMounted(async () => {
   <!-- <Toast /> -->
 
   <div class="app-shell" :class="{ auth: route.meta.layout === 'auth' }">
+    <AppHeader
+      v-if="route.meta.layout !== 'auth'"
+      v-model:mobileSidebarVisible="mobileSidebarVisible"
+    />
+
     <AppSidebar v-if="route.meta.layout !== 'auth'" v-model:mobileVisible="mobileSidebarVisible" />
 
-    <div class="app-body">
-      <AppHeader
-        v-if="route.meta.layout !== 'auth'"
-        @toggle-sidebar="mobileSidebarVisible = true"
-      />
-
-      <main class="app-main">
-        <RouterView />
-      </main>
-    </div>
+    <main class="app-main">
+      <RouterView />
+    </main>
   </div>
 </template>
 
@@ -42,33 +40,19 @@ onMounted(async () => {
 .app-shell {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   overflow-x: hidden; /* prevent stray horizontal scroll from flex gaps or sticky elements */
-}
-
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
 .app-main {
   flex: 1 1 auto;
   min-width: 0; /* allow children to shrink without forcing horizontal scroll */
-}
-
-.app-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  flex: 1 1 auto; /* take remaining width next to sidebar without overflowing */
-  min-width: 0; /* critical for flex layouts to avoid overflow */
   padding: 0.75rem;
 }
 
 @media (min-width: 1024px) {
-  .app-body {
+  .app-main {
     padding: 1rem 1.25rem 1.25rem 1rem;
-    gap: 1rem;
   }
 }
 
@@ -76,7 +60,7 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-.auth .app-body {
+.auth .app-main {
   max-width: 100%;
   margin: 0 auto;
 }
