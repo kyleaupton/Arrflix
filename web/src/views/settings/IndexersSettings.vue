@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import Button from 'primevue/button'
 import { getV1IndexersConfiguredOptions } from '@/client/@tanstack/vue-query.gen'
@@ -9,8 +10,12 @@ import {
   createIndexerActions,
 } from '@/components/tables/configs/indexerTableConfig'
 import DataTable from '@/components/tables/DataTable.vue'
+import AddIndexerModal from '@/components/modals/AddIndexerModal.vue'
 
-const { data: indexers, isLoading, error } = useQuery(getV1IndexersConfiguredOptions())
+const { data: indexers, isLoading, error, refetch } = useQuery(getV1IndexersConfiguredOptions())
+
+// Modal state
+const showAddModal = ref(false)
 
 const handleEdit = (indexer: JackettIndexerConfig) => {
   console.log('Edit indexer:', indexer)
@@ -28,8 +33,13 @@ const handleDelete = (indexer: JackettIndexerConfig) => {
 }
 
 const handleAddIndexer = () => {
-  console.log('Add new indexer')
-  // TODO: Implement add functionality
+  showAddModal.value = true
+}
+
+const handleIndexerAdded = (newIndexer: JackettIndexerConfig) => {
+  console.log('Indexer added:', newIndexer)
+  // Refetch the indexers list to show the new one
+  refetch()
 }
 
 const indexerActions = createIndexerActions(handleEdit, handleToggle, handleDelete)
@@ -65,6 +75,9 @@ const indexerActions = createIndexerActions(handleEdit, handleToggle, handleDele
         />
       </div>
     </div>
+
+    <!-- Add Indexer Modal -->
+    <AddIndexerModal v-model:visible="showAddModal" @indexer-added="handleIndexerAdded" />
   </div>
 </template>
 
