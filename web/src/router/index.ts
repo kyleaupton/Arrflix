@@ -36,6 +36,10 @@ const router = createRouter({
           path: 'libraries',
           component: () => import('@/views/settings/LibrarySettings.vue'),
         },
+        {
+          path: 'indexers',
+          component: () => import('@/views/settings/IndexersSettings.vue'),
+        },
       ],
     },
     {

@@ -171,6 +171,7 @@ onUnmounted(() => {
   background: var(--bg);
   border-radius: 32px;
   margin: 1rem;
+  margin-bottom: 0;
 }
 
 .menu-btn {
