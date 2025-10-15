@@ -15,6 +15,26 @@ export type DbgenMediaItem = {
     year: number;
 };
 
+export type HandlersIndexerCreateRequest = {
+    description: string;
+    enabled: boolean;
+    fields: {
+        [key: string]: unknown;
+    };
+    name: string;
+    type: string;
+};
+
+export type HandlersIndexerUpdateRequest = {
+    description: string;
+    enabled: boolean;
+    fields: {
+        [key: string]: unknown;
+    };
+    name: string;
+    type: string;
+};
+
 export type HandlersLibraryCreateRequest = {
     enabled: boolean;
     name: string;
@@ -55,6 +75,18 @@ export type HandlersLibrarySwagger = {
     root_path: string;
     type: string;
     updated_at: string;
+};
+
+export type JackettIndexerConfig = {
+    configured?: boolean;
+    description?: string;
+    enabled?: boolean;
+    fields?: {
+        [key: string]: unknown;
+    };
+    id?: string;
+    name?: string;
+    type?: string;
 };
 
 export type ModelGenre = {
@@ -205,6 +237,223 @@ export type GetV1HomeResponses = {
 };
 
 export type GetV1HomeResponse = GetV1HomeResponses[keyof GetV1HomeResponses];
+
+export type GetV1IndexersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/indexers';
+};
+
+export type GetV1IndexersResponses = {
+    /**
+     * OK
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type GetV1IndexersResponse = GetV1IndexersResponses[keyof GetV1IndexersResponses];
+
+export type PostV1IndexersData = {
+    /**
+     * Create indexer
+     */
+    body: HandlersIndexerCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/indexers';
+};
+
+export type PostV1IndexersErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1IndexersError = PostV1IndexersErrors[keyof PostV1IndexersErrors];
+
+export type PostV1IndexersResponses = {
+    /**
+     * Created
+     */
+    201: JackettIndexerConfig;
+};
+
+export type PostV1IndexersResponse = PostV1IndexersResponses[keyof PostV1IndexersResponses];
+
+export type GetV1IndexersConfiguredData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/indexers/configured';
+};
+
+export type GetV1IndexersConfiguredResponses = {
+    /**
+     * OK
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type GetV1IndexersConfiguredResponse = GetV1IndexersConfiguredResponses[keyof GetV1IndexersConfiguredResponses];
+
+export type GetV1IndexersUnconfiguredData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/indexers/unconfigured';
+};
+
+export type GetV1IndexersUnconfiguredResponses = {
+    /**
+     * OK
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type GetV1IndexersUnconfiguredResponse = GetV1IndexersUnconfiguredResponses[keyof GetV1IndexersUnconfiguredResponses];
+
+export type DeleteV1IndexersByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Indexer ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/indexers/{id}';
+};
+
+export type DeleteV1IndexersByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type DeleteV1IndexersByIdError = DeleteV1IndexersByIdErrors[keyof DeleteV1IndexersByIdErrors];
+
+export type DeleteV1IndexersByIdResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type DeleteV1IndexersByIdResponse = DeleteV1IndexersByIdResponses[keyof DeleteV1IndexersByIdResponses];
+
+export type GetV1IndexersByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Indexer ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/indexers/{id}';
+};
+
+export type GetV1IndexersByIdErrors = {
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1IndexersByIdError = GetV1IndexersByIdErrors[keyof GetV1IndexersByIdErrors];
+
+export type GetV1IndexersByIdResponses = {
+    /**
+     * OK
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type GetV1IndexersByIdResponse = GetV1IndexersByIdResponses[keyof GetV1IndexersByIdResponses];
+
+export type GetV1IndexersByIdConfigData = {
+    body?: never;
+    path: {
+        /**
+         * Indexer ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/indexers/{id}/config';
+};
+
+export type GetV1IndexersByIdConfigErrors = {
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1IndexersByIdConfigError = GetV1IndexersByIdConfigErrors[keyof GetV1IndexersByIdConfigErrors];
+
+export type GetV1IndexersByIdConfigResponses = {
+    /**
+     * OK
+     */
+    200: JackettIndexerConfig;
+};
+
+export type GetV1IndexersByIdConfigResponse = GetV1IndexersByIdConfigResponses[keyof GetV1IndexersByIdConfigResponses];
+
+export type PutV1IndexersByIdConfigData = {
+    /**
+     * Update indexer
+     */
+    body: HandlersIndexerUpdateRequest;
+    path: {
+        /**
+         * Indexer ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/indexers/{id}/config';
+};
+
+export type PutV1IndexersByIdConfigErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PutV1IndexersByIdConfigError = PutV1IndexersByIdConfigErrors[keyof PutV1IndexersByIdConfigErrors];
+
+export type PutV1IndexersByIdConfigResponses = {
+    /**
+     * OK
+     */
+    200: JackettIndexerConfig;
+};
+
+export type PutV1IndexersByIdConfigResponse = PutV1IndexersByIdConfigResponses[keyof PutV1IndexersByIdConfigResponses];
 
 export type GetV1LibrariesData = {
     body?: never;

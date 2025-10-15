@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, GetHealthData, GetHealthResponses, GetV1HomeData, GetV1HomeResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses } from './types.gen';
+import type { DeleteV1IndexersByIdData, DeleteV1IndexersByIdErrors, DeleteV1IndexersByIdResponses, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, GetHealthData, GetHealthResponses, GetV1HomeData, GetV1HomeResponses, GetV1IndexersByIdConfigData, GetV1IndexersByIdConfigErrors, GetV1IndexersByIdConfigResponses, GetV1IndexersByIdData, GetV1IndexersByIdErrors, GetV1IndexersByIdResponses, GetV1IndexersConfiguredData, GetV1IndexersConfiguredResponses, GetV1IndexersData, GetV1IndexersResponses, GetV1IndexersUnconfiguredData, GetV1IndexersUnconfiguredResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1IndexersData, PostV1IndexersErrors, PostV1IndexersResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PutV1IndexersByIdConfigData, PutV1IndexersByIdConfigErrors, PutV1IndexersByIdConfigResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -49,6 +49,94 @@ export const getV1Home = <ThrowOnError extends boolean = false>(options?: Option
     return (options?.client ?? client).get<GetV1HomeResponses, unknown, ThrowOnError>({
         url: '/v1/home',
         ...options
+    });
+};
+
+/**
+ * List all indexers
+ */
+export const getV1Indexers = <ThrowOnError extends boolean = false>(options?: Options<GetV1IndexersData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1IndexersResponses, unknown, ThrowOnError>({
+        url: '/v1/indexers',
+        ...options
+    });
+};
+
+/**
+ * Create indexer
+ */
+export const postV1Indexers = <ThrowOnError extends boolean = false>(options: Options<PostV1IndexersData, ThrowOnError>) => {
+    return (options.client ?? client).post<PostV1IndexersResponses, PostV1IndexersErrors, ThrowOnError>({
+        url: '/v1/indexers',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * List configured indexers
+ */
+export const getV1IndexersConfigured = <ThrowOnError extends boolean = false>(options?: Options<GetV1IndexersConfiguredData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1IndexersConfiguredResponses, unknown, ThrowOnError>({
+        url: '/v1/indexers/configured',
+        ...options
+    });
+};
+
+/**
+ * List unconfigured indexers
+ */
+export const getV1IndexersUnconfigured = <ThrowOnError extends boolean = false>(options?: Options<GetV1IndexersUnconfiguredData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1IndexersUnconfiguredResponses, unknown, ThrowOnError>({
+        url: '/v1/indexers/unconfigured',
+        ...options
+    });
+};
+
+/**
+ * Delete indexer
+ */
+export const deleteV1IndexersById = <ThrowOnError extends boolean = false>(options: Options<DeleteV1IndexersByIdData, ThrowOnError>) => {
+    return (options.client ?? client).delete<DeleteV1IndexersByIdResponses, DeleteV1IndexersByIdErrors, ThrowOnError>({
+        url: '/v1/indexers/{id}',
+        ...options
+    });
+};
+
+/**
+ * Get indexer by ID
+ */
+export const getV1IndexersById = <ThrowOnError extends boolean = false>(options: Options<GetV1IndexersByIdData, ThrowOnError>) => {
+    return (options.client ?? client).get<GetV1IndexersByIdResponses, GetV1IndexersByIdErrors, ThrowOnError>({
+        url: '/v1/indexers/{id}',
+        ...options
+    });
+};
+
+/**
+ * Get indexer configuration
+ */
+export const getV1IndexersByIdConfig = <ThrowOnError extends boolean = false>(options: Options<GetV1IndexersByIdConfigData, ThrowOnError>) => {
+    return (options.client ?? client).get<GetV1IndexersByIdConfigResponses, GetV1IndexersByIdConfigErrors, ThrowOnError>({
+        url: '/v1/indexers/{id}/config',
+        ...options
+    });
+};
+
+/**
+ * Update indexer configuration
+ */
+export const putV1IndexersByIdConfig = <ThrowOnError extends boolean = false>(options: Options<PutV1IndexersByIdConfigData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1IndexersByIdConfigResponses, PutV1IndexersByIdConfigErrors, ThrowOnError>({
+        url: '/v1/indexers/{id}/config',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
     });
 };
 
