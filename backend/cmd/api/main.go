@@ -38,7 +38,14 @@ func main() {
 	repo := repo.New(pool)
 
 	// Services
-	services := service.New(repo, logg, service.WithJWTSecret(cfg.JWTSecret))
+	services := service.New(repo, logg, &cfg, service.WithJWTSecret(cfg.JWTSecret))
+
+	// test
+	res, err := services.Indexer.ListAllIndexers(context.Background())
+	if err != nil {
+		logg.Fatal().Err(err).Msg("all indexers")
+	}
+	logg.Info().Interface("indexers", res).Msg("all indexers")
 
 	// HTTP
 	e := http.NewServer(cfg, logg, pool, services, repo)

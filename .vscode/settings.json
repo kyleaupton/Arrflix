@@ -6,5 +6,6 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[go]": {
     "editor.defaultFormatter": "golang.go"
-  }
+  },
+  "remote.autoForwardPorts": false
 }

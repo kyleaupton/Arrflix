@@ -1,12 +1,14 @@
 package service
 
 import (
+	"github.com/kyleaupton/snaggle/backend/internal/config"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
 
 type Services struct {
 	Auth      *AuthService
+	Indexer   *IndexerService
 	Libraries *LibrariesService
 	Media     *MediaService
 	Rails     *RailsService
@@ -15,7 +17,7 @@ type Services struct {
 	Tmdb      *TmdbService
 }
 
-func New(r *repo.Repository, l *logger.Logger, opts ...Option) *Services {
+func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option) *Services {
 	cfg := &cfg{}
 	for _, o := range opts {
 		o.apply(cfg)
@@ -25,6 +27,7 @@ func New(r *repo.Repository, l *logger.Logger, opts ...Option) *Services {
 
 	return &Services{
 		Auth:      NewAuthService(r, cfg),
+		Indexer:   NewIndexerService(r, l, c),
 		Libraries: NewLibrariesService(r),
 		Media:     NewMediaService(r, l, tmdb),
 		Rails:     NewRailsService(r, tmdb),
