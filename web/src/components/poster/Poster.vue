@@ -24,10 +24,31 @@ import {
   type ModelSeriesRail,
 } from '@/client/types.gen'
 
+// Poster size configuration
+const POSTER_SIZES = {
+  small: {
+    width: '8rem', // ~128px
+    class: 'poster--sm',
+    tmdbSize: 'w154',
+  },
+  medium: {
+    width: '11rem', // ~176px
+    class: 'poster--md',
+    tmdbSize: 'w185',
+  },
+  large: {
+    width: '16rem', // ~256px
+    class: 'poster--lg',
+    tmdbSize: 'w342',
+  },
+} as const
+
+type PosterSize = keyof typeof POSTER_SIZES
+
 const props = withDefaults(
   defineProps<{
     item: ModelMovie | ModelSeries | ModelMovieRail | ModelSeriesRail
-    size?: 'small' | 'medium' | 'large'
+    size?: PosterSize
   }>(),
   {
     size: 'medium',
@@ -35,13 +56,12 @@ const props = withDefaults(
 )
 
 const posterPath = computed(() => {
-  return `https://image.tmdb.org/t/p/w342/${props.item.posterPath}`
+  const sizeConfig = POSTER_SIZES[props.size]
+  return `https://image.tmdb.org/t/p/${sizeConfig.tmdbSize}/${props.item.posterPath}`
 })
 
 const sizeClass = computed(() => {
-  if (props.size === 'small') return 'poster--sm'
-  if (props.size === 'large') return 'poster--lg'
-  return 'poster--md'
+  return POSTER_SIZES[props.size].class
 })
 
 const isLoading = ref(true)
@@ -87,14 +107,20 @@ const onError = () => {
 }
 
 .poster--sm {
-  max-width: 154px; /* roughly TMDB w154 */
+  --poster-width: 8rem; /* ~128px */
+  width: var(--poster-width);
+  max-width: var(--poster-width);
 }
 
 .poster--md {
-  max-width: 342px; /* roughly TMDB w342 */
+  --poster-width: 11rem; /* ~176px */
+  width: var(--poster-width);
+  max-width: var(--poster-width);
 }
 
 .poster--lg {
-  max-width: 500px; /* roughly TMDB w500 */
+  --poster-width: 16rem; /* ~256px */
+  width: var(--poster-width);
+  max-width: var(--poster-width);
 }
 </style>

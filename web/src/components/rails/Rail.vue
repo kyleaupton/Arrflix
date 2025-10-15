@@ -36,13 +36,13 @@
         @scroll="onScroll"
       >
         <template v-if="rail.type === 'movie'">
-          <div v-for="movie in rail.movies" :key="movie.tmdbId" class="snap-start">
+          <div v-for="movie in rail.movies" :key="movie.tmdbId" class="snap-start flex-shrink-0">
             <Poster :item="movie" :to="{ path: `/movie/${movie.tmdbId}` }" />
           </div>
         </template>
 
         <template v-else-if="rail.type === 'series'">
-          <div v-for="series in rail.series" :key="series.tmdbId" class="snap-start">
+          <div v-for="series in rail.series" :key="series.tmdbId" class="snap-start flex-shrink-0">
             <Poster :item="series" :to="{ path: `/series/${series.tmdbId}` }" />
           </div>
         </template>
