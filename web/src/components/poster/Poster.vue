@@ -1,5 +1,5 @@
 <template>
-  <div class="poster-wrap" :class="sizeClass">
+  <component :is="to ? 'router-link' : 'div'" :to="to" class="poster-wrap" :class="sizeClass">
     <img
       class="poster"
       :class="{ 'is-loaded': !isLoading }"
@@ -11,7 +11,7 @@
       @error="onError"
     />
     <Skeleton v-if="isLoading" class="poster-skeleton" />
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -49,6 +49,7 @@ const props = withDefaults(
   defineProps<{
     item: ModelMovie | ModelSeries | ModelMovieRail | ModelSeriesRail
     size?: PosterSize
+    to?: { path: string } | string
   }>(),
   {
     size: 'medium',
@@ -73,16 +74,18 @@ const onError = () => {
 }
 </script>
 
-<style scoped></style>
 <style scoped>
 .poster-wrap {
   display: block;
   width: 100%;
   aspect-ratio: 2 / 3; /* common movie/TV poster ratio */
   position: relative;
-  border-radius: 8px;
+  border-radius: 8px !important;
   overflow: hidden;
   background-color: #111827; /* neutral placeholder while loading */
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 }
 
 .poster {
@@ -93,6 +96,7 @@ const onError = () => {
   object-fit: cover;
   opacity: 0;
   transition: opacity 150ms ease;
+  border-radius: 8px !important;
 }
 
 .poster.is-loaded {
@@ -104,6 +108,7 @@ const onError = () => {
   inset: 0;
   width: 100%;
   height: 100%;
+  border-radius: 8px !important;
 }
 
 .poster--sm {

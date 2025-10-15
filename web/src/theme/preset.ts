@@ -20,6 +20,11 @@ const SnagglePreset = definePreset(Aura, {
       offset: '2px',
       shadow: '0 0 0 2px color-mix(in oklab, #7c3aed, transparent 70%)',
     },
+    shadow: {
+      1: 'inset 0 1px 2px #ffffff30, 0 1px 2px #00000030, 0 2px 4px #00000015', // --shadow-sm
+      2: 'inset 0 1px 2px #ffffff50, 0 2px 4px #00000030, 0 4px 8px #00000015', // --shadow-md
+      3: 'inset 0 1px 2px #ffffff70, 0 4px 6px #00000030, 0 6px 10px #00000015', // --shadow-lg
+    },
     colorScheme: {
       light: {
         primary: {
@@ -36,6 +41,20 @@ const SnagglePreset = definePreset(Aura, {
           hoverColor: '#a78bfa',
           activeColor: '#7c3aed',
         },
+      },
+    },
+  },
+  components: {
+    inputtext: {
+      root: {
+        shadow: '{shadow.1}',
+        borderColor: 'transparent',
+      },
+    },
+    menu: {
+      root: {
+        shadow: '{shadow.1}',
+        borderColor: 'transparent',
       },
     },
   },

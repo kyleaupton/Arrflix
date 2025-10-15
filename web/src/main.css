@@ -14,6 +14,10 @@
   --bg-dark: oklch(0.1 0 264);
   --bg: oklch(0.2 0 264);
   --bg-light: oklch(0.3 0 264);
+
+  --shadow-sm: var(--p-shadow-1);
+  --shadow-md: var(--p-shadow-2);
+  --shadow-lg: var(--p-shadow-3);
 }
 
 html,

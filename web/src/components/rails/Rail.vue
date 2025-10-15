@@ -82,12 +82,17 @@ const onScroll = () => {
 }
 
 const onWheel = (e: WheelEvent) => {
+  // Only handle horizontal scroll if user is explicitly scrolling horizontally
+  // Don't interfere with vertical page scrolling
   const el = scroller.value
   if (!el) return
-  if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+
+  // Only prevent default and scroll horizontally if the user is actually scrolling horizontally
+  if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
     e.preventDefault()
-    el.scrollLeft += e.deltaY
+    el.scrollLeft += e.deltaX
   }
+  // Let vertical scrolling pass through normally
 }
 
 const onKeydown = (e: KeyboardEvent) => {

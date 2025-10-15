@@ -1,5 +1,5 @@
 <template>
-  <header class="app-header">
+  <header class="app-header shadow-[var(--p-shadow-1)]">
     <div class="flex items-center gap-5">
       <Button
         v-if="showMobileMenu"
@@ -13,6 +13,7 @@
         <InputIcon :class="PrimeIcons.SEARCH" />
         <InputText
           v-model="query"
+          :dt="{ root: { borderRadius: '32px' } }"
           class="w-full"
           placeholder="Search"
           variant="filled"
@@ -36,7 +37,43 @@
 
     <div class="flex items-center gap-2">
       <div class="avatar-wrap">
-        <Avatar label="S" shape="circle" />
+        <Avatar class="cursor-pointer" label="S" shape="circle" @click="handleAvatarClick" />
+
+        <Menu ref="menu" :model="items" class="w-full md:w-60" :popup="true">
+          <template #start>
+            <div
+              class="relative overflow-hidden w-full rounded-border bg-transparent flex items-center p-2 pl-4 transition-colors duration-200"
+            >
+              <Avatar
+                image="https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png"
+                class="mr-2"
+                shape="circle"
+              />
+              <span class="inline-flex flex-col items-start">
+                <span class="font-bold">Amy Elsner</span>
+                <span class="text-sm">Admin</span>
+              </span>
+            </div>
+          </template>
+
+          <template #item="{ item, props }">
+            <component
+              :is="item.to ? 'router-link' : 'a'"
+              class="flex items-center"
+              v-bind="props.action"
+              :to="item.to"
+            >
+              <span :class="item.icon" />
+              <span>{{ item.label }}</span>
+              <Badge v-if="item.badge" class="ml-auto" :value="item.badge" />
+              <span
+                v-if="item.shortcut"
+                class="ml-auto border border-surface rounded bg-emphasis text-muted-color text-xs p-1"
+                >{{ item.shortcut }}</span
+              >
+            </component>
+          </template>
+        </Menu>
       </div>
     </div>
   </header>
@@ -44,18 +81,23 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { useRoute, RouterLink, useRouter } from 'vue-router'
 import IconField from 'primevue/iconfield'
 import InputText from 'primevue/inputtext'
 import InputIcon from 'primevue/inputicon'
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
+import Menu, { type MenuMethods } from 'primevue/menu'
+import Badge from 'primevue/badge'
 import { PrimeIcons } from '@/icons'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
+const router = useRouter()
 
 const query = ref('')
 const windowWidth = ref(window.innerWidth)
+const menu = ref<MenuMethods | null>(null)
 
 const mobileSidebarVisible = defineModel<boolean>('mobileSidebarVisible', { default: false })
 
@@ -70,12 +112,41 @@ const links = ref([
   { label: 'Requests', to: '/requests' },
 ])
 
+const items = ref([
+  {
+    separator: true,
+  },
+  {
+    label: 'Messages',
+    icon: PrimeIcons.INBOX,
+    badge: 2,
+  },
+  {
+    label: 'Settings',
+    icon: PrimeIcons.COG,
+    to: '/settings',
+  },
+  {
+    label: 'Logout',
+    icon: PrimeIcons.SIGN_OUT,
+    command: () => {
+      const auth = useAuthStore()
+      auth.logout()
+      router.push('/login')
+    },
+  },
+])
+
 const emit = defineEmits<{
   (e: 'search', query: string): void
 }>()
 
 const handleResize = () => {
   windowWidth.value = window.innerWidth
+}
+
+const handleAvatarClick = (event: MouseEvent) => {
+  menu.value?.toggle(event)
 }
 
 onMounted(() => {
@@ -96,8 +167,10 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   background: var(--bg);
+  border-radius: 32px;
+  margin: 1rem;
 }
 
 .menu-btn {
