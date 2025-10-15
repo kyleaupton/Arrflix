@@ -81,6 +81,55 @@ func (s *TmdbService) GetTrendingSeries(ctx context.Context) (tmdb.Trending, err
 	}, DYNAMIC_TTL)
 }
 
+func (s *TmdbService) GetPopularMovies(ctx context.Context) (tmdb.MoviePopular, error) {
+	cacheKey := "tmdb_popular_movies"
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MoviePopular, error) {
+		return s.client.GetMoviePopular(map[string]string{})
+	}, DYNAMIC_TTL)
+}
+
+func (s *TmdbService) GetTopRatedMovies(ctx context.Context) (tmdb.MovieTopRated, error) {
+	cacheKey := "tmdb_top_rated_movies"
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MovieTopRated, error) {
+		return s.client.GetMovieTopRated(map[string]string{})
+	}, DYNAMIC_TTL)
+}
+
+func (s *TmdbService) GetNowPlayingMovies(ctx context.Context) (tmdb.MovieNowPlaying, error) {
+	cacheKey := "tmdb_now_playing_movies"
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MovieNowPlaying, error) {
+		return s.client.GetMovieNowPlaying(map[string]string{})
+	}, DYNAMIC_TTL)
+}
+
+func (s *TmdbService) GetUpcomingMovies(ctx context.Context) (tmdb.MovieUpcoming, error) {
+	cacheKey := "tmdb_upcoming_movies"
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MovieUpcoming, error) {
+		return s.client.GetMovieUpcoming(map[string]string{})
+	}, DYNAMIC_TTL)
+}
+
+func (s *TmdbService) GetPopularSeries(ctx context.Context) (tmdb.TVPopular, error) {
+	cacheKey := "tmdb_popular_series"
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVPopular, error) {
+		return s.client.GetTVPopular(map[string]string{})
+	}, DYNAMIC_TTL)
+}
+
+func (s *TmdbService) GetTopRatedSeries(ctx context.Context) (tmdb.TVTopRated, error) {
+	cacheKey := "tmdb_top_rated_series"
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVTopRated, error) {
+		return s.client.GetTVTopRated(map[string]string{})
+	}, DYNAMIC_TTL)
+}
+
+func (s *TmdbService) GetOnTheAirSeries(ctx context.Context) (tmdb.TVOnTheAir, error) {
+	cacheKey := "tmdb_on_the_air_series"
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVOnTheAir, error) {
+		return s.client.GetTVOnTheAir(map[string]string{})
+	}, DYNAMIC_TTL)
+}
+
 // getOrFetchFromCache encapsulates the pattern of:
 // 1) checking API cache
 // 2) calling the provided fetch function on cache miss
