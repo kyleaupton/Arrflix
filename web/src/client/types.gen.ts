@@ -136,6 +136,80 @@ export type ModelGenre = {
     tmdbId: number;
 };
 
+export type ModelIndexerCapabilities = {
+    bookSearchParams: Array<string>;
+    categories: Array<ModelIndexerCategory>;
+    limitsDefault: number;
+    limitsMax: number;
+    movieSearchParams: Array<string>;
+    musicSearchParams: Array<string>;
+    searchParams: Array<string>;
+    supportsRawSearch: boolean;
+    tvSearchParams: Array<string>;
+};
+
+export type ModelIndexerCategory = {
+    id: number;
+    name: string;
+    subCategories: Array<ModelIndexerCategory>;
+};
+
+export type ModelIndexerDefinition = {
+    added: string;
+    appProfileId: number;
+    capabilities: ModelIndexerCapabilities;
+    configContract: string;
+    definitionName: string;
+    description: string;
+    downloadClientId: number;
+    enable: boolean;
+    encoding: string;
+    fields: Array<ModelIndexerField>;
+    implementation: string;
+    implementationName: string;
+    indexerUrls: Array<string>;
+    infoLink: string;
+    language: string;
+    legacyUrls: Array<string>;
+    name: string;
+    presets: Array<unknown>;
+    priority: number;
+    privacy: string;
+    protocol: string;
+    redirect: boolean;
+    sortName: string;
+    supportsPagination: boolean;
+    supportsRedirect: boolean;
+    supportsRss: boolean;
+    supportsSearch: boolean;
+    tags: Array<string>;
+};
+
+export type ModelIndexerField = {
+    advanced: boolean;
+    helpLink?: string;
+    helpText?: string;
+    helpTextWarning?: string;
+    hidden?: string;
+    isFloat: boolean;
+    label: string;
+    name: string;
+    order: number;
+    privacy: string;
+    selectOptions?: Array<ModelIndexerSelectOption>;
+    selectOptionsProviderAction?: string;
+    type: string;
+    unit?: string;
+    value?: unknown;
+};
+
+export type ModelIndexerSelectOption = {
+    hint?: string;
+    name: string;
+    order: number;
+    value: unknown;
+};
+
 export type ModelMovie = {
     backdropPath: string;
     originCountry: Array<string>;
@@ -280,22 +354,6 @@ export type GetV1HomeResponses = {
 
 export type GetV1HomeResponse = GetV1HomeResponses[keyof GetV1HomeResponses];
 
-export type GetV1IndexersData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/v1/indexers';
-};
-
-export type GetV1IndexersResponses = {
-    /**
-     * OK
-     */
-    200: Array<JackettIndexerDetails>;
-};
-
-export type GetV1IndexersResponse = GetV1IndexersResponses[keyof GetV1IndexersResponses];
-
 export type GetV1IndexersConfiguredData = {
     body?: never;
     path?: never;
@@ -307,26 +365,24 @@ export type GetV1IndexersConfiguredResponses = {
     /**
      * OK
      */
-    200: Array<JackettIndexerDetails>;
+    200: unknown;
 };
 
-export type GetV1IndexersConfiguredResponse = GetV1IndexersConfiguredResponses[keyof GetV1IndexersConfiguredResponses];
-
-export type GetV1IndexersUnconfiguredData = {
+export type GetV1IndexersSchemaData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/v1/indexers/unconfigured';
+    url: '/v1/indexers/schema';
 };
 
-export type GetV1IndexersUnconfiguredResponses = {
+export type GetV1IndexersSchemaResponses = {
     /**
      * OK
      */
-    200: Array<JackettIndexerDetails>;
+    200: Array<Array<ModelIndexerDefinition>>;
 };
 
-export type GetV1IndexersUnconfiguredResponse = GetV1IndexersUnconfiguredResponses[keyof GetV1IndexersUnconfiguredResponses];
+export type GetV1IndexersSchemaResponse = GetV1IndexersSchemaResponses[keyof GetV1IndexersSchemaResponses];
 
 export type DeleteV1IndexersByIdData = {
     body?: never;

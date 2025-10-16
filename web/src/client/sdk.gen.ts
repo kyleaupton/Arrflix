@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteV1IndexersByIdData, DeleteV1IndexersByIdErrors, DeleteV1IndexersByIdResponses, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, GetHealthData, GetHealthResponses, GetV1HomeData, GetV1HomeResponses, GetV1IndexersByIdConfigData, GetV1IndexersByIdConfigErrors, GetV1IndexersByIdConfigResponses, GetV1IndexersByIdData, GetV1IndexersByIdErrors, GetV1IndexersByIdResponses, GetV1IndexersConfiguredData, GetV1IndexersConfiguredResponses, GetV1IndexersData, GetV1IndexersResponses, GetV1IndexersUnconfiguredData, GetV1IndexersUnconfiguredResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1IndexersByIdConfigData, PostV1IndexersByIdConfigErrors, PostV1IndexersByIdConfigResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses } from './types.gen';
+import type { DeleteV1IndexersByIdData, DeleteV1IndexersByIdErrors, DeleteV1IndexersByIdResponses, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, GetHealthData, GetHealthResponses, GetV1HomeData, GetV1HomeResponses, GetV1IndexersByIdConfigData, GetV1IndexersByIdConfigErrors, GetV1IndexersByIdConfigResponses, GetV1IndexersByIdData, GetV1IndexersByIdErrors, GetV1IndexersByIdResponses, GetV1IndexersConfiguredData, GetV1IndexersConfiguredResponses, GetV1IndexersSchemaData, GetV1IndexersSchemaResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1IndexersByIdConfigData, PostV1IndexersByIdConfigErrors, PostV1IndexersByIdConfigResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -53,16 +53,6 @@ export const getV1Home = <ThrowOnError extends boolean = false>(options?: Option
 };
 
 /**
- * List all indexers
- */
-export const getV1Indexers = <ThrowOnError extends boolean = false>(options?: Options<GetV1IndexersData, ThrowOnError>) => {
-    return (options?.client ?? client).get<GetV1IndexersResponses, unknown, ThrowOnError>({
-        url: '/v1/indexers',
-        ...options
-    });
-};
-
-/**
  * List configured indexers
  */
 export const getV1IndexersConfigured = <ThrowOnError extends boolean = false>(options?: Options<GetV1IndexersConfiguredData, ThrowOnError>) => {
@@ -73,11 +63,11 @@ export const getV1IndexersConfigured = <ThrowOnError extends boolean = false>(op
 };
 
 /**
- * List unconfigured indexers
+ * Get schema of indexers
  */
-export const getV1IndexersUnconfigured = <ThrowOnError extends boolean = false>(options?: Options<GetV1IndexersUnconfiguredData, ThrowOnError>) => {
-    return (options?.client ?? client).get<GetV1IndexersUnconfiguredResponses, unknown, ThrowOnError>({
-        url: '/v1/indexers/unconfigured',
+export const getV1IndexersSchema = <ThrowOnError extends boolean = false>(options?: Options<GetV1IndexersSchemaData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1IndexersSchemaResponses, unknown, ThrowOnError>({
+        url: '/v1/indexers/schema',
         ...options
     });
 };

@@ -1,27 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useQuery } from '@tanstack/vue-query'
-import { PrimeIcons } from '@/icons'
-import { type JackettIndexerDetails } from '@/client/types.gen'
+import { type ModelIndexerDefinition } from '@/client/types.gen'
 import DataTable from '@/components/tables/DataTable.vue'
 import {
   availableIndexerColumns,
   createAvailableIndexerActions,
 } from '@/components/tables/configs/availableIndexerTableConfig'
-import { getV1IndexersUnconfiguredOptions } from '@/client/@tanstack/vue-query.gen'
+import { getV1IndexersSchemaOptions } from '@/client/@tanstack/vue-query.gen'
 
 defineProps<{
-  selectedIndexer: JackettIndexerDetails | null
+  selectedIndexer: ModelIndexerDefinition | null
 }>()
 
 const emit = defineEmits<{
-  'indexer-selected': [indexer: JackettIndexerDetails]
+  'indexer-selected': [indexer: ModelIndexerDefinition]
 }>()
 
-const queryOptions = getV1IndexersUnconfiguredOptions()
+const queryOptions = getV1IndexersSchemaOptions()
 
 // Create actions for the available indexers table
-const availableIndexerActions = createAvailableIndexerActions((indexer: JackettIndexerDetails) => {
+const availableIndexerActions = createAvailableIndexerActions((indexer: ModelIndexerDefinition) => {
   emit('indexer-selected', indexer)
 })
 </script>

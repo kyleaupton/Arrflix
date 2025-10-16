@@ -1,10 +1,10 @@
 import { type TableColumn, type TableAction } from '../DataTable.vue'
-import { type JackettIndexerConfig } from '@/client/types.gen'
+import { type ModelIndexerDefinition } from '@/client/types.gen'
 import { PrimeIcons } from '@/icons'
 
-export const availableIndexerColumns: TableColumn<JackettIndexerConfig>[] = [
+export const availableIndexerColumns: TableColumn<ModelIndexerDefinition>[] = [
   {
-    key: 'title',
+    key: 'name',
     label: 'Name',
     sortable: true,
     filterable: true,
@@ -18,8 +18,8 @@ export const availableIndexerColumns: TableColumn<JackettIndexerConfig>[] = [
     width: '300px',
   },
   {
-    key: 'type',
-    label: 'Type',
+    key: 'language',
+    label: 'Language',
     sortable: true,
     filterable: true,
     width: '120px',
@@ -31,8 +31,8 @@ export const availableIndexerColumns: TableColumn<JackettIndexerConfig>[] = [
 ]
 
 export const createAvailableIndexerActions = (
-  onSelect: (indexer: JackettIndexerConfig) => void,
-): TableAction<JackettIndexerConfig>[] => [
+  onSelect: (indexer: ModelIndexerDefinition) => void,
+): TableAction<ModelIndexerDefinition>[] => [
   {
     key: 'select',
     label: 'Select',

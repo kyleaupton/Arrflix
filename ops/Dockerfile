@@ -49,22 +49,28 @@ COPY ops/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ops/scripts/wait-for-db.sh /usr/local/bin/wait-for-db.sh
 COPY ops/scripts/run-postgres.sh /usr/local/bin/run-postgres.sh
 RUN chmod +x /usr/local/bin/wait-for-db.sh /usr/local/bin/run-postgres.sh
-COPY ops/scripts/wait-for-jackett.sh /usr/local/bin/wait-for-jackett.sh
-RUN chmod +x /usr/local/bin/wait-for-jackett.sh
-COPY ops/scripts/jacket-print-apikey.sh /usr/local/bin/jacket-print-apikey.sh
-RUN chmod +x /usr/local/bin/jacket-print-apikey.sh
+COPY ops/scripts/wait-for-prowlarr.sh /usr/local/bin/wait-for-prowlarr.sh
+RUN chmod +x /usr/local/bin/wait-for-prowlarr.sh
+COPY ops/scripts/prowlarr-print-apikey.sh /usr/local/bin/prowlarr-print-apikey.sh
+RUN chmod +x /usr/local/bin/prowlarr-print-apikey.sh
+COPY ops/scripts/generate-prowlarr-apikey.sh /usr/local/bin/generate-prowlarr-apikey.sh
+RUN chmod +x /usr/local/bin/generate-prowlarr-apikey.sh
+COPY ops/scripts/get-prowlarr-apikey.sh /usr/local/bin/get-prowlarr-apikey.sh
+RUN chmod +x /usr/local/bin/get-prowlarr-apikey.sh
+COPY ops/scripts/start-prowlarr-with-apikey.sh /usr/local/bin/start-prowlarr-with-apikey.sh
+RUN chmod +x /usr/local/bin/start-prowlarr-with-apikey.sh
 
-# Install Jackett (Linux AMD64). Place under /opt/jackett
+# Install Prowlarr (Linux AMD64). Place under /opt/prowlarr
 RUN set -eux; \
-    mkdir -p /opt/jackett && cd /opt/jackett && \
-    curl -fsSL https://github.com/Jackett/Jackett/releases/download/v0.24.131/Jackett.Binaries.LinuxAMDx64.tar.gz -o jackett.tar.gz && \
-    tar -xzf jackett.tar.gz --strip-components=1 && \
-    rm jackett.tar.gz && \
-    ln -sf /opt/jackett/jackett /usr/local/bin/jackett
+    mkdir -p /opt/prowlarr && cd /opt/prowlarr && \
+    curl -fsSL https://github.com/Prowlarr/Prowlarr/releases/download/v2.0.5.5160/Prowlarr.master.2.0.5.5160.linux-core-x64.tar.gz -o prowlarr.tar.gz && \
+    tar -xzf prowlarr.tar.gz --strip-components=1 && \
+    rm prowlarr.tar.gz && \
+    ln -sf /opt/prowlarr/Prowlarr /usr/local/bin/prowlarr
 
 # Prepare Postgres data directory
 RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql
-VOLUME ["/var/lib/postgresql/data", "/data"]
+VOLUME ["/var/lib/postgresql/data", "/var/lib/prowlarr", "/data"]
 
 EXPOSE 8484
 
@@ -120,22 +126,28 @@ COPY ops/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ops/scripts/wait-for-db.sh /usr/local/bin/wait-for-db.sh
 COPY ops/scripts/run-postgres.sh /usr/local/bin/run-postgres.sh
 RUN chmod +x /usr/local/bin/wait-for-db.sh /usr/local/bin/run-postgres.sh
-COPY ops/scripts/wait-for-jackett.sh /usr/local/bin/wait-for-jackett.sh
-RUN chmod +x /usr/local/bin/wait-for-jackett.sh
-COPY ops/scripts/jacket-print-apikey.sh /usr/local/bin/jacket-print-apikey.sh
-RUN chmod +x /usr/local/bin/jacket-print-apikey.sh
+COPY ops/scripts/wait-for-prowlarr.sh /usr/local/bin/wait-for-prowlarr.sh
+RUN chmod +x /usr/local/bin/wait-for-prowlarr.sh
+COPY ops/scripts/prowlarr-print-apikey.sh /usr/local/bin/prowlarr-print-apikey.sh
+RUN chmod +x /usr/local/bin/prowlarr-print-apikey.sh
+COPY ops/scripts/generate-prowlarr-apikey.sh /usr/local/bin/generate-prowlarr-apikey.sh
+RUN chmod +x /usr/local/bin/generate-prowlarr-apikey.sh
+COPY ops/scripts/get-prowlarr-apikey.sh /usr/local/bin/get-prowlarr-apikey.sh
+RUN chmod +x /usr/local/bin/get-prowlarr-apikey.sh
+COPY ops/scripts/start-prowlarr-with-apikey.sh /usr/local/bin/start-prowlarr-with-apikey.sh
+RUN chmod +x /usr/local/bin/start-prowlarr-with-apikey.sh
 
-# Install Jackett (Linux AMD64) into dev image as well
+# Install Prowlarr (Linux AMD64) into dev image as well
 RUN set -eux; \
-    mkdir -p /opt/jackett && cd /opt/jackett && \
-    curl -fsSL https://github.com/Jackett/Jackett/releases/download/v0.24.131/Jackett.Binaries.LinuxAMDx64.tar.gz -o jackett.tar.gz && \
-    tar -xzf jackett.tar.gz --strip-components=1 && \
-    rm jackett.tar.gz && \
-    ln -sf /opt/jackett/jackett /usr/local/bin/jackett
+    mkdir -p /opt/prowlarr && cd /opt/prowlarr && \
+    curl -fsSL https://github.com/Prowlarr/Prowlarr/releases/download/v2.0.5.5160/Prowlarr.master.2.0.5.5160.linux-core-x64.tar.gz -o prowlarr.tar.gz && \
+    tar -xzf prowlarr.tar.gz --strip-components=1 && \
+    rm prowlarr.tar.gz && \
+    ln -sf /opt/prowlarr/Prowlarr /usr/local/bin/prowlarr
 
 # Prepare dirs and volumes
 RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql
-VOLUME ["/var/lib/postgresql/data", "/data"]
+VOLUME ["/var/lib/postgresql/data", "/var/lib/prowlarr", "/data"]
 
 # Placeholders for source mounts; we still need them for context
 WORKDIR /app

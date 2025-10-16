@@ -2,3 +2,4 @@
 web/src/client/** linguist-generated
 backend/internal/http/docs/** linguist-generated
 backend/internal/db/sqlc/** linguist-generated
+backend/internal/prowlarr/** linguist-generated

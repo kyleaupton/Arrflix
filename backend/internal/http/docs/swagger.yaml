@@ -312,6 +312,217 @@ definitions:
     - name
     - tmdbId
     type: object
+  model.IndexerCapabilities:
+    properties:
+      bookSearchParams:
+        items:
+          type: string
+        type: array
+      categories:
+        items:
+          $ref: '#/definitions/model.IndexerCategory'
+        type: array
+      limitsDefault:
+        type: integer
+      limitsMax:
+        type: integer
+      movieSearchParams:
+        items:
+          type: string
+        type: array
+      musicSearchParams:
+        items:
+          type: string
+        type: array
+      searchParams:
+        items:
+          type: string
+        type: array
+      supportsRawSearch:
+        type: boolean
+      tvSearchParams:
+        items:
+          type: string
+        type: array
+    required:
+    - bookSearchParams
+    - categories
+    - limitsDefault
+    - limitsMax
+    - movieSearchParams
+    - musicSearchParams
+    - searchParams
+    - supportsRawSearch
+    - tvSearchParams
+    type: object
+  model.IndexerCategory:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      subCategories:
+        items:
+          $ref: '#/definitions/model.IndexerCategory'
+        type: array
+    required:
+    - id
+    - name
+    - subCategories
+    type: object
+  model.IndexerDefinition:
+    properties:
+      added:
+        type: string
+      appProfileId:
+        type: integer
+      capabilities:
+        $ref: '#/definitions/model.IndexerCapabilities'
+      configContract:
+        type: string
+      definitionName:
+        type: string
+      description:
+        type: string
+      downloadClientId:
+        type: integer
+      enable:
+        type: boolean
+      encoding:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/model.IndexerField'
+        type: array
+      implementation:
+        type: string
+      implementationName:
+        type: string
+      indexerUrls:
+        items:
+          type: string
+        type: array
+      infoLink:
+        type: string
+      language:
+        type: string
+      legacyUrls:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      presets:
+        items: {}
+        type: array
+      priority:
+        type: integer
+      privacy:
+        type: string
+      protocol:
+        type: string
+      redirect:
+        type: boolean
+      sortName:
+        type: string
+      supportsPagination:
+        type: boolean
+      supportsRedirect:
+        type: boolean
+      supportsRss:
+        type: boolean
+      supportsSearch:
+        type: boolean
+      tags:
+        items:
+          type: string
+        type: array
+    required:
+    - added
+    - appProfileId
+    - capabilities
+    - configContract
+    - definitionName
+    - description
+    - downloadClientId
+    - enable
+    - encoding
+    - fields
+    - implementation
+    - implementationName
+    - indexerUrls
+    - infoLink
+    - language
+    - legacyUrls
+    - name
+    - presets
+    - priority
+    - privacy
+    - protocol
+    - redirect
+    - sortName
+    - supportsPagination
+    - supportsRedirect
+    - supportsRss
+    - supportsSearch
+    - tags
+    type: object
+  model.IndexerField:
+    properties:
+      advanced:
+        type: boolean
+      helpLink:
+        type: string
+      helpText:
+        type: string
+      helpTextWarning:
+        type: string
+      hidden:
+        type: string
+      isFloat:
+        type: boolean
+      label:
+        type: string
+      name:
+        type: string
+      order:
+        type: integer
+      privacy:
+        type: string
+      selectOptions:
+        items:
+          $ref: '#/definitions/model.IndexerSelectOption'
+        type: array
+      selectOptionsProviderAction:
+        type: string
+      type:
+        type: string
+      unit:
+        type: string
+      value: {}
+    required:
+    - advanced
+    - isFloat
+    - label
+    - name
+    - order
+    - privacy
+    - type
+    type: object
+  model.IndexerSelectOption:
+    properties:
+      hint:
+        type: string
+      name:
+        type: string
+      order:
+        type: integer
+      value: {}
+    required:
+    - name
+    - order
+    - value
+    type: object
   model.Movie:
     properties:
       backdropPath:
@@ -603,20 +814,6 @@ paths:
       summary: Get rails
       tags:
       - home
-  /v1/indexers:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/jackett.IndexerDetails'
-            type: array
-      summary: List all indexers
-      tags:
-      - indexers
   /v1/indexers/{id}:
     delete:
       parameters:
@@ -725,14 +922,11 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            items:
-              $ref: '#/definitions/jackett.IndexerDetails'
-            type: array
+          schema: {}
       summary: List configured indexers
       tags:
       - indexers
-  /v1/indexers/unconfigured:
+  /v1/indexers/schema:
     get:
       produces:
       - application/json
@@ -741,9 +935,11 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/jackett.IndexerDetails'
+              items:
+                $ref: '#/definitions/model.IndexerDefinition'
+              type: array
             type: array
-      summary: List unconfigured indexers
+      summary: Get schema of indexers
       tags:
       - indexers
   /v1/libraries:

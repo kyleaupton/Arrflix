@@ -12,58 +12,42 @@ type Indexers struct{ svc *service.Services }
 func NewIndexers(s *service.Services) *Indexers { return &Indexers{svc: s} }
 
 func (h *Indexers) RegisterProtected(v1 *echo.Group) {
-	v1.GET("/indexers", h.ListAll)
 	v1.GET("/indexers/configured", h.ListConfigured)
-	v1.GET("/indexers/unconfigured", h.ListUnconfigured)
+	v1.GET("/indexers/schema", h.GetSchema)
 	v1.GET("/indexers/:id", h.Get)
 	v1.GET("/indexers/:id/config", h.GetConfig)
 	v1.POST("/indexers/:id/config", h.SaveConfig)
 	v1.DELETE("/indexers/:id", h.Delete)
 }
 
-// ListAll returns all indexers (both configured and unconfigured)
-// @Summary List all indexers
-// @Tags    indexers
-// @Produce json
-// @Success 200 {array} jackett.IndexerDetails
-// @Router  /v1/indexers [get]
-func (h *Indexers) ListAll(c echo.Context) error {
-	ctx := c.Request().Context()
-	indexers, err := h.svc.Indexer.ListAllIndexers(ctx)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list indexers"})
-	}
-	return c.JSON(http.StatusOK, indexers)
-}
-
 // ListConfigured returns only configured indexers
 // @Summary List configured indexers
 // @Tags    indexers
 // @Produce json
-// @Success 200 {array} jackett.IndexerDetails
+// @Success 200 {object} any
 // @Router  /v1/indexers/configured [get]
 func (h *Indexers) ListConfigured(c echo.Context) error {
 	ctx := c.Request().Context()
-	indexers, err := h.svc.Indexer.IndexersConfigured(ctx)
+	indexers, err := h.svc.Indexer.ListConfiguredIndexers(ctx)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list configured indexers"})
 	}
 	return c.JSON(http.StatusOK, indexers)
 }
 
-// ListUnconfigured returns only unconfigured indexers
-// @Summary List unconfigured indexers
+// ListUnconfigured returns the schema of the indexers
+// @Summary Get schema of indexers
 // @Tags    indexers
 // @Produce json
-// @Success 200 {array} jackett.IndexerDetails
-// @Router  /v1/indexers/unconfigured [get]
-func (h *Indexers) ListUnconfigured(c echo.Context) error {
+// @Success 200 {array} model.IndexerSchema
+// @Router  /v1/indexers/schema [get]
+func (h *Indexers) GetSchema(c echo.Context) error {
 	ctx := c.Request().Context()
-	indexers, err := h.svc.Indexer.IndexersUnconfigured(ctx)
+	schema, err := h.svc.Indexer.GetSchema(ctx)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list unconfigured indexers"})
 	}
-	return c.JSON(http.StatusOK, indexers)
+	return c.JSON(http.StatusOK, schema)
 }
 
 // Get returns a specific indexer by ID
@@ -80,18 +64,18 @@ func (h *Indexers) Get(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "indexer ID required"})
 	}
 
-	ctx := c.Request().Context()
-	allIndexers, err := h.svc.Indexer.ListAllIndexers(ctx)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list indexers"})
-	}
+	// ctx := c.Request().Context()
+	// allIndexers, err := h.svc.Indexer.ListAllIndexers(ctx)
+	// if err != nil {
+	// 	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list indexers"})
+	// }
 
-	// Find the specific indexer
-	for _, indexer := range allIndexers {
-		if indexer.ID == indexerID {
-			return c.JSON(http.StatusOK, indexer)
-		}
-	}
+	// // Find the specific indexer
+	// for _, indexer := range allIndexers {
+	// 	if indexer.ID == indexerID {
+	// 		return c.JSON(http.StatusOK, indexer)
+	// 	}
+	// }
 
 	return c.JSON(http.StatusNotFound, map[string]string{"error": "indexer not found"})
 }

@@ -5,9 +5,8 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Steps from 'primevue/steps'
 import { PrimeIcons } from '@/icons'
-import { type JackettIndexerDetails } from '@/client/types.gen'
+import { type ModelIndexerDefinition } from '@/client/types.gen'
 import { postV1IndexersByIdConfigMutation } from '@/client/@tanstack/vue-query.gen'
-import { createAvailableIndexerActions } from '@/components/tables/configs/availableIndexerTableConfig'
 import SelectIndexerTypeStep from './steps/SelectIndexerTypeStep.vue'
 import ConfigurationStep from './steps/ConfigurationStep.vue'
 import ReviewStep from './steps/ReviewStep.vue'
@@ -19,7 +18,7 @@ const emit = defineEmits<{
 
 // Form state
 const currentStep = ref(0)
-const selectedIndexerType = ref<JackettIndexerDetails | null>(null)
+const selectedIndexerType = ref<ModelIndexerDefinition | null>(null)
 const saveData = ref<Record<string, unknown>>({})
 
 const createIndexerMutation = useMutation({
@@ -69,20 +68,17 @@ const prevStep = () => {
   }
 }
 
-const selectIndexerType = (indexer: JackettIndexerDetails) => {
+const selectIndexerType = (indexer: ModelIndexerDefinition) => {
   selectedIndexerType.value = indexer
 }
 
-// Create actions for the available indexers table
-const availableIndexerActions = createAvailableIndexerActions(selectIndexerType)
-
 const createIndexer = () => {
-  if (canProceed.value && selectedIndexerType.value) {
-    createIndexerMutation.mutate({
-      path: { id: selectedIndexerType.value.id },
-      body: saveData.value,
-    })
-  }
+  // if (canProceed.value && selectedIndexerType.value) {
+  //   createIndexerMutation.mutate({
+  //     path: { id: selectedIndexerType.value.id },
+  //     body: saveData.value,
+  //   })
+  // }
 }
 
 const closeModal = () => {
@@ -126,10 +122,7 @@ const handleUpdateVisible = (visible: boolean) => {
 
         <!-- Step 2: Configuration -->
         <div v-if="currentStep === 1 && selectedIndexerType" class="step-2">
-          <ConfigurationStep
-            :selected-indexer="selectedIndexerType"
-            @update:save-data="saveData = $event"
-          />
+          <ConfigurationStep v-model="saveData" :selected-indexer="selectedIndexerType" />
         </div>
 
         <!-- Step 4: Review -->

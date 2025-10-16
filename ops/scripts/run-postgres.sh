@@ -32,12 +32,17 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
 	  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'snaggle') THEN
 	    CREATE ROLE snaggle LOGIN PASSWORD 'snagglepw';
 	  END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'prowlarr') THEN
+	    CREATE ROLE prowlarr LOGIN PASSWORD 'prowlarrpw';
+	  END IF;
 	END
 	$$;
 EOSQL
 
   echo "[run-postgres] Creating database..."
   psql -U postgres -p ${TEMP_PORT} -c "CREATE DATABASE \"${POSTGRES_DB}\" OWNER \"${POSTGRES_USER}\""
+  psql -U postgres -p ${TEMP_PORT} -c "CREATE DATABASE \"prowlarr-main\" OWNER \"prowlarr\""
+  psql -U postgres -p ${TEMP_PORT} -c "CREATE DATABASE \"prowlarr-log\" OWNER \"prowlarr\""
 
   cleanup_temp
   trap - EXIT

@@ -81,28 +81,6 @@
                 }
             }
         },
-        "/v1/indexers": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "indexers"
-                ],
-                "summary": "List all indexers",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/jackett.IndexerDetails"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/v1/indexers/configured": {
             "get": {
                 "produces": [
@@ -115,17 +93,12 @@
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/jackett.IndexerDetails"
-                            }
-                        }
+                        "schema": {}
                     }
                 }
             }
         },
-        "/v1/indexers/unconfigured": {
+        "/v1/indexers/schema": {
             "get": {
                 "produces": [
                     "application/json"
@@ -133,14 +106,17 @@
                 "tags": [
                     "indexers"
                 ],
-                "summary": "List unconfigured indexers",
+                "summary": "Get schema of indexers",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/jackett.IndexerDetails"
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/model.IndexerDefinition"
+                                }
                             }
                         }
                     }
@@ -1062,6 +1038,301 @@
                 "tmdbId": {
                     "type": "integer"
                 }
+            }
+        },
+        "model.IndexerCapabilities": {
+            "type": "object",
+            "required": [
+                "bookSearchParams",
+                "categories",
+                "limitsDefault",
+                "limitsMax",
+                "movieSearchParams",
+                "musicSearchParams",
+                "searchParams",
+                "supportsRawSearch",
+                "tvSearchParams"
+            ],
+            "properties": {
+                "bookSearchParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.IndexerCategory"
+                    }
+                },
+                "limitsDefault": {
+                    "type": "integer"
+                },
+                "limitsMax": {
+                    "type": "integer"
+                },
+                "movieSearchParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "musicSearchParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "searchParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "supportsRawSearch": {
+                    "type": "boolean"
+                },
+                "tvSearchParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "model.IndexerCategory": {
+            "type": "object",
+            "required": [
+                "id",
+                "name",
+                "subCategories"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "subCategories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.IndexerCategory"
+                    }
+                }
+            }
+        },
+        "model.IndexerDefinition": {
+            "type": "object",
+            "required": [
+                "added",
+                "appProfileId",
+                "capabilities",
+                "configContract",
+                "definitionName",
+                "description",
+                "downloadClientId",
+                "enable",
+                "encoding",
+                "fields",
+                "implementation",
+                "implementationName",
+                "indexerUrls",
+                "infoLink",
+                "language",
+                "legacyUrls",
+                "name",
+                "presets",
+                "priority",
+                "privacy",
+                "protocol",
+                "redirect",
+                "sortName",
+                "supportsPagination",
+                "supportsRedirect",
+                "supportsRss",
+                "supportsSearch",
+                "tags"
+            ],
+            "properties": {
+                "added": {
+                    "type": "string"
+                },
+                "appProfileId": {
+                    "type": "integer"
+                },
+                "capabilities": {
+                    "$ref": "#/definitions/model.IndexerCapabilities"
+                },
+                "configContract": {
+                    "type": "string"
+                },
+                "definitionName": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "downloadClientId": {
+                    "type": "integer"
+                },
+                "enable": {
+                    "type": "boolean"
+                },
+                "encoding": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.IndexerField"
+                    }
+                },
+                "implementation": {
+                    "type": "string"
+                },
+                "implementationName": {
+                    "type": "string"
+                },
+                "indexerUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "infoLink": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "legacyUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "presets": {
+                    "type": "array",
+                    "items": {}
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "privacy": {
+                    "type": "string"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "redirect": {
+                    "type": "boolean"
+                },
+                "sortName": {
+                    "type": "string"
+                },
+                "supportsPagination": {
+                    "type": "boolean"
+                },
+                "supportsRedirect": {
+                    "type": "boolean"
+                },
+                "supportsRss": {
+                    "type": "boolean"
+                },
+                "supportsSearch": {
+                    "type": "boolean"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "model.IndexerField": {
+            "type": "object",
+            "required": [
+                "advanced",
+                "isFloat",
+                "label",
+                "name",
+                "order",
+                "privacy",
+                "type"
+            ],
+            "properties": {
+                "advanced": {
+                    "type": "boolean"
+                },
+                "helpLink": {
+                    "type": "string"
+                },
+                "helpText": {
+                    "type": "string"
+                },
+                "helpTextWarning": {
+                    "type": "string"
+                },
+                "hidden": {
+                    "type": "string"
+                },
+                "isFloat": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "privacy": {
+                    "type": "string"
+                },
+                "selectOptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.IndexerSelectOption"
+                    }
+                },
+                "selectOptionsProviderAction": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value": {}
+            }
+        },
+        "model.IndexerSelectOption": {
+            "type": "object",
+            "required": [
+                "name",
+                "order",
+                "value"
+            ],
+            "properties": {
+                "hint": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "value": {}
             }
         },
         "model.Movie": {
