@@ -14,6 +14,7 @@ services:
       - snaggle_pg_data:/var/lib/postgresql/data
     ports:
       - "8484:8484"
+      - "9117:9117"
     restart: unless-stopped
 
 volumes:

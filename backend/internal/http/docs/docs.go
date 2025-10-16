@@ -104,48 +104,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "object",
-                                "additionalProperties": true
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "indexers"
-                ],
-                "summary": "Create indexer",
-                "parameters": [
-                    {
-                        "description": "Create indexer",
-                        "name": "payload",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.IndexerCreateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/jackett.IndexerConfig"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
+                                "$ref": "#/definitions/jackett.IndexerDetails"
                             }
                         }
                     }
@@ -167,8 +126,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "object",
-                                "additionalProperties": true
+                                "$ref": "#/definitions/jackett.IndexerDetails"
                             }
                         }
                     }
@@ -190,8 +148,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "object",
-                                "additionalProperties": true
+                                "$ref": "#/definitions/jackett.IndexerDetails"
                             }
                         }
                     }
@@ -220,8 +177,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/jackett.IndexerDetails"
                         }
                     },
                     "404": {
@@ -290,7 +246,10 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/jackett.IndexerConfig"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/jackett.IndexerConfigField"
+                            }
                         }
                     },
                     "404": {
@@ -304,7 +263,7 @@ const docTemplate = `{
                     }
                 }
             },
-            "put": {
+            "post": {
                 "consumes": [
                     "application/json"
                 ],
@@ -314,7 +273,7 @@ const docTemplate = `{
                 "tags": [
                     "indexers"
                 ],
-                "summary": "Update indexer configuration",
+                "summary": "Save indexer configuration",
                 "parameters": [
                     {
                         "type": "string",
@@ -324,20 +283,18 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Update indexer",
+                        "description": "Save indexer",
                         "name": "payload",
                         "in": "body",
                         "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.IndexerUpdateRequest"
-                        }
+                        "schema": {}
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "204": {
+                        "description": "No Content",
                         "schema": {
-                            "$ref": "#/definitions/jackett.IndexerConfig"
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -703,62 +660,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.IndexerCreateRequest": {
-            "type": "object",
-            "required": [
-                "description",
-                "enabled",
-                "fields",
-                "name",
-                "type"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "fields": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.IndexerUpdateRequest": {
-            "type": "object",
-            "required": [
-                "description",
-                "enabled",
-                "fields",
-                "name",
-                "type"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "fields": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
         "handlers.LibraryCreateRequest": {
             "type": "object",
             "required": [
@@ -883,26 +784,272 @@ const docTemplate = `{
                 }
             }
         },
-        "jackett.IndexerConfig": {
+        "jackett.IndexerCaps": {
+            "type": "object",
+            "required": [
+                "categories",
+                "limits",
+                "searching",
+                "server"
+            ],
+            "properties": {
+                "categories": {
+                    "type": "object",
+                    "required": [
+                        "categories"
+                    ],
+                    "properties": {
+                        "categories": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": [
+                                    "id",
+                                    "name",
+                                    "subcats"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "subcats": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "required": [
+                                                "id",
+                                                "name"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "limits": {
+                    "type": "object",
+                    "required": [
+                        "default",
+                        "max"
+                    ],
+                    "properties": {
+                        "default": {
+                            "type": "string"
+                        },
+                        "max": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "searching": {
+                    "type": "object",
+                    "required": [
+                        "audioSearch",
+                        "bookSearch",
+                        "movieSearch",
+                        "musicSearch",
+                        "search",
+                        "tvsearch"
+                    ],
+                    "properties": {
+                        "audioSearch": {
+                            "type": "object",
+                            "required": [
+                                "available",
+                                "searchEngine",
+                                "supportedParams"
+                            ],
+                            "properties": {
+                                "available": {
+                                    "type": "string"
+                                },
+                                "searchEngine": {
+                                    "type": "string"
+                                },
+                                "supportedParams": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "bookSearch": {
+                            "type": "object",
+                            "required": [
+                                "available",
+                                "searchEngine",
+                                "supportedParams"
+                            ],
+                            "properties": {
+                                "available": {
+                                    "type": "string"
+                                },
+                                "searchEngine": {
+                                    "type": "string"
+                                },
+                                "supportedParams": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "movieSearch": {
+                            "type": "object",
+                            "required": [
+                                "available",
+                                "searchEngine",
+                                "supportedParams"
+                            ],
+                            "properties": {
+                                "available": {
+                                    "type": "string"
+                                },
+                                "searchEngine": {
+                                    "type": "string"
+                                },
+                                "supportedParams": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "musicSearch": {
+                            "type": "object",
+                            "required": [
+                                "available",
+                                "searchEngine",
+                                "supportedParams"
+                            ],
+                            "properties": {
+                                "available": {
+                                    "type": "string"
+                                },
+                                "searchEngine": {
+                                    "type": "string"
+                                },
+                                "supportedParams": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "search": {
+                            "type": "object",
+                            "required": [
+                                "available",
+                                "searchEngine",
+                                "supportedParams"
+                            ],
+                            "properties": {
+                                "available": {
+                                    "type": "string"
+                                },
+                                "searchEngine": {
+                                    "type": "string"
+                                },
+                                "supportedParams": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "tvsearch": {
+                            "type": "object",
+                            "required": [
+                                "available",
+                                "searchEngine",
+                                "supportedParams"
+                            ],
+                            "properties": {
+                                "available": {
+                                    "type": "string"
+                                },
+                                "searchEngine": {
+                                    "type": "string"
+                                },
+                                "supportedParams": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "server": {
+                    "type": "object",
+                    "required": [
+                        "title"
+                    ],
+                    "properties": {
+                        "title": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "jackett.IndexerConfigField": {
             "type": "object",
             "properties": {
-                "configured": {
-                    "type": "boolean"
-                },
-                "description": {
+                "delimiters": {
                     "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "fields": {
-                    "type": "object",
-                    "additionalProperties": true
                 },
                 "id": {
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "options": {},
+                "pattern": {
+                    "type": "string"
+                },
+                "separator": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "value": {}
+            }
+        },
+        "jackett.IndexerDetails": {
+            "type": "object",
+            "required": [
+                "caps",
+                "configured",
+                "description",
+                "id",
+                "language",
+                "link",
+                "title",
+                "type"
+            ],
+            "properties": {
+                "caps": {
+                    "$ref": "#/definitions/jackett.IndexerCaps"
+                },
+                "configured": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "title": {
                     "type": "string"
                 },
                 "type": {

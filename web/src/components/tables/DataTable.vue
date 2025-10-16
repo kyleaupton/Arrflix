@@ -1,7 +1,8 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 
 <script setup lang="ts" generic="T extends Record<string, any>">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -32,7 +33,7 @@ export interface TableAction<T = any> {
 }
 
 interface Props {
-  data: T[]
+  data?: T[]
   columns: TableColumn<T>[]
   actions?: TableAction<T>[]
   loading?: boolean
@@ -46,9 +47,16 @@ interface Props {
   filterable?: boolean
   searchable?: boolean
   searchPlaceholder?: string
+  // Async loading support (legacy)
+  asyncData?: () => Promise<T[]>
+  autoLoad?: boolean
+  // TanStack Query support - pass query options to use TanStack Query for data fetching
+  // This takes precedence over asyncData when both are provided
+  queryOptions?: any
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  data: () => [],
   loading: false,
   emptyMessage: 'No data available',
   selectionMode: 'single',
@@ -60,24 +68,62 @@ const props = withDefaults(defineProps<Props>(), {
   filterable: true,
   searchable: true,
   searchPlaceholder: 'Search...',
+  autoLoad: true,
 })
 
 const emit = defineEmits<{
   selectionChange: [selection: T | T[] | null]
   rowSelect: [row: T]
   rowUnselect: [row: T]
+  'data-loaded': [data: T[]]
+  'load-error': [error: Error]
+  'query-success': [data: T[]]
+  'query-error': [error: Error]
 }>()
 
 const selectedRows = ref<T | T[] | null>(null)
 const globalFilter = ref('')
 
+// Async loading state (legacy)
+const legacyAsyncData = ref<T[]>([])
+const asyncLoading = ref(false)
+const asyncError = ref<Error | null>(null)
+
+// TanStack Query integration
+const queryResult = props.queryOptions ? useQuery(props.queryOptions) : null
+
+// Determine which data source to use
+// Priority: TanStack Query > asyncData > static data
+const tableData = computed(() => {
+  if (props.queryOptions && queryResult?.data?.value) {
+    return queryResult.data.value
+  }
+  return props.asyncData ? legacyAsyncData.value : props.data || []
+})
+
+const isLoading = computed(() => {
+  if (props.queryOptions && queryResult?.isLoading?.value) {
+    return queryResult.isLoading.value
+  }
+  return props.asyncData ? asyncLoading.value : props.loading
+})
+
+const queryError = computed(() => {
+  if (props.queryOptions && queryResult?.error?.value) {
+    return queryResult.error.value
+  }
+  return asyncError.value
+})
+
 const filteredData = computed(() => {
+  const data = tableData.value
+
   if (!props.searchable || !globalFilter.value) {
-    return props.data
+    return data
   }
 
   const filter = globalFilter.value.toLowerCase()
-  return props.data.filter((row) => {
+  return data.filter((row) => {
     return props.columns.some((column) => {
       const value = getNestedValue(row, column.key as string)
       return String(value).toLowerCase().includes(filter)
@@ -119,6 +165,79 @@ const isActionDisabled = (action: TableAction<T>, row: T) => {
 const isActionVisible = (action: TableAction<T>, row: T) => {
   return action.visible ? action.visible(row) : true
 }
+
+// Async loading functions
+const loadAsyncData = async () => {
+  if (!props.asyncData) return
+
+  try {
+    asyncLoading.value = true
+    asyncError.value = null
+    const data = await props.asyncData()
+    legacyAsyncData.value = data
+    emit('data-loaded', data)
+  } catch (error) {
+    asyncError.value = error as Error
+    emit('load-error', error as Error)
+  } finally {
+    asyncLoading.value = false
+  }
+}
+
+// Expose load function for manual triggering
+const loadData = () => {
+  if (props.asyncData) {
+    loadAsyncData()
+  }
+}
+
+// Auto-load on mount if enabled
+onMounted(() => {
+  if (props.autoLoad && props.asyncData) {
+    loadAsyncData()
+  }
+})
+
+// Watch for asyncData changes
+watch(
+  () => props.asyncData,
+  (newAsyncData) => {
+    if (newAsyncData && props.autoLoad) {
+      loadAsyncData()
+    }
+  },
+)
+
+// Watch for TanStack Query state changes
+watch(
+  () => queryResult?.data?.value,
+  (newData) => {
+    if (newData && props.queryOptions) {
+      emit('query-success', newData)
+    }
+  },
+)
+
+watch(
+  () => queryResult?.error?.value,
+  (newError) => {
+    if (newError && props.queryOptions) {
+      emit('query-error', newError)
+    }
+  },
+)
+
+// Expose methods for parent components
+defineExpose({
+  loadData,
+  asyncData: legacyAsyncData.value,
+  asyncLoading: asyncLoading.value,
+  asyncError: asyncError.value,
+  // TanStack Query methods
+  refetch: queryResult?.refetch,
+  queryResult: queryResult,
+  queryError: queryError.value,
+})
 </script>
 
 <template>
@@ -150,7 +269,7 @@ const isActionVisible = (action: TableAction<T>, row: T) => {
     <!-- Data Table -->
     <DataTable
       :value="filteredData"
-      :loading="loading"
+      :loading="isLoading"
       :selection-mode="selectable ? selectionMode : undefined"
       :selection="selectedRows"
       :paginator="paginator"
@@ -177,7 +296,8 @@ const isActionVisible = (action: TableAction<T>, row: T) => {
         :style="{ width: column.width, textAlign: column.align || 'left' }"
       >
         <template #body="{ data }">
-          <component :is="column.render ? 'div' : 'span'" v-html="renderCell(column, data)" />
+          <span v-if="!column.render">{{ renderCell(column, data) }}</span>
+          <div v-else v-html="renderCell(column, data)"></div>
         </template>
       </Column>
 
@@ -195,8 +315,8 @@ const isActionVisible = (action: TableAction<T>, row: T) => {
               :key="action.key"
               :label="action.label"
               :icon="action.icon"
-              :severity="getActionSeverity(action, data)"
-              :variant="getActionVariant(action, data)"
+              :severity="getActionSeverity(action)"
+              :variant="getActionVariant(action)"
               :disabled="isActionDisabled(action, data)"
               size="small"
               v-show="isActionVisible(action, data)"

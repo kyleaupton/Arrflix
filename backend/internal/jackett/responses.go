@@ -202,14 +202,14 @@ type indexersResp struct {
 
 // IndexerDetails represents detailed information about a configured indexer.
 type IndexerDetails struct {
-	ID          string      `xml:"id,attr"`
-	Configured  string      `xml:"configured,attr"`
-	Title       string      `xml:"title"`
-	Description string      `xml:"description"`
-	Link        string      `xml:"link"`
-	Language    string      `xml:"language"`
-	Type        string      `xml:"type"`
-	Caps        IndexerCaps `xml:"caps"`
+	ID          string      `xml:"id,attr" json:"id"`
+	Configured  string      `xml:"configured,attr" json:"configured"`
+	Title       string      `xml:"title" json:"title"`
+	Description string      `xml:"description" json:"description"`
+	Link        string      `xml:"link" json:"link"`
+	Language    string      `xml:"language" json:"language"`
+	Type        string      `xml:"type" json:"type"`
+	Caps        IndexerCaps `xml:"caps" json:"caps"`
 }
 
 // IndexerCaps represents the capabilities of a configured indexer.
@@ -368,27 +368,36 @@ func parseInt[T int | int32 | int64 | uint | uint32 | uint64](s string) (T, erro
 }
 
 // IndexerConfig represents the configuration for an indexer.
-type IndexerConfig struct {
-	ID          string                 `json:"id,omitempty"`
-	Name        string                 `json:"name,omitempty"`
-	Description string                 `json:"description,omitempty"`
-	Type        string                 `json:"type,omitempty"`
-	Configured  bool                   `json:"configured,omitempty"`
-	Enabled     bool                   `json:"enabled,omitempty"`
-	Fields      map[string]interface{} `json:"fields,omitempty"`
-}
+// type IndexerConfig struct {
+// 	ID          string                 `json:"id,omitempty"`
+// 	Title       string                 `json:"title,omitempty"`
+// 	Description string                 `json:"description,omitempty"`
+// 	Type        string                 `json:"type,omitempty"`
+// 	Configured  bool                   `json:"configured,omitempty"`
+// 	Enabled     bool                   `json:"enabled,omitempty"`
+// 	Fields      map[string]interface{} `json:"fields,omitempty"`
+// }
 
 // IndexerConfigRequest represents a request to create or update an indexer configuration.
-type IndexerConfigRequest struct {
-	Name        string                 `json:"name,omitempty"`
-	Description string                 `json:"description,omitempty"`
-	Type        string                 `json:"type,omitempty"`
-	Enabled     bool                   `json:"enabled,omitempty"`
-	Fields      map[string]interface{} `json:"fields,omitempty"`
+// type IndexerConfigRequest struct {
+// 	Name        string               `json:"name,omitempty"`
+// 	Description string               `json:"description,omitempty"`
+// 	Type        string               `json:"type,omitempty"`
+// 	Enabled     bool                 `json:"enabled,omitempty"`
+// 	Fields      []IndexerConfigField `json:"fields,omitempty"`
+// }
+
+// IndexerFieldConfig represents a single field configuration item.
+type IndexerConfigField struct {
+	ID         string      `json:"id,omitempty"`
+	Type       string      `json:"type,omitempty"`
+	Name       string      `json:"name,omitempty"`
+	Value      interface{} `json:"value,omitempty"`
+	Options    interface{} `json:"options,omitempty"`
+	Separator  string      `json:"separator,omitempty"`
+	Delimiters string      `json:"delimiters,omitempty"`
+	Pattern    string      `json:"pattern,omitempty"`
 }
 
 // IndexerConfigResponse represents the response from getting indexer configuration.
-type IndexerConfigResponse struct {
-	IndexerConfig
-	Error string `json:"error,omitempty"`
-}
+type IndexerConfigResponse []IndexerConfigField

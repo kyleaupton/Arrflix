@@ -15,26 +15,6 @@ export type DbgenMediaItem = {
     year: number;
 };
 
-export type HandlersIndexerCreateRequest = {
-    description: string;
-    enabled: boolean;
-    fields: {
-        [key: string]: unknown;
-    };
-    name: string;
-    type: string;
-};
-
-export type HandlersIndexerUpdateRequest = {
-    description: string;
-    enabled: boolean;
-    fields: {
-        [key: string]: unknown;
-    };
-    name: string;
-    type: string;
-};
-
 export type HandlersLibraryCreateRequest = {
     enabled: boolean;
     name: string;
@@ -77,16 +57,78 @@ export type HandlersLibrarySwagger = {
     updated_at: string;
 };
 
-export type JackettIndexerConfig = {
-    configured?: boolean;
-    description?: string;
-    enabled?: boolean;
-    fields?: {
-        [key: string]: unknown;
+export type JackettIndexerCaps = {
+    categories: {
+        categories: Array<{
+            id: string;
+            name: string;
+            subcats: Array<{
+                id: string;
+                name: string;
+            }>;
+        }>;
     };
+    limits: {
+        default: string;
+        max: string;
+    };
+    searching: {
+        audioSearch: {
+            available: string;
+            searchEngine: string;
+            supportedParams: string;
+        };
+        bookSearch: {
+            available: string;
+            searchEngine: string;
+            supportedParams: string;
+        };
+        movieSearch: {
+            available: string;
+            searchEngine: string;
+            supportedParams: string;
+        };
+        musicSearch: {
+            available: string;
+            searchEngine: string;
+            supportedParams: string;
+        };
+        search: {
+            available: string;
+            searchEngine: string;
+            supportedParams: string;
+        };
+        tvsearch: {
+            available: string;
+            searchEngine: string;
+            supportedParams: string;
+        };
+    };
+    server: {
+        title: string;
+    };
+};
+
+export type JackettIndexerConfigField = {
+    delimiters?: string;
     id?: string;
     name?: string;
+    options?: unknown;
+    pattern?: string;
+    separator?: string;
     type?: string;
+    value?: unknown;
+};
+
+export type JackettIndexerDetails = {
+    caps: JackettIndexerCaps;
+    configured: string;
+    description: string;
+    id: string;
+    language: string;
+    link: string;
+    title: string;
+    type: string;
 };
 
 export type ModelGenre = {
@@ -249,42 +291,10 @@ export type GetV1IndexersResponses = {
     /**
      * OK
      */
-    200: Array<{
-        [key: string]: unknown;
-    }>;
+    200: Array<JackettIndexerDetails>;
 };
 
 export type GetV1IndexersResponse = GetV1IndexersResponses[keyof GetV1IndexersResponses];
-
-export type PostV1IndexersData = {
-    /**
-     * Create indexer
-     */
-    body: HandlersIndexerCreateRequest;
-    path?: never;
-    query?: never;
-    url: '/v1/indexers';
-};
-
-export type PostV1IndexersErrors = {
-    /**
-     * Bad Request
-     */
-    400: {
-        [key: string]: string;
-    };
-};
-
-export type PostV1IndexersError = PostV1IndexersErrors[keyof PostV1IndexersErrors];
-
-export type PostV1IndexersResponses = {
-    /**
-     * Created
-     */
-    201: JackettIndexerConfig;
-};
-
-export type PostV1IndexersResponse = PostV1IndexersResponses[keyof PostV1IndexersResponses];
 
 export type GetV1IndexersConfiguredData = {
     body?: never;
@@ -297,9 +307,7 @@ export type GetV1IndexersConfiguredResponses = {
     /**
      * OK
      */
-    200: Array<{
-        [key: string]: unknown;
-    }>;
+    200: Array<JackettIndexerDetails>;
 };
 
 export type GetV1IndexersConfiguredResponse = GetV1IndexersConfiguredResponses[keyof GetV1IndexersConfiguredResponses];
@@ -315,9 +323,7 @@ export type GetV1IndexersUnconfiguredResponses = {
     /**
      * OK
      */
-    200: Array<{
-        [key: string]: unknown;
-    }>;
+    200: Array<JackettIndexerDetails>;
 };
 
 export type GetV1IndexersUnconfiguredResponse = GetV1IndexersUnconfiguredResponses[keyof GetV1IndexersUnconfiguredResponses];
@@ -381,9 +387,7 @@ export type GetV1IndexersByIdResponses = {
     /**
      * OK
      */
-    200: {
-        [key: string]: unknown;
-    };
+    200: JackettIndexerDetails;
 };
 
 export type GetV1IndexersByIdResponse = GetV1IndexersByIdResponses[keyof GetV1IndexersByIdResponses];
@@ -415,16 +419,16 @@ export type GetV1IndexersByIdConfigResponses = {
     /**
      * OK
      */
-    200: JackettIndexerConfig;
+    200: Array<JackettIndexerConfigField>;
 };
 
 export type GetV1IndexersByIdConfigResponse = GetV1IndexersByIdConfigResponses[keyof GetV1IndexersByIdConfigResponses];
 
-export type PutV1IndexersByIdConfigData = {
+export type PostV1IndexersByIdConfigData = {
     /**
-     * Update indexer
+     * Save indexer
      */
-    body: HandlersIndexerUpdateRequest;
+    body: unknown;
     path: {
         /**
          * Indexer ID
@@ -435,7 +439,7 @@ export type PutV1IndexersByIdConfigData = {
     url: '/v1/indexers/{id}/config';
 };
 
-export type PutV1IndexersByIdConfigErrors = {
+export type PostV1IndexersByIdConfigErrors = {
     /**
      * Bad Request
      */
@@ -444,16 +448,16 @@ export type PutV1IndexersByIdConfigErrors = {
     };
 };
 
-export type PutV1IndexersByIdConfigError = PutV1IndexersByIdConfigErrors[keyof PutV1IndexersByIdConfigErrors];
+export type PostV1IndexersByIdConfigError = PostV1IndexersByIdConfigErrors[keyof PostV1IndexersByIdConfigErrors];
 
-export type PutV1IndexersByIdConfigResponses = {
+export type PostV1IndexersByIdConfigResponses = {
     /**
-     * OK
+     * No Content
      */
-    200: JackettIndexerConfig;
+    204: string;
 };
 
-export type PutV1IndexersByIdConfigResponse = PutV1IndexersByIdConfigResponses[keyof PutV1IndexersByIdConfigResponses];
+export type PostV1IndexersByIdConfigResponse = PostV1IndexersByIdConfigResponses[keyof PostV1IndexersByIdConfigResponses];
 
 export type GetV1LibrariesData = {
     body?: never;

@@ -1,15 +1,18 @@
 package jackett
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 )
 
 const testAPIKey string = "abracadabra"
+const testCookieValue string = "CfDJ8Der2JDZHqxIpwmLd8ZiKBfPcdLxd2ZjZGlin34qAKJfs4OSWdX-qqScYz-fMbWZRB3yyM4XmoLiIbd898EM5FewjQxid3Xw-7T-0pS37mlQ3S-UUlM27AWyRVy8W-JiFLVFTPxLF6MKnKoZ6CEbNrubTnN5K8-j5p5eNeOnJAsgfjtQ-8GpbvCLr0hIy0bDXCgfRFNZrenfsSJ0pOJup_QYDuYv0bmDr36pTBYnYxDKh6Uh_unnstHxYj9fHE6J0HIAs67srQo5_3MukBnClj4vkjuX21HpXwxs6UI8IGrw5gLYZnXJ0_-z-302UNdi3xI0jLqDu8Izs1DbVccLkNT0"
 
 func TestGenerateURL(t *testing.T) {
 	t.Parallel()
@@ -148,7 +151,7 @@ func TestListIndexers(t *testing.T) {
 	j, srv := mockServer(t)
 	defer srv.Close()
 
-	got, err := j.ListIndexers(t.Context())
+	got, err := j.ListIndexers(t.Context(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -400,3 +403,413 @@ const exampleCapsResponse = `
     <category id="100002" name="TV" />
   </categories>
 </caps>`
+
+func TestCookieAuthentication(t *testing.T) {
+	t.Parallel()
+
+	// Create a mock server that checks for cookies
+	var receivedCookies string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedCookies = r.Header.Get("Cookie")
+		w.Write([]byte(exampleResponse))
+	}))
+	defer srv.Close()
+
+	// Test cookie authentication
+	j, err := New(Settings{
+		ApiURL: srv.URL,
+		Cookies: map[string]string{
+			"Jackett": testCookieValue,
+		},
+		Client: srv.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Make a request
+	_, err = j.Fetch(context.Background(), NewRawSearch().Build())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Check that cookies were sent
+	expectedCookie := fmt.Sprintf("Jackett=%s", testCookieValue)
+	if receivedCookies != expectedCookie {
+		t.Errorf("Expected cookie %q, got %q", expectedCookie, receivedCookies)
+	}
+}
+
+func TestCookieAuthenticationWithEnvironmentVariable(t *testing.T) {
+	// Set environment variable
+	t.Setenv("JACKETT_COOKIES", "Jackett="+testCookieValue+"; TestCookie=1")
+
+	// Create a mock server that checks for cookies
+	var receivedCookies string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedCookies = r.Header.Get("Cookie")
+		w.Write([]byte(exampleResponse))
+	}))
+	defer srv.Close()
+
+	// Test cookie authentication from environment
+	j, err := New(Settings{
+		ApiURL: srv.URL,
+		Client: srv.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Make a request
+	_, err = j.Fetch(context.Background(), NewRawSearch().Build())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Check that cookies were sent (order may vary)
+	expectedCookies := []string{
+		fmt.Sprintf("Jackett=%s; TestCookie=1", testCookieValue),
+		fmt.Sprintf("TestCookie=1; Jackett=%s", testCookieValue),
+	}
+
+	found := false
+	for _, expected := range expectedCookies {
+		if receivedCookies == expected {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Errorf("Expected one of %v, got %q", expectedCookies, receivedCookies)
+	}
+}
+
+func TestBothAPIKeyAndCookieAuthentication(t *testing.T) {
+	t.Parallel()
+
+	// Create a mock server that checks for both API key and cookies
+	var receivedAPIKey string
+	var receivedCookies string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedAPIKey = r.URL.Query().Get("apikey")
+		receivedCookies = r.Header.Get("Cookie")
+		w.Write([]byte(exampleResponse))
+	}))
+	defer srv.Close()
+
+	// Test both authentication methods
+	j, err := New(Settings{
+		ApiURL: srv.URL,
+		ApiKey: testAPIKey,
+		Cookies: map[string]string{
+			"Jackett": testCookieValue,
+		},
+		Client: srv.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Make a request
+	_, err = j.Fetch(context.Background(), NewRawSearch().Build())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Check that both API key and cookies were sent
+	if receivedAPIKey != testAPIKey {
+		t.Errorf("Expected API key %q, got %q", testAPIKey, receivedAPIKey)
+	}
+
+	expectedCookie := fmt.Sprintf("Jackett=%s", testCookieValue)
+	if receivedCookies != expectedCookie {
+		t.Errorf("Expected cookie %q, got %q", expectedCookie, receivedCookies)
+	}
+}
+
+func TestCookieAcquisitionFlow(t *testing.T) {
+	t.Parallel()
+
+	t.Run("acquireCookies", func(t *testing.T) {
+		t.Parallel()
+
+		// Create a mock server that simulates the Jackett redirect flow
+		redirectCount := 0
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/UI/Dashboard":
+				if redirectCount == 0 {
+					redirectCount++
+					w.Header().Set("Location", "/UI/Login?ReturnUrl=%2FUI%2FDashboard")
+					w.WriteHeader(http.StatusFound)
+					return
+				}
+				// Final success response
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("Dashboard"))
+			case "/UI/Login":
+				if r.URL.Query().Get("cookiesChecked") == "1" {
+					// Final redirect back to dashboard
+					w.Header().Set("Location", "/UI/Dashboard")
+					w.WriteHeader(http.StatusFound)
+					return
+				}
+				// First login redirect
+				w.Header().Set("Location", "/UI/TestCookie")
+				w.WriteHeader(http.StatusFound)
+			case "/UI/TestCookie":
+				// Set a cookie and redirect back to login
+				http.SetCookie(w, &http.Cookie{
+					Name:  "Jackett",
+					Value: testCookieValue,
+					Path:  "/",
+				})
+				w.Header().Set("Location", "/UI/Login?cookiesChecked=1")
+				w.WriteHeader(http.StatusFound)
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer srv.Close()
+
+		// Create client
+		client, err := New(Settings{
+			ApiURL: srv.URL,
+		})
+		if err != nil {
+			t.Fatalf("Failed to create client: %v", err)
+		}
+
+		// Test cookie acquisition
+		ctx := context.Background()
+		err = client.acquireCookies(ctx)
+		if err != nil {
+			t.Fatalf("Failed to acquire cookies: %v", err)
+		}
+
+		// Verify cookies were stored
+		client.cookieMutex.RLock()
+		cookieValue, exists := client.cfg.Cookies["Jackett"]
+		client.cookieMutex.RUnlock()
+
+		if !exists {
+			t.Fatal("Expected Jackett cookie to be stored")
+		}
+		if cookieValue != testCookieValue {
+			t.Errorf("Expected cookie value %q, got %q", testCookieValue, cookieValue)
+		}
+	})
+
+	t.Run("middleware retry on auth failure", func(t *testing.T) {
+		t.Parallel()
+
+		// Track request attempts
+		requestCount := 0
+		cookieAcquired := false
+
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestCount++
+
+			// Simulate the redirect flow for cookie acquisition
+			if r.URL.Path == "/UI/Dashboard" {
+				if !cookieAcquired {
+					// First attempt - redirect to login
+					w.Header().Set("Location", "/UI/Login")
+					w.WriteHeader(http.StatusFound)
+					return
+				}
+				// After cookie acquisition - success
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("Dashboard"))
+				return
+			}
+
+			if r.URL.Path == "/UI/Login" {
+				// Set cookie and redirect back
+				http.SetCookie(w, &http.Cookie{
+					Name:  "Jackett",
+					Value: testCookieValue,
+					Path:  "/",
+				})
+				w.Header().Set("Location", "/UI/Dashboard")
+				w.WriteHeader(http.StatusFound)
+				cookieAcquired = true
+				return
+			}
+
+			// API endpoint - first call fails with 302, second succeeds
+			if r.URL.Path == "/api/v2.0/indexers/all/results/torznab" {
+				if requestCount <= 2 { // First API call fails
+					w.Header().Set("Location", "/UI/Dashboard")
+					w.WriteHeader(http.StatusFound)
+					return
+				}
+				// Subsequent calls succeed
+				w.Header().Set("Content-Type", "application/xml")
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<indexers>
+  <indexer id="test" title="Test Indexer" description="Test" link="http://test.com" language="en" type="public" configured="true" />
+</indexers>`))
+				return
+			}
+
+			w.WriteHeader(http.StatusNotFound)
+		}))
+		defer srv.Close()
+
+		// Create client
+		client, err := New(Settings{
+			ApiURL: srv.URL,
+		})
+		if err != nil {
+			t.Fatalf("Failed to create client: %v", err)
+		}
+
+		// Make an API call that should trigger cookie acquisition and retry
+		ctx := context.Background()
+		_, err = client.ListIndexers(ctx, nil)
+		if err != nil {
+			t.Fatalf("Failed to list indexers: %v", err)
+		}
+
+		// Verify that multiple requests were made (initial + retry)
+		if requestCount < 3 {
+			t.Errorf("Expected at least 3 requests (cookie flow + API retry), got %d", requestCount)
+		}
+
+		// Verify cookies were stored
+		client.cookieMutex.RLock()
+		_, exists := client.cfg.Cookies["Jackett"]
+		client.cookieMutex.RUnlock()
+
+		if !exists {
+			t.Fatal("Expected Jackett cookie to be stored after retry")
+		}
+	})
+
+	t.Run("concurrent cookie acquisition", func(t *testing.T) {
+		t.Parallel()
+
+		// Track concurrent requests
+		var concurrentRequests int32
+		var maxConcurrent int32
+		var cookieAcquired bool
+
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			current := atomic.AddInt32(&concurrentRequests, 1)
+			defer atomic.AddInt32(&concurrentRequests, -1)
+
+			// Track maximum concurrent requests
+			for {
+				currentMax := atomic.LoadInt32(&maxConcurrent)
+				if current > currentMax {
+					if atomic.CompareAndSwapInt32(&maxConcurrent, currentMax, current) {
+						break
+					}
+				} else {
+					break
+				}
+			}
+
+			// Simulate cookie acquisition flow
+			if r.URL.Path == "/UI/Dashboard" {
+				http.SetCookie(w, &http.Cookie{
+					Name:  "Jackett",
+					Value: testCookieValue,
+					Path:  "/",
+				})
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("Dashboard"))
+				cookieAcquired = true
+				return
+			}
+
+			// API endpoint - first call fails with 302 to trigger cookie acquisition
+			if r.URL.Path == "/api/v2.0/indexers/all/results/torznab" {
+				if !cookieAcquired {
+					w.Header().Set("Location", "/UI/Dashboard")
+					w.WriteHeader(http.StatusFound)
+					return
+				}
+				w.Header().Set("Content-Type", "application/xml")
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<indexers>
+  <indexer id="test" title="Test Indexer" description="Test" link="http://test.com" language="en" type="public" configured="true" />
+</indexers>`))
+				return
+			}
+
+			w.WriteHeader(http.StatusNotFound)
+		}))
+		defer srv.Close()
+
+		// Create client
+		client, err := New(Settings{
+			ApiURL: srv.URL,
+		})
+		if err != nil {
+			t.Fatalf("Failed to create client: %v", err)
+		}
+
+		// Make concurrent API calls
+		ctx := context.Background()
+		var wg sync.WaitGroup
+		numGoroutines := 5
+
+		for i := 0; i < numGoroutines; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				_, err := client.ListIndexers(ctx, nil)
+				if err != nil {
+					t.Errorf("Failed to list indexers: %v", err)
+				}
+			}()
+		}
+
+		wg.Wait()
+
+		// Verify that cookie acquisition was thread-safe
+		// (max concurrent should be limited by the mutex)
+		if atomic.LoadInt32(&maxConcurrent) > 1 {
+			t.Errorf("Expected cookie acquisition to be serialized, but saw %d concurrent requests", atomic.LoadInt32(&maxConcurrent))
+		}
+
+		// Verify cookies were stored
+		client.cookieMutex.RLock()
+		_, exists := client.cfg.Cookies["Jackett"]
+		client.cookieMutex.RUnlock()
+
+		if !exists {
+			t.Fatal("Expected Jackett cookie to be stored")
+		}
+	})
+
+	t.Run("isAuthFailure", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			statusCode int
+			expected   bool
+		}{
+			{200, false},
+			{201, false},
+			{302, true},
+			{401, true},
+			{403, true},
+			{404, false},
+			{500, false},
+		}
+
+		for _, test := range tests {
+			result := isAuthFailure(test.statusCode)
+			if result != test.expected {
+				t.Errorf("isAuthFailure(%d) = %v, expected %v", test.statusCode, result, test.expected)
+			}
+		}
+	})
+}

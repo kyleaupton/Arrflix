@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"os"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -26,6 +28,11 @@ type Settings struct {
 	// If empty, the value of the JACKETT_API_KEY environment variable will be used.
 	ApiKey string
 
+	// Cookies is a map of cookie names to values for cookie-based authentication.
+	// If empty, the value of the JACKETT_COOKIES environment variable will be used.
+	// The environment variable should be in the format "name1=value1; name2=value2".
+	Cookies map[string]string
+
 	// Client is the HTTP client to use for making requests.
 	// If nil, http.DefaultClient will be used.
 	Client *http.Client
@@ -37,20 +44,22 @@ type Settings struct {
 
 // Client is a Jackett API client.
 type Client struct {
-	apiURL *url.URL
-	cfg    Settings
-	tcache sync.Map
+	apiURL      *url.URL
+	cfg         Settings
+	tcache      sync.Map
+	cookieMutex sync.RWMutex // Protects cfg.Cookies access
 }
 
 const (
-	envAPIURL = "JACKETT_API_URL"
-	envAPIKey = "JACKETT_API_KEY"
+	envAPIURL  = "JACKETT_API_URL"
+	envAPIKey  = "JACKETT_API_KEY"
+	envCookies = "JACKETT_COOKIES"
 )
 
 // New creates a new Jackett client with the given settings.
 // It will return an error if the API URL cannot be parsed.
-// Environment variables JACKETT_API_URL and JACKETT_API_KEY can be used
-// as fallbacks if ApiURL or ApiKey are not provided in Settings.
+// Environment variables JACKETT_API_URL, JACKETT_API_KEY, and JACKETT_COOKIES can be used
+// as fallbacks if ApiURL, ApiKey, or Cookies are not provided in Settings.
 func New(s Settings) (*Client, error) {
 	j := Client{cfg: s}
 	apiURLStr := valOrEnv(s.ApiURL, envAPIURL)
@@ -60,12 +69,21 @@ func New(s Settings) (*Client, error) {
 	}
 	j.apiURL = apiURL
 
+	// Handle cookies from environment variable if not provided in settings
+	if len(j.cfg.Cookies) == 0 {
+		envCookiesValue := os.Getenv(envCookies)
+		if envCookiesValue != "" {
+			j.cfg.Cookies = parseCookiesFromEnv(envCookiesValue)
+		}
+	}
+
 	if j.cfg.Client == nil {
 		j.cfg.Client = http.DefaultClient
 	}
 	j.cfg.Client.Transport = wrapTransport(j.cfg.Client.Transport,
 		j.apiURL,
-		valOrEnv(s.ApiKey, envAPIKey))
+		valOrEnv(s.ApiKey, envAPIKey),
+		&j)
 	return &j, nil
 }
 
@@ -166,11 +184,14 @@ func (j *Client) Fetch(ctx context.Context, fr *FetchRequest, opts ...FetchOptio
 }
 
 // ListIndexers returns a slice of all indexers on this Jackett instance.
-func (j *Client) ListIndexers(ctx context.Context) ([]IndexerDetails, error) {
+func (j *Client) ListIndexers(ctx context.Context, configured *bool) ([]IndexerDetails, error) {
 	u := *j.apiURL
 	u.Path = "/api/v2.0/indexers/all/results/torznab"
 	q := u.Query()
 	q.Add("t", "indexers")
+	if configured != nil {
+		q.Add("configured", strconv.FormatBool(*configured))
+	}
 	u.RawQuery = q.Encode()
 	idxs, err := getXML[indexersResp](ctx, j.cfg.Client, u.String())
 	if err != nil {
@@ -182,22 +203,46 @@ func (j *Client) ListIndexers(ctx context.Context) ([]IndexerDetails, error) {
 	return idxs.Indexers, err
 }
 
-// ListConfiguredIndexers returns a slice of only configured indexers on this Jackett instance.
-func (j *Client) ListConfiguredIndexers(ctx context.Context) ([]IndexerDetails, error) {
+// GetIndexerConfig retrieves the configuration for a specific indexer.
+func (j *Client) GetIndexerConfig(ctx context.Context, indexerID string) (*IndexerConfigResponse, error) {
 	u := *j.apiURL
-	u.Path = "/api/v2.0/indexers/all/results/torznab"
-	q := u.Query()
-	q.Add("t", "indexers")
-	q.Add("configured", "true")
-	u.RawQuery = q.Encode()
-	idxs, err := getXML[indexersResp](ctx, j.cfg.Client, u.String())
+	u.Path = fmt.Sprintf("/api/v2.0/indexers/%s/config", indexerID)
+
+	config, err := getJSON[IndexerConfigResponse](ctx, j.cfg.Client, u.String())
 	if err != nil {
-		return nil, fmt.Errorf("list configured indexers: %w", err)
+		return nil, fmt.Errorf("get indexer config: %w", err)
 	}
-	slices.SortFunc(idxs.Indexers, func(a, b IndexerDetails) int {
-		return strings.Compare(a.ID, b.ID)
-	})
-	return idxs.Indexers, err
+
+	// if config.Error != "" {
+	// 	return nil, fmt.Errorf("indexer config error: %s", config.Error)
+	// }
+
+	return &config, nil
+}
+
+// SaveIndexerConfig creates or updates an indexer configuration.
+func (j *Client) SaveIndexerConfig(ctx context.Context, indexerID string, config any) error {
+	u := *j.apiURL
+	u.Path = fmt.Sprintf("/api/v2.0/indexers/%s/config", indexerID)
+
+	_, err := putJSON[any](ctx, j.cfg.Client, u.String(), config)
+	if err != nil {
+		return fmt.Errorf("save indexer config: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteIndexer removes an indexer by its ID.
+func (j *Client) DeleteIndexer(ctx context.Context, indexerID string) error {
+	u := *j.apiURL
+	u.Path = fmt.Sprintf("/api/v2.0/indexers/%s", indexerID)
+
+	if err := deleteRequest(ctx, j.cfg.Client, u.String()); err != nil {
+		return fmt.Errorf("delete indexer: %w", err)
+	}
+
+	return nil
 }
 
 func (j *Client) getIndexerCaps(ctx context.Context, id string) (IndexerCaps, error) {
@@ -247,6 +292,31 @@ func valOrEnv(v, env string) string {
 	return os.Getenv(env)
 }
 
+// parseCookiesFromEnv parses cookies from environment variable format "name1=value1; name2=value2"
+func parseCookiesFromEnv(envValue string) map[string]string {
+	cookies := make(map[string]string)
+	if envValue == "" {
+		return cookies
+	}
+
+	// Split by semicolon and parse each cookie
+	cookiePairs := strings.Split(envValue, ";")
+	for _, pair := range cookiePairs {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+
+		// Split by first equals sign
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) == 2 {
+			cookies[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+		}
+	}
+
+	return cookies
+}
+
 func extractTracker(path string) string {
 	_, tracker, ok := strings.Cut(path, "api/v2.0/indexers/")
 	if !ok {
@@ -255,64 +325,108 @@ func extractTracker(path string) string {
 	return strings.TrimSuffix(tracker, "/results/torznab")
 }
 
-// GetIndexerConfig retrieves the configuration for a specific indexer.
-func (j *Client) GetIndexerConfig(ctx context.Context, indexerID string) (*IndexerConfig, error) {
-	u := *j.apiURL
-	u.Path = fmt.Sprintf("/api/v2.0/indexers/%s/config", indexerID)
+// acquireCookies performs the Jackett cookie authentication flow
+// by following the redirect chain and extracting cookies from Set-Cookie headers
+func (j *Client) acquireCookies(ctx context.Context) error {
+	j.cookieMutex.Lock()
+	defer j.cookieMutex.Unlock()
 
-	config, err := getJSON[IndexerConfigResponse](ctx, j.cfg.Client, u.String())
+	// Create a temporary client that doesn't follow redirects automatically
+	// Use a clean transport to avoid middleware interference
+	tempClient := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse // Don't follow redirects automatically
+		},
+		Transport: http.DefaultTransport,
+	}
+
+	// Start the flow at /UI/Dashboard
+	dashboardURL := *j.apiURL
+	dashboardURL.Path = "/UI/Dashboard"
+
+	// Create a cookie jar to collect cookies during the flow
+	jar, err := cookiejar.New(nil)
 	if err != nil {
-		return nil, fmt.Errorf("get indexer config: %w", err)
+		return fmt.Errorf("create cookie jar: %w", err)
+	}
+	tempClient.Jar = jar
+
+	// Follow the redirect chain
+	currentURL := dashboardURL.String()
+	maxRedirects := 10 // Prevent infinite loops
+	redirectCount := 0
+
+	for redirectCount < maxRedirects {
+		req, err := http.NewRequestWithContext(ctx, "GET", currentURL, nil)
+		if err != nil {
+			return fmt.Errorf("create request: %w", err)
+		}
+
+		resp, err := tempClient.Do(req)
+		if err != nil {
+			return fmt.Errorf("execute request: %w", err)
+		}
+		resp.Body.Close()
+
+		// Check if we got a successful response (200)
+		if resp.StatusCode == 200 {
+			break
+		}
+
+		// Check if we got a redirect
+		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			location := resp.Header.Get("Location")
+			if location == "" {
+				return fmt.Errorf("redirect without Location header")
+			}
+
+			// Parse the location URL
+			redirectURL, err := url.Parse(location)
+			if err != nil {
+				return fmt.Errorf("parse redirect URL: %w", err)
+			}
+
+			// Make absolute URL if needed
+			if !redirectURL.IsAbs() {
+				baseURL, err := url.Parse(currentURL)
+				if err != nil {
+					return fmt.Errorf("parse base URL: %w", err)
+				}
+				redirectURL = baseURL.ResolveReference(redirectURL)
+			}
+
+			currentURL = redirectURL.String()
+			redirectCount++
+			continue
+		}
+
+		// If we get here, it's not a redirect and not success
+		return fmt.Errorf("unexpected status code %d during cookie acquisition", resp.StatusCode)
 	}
 
-	if config.Error != "" {
-		return nil, fmt.Errorf("indexer config error: %s", config.Error)
+	if redirectCount >= maxRedirects {
+		return fmt.Errorf("too many redirects during cookie acquisition")
 	}
 
-	return &config.IndexerConfig, nil
-}
-
-// SaveIndexerConfig creates or updates an indexer configuration.
-func (j *Client) SaveIndexerConfig(ctx context.Context, indexerID string, config *IndexerConfigRequest) (*IndexerConfig, error) {
-	u := *j.apiURL
-	u.Path = fmt.Sprintf("/api/v2.0/indexers/%s/config", indexerID)
-
-	result, err := putJSON[IndexerConfigResponse](ctx, j.cfg.Client, u.String(), config)
-	if err != nil {
-		return nil, fmt.Errorf("save indexer config: %w", err)
+	// Extract cookies from the jar and store them in our config
+	if j.cfg.Cookies == nil {
+		j.cfg.Cookies = make(map[string]string)
 	}
 
-	if result.Error != "" {
-		return nil, fmt.Errorf("indexer config error: %s", result.Error)
+	// Get cookies for our API URL
+	cookies := jar.Cookies(j.apiURL)
+	for _, cookie := range cookies {
+		j.cfg.Cookies[cookie.Name] = cookie.Value
 	}
 
-	return &result.IndexerConfig, nil
-}
-
-// CreateIndexer creates a new indexer with the given configuration.
-func (j *Client) CreateIndexer(ctx context.Context, config *IndexerConfigRequest) (*IndexerConfig, error) {
-	u := *j.apiURL
-	u.Path = "/api/v2.0/indexers"
-
-	result, err := postJSON[IndexerConfigResponse](ctx, j.cfg.Client, u.String(), config)
-	if err != nil {
-		return nil, fmt.Errorf("create indexer: %w", err)
-	}
-
-	if result.Error != "" {
-		return nil, fmt.Errorf("indexer config error: %s", result.Error)
-	}
-
-	return &result.IndexerConfig, nil
-}
-
-// DeleteIndexer removes an indexer by its ID.
-func (j *Client) DeleteIndexer(ctx context.Context, indexerID string) error {
-	u := *j.apiURL
-	u.Path = fmt.Sprintf("/api/v2.0/indexers/%s", indexerID)
-
-	if err := deleteRequest(ctx, j.cfg.Client, u.String()); err != nil {
-		return fmt.Errorf("delete indexer: %w", err)
+	// Also check for any cookies that might be set for the base domain
+	baseURL := *j.apiURL
+	baseURL.Path = ""
+	baseURL.RawQuery = ""
+	baseURL.Fragment = ""
+	baseCookies := jar.Cookies(&baseURL)
+	for _, cookie := range baseCookies {
+		j.cfg.Cookies[cookie.Name] = cookie.Value
 	}
 
 	return nil

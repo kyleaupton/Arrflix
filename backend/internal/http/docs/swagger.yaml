@@ -28,46 +28,6 @@ definitions:
     - updated_at
     - year
     type: object
-  handlers.IndexerCreateRequest:
-    properties:
-      description:
-        type: string
-      enabled:
-        type: boolean
-      fields:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      type:
-        type: string
-    required:
-    - description
-    - enabled
-    - fields
-    - name
-    - type
-    type: object
-  handlers.IndexerUpdateRequest:
-    properties:
-      description:
-        type: string
-      enabled:
-        type: boolean
-      fields:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      type:
-        type: string
-    required:
-    - description
-    - enabled
-    - fields
-    - name
-    - type
-    type: object
   handlers.LibraryCreateRequest:
     properties:
       enabled:
@@ -154,23 +114,193 @@ definitions:
     - type
     - updated_at
     type: object
-  jackett.IndexerConfig:
+  jackett.IndexerCaps:
     properties:
-      configured:
-        type: boolean
-      description:
-        type: string
-      enabled:
-        type: boolean
-      fields:
-        additionalProperties: true
+      categories:
+        properties:
+          categories:
+            items:
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                subcats:
+                  items:
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                    - id
+                    - name
+                    type: object
+                  type: array
+              required:
+              - id
+              - name
+              - subcats
+              type: object
+            type: array
+        required:
+        - categories
         type: object
+      limits:
+        properties:
+          default:
+            type: string
+          max:
+            type: string
+        required:
+        - default
+        - max
+        type: object
+      searching:
+        properties:
+          audioSearch:
+            properties:
+              available:
+                type: string
+              searchEngine:
+                type: string
+              supportedParams:
+                type: string
+            required:
+            - available
+            - searchEngine
+            - supportedParams
+            type: object
+          bookSearch:
+            properties:
+              available:
+                type: string
+              searchEngine:
+                type: string
+              supportedParams:
+                type: string
+            required:
+            - available
+            - searchEngine
+            - supportedParams
+            type: object
+          movieSearch:
+            properties:
+              available:
+                type: string
+              searchEngine:
+                type: string
+              supportedParams:
+                type: string
+            required:
+            - available
+            - searchEngine
+            - supportedParams
+            type: object
+          musicSearch:
+            properties:
+              available:
+                type: string
+              searchEngine:
+                type: string
+              supportedParams:
+                type: string
+            required:
+            - available
+            - searchEngine
+            - supportedParams
+            type: object
+          search:
+            properties:
+              available:
+                type: string
+              searchEngine:
+                type: string
+              supportedParams:
+                type: string
+            required:
+            - available
+            - searchEngine
+            - supportedParams
+            type: object
+          tvsearch:
+            properties:
+              available:
+                type: string
+              searchEngine:
+                type: string
+              supportedParams:
+                type: string
+            required:
+            - available
+            - searchEngine
+            - supportedParams
+            type: object
+        required:
+        - audioSearch
+        - bookSearch
+        - movieSearch
+        - musicSearch
+        - search
+        - tvsearch
+        type: object
+      server:
+        properties:
+          title:
+            type: string
+        required:
+        - title
+        type: object
+    required:
+    - categories
+    - limits
+    - searching
+    - server
+    type: object
+  jackett.IndexerConfigField:
+    properties:
+      delimiters:
+        type: string
       id:
         type: string
       name:
         type: string
+      options: {}
+      pattern:
+        type: string
+      separator:
+        type: string
       type:
         type: string
+      value: {}
+    type: object
+  jackett.IndexerDetails:
+    properties:
+      caps:
+        $ref: '#/definitions/jackett.IndexerCaps'
+      configured:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      language:
+        type: string
+      link:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    required:
+    - caps
+    - configured
+    - description
+    - id
+    - language
+    - link
+    - title
+    - type
     type: object
   model.Genre:
     properties:
@@ -482,36 +612,9 @@ paths:
           description: OK
           schema:
             items:
-              additionalProperties: true
-              type: object
+              $ref: '#/definitions/jackett.IndexerDetails'
             type: array
       summary: List all indexers
-      tags:
-      - indexers
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Create indexer
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.IndexerCreateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/jackett.IndexerConfig'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Create indexer
       tags:
       - indexers
   /v1/indexers/{id}:
@@ -549,8 +652,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/jackett.IndexerDetails'
         "404":
           description: Not Found
           schema:
@@ -574,7 +676,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/jackett.IndexerConfig'
+            items:
+              $ref: '#/definitions/jackett.IndexerConfigField'
+            type: array
         "404":
           description: Not Found
           schema:
@@ -584,7 +688,7 @@ paths:
       summary: Get indexer configuration
       tags:
       - indexers
-    put:
+    post:
       consumes:
       - application/json
       parameters:
@@ -593,26 +697,25 @@ paths:
         name: id
         required: true
         type: string
-      - description: Update indexer
+      - description: Save indexer
         in: body
         name: payload
         required: true
-        schema:
-          $ref: '#/definitions/handlers.IndexerUpdateRequest'
+        schema: {}
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
           schema:
-            $ref: '#/definitions/jackett.IndexerConfig'
+            type: string
         "400":
           description: Bad Request
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Update indexer configuration
+      summary: Save indexer configuration
       tags:
       - indexers
   /v1/indexers/configured:
@@ -624,8 +727,7 @@ paths:
           description: OK
           schema:
             items:
-              additionalProperties: true
-              type: object
+              $ref: '#/definitions/jackett.IndexerDetails'
             type: array
       summary: List configured indexers
       tags:
@@ -639,8 +741,7 @@ paths:
           description: OK
           schema:
             items:
-              additionalProperties: true
-              type: object
+              $ref: '#/definitions/jackett.IndexerDetails'
             type: array
       summary: List unconfigured indexers
       tags:

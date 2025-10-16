@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"runtime/debug"
@@ -29,9 +30,19 @@ func getXML[T any](ctx context.Context, client *http.Client, url string) (T, err
 func getJSON[T any](ctx context.Context, client *http.Client, url string) (T, error) {
 	var data T
 	b, err := getBytes(ctx, client, url)
+
+	test, _ := json.MarshalIndent(b, "", "  ")
+	fmt.Printf(string(test))
+
 	if err != nil {
 		return data, err
 	}
+
+	// Log the raw response for debugging
+	fmt.Printf("DEBUG: Raw response from %s:\n", url)
+	fmt.Printf("Response length: %d bytes\n", len(b))
+	fmt.Printf("First 500 chars: %s\n", string(b[:int(math.Min(500, float64(len(b))))]))
+
 	if err := json.Unmarshal(b, &data); err != nil {
 		return data, fmt.Errorf("unmarshal response data: %s: %w\n%s", url, err, string(b))
 	}
@@ -145,8 +156,8 @@ func deleteRequest(ctx context.Context, client *http.Client, url string) error {
 
 var _ http.RoundTripper = (*middleware)(nil)
 
-// wrapTransport wraps the given http.Transport with a middleware that adds the user agent to all outgoing requests. It also adds the api key to all requests matching BaseURL.
-func wrapTransport(rt http.RoundTripper, base *url.URL, apiKey string) http.RoundTripper {
+// wrapTransport wraps the given http.Transport with a middleware that adds the user agent to all outgoing requests. It also adds the api key and/or cookies to all requests matching BaseURL.
+func wrapTransport(rt http.RoundTripper, base *url.URL, apiKey string, client *Client) http.RoundTripper {
 	if rt == nil {
 		rt = http.DefaultTransport
 	}
@@ -154,6 +165,7 @@ func wrapTransport(rt http.RoundTripper, base *url.URL, apiKey string) http.Roun
 		Transport: rt,
 		BaseURL:   base,
 		APIKey:    apiKey,
+		Client:    client,
 	}
 }
 
@@ -161,18 +173,84 @@ type middleware struct {
 	Transport http.RoundTripper
 	BaseURL   *url.URL
 	APIKey    string
+	Client    *Client
 }
 
 func (m *middleware) RoundTrip(r *http.Request) (*http.Response, error) {
 	r.Header.Set("User-Agent", ua())
 
 	if m.matchesTarget(r.URL) {
-		q := r.URL.Query()
-		q.Set("apikey", m.APIKey)
-		r.URL.RawQuery = q.Encode()
+		// Add API key if provided
+		if m.APIKey != "" {
+			q := r.URL.Query()
+			q.Set("apikey", m.APIKey)
+			r.URL.RawQuery = q.Encode()
+			fmt.Printf("DEBUG: Making request to %s with API key: %s\n", r.URL.String(), m.APIKey)
+		}
+
+		// Add cookies if provided
+		if m.Client != nil {
+			m.Client.cookieMutex.RLock()
+			if len(m.Client.cfg.Cookies) > 0 {
+				var cookieStrings []string
+				for name, value := range m.Client.cfg.Cookies {
+					cookieStrings = append(cookieStrings, fmt.Sprintf("%s=%s", name, value))
+				}
+				r.Header.Set("Cookie", strings.Join(cookieStrings, "; "))
+				fmt.Printf("DEBUG: Making request to %s with cookies: %s\n", r.URL.String(), strings.Join(cookieStrings, "; "))
+			}
+			m.Client.cookieMutex.RUnlock()
+		}
 	}
 
-	return m.Transport.RoundTrip(r)
+	// Make the request
+	resp, err := m.Transport.RoundTrip(r)
+	if err != nil {
+		return resp, err
+	}
+
+	// Check for authentication failures and retry with fresh cookies
+	if m.matchesTarget(r.URL) && m.Client != nil && isAuthFailure(resp.StatusCode) {
+		// Check if this is a retry (to prevent infinite loops)
+		if r.Header.Get("X-Retry-Attempt") == "1" {
+			return resp, err
+		}
+
+		// Try to acquire fresh cookies
+		if err := m.Client.acquireCookies(r.Context()); err != nil {
+			fmt.Printf("DEBUG: Failed to acquire cookies: %v\n", err)
+			return resp, err
+		}
+
+		// Retry the request with fresh cookies
+		retryReq := r.Clone(r.Context())
+		retryReq.Header.Set("X-Retry-Attempt", "1")
+
+		// Add fresh cookies
+		m.Client.cookieMutex.RLock()
+		if len(m.Client.cfg.Cookies) > 0 {
+			var cookieStrings []string
+			for name, value := range m.Client.cfg.Cookies {
+				cookieStrings = append(cookieStrings, fmt.Sprintf("%s=%s", name, value))
+			}
+			retryReq.Header.Set("Cookie", strings.Join(cookieStrings, "; "))
+			fmt.Printf("DEBUG: Retrying request to %s with fresh cookies: %s\n", retryReq.URL.String(), strings.Join(cookieStrings, "; "))
+		}
+		m.Client.cookieMutex.RUnlock()
+
+		// Close the original response body
+		resp.Body.Close()
+
+		// Make the retry request
+		return m.Transport.RoundTrip(retryReq)
+	}
+
+	return resp, err
+}
+
+// isAuthFailure checks if the status code indicates an authentication failure
+func isAuthFailure(statusCode int) bool {
+	return statusCode == 302 || statusCode == 401 || statusCode == 403
 }
 
 func (m *middleware) matchesTarget(reqURL *url.URL) bool {

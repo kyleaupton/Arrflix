@@ -42,7 +42,26 @@ func main() {
 
 As `ApiURL` just use root URL of your Jackett instance. `ApiKey` could be found at the top of Jackett UI.
 
-It is also possible to get Jackett credentials from environment variables `JACKETT_API_URL` and `JACKETT_API_KEY`.
+### Authentication Methods
+
+The client supports two authentication methods:
+
+1. **API Key Authentication** (default): Uses the `apikey` query parameter
+2. **Cookie Authentication**: Uses HTTP cookies for authentication
+
+For cookie-based authentication, you can provide cookies in the `Cookies` field:
+
+```go
+j, err := jackett.New(jackett.Settings{
+    ApiURL: "http://localhost:9117",
+    Cookies: map[string]string{
+        "Jackett": "CfDJ8Der2JDZHqxIpwmLd8ZiKBfPcdLxd2ZjZGlin34qAKJfs4OSWdX-qqScYz-fMbWZRB3yyM4XmoLiIbd898EM5FewjQxid3Xw-7T-0pS37mlQ3S-UUlM27AWyRVy8W-JiFLVFTPxLF6MKnKoZ6CEbNrubTnN5K8-j5p5eNeOnJAsgfjtQ-8GpbvCLr0hIy0bDXCgfRFNZrenfsSJ0pOJup_QYDuYv0bmDr36pTBYnYxDKh6Uh_unnstHxYj9fHE6J0HIAs67srQo5_3MukBnClj4vkjuX21HpXwxs6UI8IGrw5gLYZnXJ0_-z-302UNdi3xI0jLqDu8Izs1DbVccLkNT0",
+    },
+})
+```
+
+It is also possible to get Jackett credentials from environment variables `JACKETT_API_URL`, `JACKETT_API_KEY`, and `JACKETT_COOKIES`.
+The `JACKETT_COOKIES` environment variable should be in the format "name1=value1; name2=value2".
 In this case just provide empty settings like so:
 
 ```go

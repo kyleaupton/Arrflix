@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { deleteV1IndexersById, deleteV1LibrariesById, getHealth, getV1Home, getV1Indexers, getV1IndexersById, getV1IndexersByIdConfig, getV1IndexersConfigured, getV1IndexersUnconfigured, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1SeriesById, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Indexers, postV1Libraries, postV1LibrariesByIdScan, putV1IndexersByIdConfig, putV1LibrariesById } from '../sdk.gen';
-import type { DeleteV1IndexersByIdData, DeleteV1IndexersByIdError, DeleteV1IndexersByIdResponse, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, GetHealthData, GetV1HomeData, GetV1IndexersByIdConfigData, GetV1IndexersByIdData, GetV1IndexersConfiguredData, GetV1IndexersData, GetV1IndexersUnconfiguredData, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1MovieByIdData, GetV1SeriesByIdData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1IndexersData, PostV1IndexersError, PostV1IndexersResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PutV1IndexersByIdConfigData, PutV1IndexersByIdConfigError, PutV1IndexersByIdConfigResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse } from '../types.gen';
+import { deleteV1IndexersById, deleteV1LibrariesById, getHealth, getV1Home, getV1Indexers, getV1IndexersById, getV1IndexersByIdConfig, getV1IndexersConfigured, getV1IndexersUnconfigured, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1SeriesById, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1IndexersByIdConfig, postV1Libraries, postV1LibrariesByIdScan, putV1LibrariesById } from '../sdk.gen';
+import type { DeleteV1IndexersByIdData, DeleteV1IndexersByIdError, DeleteV1IndexersByIdResponse, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, GetHealthData, GetV1HomeData, GetV1IndexersByIdConfigData, GetV1IndexersByIdData, GetV1IndexersConfiguredData, GetV1IndexersData, GetV1IndexersUnconfiguredData, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1MovieByIdData, GetV1SeriesByIdData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1IndexersByIdConfigData, PostV1IndexersByIdConfigError, PostV1IndexersByIdConfigResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -118,23 +118,6 @@ export const getV1IndexersOptions = (options?: Options<GetV1IndexersData>) => {
     });
 };
 
-/**
- * Create indexer
- */
-export const postV1IndexersMutation = (options?: Partial<Options<PostV1IndexersData>>): UseMutationOptions<PostV1IndexersResponse, PostV1IndexersError, Options<PostV1IndexersData>> => {
-    const mutationOptions: UseMutationOptions<PostV1IndexersResponse, PostV1IndexersError, Options<PostV1IndexersData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await postV1Indexers({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
 export const getV1IndexersConfiguredQueryKey = (options?: Options<GetV1IndexersConfiguredData>) => createQueryKey('getV1IndexersConfigured', options);
 
 /**
@@ -233,12 +216,12 @@ export const getV1IndexersByIdConfigOptions = (options: Options<GetV1IndexersByI
 };
 
 /**
- * Update indexer configuration
+ * Save indexer configuration
  */
-export const putV1IndexersByIdConfigMutation = (options?: Partial<Options<PutV1IndexersByIdConfigData>>): UseMutationOptions<PutV1IndexersByIdConfigResponse, PutV1IndexersByIdConfigError, Options<PutV1IndexersByIdConfigData>> => {
-    const mutationOptions: UseMutationOptions<PutV1IndexersByIdConfigResponse, PutV1IndexersByIdConfigError, Options<PutV1IndexersByIdConfigData>> = {
+export const postV1IndexersByIdConfigMutation = (options?: Partial<Options<PostV1IndexersByIdConfigData>>): UseMutationOptions<PostV1IndexersByIdConfigResponse, PostV1IndexersByIdConfigError, Options<PostV1IndexersByIdConfigData>> => {
+    const mutationOptions: UseMutationOptions<PostV1IndexersByIdConfigResponse, PostV1IndexersByIdConfigError, Options<PostV1IndexersByIdConfigData>> = {
         mutationFn: async (fnOptions) => {
-            const { data } = await putV1IndexersByIdConfig({
+            const { data } = await postV1IndexersByIdConfig({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

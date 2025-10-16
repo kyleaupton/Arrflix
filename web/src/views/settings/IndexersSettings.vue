@@ -36,8 +36,7 @@ const handleAddIndexer = () => {
   showAddModal.value = true
 }
 
-const handleIndexerAdded = (newIndexer: JackettIndexerConfig) => {
-  console.log('Indexer added:', newIndexer)
+const handleIndexerAdded = () => {
   // Refetch the indexers list to show the new one
   refetch()
 }
@@ -77,7 +76,11 @@ const indexerActions = createIndexerActions(handleEdit, handleToggle, handleDele
     </div>
 
     <!-- Add Indexer Modal -->
-    <AddIndexerModal v-model:visible="showAddModal" @indexer-added="handleIndexerAdded" />
+    <AddIndexerModal
+      v-if="showAddModal"
+      @indexer-added="handleIndexerAdded"
+      @close="showAddModal = false"
+    />
   </div>
 </template>
 

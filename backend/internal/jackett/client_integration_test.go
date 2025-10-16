@@ -17,7 +17,7 @@ func TestIntegrationFetch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	idxs, err := j.ListIndexers(t.Context())
+	idxs, err := j.ListIndexers(t.Context(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
