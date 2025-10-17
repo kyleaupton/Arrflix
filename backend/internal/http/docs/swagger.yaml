@@ -114,193 +114,102 @@ definitions:
     - type
     - updated_at
     type: object
-  jackett.IndexerCaps:
+  model.Capabilities:
     properties:
+      bookSearchParams:
+        items:
+          type: string
+        type: array
       categories:
-        properties:
-          categories:
-            items:
-              properties:
-                id:
-                  type: string
-                name:
-                  type: string
-                subcats:
-                  items:
-                    properties:
-                      id:
-                        type: string
-                      name:
-                        type: string
-                    required:
-                    - id
-                    - name
-                    type: object
-                  type: array
-              required:
-              - id
-              - name
-              - subcats
-              type: object
-            type: array
-        required:
-        - categories
-        type: object
-      limits:
-        properties:
-          default:
-            type: string
-          max:
-            type: string
-        required:
-        - default
-        - max
-        type: object
-      searching:
-        properties:
-          audioSearch:
-            properties:
-              available:
-                type: string
-              searchEngine:
-                type: string
-              supportedParams:
-                type: string
-            required:
-            - available
-            - searchEngine
-            - supportedParams
-            type: object
-          bookSearch:
-            properties:
-              available:
-                type: string
-              searchEngine:
-                type: string
-              supportedParams:
-                type: string
-            required:
-            - available
-            - searchEngine
-            - supportedParams
-            type: object
-          movieSearch:
-            properties:
-              available:
-                type: string
-              searchEngine:
-                type: string
-              supportedParams:
-                type: string
-            required:
-            - available
-            - searchEngine
-            - supportedParams
-            type: object
-          musicSearch:
-            properties:
-              available:
-                type: string
-              searchEngine:
-                type: string
-              supportedParams:
-                type: string
-            required:
-            - available
-            - searchEngine
-            - supportedParams
-            type: object
-          search:
-            properties:
-              available:
-                type: string
-              searchEngine:
-                type: string
-              supportedParams:
-                type: string
-            required:
-            - available
-            - searchEngine
-            - supportedParams
-            type: object
-          tvsearch:
-            properties:
-              available:
-                type: string
-              searchEngine:
-                type: string
-              supportedParams:
-                type: string
-            required:
-            - available
-            - searchEngine
-            - supportedParams
-            type: object
-        required:
-        - audioSearch
-        - bookSearch
-        - movieSearch
-        - musicSearch
-        - search
-        - tvsearch
-        type: object
-      server:
-        properties:
-          title:
-            type: string
-        required:
-        - title
-        type: object
+        items:
+          $ref: '#/definitions/model.Categories'
+        type: array
+      limitsDefault:
+        type: integer
+      limitsMax:
+        type: integer
+      movieSearchParams:
+        items:
+          type: string
+        type: array
+      musicSearchParams:
+        items:
+          type: string
+        type: array
+      searchParams:
+        items:
+          type: string
+        type: array
+      supportsRawSearch:
+        type: boolean
+      tvSearchParams:
+        items:
+          type: string
+        type: array
     required:
+    - bookSearchParams
     - categories
-    - limits
-    - searching
-    - server
+    - limitsDefault
+    - limitsMax
+    - movieSearchParams
+    - musicSearchParams
+    - searchParams
+    - supportsRawSearch
+    - tvSearchParams
     type: object
-  jackett.IndexerConfigField:
+  model.Categories:
     properties:
-      delimiters:
-        type: string
       id:
+        type: integer
+      name:
+        type: string
+      subCategories:
+        items:
+          $ref: '#/definitions/model.Categories'
+        type: array
+    required:
+    - id
+    - name
+    - subCategories
+    type: object
+  model.FieldInput:
+    properties:
+      name:
+        type: string
+      value: {}
+    required:
+    - name
+    type: object
+  model.FieldOutput:
+    properties:
+      advanced:
+        type: boolean
+      helpLink:
+        type: string
+      helpText:
+        type: string
+      hidden:
+        type: string
+      label:
         type: string
       name:
         type: string
-      options: {}
-      pattern:
+      order:
+        type: integer
+      privacy:
         type: string
-      separator:
+      selectOptions:
+        items:
+          $ref: '#/definitions/model.SelectOption'
+        type: array
+      selectOptionsProviderAction:
         type: string
       type:
         type: string
       value: {}
-    type: object
-  jackett.IndexerDetails:
-    properties:
-      caps:
-        $ref: '#/definitions/jackett.IndexerCaps'
-      configured:
-        type: string
-      description:
-        type: string
-      id:
-        type: string
-      language:
-        type: string
-      link:
-        type: string
-      title:
-        type: string
-      type:
-        type: string
     required:
-    - caps
-    - configured
-    - description
-    - id
-    - language
-    - link
-    - title
-    - type
+    - name
+    - privacy
     type: object
   model.Genre:
     properties:
@@ -509,6 +418,132 @@ definitions:
     - privacy
     - type
     type: object
+  model.IndexerInput:
+    properties:
+      appProfileId:
+        type: integer
+      configContract:
+        type: string
+      enable:
+        type: boolean
+      fields:
+        items:
+          $ref: '#/definitions/model.FieldInput'
+        type: array
+      id:
+        type: integer
+      implementation:
+        type: string
+      name:
+        type: string
+      priority:
+        type: integer
+      protocol:
+        $ref: '#/definitions/model.Protocol'
+      redirect:
+        type: boolean
+      tags:
+        items:
+          type: integer
+        type: array
+    required:
+    - appProfileId
+    - configContract
+    - enable
+    - fields
+    - implementation
+    - name
+    - priority
+    - protocol
+    - redirect
+    type: object
+  model.IndexerOutput:
+    properties:
+      added:
+        type: string
+      appProfileId:
+        type: integer
+      capabilities:
+        $ref: '#/definitions/model.Capabilities'
+      configContract:
+        type: string
+      definitionName:
+        type: string
+      description:
+        type: string
+      enable:
+        type: boolean
+      encoding:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/model.FieldOutput'
+        type: array
+      id:
+        type: integer
+      implementation:
+        type: string
+      implementationName:
+        type: string
+      indexerUrls:
+        items:
+          type: string
+        type: array
+      infoLink:
+        type: string
+      language:
+        type: string
+      legacyUrls:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      priority:
+        type: integer
+      privacy:
+        type: string
+      protocol:
+        $ref: '#/definitions/model.Protocol'
+      redirect:
+        type: boolean
+      sortName:
+        type: string
+      supportsRedirect:
+        type: boolean
+      supportsRss:
+        type: boolean
+      supportsSearch:
+        type: boolean
+      tags:
+        items:
+          type: integer
+        type: array
+    required:
+    - added
+    - appProfileId
+    - configContract
+    - definitionName
+    - description
+    - enable
+    - fields
+    - implementation
+    - implementationName
+    - indexerUrls
+    - infoLink
+    - language
+    - legacyUrls
+    - name
+    - priority
+    - privacy
+    - protocol
+    - redirect
+    - sortName
+    - supportsRedirect
+    - supportsRss
+    - supportsSearch
+    - tags
+    type: object
   model.IndexerSelectOption:
     properties:
       hint:
@@ -644,6 +679,16 @@ definitions:
     - iso3166_1
     - name
     type: object
+  model.Protocol:
+    enum:
+    - unknown
+    - usenet
+    - torrent
+    type: string
+    x-enum-varnames:
+    - ProtocolUnknown
+    - ProtocolUsenet
+    - ProtocolTorrent
   model.Rail:
     properties:
       id:
@@ -688,6 +733,24 @@ definitions:
     - seasonNumber
     - title
     - tmdbId
+    type: object
+  model.SelectOption:
+    properties:
+      dividerAfter:
+        type: boolean
+      hint:
+        type: string
+      name:
+        type: string
+      order:
+        type: integer
+      value:
+        type: integer
+    required:
+    - hint
+    - name
+    - order
+    - value
     type: object
   model.Series:
     properties:
@@ -814,6 +877,39 @@ paths:
       summary: Get rails
       tags:
       - home
+  /v1/indexer:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Save indexer
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.IndexerInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.IndexerOutput'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Save indexer configuration
+      tags:
+      - indexers
   /v1/indexers/{id}:
     delete:
       parameters:
@@ -849,70 +945,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/jackett.IndexerDetails'
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Get indexer by ID
-      tags:
-      - indexers
-  /v1/indexers/{id}/config:
-    get:
-      parameters:
-      - description: Indexer ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/jackett.IndexerConfigField'
-            type: array
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Get indexer configuration
-      tags:
-      - indexers
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Indexer ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Save indexer
-        in: body
-        name: payload
-        required: true
-        schema: {}
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-          schema:
-            type: string
+            $ref: '#/definitions/model.IndexerOutput'
         "400":
           description: Bad Request
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Save indexer configuration
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get indexer by ID
       tags:
       - indexers
   /v1/indexers/configured:
@@ -922,7 +968,10 @@ paths:
       responses:
         "200":
           description: OK
-          schema: {}
+          schema:
+            items:
+              $ref: '#/definitions/model.IndexerOutput'
+            type: array
       summary: List configured indexers
       tags:
       - indexers

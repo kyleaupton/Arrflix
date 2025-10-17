@@ -12,7 +12,6 @@ import (
 	"golift.io/starr/prowlarr"
 
 	"github.com/kyleaupton/snaggle/backend/internal/config"
-	"github.com/kyleaupton/snaggle/backend/internal/jackett"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
@@ -67,33 +66,24 @@ func (s *IndexerService) GetSchema(ctx context.Context) ([]any, error) {
 	return schemaData, nil
 }
 
-// GetIndexerConfig retrieves the configuration for a specific indexer
-func (s *IndexerService) GetIndexerConfig(ctx context.Context, indexerID string) (*jackett.IndexerConfigResponse, error) {
-	// s.logger.Info().Str("indexerID", indexerID).Msg("Getting indexer configuration")
+// GetIndexer returns a specific indexer by ID
+func (s *IndexerService) GetIndexer(ctx context.Context, indexerID int64) (*prowlarr.IndexerOutput, error) {
+	res, err := s.prowlarr.GetIndexerContext(ctx, indexerID)
+	if err != nil {
+		return nil, err
+	}
 
-	// config, err := s.jackett.GetIndexerConfig(ctx, indexerID)
-	// if err != nil {
-	// 	s.logger.Error().Str("indexerID", indexerID).Err(err).Msg("Failed to get indexer config")
-	// 	return nil, err
-	// }
-
-	// s.logger.Info().Str("indexerID", indexerID).Msg("Successfully retrieved indexer config")
-	// return config, nil
-	return &jackett.IndexerConfigResponse{}, nil
+	return res, nil
 }
 
 // UpdateIndexerConfig updates the configuration for a specific indexer
-func (s *IndexerService) SaveIndexerConfig(ctx context.Context, indexerID string, config any) error {
-	// s.logger.Info().Str("indexerID", indexerID).Msg("Updating indexer configuration")
+func (s *IndexerService) SaveIndexerConfig(ctx context.Context, input *prowlarr.IndexerInput) (*prowlarr.IndexerOutput, error) {
+	res, err := s.prowlarr.AddIndexerContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
 
-	// err := s.jackett.SaveIndexerConfig(ctx, indexerID, config)
-	// if err != nil {
-	// 	s.logger.Error().Str("indexerID", indexerID).Err(err).Msg("Failed to update indexer config")
-	// 	return err
-	// }
-
-	// s.logger.Info().Str("indexerID", indexerID).Msg("Successfully updated indexer config")
-	return nil
+	return res, nil
 }
 
 // DeleteIndexer removes an indexer by its ID

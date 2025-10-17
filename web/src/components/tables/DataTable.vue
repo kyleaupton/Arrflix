@@ -42,6 +42,9 @@ interface Props {
   selectable?: boolean
   paginator?: boolean
   rows?: number
+  scrollable?: boolean
+  scrollHeight?: string
+  virtualScrollerOptions?: any
   sortField?: string
   sortOrder?: 1 | -1
   filterable?: boolean
@@ -274,6 +277,9 @@ defineExpose({
       :selection="selectedRows"
       :paginator="paginator"
       :rows="rows"
+      :scrollable="scrollable"
+      :scroll-height="scrollHeight"
+      :virtual-scroller-options="virtualScrollerOptions"
       :sort-field="sortField"
       :sort-order="sortOrder"
       :global-filter-fields="searchable ? columns.map((col) => col.key as string) : undefined"

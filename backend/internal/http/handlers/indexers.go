@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 	"github.com/labstack/echo/v4"
+	"golift.io/starr/prowlarr"
 )
 
 type Indexers struct{ svc *service.Services }
@@ -14,17 +16,16 @@ func NewIndexers(s *service.Services) *Indexers { return &Indexers{svc: s} }
 func (h *Indexers) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/indexers/configured", h.ListConfigured)
 	v1.GET("/indexers/schema", h.GetSchema)
-	v1.GET("/indexers/:id", h.Get)
-	v1.GET("/indexers/:id/config", h.GetConfig)
-	v1.POST("/indexers/:id/config", h.SaveConfig)
-	v1.DELETE("/indexers/:id", h.Delete)
+	v1.GET("/indexer/:id", h.GetIndexer)
+	v1.POST("/indexer", h.SaveConfig)
+	v1.DELETE("/indexer/:id", h.Delete)
 }
 
 // ListConfigured returns only configured indexers
 // @Summary List configured indexers
 // @Tags    indexers
 // @Produce json
-// @Success 200 {object} any
+// @Success 200 {array} model.IndexerOutput
 // @Router  /v1/indexers/configured [get]
 func (h *Indexers) ListConfigured(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -55,52 +56,28 @@ func (h *Indexers) GetSchema(c echo.Context) error {
 // @Tags    indexers
 // @Produce json
 // @Param   id path string true "Indexer ID"
-// @Success 200 {object} jackett.IndexerDetails
-// @Failure 404 {object} map[string]string
+// @Success 200 {object} model.IndexerOutput
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
 // @Router  /v1/indexers/{id} [get]
-func (h *Indexers) Get(c echo.Context) error {
+func (h *Indexers) GetIndexer(c echo.Context) error {
 	indexerID := c.Param("id")
 	if indexerID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "indexer ID required"})
 	}
 
-	// ctx := c.Request().Context()
-	// allIndexers, err := h.svc.Indexer.ListAllIndexers(ctx)
-	// if err != nil {
-	// 	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list indexers"})
-	// }
-
-	// // Find the specific indexer
-	// for _, indexer := range allIndexers {
-	// 	if indexer.ID == indexerID {
-	// 		return c.JSON(http.StatusOK, indexer)
-	// 	}
-	// }
-
-	return c.JSON(http.StatusNotFound, map[string]string{"error": "indexer not found"})
-}
-
-// GetConfig returns the configuration for a specific indexer
-// @Summary Get indexer configuration
-// @Tags    indexers
-// @Produce json
-// @Param   id path string true "Indexer ID"
-// @Success 200 {array} jackett.IndexerConfigField
-// @Failure 404 {object} map[string]string
-// @Router  /v1/indexers/{id}/config [get]
-func (h *Indexers) GetConfig(c echo.Context) error {
-	indexerID := c.Param("id")
-	if indexerID == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "indexer ID required"})
+	indexerIDInt, err := strconv.ParseInt(indexerID, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid indexer ID"})
 	}
 
 	ctx := c.Request().Context()
-	config, err := h.svc.Indexer.GetIndexerConfig(ctx, indexerID)
+	indexer, err := h.svc.Indexer.GetIndexer(ctx, indexerIDInt)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "indexer config not found"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to get indexer"})
 	}
 
-	return c.JSON(http.StatusOK, config)
+	return c.JSON(http.StatusOK, indexer)
 }
 
 // SaveConfig saves the configuration for a specific indexer
@@ -108,28 +85,24 @@ func (h *Indexers) GetConfig(c echo.Context) error {
 // @Tags    indexers
 // @Accept  json
 // @Produce json
-// @Param   id path string true "Indexer ID"
-// @Param   payload body any true "Save indexer"
-// @Success 204 {string} string ""
+// @Param   payload body model.IndexerInput true "Save indexer"
+// @Success 200 {object} model.IndexerOutput
 // @Failure 400 {object} map[string]string
-// @Router  /v1/indexers/{id}/config [post]
+// @Failure 500 {object} map[string]string
+// @Router  /v1/indexer [post]
 func (h *Indexers) SaveConfig(c echo.Context) error {
-	indexerID := c.Param("id")
-	if indexerID == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "indexer ID required"})
-	}
-
 	ctx := c.Request().Context()
-	var config any
+	var config *prowlarr.IndexerInput
 	if err := c.Bind(&config); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}
 
-	if err := h.svc.Indexer.SaveIndexerConfig(ctx, indexerID, config); err != nil {
+	res, err := h.svc.Indexer.SaveIndexerConfig(ctx, config)
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to save indexer config"})
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	return c.JSON(http.StatusOK, res)
 }
 
 // Delete removes an indexer by ID

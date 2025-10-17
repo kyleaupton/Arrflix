@@ -29,6 +29,7 @@ const availableIndexerActions = createAvailableIndexerActions((indexer: ModelInd
     <p class="text-muted-color mb-6">Choose from available indexer types to configure.</p>
 
     <DataTable
+      class="h-full"
       ref="dataTableRef"
       :query-options="queryOptions"
       :columns="availableIndexerColumns"
@@ -37,9 +38,10 @@ const availableIndexerActions = createAvailableIndexerActions((indexer: ModelInd
       empty-message="No unconfigured indexers available"
       searchable
       search-placeholder="Search available indexers..."
-      paginator
-      :rows="15"
+      :scrollable="true"
+      :scroll-height="'calc(100vh*0.5 - 100px)'"
       selectable
+      :paginator="true"
       selection-mode="single"
       @selection-change="
         (selection) => {

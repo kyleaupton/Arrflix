@@ -57,78 +57,42 @@ export type HandlersLibrarySwagger = {
     updated_at: string;
 };
 
-export type JackettIndexerCaps = {
-    categories: {
-        categories: Array<{
-            id: string;
-            name: string;
-            subcats: Array<{
-                id: string;
-                name: string;
-            }>;
-        }>;
-    };
-    limits: {
-        default: string;
-        max: string;
-    };
-    searching: {
-        audioSearch: {
-            available: string;
-            searchEngine: string;
-            supportedParams: string;
-        };
-        bookSearch: {
-            available: string;
-            searchEngine: string;
-            supportedParams: string;
-        };
-        movieSearch: {
-            available: string;
-            searchEngine: string;
-            supportedParams: string;
-        };
-        musicSearch: {
-            available: string;
-            searchEngine: string;
-            supportedParams: string;
-        };
-        search: {
-            available: string;
-            searchEngine: string;
-            supportedParams: string;
-        };
-        tvsearch: {
-            available: string;
-            searchEngine: string;
-            supportedParams: string;
-        };
-    };
-    server: {
-        title: string;
-    };
+export type ModelCapabilities = {
+    bookSearchParams: Array<string>;
+    categories: Array<ModelCategories>;
+    limitsDefault: number;
+    limitsMax: number;
+    movieSearchParams: Array<string>;
+    musicSearchParams: Array<string>;
+    searchParams: Array<string>;
+    supportsRawSearch: boolean;
+    tvSearchParams: Array<string>;
 };
 
-export type JackettIndexerConfigField = {
-    delimiters?: string;
-    id?: string;
-    name?: string;
-    options?: unknown;
-    pattern?: string;
-    separator?: string;
-    type?: string;
+export type ModelCategories = {
+    id: number;
+    name: string;
+    subCategories: Array<ModelCategories>;
+};
+
+export type ModelFieldInput = {
+    name: string;
     value?: unknown;
 };
 
-export type JackettIndexerDetails = {
-    caps: JackettIndexerCaps;
-    configured: string;
-    description: string;
-    id: string;
-    language: string;
-    link: string;
-    title: string;
-    type: string;
+export type ModelFieldOutput = {
+    advanced?: boolean;
+    helpLink?: string;
+    helpText?: string;
+    hidden?: string;
+    label?: string;
+    name: string;
+    order?: number;
+    privacy: string;
+    selectOptions?: Array<ModelSelectOption>;
+    selectOptionsProviderAction?: string;
+    type?: string;
+    value?: unknown;
 };
 
 export type ModelGenre = {
@@ -203,6 +167,49 @@ export type ModelIndexerField = {
     value?: unknown;
 };
 
+export type ModelIndexerInput = {
+    appProfileId: number;
+    configContract: string;
+    enable: boolean;
+    fields: Array<ModelFieldInput>;
+    id?: number;
+    implementation: string;
+    name: string;
+    priority: number;
+    protocol: ModelProtocol;
+    redirect: boolean;
+    tags?: Array<number>;
+};
+
+export type ModelIndexerOutput = {
+    added: string;
+    appProfileId: number;
+    capabilities?: ModelCapabilities;
+    configContract: string;
+    definitionName: string;
+    description: string;
+    enable: boolean;
+    encoding?: string;
+    fields: Array<ModelFieldOutput>;
+    id?: number;
+    implementation: string;
+    implementationName: string;
+    indexerUrls: Array<string>;
+    infoLink: string;
+    language: string;
+    legacyUrls: Array<string>;
+    name: string;
+    priority: number;
+    privacy: string;
+    protocol: ModelProtocol;
+    redirect: boolean;
+    sortName: string;
+    supportsRedirect: boolean;
+    supportsRss: boolean;
+    supportsSearch: boolean;
+    tags: Array<number>;
+};
+
 export type ModelIndexerSelectOption = {
     hint?: string;
     name: string;
@@ -261,6 +268,8 @@ export type ModelProductionCountry = {
     name: string;
 };
 
+export type ModelProtocol = 'unknown' | 'usenet' | 'torrent';
+
 export type ModelRail = {
     id: string;
     movies: Array<ModelMovieRail>;
@@ -276,6 +285,14 @@ export type ModelSeason = {
     seasonNumber: number;
     title: string;
     tmdbId: number;
+};
+
+export type ModelSelectOption = {
+    dividerAfter?: boolean;
+    hint: string;
+    name: string;
+    order: number;
+    value: number;
 };
 
 export type ModelSeries = {
@@ -354,6 +371,42 @@ export type GetV1HomeResponses = {
 
 export type GetV1HomeResponse = GetV1HomeResponses[keyof GetV1HomeResponses];
 
+export type PostV1IndexerData = {
+    /**
+     * Save indexer
+     */
+    body: ModelIndexerInput;
+    path?: never;
+    query?: never;
+    url: '/v1/indexer';
+};
+
+export type PostV1IndexerErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1IndexerError = PostV1IndexerErrors[keyof PostV1IndexerErrors];
+
+export type PostV1IndexerResponses = {
+    /**
+     * OK
+     */
+    200: ModelIndexerOutput;
+};
+
+export type PostV1IndexerResponse = PostV1IndexerResponses[keyof PostV1IndexerResponses];
+
 export type GetV1IndexersConfiguredData = {
     body?: never;
     path?: never;
@@ -365,8 +418,10 @@ export type GetV1IndexersConfiguredResponses = {
     /**
      * OK
      */
-    200: unknown;
+    200: Array<ModelIndexerOutput>;
 };
+
+export type GetV1IndexersConfiguredResponse = GetV1IndexersConfiguredResponses[keyof GetV1IndexersConfiguredResponses];
 
 export type GetV1IndexersSchemaData = {
     body?: never;
@@ -430,9 +485,15 @@ export type GetV1IndexersByIdData = {
 
 export type GetV1IndexersByIdErrors = {
     /**
-     * Not Found
+     * Bad Request
      */
-    404: {
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
         [key: string]: string;
     };
 };
@@ -443,77 +504,10 @@ export type GetV1IndexersByIdResponses = {
     /**
      * OK
      */
-    200: JackettIndexerDetails;
+    200: ModelIndexerOutput;
 };
 
 export type GetV1IndexersByIdResponse = GetV1IndexersByIdResponses[keyof GetV1IndexersByIdResponses];
-
-export type GetV1IndexersByIdConfigData = {
-    body?: never;
-    path: {
-        /**
-         * Indexer ID
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/v1/indexers/{id}/config';
-};
-
-export type GetV1IndexersByIdConfigErrors = {
-    /**
-     * Not Found
-     */
-    404: {
-        [key: string]: string;
-    };
-};
-
-export type GetV1IndexersByIdConfigError = GetV1IndexersByIdConfigErrors[keyof GetV1IndexersByIdConfigErrors];
-
-export type GetV1IndexersByIdConfigResponses = {
-    /**
-     * OK
-     */
-    200: Array<JackettIndexerConfigField>;
-};
-
-export type GetV1IndexersByIdConfigResponse = GetV1IndexersByIdConfigResponses[keyof GetV1IndexersByIdConfigResponses];
-
-export type PostV1IndexersByIdConfigData = {
-    /**
-     * Save indexer
-     */
-    body: unknown;
-    path: {
-        /**
-         * Indexer ID
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/v1/indexers/{id}/config';
-};
-
-export type PostV1IndexersByIdConfigErrors = {
-    /**
-     * Bad Request
-     */
-    400: {
-        [key: string]: string;
-    };
-};
-
-export type PostV1IndexersByIdConfigError = PostV1IndexersByIdConfigErrors[keyof PostV1IndexersByIdConfigErrors];
-
-export type PostV1IndexersByIdConfigResponses = {
-    /**
-     * No Content
-     */
-    204: string;
-};
-
-export type PostV1IndexersByIdConfigResponse = PostV1IndexersByIdConfigResponses[keyof PostV1IndexersByIdConfigResponses];
 
 export type GetV1LibrariesData = {
     body?: never;

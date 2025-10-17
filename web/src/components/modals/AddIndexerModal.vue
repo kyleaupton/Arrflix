@@ -5,8 +5,8 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Steps from 'primevue/steps'
 import { PrimeIcons } from '@/icons'
-import { type ModelIndexerDefinition } from '@/client/types.gen'
-import { postV1IndexersByIdConfigMutation } from '@/client/@tanstack/vue-query.gen'
+import { type ModelIndexerDefinition, type ModelIndexerInput } from '@/client/types.gen'
+import { postV1IndexerMutation } from '@/client/@tanstack/vue-query.gen'
 import SelectIndexerTypeStep from './steps/SelectIndexerTypeStep.vue'
 import ConfigurationStep from './steps/ConfigurationStep.vue'
 import ReviewStep from './steps/ReviewStep.vue'
@@ -19,10 +19,10 @@ const emit = defineEmits<{
 // Form state
 const currentStep = ref(0)
 const selectedIndexerType = ref<ModelIndexerDefinition | null>(null)
-const saveData = ref<Record<string, unknown>>({})
+const saveData = ref<ModelIndexerInput | undefined>(undefined)
 
 const createIndexerMutation = useMutation({
-  ...postV1IndexersByIdConfigMutation(),
+  ...postV1IndexerMutation(),
   onSuccess: () => {
     emit('indexer-added')
     closeModal()
@@ -73,12 +73,11 @@ const selectIndexerType = (indexer: ModelIndexerDefinition) => {
 }
 
 const createIndexer = () => {
-  // if (canProceed.value && selectedIndexerType.value) {
-  //   createIndexerMutation.mutate({
-  //     path: { id: selectedIndexerType.value.id },
-  //     body: saveData.value,
-  //   })
-  // }
+  if (canProceed.value && selectedIndexerType.value && saveData.value) {
+    createIndexerMutation.mutate({
+      body: saveData.value,
+    })
+  }
 }
 
 const closeModal = () => {
@@ -86,7 +85,6 @@ const closeModal = () => {
 }
 
 const handleUpdateVisible = (visible: boolean) => {
-  console.log('handleUpdateVisible', visible)
   if (!visible) {
     closeModal()
   }
@@ -103,16 +101,16 @@ const handleUpdateVisible = (visible: boolean) => {
     class="w-full max-w-4xl"
     @update:visible="handleUpdateVisible"
   >
-    <div class="add-indexer-modal">
+    <div class="add-indexer-modal overflow-hidden h-full">
       <!-- Progress Steps -->
       <div class="mb-6">
         <Steps :model="steps" :active-index="currentStep" />
       </div>
 
       <!-- Step Content -->
-      <div class="step-content min-h-96">
+      <div class="max-h-[calc(100vh*0.6)] overflow-y-auto">
         <!-- Step 1: Select Indexer Type -->
-        <div v-if="currentStep === 0" class="step-1">
+        <div v-if="currentStep === 0" class="step-1 h-full overflow-hidden">
           <SelectIndexerTypeStep
             ref="selectStepRef"
             :selected-indexer="selectedIndexerType"
@@ -121,7 +119,7 @@ const handleUpdateVisible = (visible: boolean) => {
         </div>
 
         <!-- Step 2: Configuration -->
-        <div v-if="currentStep === 1 && selectedIndexerType" class="step-2">
+        <div v-if="currentStep === 1 && selectedIndexerType" class="step-2 overflow-hidden">
           <ConfigurationStep v-model="saveData" :selected-indexer="selectedIndexerType" />
         </div>
 
@@ -132,7 +130,7 @@ const handleUpdateVisible = (visible: boolean) => {
       </div>
 
       <!-- Footer Actions -->
-      <div class="flex justify-between items-center mt-8 pt-6 border-t border-surface">
+      <div class="flex justify-between items-center pt-6">
         <Button
           :label="isFirstStep ? 'Cancel' : 'Previous'"
           :icon="isFirstStep ? PrimeIcons.TIMES : PrimeIcons.ANGLE_LEFT"
@@ -164,21 +162,4 @@ const handleUpdateVisible = (visible: boolean) => {
   </Dialog>
 </template>
 
-<style scoped>
-.add-indexer-modal {
-  min-height: 500px;
-}
-
-.step-content {
-  min-height: 400px;
-}
-
-:deep(.p-steps .p-steps-item.p-highlight .p-steps-number) {
-  background: var(--p-primary-color);
-  color: var(--p-primary-contrast-color);
-}
-
-:deep(.p-dialog-content) {
-  padding: 2rem;
-}
-</style>
+<style scoped></style>

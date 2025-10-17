@@ -9,7 +9,16 @@ import Message from 'primevue/message'
 import Checkbox from 'primevue/checkbox'
 import { type ModelIndexerField } from '@/client/types.gen'
 
-const model = defineModel<unknown>()
+const model = computed({
+  get: () => props.field.value,
+  set: (value) => {
+    emit('value-change', props.field.name, value)
+  },
+})
+
+const emit = defineEmits<{
+  (e: 'value-change', fieldName: string, value: unknown): void
+}>()
 
 const props = defineProps<{
   field: ModelIndexerField
@@ -48,7 +57,10 @@ const fieldId = computed(() => `field-${props.field.name}`)
 </script>
 
 <template>
-  <div class="field-container" :class="{ 'advanced-field': field.advanced }">
+  <div
+    class="field-container"
+    :class="{ hidden: field.hidden === 'hidden', 'advanced-field': field.advanced }"
+  >
     <!-- Text Input Fields -->
     <template v-if="field.type === 'textbox'">
       <label :for="fieldId" class="block text-sm font-medium mb-2">
@@ -161,16 +173,16 @@ const fieldId = computed(() => `field-${props.field.name}`)
       </div>
     </template>
 
-    <Message v-if="hasHelpText" size="small" :severity="helpSeverity" variant="simple"
+    <Message v-if="hasHelpText" class="mt-1" size="small" :severity="helpSeverity" variant="simple"
       >{{ field.helpText || field.helpTextWarning }}
-        <a
-          v-if="field.helpLink"
-          :href="field.helpLink"
-          target="_blank"
-          class="ml-1 text-blue-600 hover:underline"
-        >
-          Learn more
-        </a>
+      <a
+        v-if="field.helpLink"
+        :href="field.helpLink"
+        target="_blank"
+        class="ml-1 text-blue-600 hover:underline"
+      >
+        Learn more
+      </a>
     </Message>
   </div>
 </template>

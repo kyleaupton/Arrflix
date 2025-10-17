@@ -6,21 +6,17 @@ export const availableIndexerColumns: TableColumn<ModelIndexerDefinition>[] = [
   {
     key: 'name',
     label: 'Name',
+    width: '100px',
     sortable: true,
     filterable: true,
-    width: '200px',
   },
   {
     key: 'description',
     label: 'Description',
-    sortable: true,
-    filterable: true,
-    width: '300px',
   },
   {
     key: 'language',
     label: 'Language',
-    sortable: true,
     filterable: true,
     width: '120px',
     align: 'center',

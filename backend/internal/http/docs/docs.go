@@ -89,6 +89,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/indexer": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "indexers"
+                ],
+                "summary": "Save indexer configuration",
+                "parameters": [
+                    {
+                        "description": "Save indexer",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.IndexerInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.IndexerOutput"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/indexers/configured": {
             "get": {
                 "produces": [
@@ -101,7 +152,12 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "schema": {}
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.IndexerOutput"
+                            }
+                        }
                     }
                 }
             }
@@ -153,11 +209,20 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/jackett.IndexerDetails"
+                            "$ref": "#/definitions/model.IndexerOutput"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -179,91 +244,6 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/indexers/{id}/config": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "indexers"
-                ],
-                "summary": "Get indexer configuration",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Indexer ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/jackett.IndexerConfigField"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "indexers"
-                ],
-                "summary": "Save indexer configuration",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Indexer ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Save indexer",
-                        "name": "payload",
-                        "in": "body",
-                        "required": true,
-                        "schema": {}
                     }
                 ],
                 "responses": {
@@ -760,277 +740,145 @@ const docTemplate = `{
                 }
             }
         },
-        "jackett.IndexerCaps": {
+        "model.Capabilities": {
             "type": "object",
             "required": [
+                "bookSearchParams",
                 "categories",
-                "limits",
-                "searching",
-                "server"
+                "limitsDefault",
+                "limitsMax",
+                "movieSearchParams",
+                "musicSearchParams",
+                "searchParams",
+                "supportsRawSearch",
+                "tvSearchParams"
             ],
             "properties": {
+                "bookSearchParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "categories": {
-                    "type": "object",
-                    "required": [
-                        "categories"
-                    ],
-                    "properties": {
-                        "categories": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "required": [
-                                    "id",
-                                    "name",
-                                    "subcats"
-                                ],
-                                "properties": {
-                                    "id": {
-                                        "type": "string"
-                                    },
-                                    "name": {
-                                        "type": "string"
-                                    },
-                                    "subcats": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "object",
-                                            "required": [
-                                                "id",
-                                                "name"
-                                            ],
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "name": {
-                                                    "type": "string"
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Categories"
                     }
                 },
-                "limits": {
-                    "type": "object",
-                    "required": [
-                        "default",
-                        "max"
-                    ],
-                    "properties": {
-                        "default": {
-                            "type": "string"
-                        },
-                        "max": {
-                            "type": "string"
-                        }
+                "limitsDefault": {
+                    "type": "integer"
+                },
+                "limitsMax": {
+                    "type": "integer"
+                },
+                "movieSearchParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 },
-                "searching": {
-                    "type": "object",
-                    "required": [
-                        "audioSearch",
-                        "bookSearch",
-                        "movieSearch",
-                        "musicSearch",
-                        "search",
-                        "tvsearch"
-                    ],
-                    "properties": {
-                        "audioSearch": {
-                            "type": "object",
-                            "required": [
-                                "available",
-                                "searchEngine",
-                                "supportedParams"
-                            ],
-                            "properties": {
-                                "available": {
-                                    "type": "string"
-                                },
-                                "searchEngine": {
-                                    "type": "string"
-                                },
-                                "supportedParams": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "bookSearch": {
-                            "type": "object",
-                            "required": [
-                                "available",
-                                "searchEngine",
-                                "supportedParams"
-                            ],
-                            "properties": {
-                                "available": {
-                                    "type": "string"
-                                },
-                                "searchEngine": {
-                                    "type": "string"
-                                },
-                                "supportedParams": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "movieSearch": {
-                            "type": "object",
-                            "required": [
-                                "available",
-                                "searchEngine",
-                                "supportedParams"
-                            ],
-                            "properties": {
-                                "available": {
-                                    "type": "string"
-                                },
-                                "searchEngine": {
-                                    "type": "string"
-                                },
-                                "supportedParams": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "musicSearch": {
-                            "type": "object",
-                            "required": [
-                                "available",
-                                "searchEngine",
-                                "supportedParams"
-                            ],
-                            "properties": {
-                                "available": {
-                                    "type": "string"
-                                },
-                                "searchEngine": {
-                                    "type": "string"
-                                },
-                                "supportedParams": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "search": {
-                            "type": "object",
-                            "required": [
-                                "available",
-                                "searchEngine",
-                                "supportedParams"
-                            ],
-                            "properties": {
-                                "available": {
-                                    "type": "string"
-                                },
-                                "searchEngine": {
-                                    "type": "string"
-                                },
-                                "supportedParams": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "tvsearch": {
-                            "type": "object",
-                            "required": [
-                                "available",
-                                "searchEngine",
-                                "supportedParams"
-                            ],
-                            "properties": {
-                                "available": {
-                                    "type": "string"
-                                },
-                                "searchEngine": {
-                                    "type": "string"
-                                },
-                                "supportedParams": {
-                                    "type": "string"
-                                }
-                            }
-                        }
+                "musicSearchParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 },
-                "server": {
-                    "type": "object",
-                    "required": [
-                        "title"
-                    ],
-                    "properties": {
-                        "title": {
-                            "type": "string"
-                        }
+                "searchParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "supportsRawSearch": {
+                    "type": "boolean"
+                },
+                "tvSearchParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 }
             }
         },
-        "jackett.IndexerConfigField": {
+        "model.Categories": {
             "type": "object",
+            "required": [
+                "id",
+                "name",
+                "subCategories"
+            ],
             "properties": {
-                "delimiters": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 },
-                "id": {
+                "subCategories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Categories"
+                    }
+                }
+            }
+        },
+        "model.FieldInput": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {}
+            }
+        },
+        "model.FieldOutput": {
+            "type": "object",
+            "required": [
+                "name",
+                "privacy"
+            ],
+            "properties": {
+                "advanced": {
+                    "type": "boolean"
+                },
+                "helpLink": {
+                    "type": "string"
+                },
+                "helpText": {
+                    "type": "string"
+                },
+                "hidden": {
+                    "type": "string"
+                },
+                "label": {
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
                 },
-                "options": {},
-                "pattern": {
+                "order": {
+                    "type": "integer"
+                },
+                "privacy": {
                     "type": "string"
                 },
-                "separator": {
+                "selectOptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.SelectOption"
+                    }
+                },
+                "selectOptionsProviderAction": {
                     "type": "string"
                 },
                 "type": {
                     "type": "string"
                 },
                 "value": {}
-            }
-        },
-        "jackett.IndexerDetails": {
-            "type": "object",
-            "required": [
-                "caps",
-                "configured",
-                "description",
-                "id",
-                "language",
-                "link",
-                "title",
-                "type"
-            ],
-            "properties": {
-                "caps": {
-                    "$ref": "#/definitions/jackett.IndexerCaps"
-                },
-                "configured": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "language": {
-                    "type": "string"
-                },
-                "link": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
             }
         },
         "model.Genre": {
@@ -1323,6 +1171,181 @@ const docTemplate = `{
                 "value": {}
             }
         },
+        "model.IndexerInput": {
+            "type": "object",
+            "required": [
+                "appProfileId",
+                "configContract",
+                "enable",
+                "fields",
+                "implementation",
+                "name",
+                "priority",
+                "protocol",
+                "redirect"
+            ],
+            "properties": {
+                "appProfileId": {
+                    "type": "integer"
+                },
+                "configContract": {
+                    "type": "string"
+                },
+                "enable": {
+                    "type": "boolean"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.FieldInput"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "implementation": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "protocol": {
+                    "$ref": "#/definitions/model.Protocol"
+                },
+                "redirect": {
+                    "type": "boolean"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "model.IndexerOutput": {
+            "type": "object",
+            "required": [
+                "added",
+                "appProfileId",
+                "configContract",
+                "definitionName",
+                "description",
+                "enable",
+                "fields",
+                "implementation",
+                "implementationName",
+                "indexerUrls",
+                "infoLink",
+                "language",
+                "legacyUrls",
+                "name",
+                "priority",
+                "privacy",
+                "protocol",
+                "redirect",
+                "sortName",
+                "supportsRedirect",
+                "supportsRss",
+                "supportsSearch",
+                "tags"
+            ],
+            "properties": {
+                "added": {
+                    "type": "string"
+                },
+                "appProfileId": {
+                    "type": "integer"
+                },
+                "capabilities": {
+                    "$ref": "#/definitions/model.Capabilities"
+                },
+                "configContract": {
+                    "type": "string"
+                },
+                "definitionName": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enable": {
+                    "type": "boolean"
+                },
+                "encoding": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.FieldOutput"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "implementation": {
+                    "type": "string"
+                },
+                "implementationName": {
+                    "type": "string"
+                },
+                "indexerUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "infoLink": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "legacyUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "privacy": {
+                    "type": "string"
+                },
+                "protocol": {
+                    "$ref": "#/definitions/model.Protocol"
+                },
+                "redirect": {
+                    "type": "boolean"
+                },
+                "sortName": {
+                    "type": "string"
+                },
+                "supportsRedirect": {
+                    "type": "boolean"
+                },
+                "supportsRss": {
+                    "type": "boolean"
+                },
+                "supportsSearch": {
+                    "type": "boolean"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "model.IndexerSelectOption": {
             "type": "object",
             "required": [
@@ -1515,6 +1538,19 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Protocol": {
+            "type": "string",
+            "enum": [
+                "unknown",
+                "usenet",
+                "torrent"
+            ],
+            "x-enum-varnames": [
+                "ProtocolUnknown",
+                "ProtocolUsenet",
+                "ProtocolTorrent"
+            ]
+        },
         "model.Rail": {
             "type": "object",
             "required": [
@@ -1575,6 +1611,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.SelectOption": {
+            "type": "object",
+            "required": [
+                "hint",
+                "name",
+                "order",
+                "value"
+            ],
+            "properties": {
+                "dividerAfter": {
+                    "type": "boolean"
+                },
+                "hint": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "value": {
                     "type": "integer"
                 }
             }
