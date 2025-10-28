@@ -1,0 +1,10 @@
+FROM debian:stable-slim
+RUN apt-get update && apt-get install -y curl tar && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /opt/prowlarr && cd /opt/prowlarr && \
+    curl -fsSL https://github.com/Prowlarr/Prowlarr/releases/download/v2.0.5.5160/Prowlarr.master.2.0.5.5160.linux-core-x64.tar.gz -o prowlarr.tar.gz && \
+    tar -xzf prowlarr.tar.gz --strip-components=1 && \
+    rm prowlarr.tar.gz
+VOLUME ["/var/lib/prowlarr"]
+EXPOSE 9696
+ENTRYPOINT ["/opt/prowlarr/Prowlarr"]
+CMD ["-nobrowser", "-data=/var/lib/prowlarr"]

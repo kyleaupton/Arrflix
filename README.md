@@ -1,5 +1,37 @@
 # Snaggle
 
+A self-hosted media management platform that unifies the best parts of Sonarr, Radarr, and Overseerr — but with more transparency, flexibility, and developer-first clarity.
+
+## Quick Start
+
+Snaggle now uses a container orchestration approach. Simply run:
+
+```bash
+cd ops
+docker-compose up -d
+```
+
+This starts the `snaggle-ops` reconciler which automatically spawns and manages all required services:
+
+- PostgreSQL database
+- Prowlarr indexer management
+- Snaggle API backend
+- Nginx web server
+- Dynamic services (qBittorrent instances, etc.)
+
+Access the web interface at http://localhost:8484
+
+## Architecture
+
+Snaggle uses a Go-based reconciliation controller that manages Docker containers in a Kubernetes-style pattern:
+
+- **Single Entry Point**: Only `snaggle-ops` container in docker-compose
+- **Dynamic Services**: Add/remove services via database without restarts
+- **Better Isolation**: Each service runs in its own container
+- **Dependency Management**: Services start in correct order with health checks
+
+See [ops/README.md](ops/README.md) for detailed architecture documentation.
+
 ## Vision
 
 ### Problem
@@ -17,7 +49,7 @@ Existing media managers (e.g., Sonarr/Radarr) feel slow/heavy, hard to customize
 - **Observable by default** (events, logs, metrics, traces)
 - **Composable** (plugin adapters for indexers, downloaders, metadata)
 - **Idempotent** (safe retries; no dupes)
-- **Resource-aware** (don’t clobber the NAS or saturate WAN)
+- **Resource-aware** (don't clobber the NAS or saturate WAN)
 
 ### Non-Goals (v1)
 
