@@ -1,0 +1,38 @@
+services:
+  snaggle-ops:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: snaggle-ops:latest
+    container_name: snaggle-ops-dev
+    environment:
+      RUNTIME_MODE: dev
+      DATABASE_URL: postgres://${POSTGRES_USER:-snaggle}:${POSTGRES_PASSWORD:-snaggle}@snaggle-postgres:5432/${POSTGRES_DB:-snaggle}?sslmode=disable
+      POSTGRES_DB: ${POSTGRES_DB:-snaggle}
+      POSTGRES_USER: ${POSTGRES_USER:-snaggle}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-snaggle}
+      JWT_SECRET: ${JWT_SECRET:-dev-insecure-change-me}
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      RECONCILE_INTERVAL: ${RECONCILE_INTERVAL:-10s}
+      NETWORK_NAME: snaggle-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Dev mode volume mounts for live reload
+      - ../backend:/host/backend:ro
+      - ../web:/host/web:ro
+    networks:
+      - snaggle-network
+    ports:
+      - "8484:8484" # Main web interface
+      - "8080:8080" # API dev server (direct access)
+      - "5173:5173" # Vite dev server (direct access)
+    restart: unless-stopped
+
+networks:
+  snaggle-network:
+    name: snaggle-network
+
+volumes:
+  snaggle_pg_data:
+  snaggle_prowlarr_data:
+  web_node_modules:

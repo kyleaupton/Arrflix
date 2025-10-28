@@ -6,6 +6,7 @@ services:
     image: snaggle-ops:latest
     container_name: snaggle-ops
     environment:
+      RUNTIME_MODE: ${RUNTIME_MODE:-prod}
       DATABASE_URL: postgres://${POSTGRES_USER:-snaggle}:${POSTGRES_PASSWORD:-snaggle}@snaggle-postgres:5432/${POSTGRES_DB:-snaggle}?sslmode=disable
       POSTGRES_DB: ${POSTGRES_DB:-snaggle}
       POSTGRES_USER: ${POSTGRES_USER:-snaggle}
@@ -16,10 +17,16 @@ services:
       NETWORK_NAME: snaggle-network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Dev mode volume mounts
+      - ../backend:/host/backend:ro
+      - ../web:/host/web:ro
     networks:
       - snaggle-network
     ports:
       - "8484:8484"
+      # Dev mode additional ports
+      - "8080:8080" # API dev server
+      - "5173:5173" # Vite dev server
     restart: unless-stopped
 
 networks:
@@ -29,3 +36,4 @@ networks:
 volumes:
   snaggle_pg_data:
   snaggle_prowlarr_data:
+  web_node_modules:

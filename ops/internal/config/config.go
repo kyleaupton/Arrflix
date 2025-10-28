@@ -6,6 +6,7 @@ import (
 )
 
 type Config struct {
+	RuntimeMode       string
 	DatabaseURL       string
 	PostgresDB        string
 	PostgresUser      string
@@ -33,6 +34,7 @@ func Load() Config {
 	}
 
 	return Config{
+		RuntimeMode:       envOr("RUNTIME_MODE", "prod"),
 		DatabaseURL:       envOr("DATABASE_URL", "postgres://snaggle:snaggle@snaggle-postgres:5432/snaggle?sslmode=disable"),
 		PostgresDB:        envOr("POSTGRES_DB", "snaggle"),
 		PostgresUser:      envOr("POSTGRES_USER", "snaggle"),

@@ -21,6 +21,21 @@ This starts the `snaggle-ops` reconciler which automatically spawns and manages 
 
 Access the web interface at http://localhost:8484
 
+### Development Mode
+
+For development with live reload:
+
+```bash
+cd ops
+RUNTIME_MODE=dev docker-compose up -d
+```
+
+This enables:
+
+- Go API with Air live reload
+- Vue frontend with Vite HMR
+- Direct access to dev servers on ports 8080 and 5173
+
 ## Architecture
 
 Snaggle uses a Go-based reconciliation controller that manages Docker containers in a Kubernetes-style pattern:

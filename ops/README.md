@@ -55,17 +55,48 @@ ops/
 
 ## Usage
 
-### Running with Docker Compose
+### Production Mode (Default)
 
 ```bash
 cd ops
 docker-compose up -d
 ```
 
-This will start the `snaggle-ops` container which will then spawn and manage all other services.
+This starts the `snaggle-ops` reconciler which spawns and manages all services in production mode.
+
+### Development Mode
+
+For development with live reload:
+
+```bash
+cd ops
+RUNTIME_MODE=dev docker-compose up -d
+```
+
+Or use the dedicated dev compose file:
+
+```bash
+cd ops
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+In dev mode, the reconciler spawns:
+
+- **snaggle-api-dev**: Go API with Air live reload
+- **snaggle-web-dev**: Vite dev server with HMR
+- **snaggle-nginx-dev**: Nginx proxy to both dev servers
+- **snaggle-postgres**: Database (same as prod)
+- **snaggle-prowlarr**: Indexer management (same as prod)
+
+### Access Points
+
+- **Main Interface**: http://localhost:8484 (proxied through nginx)
+- **API Direct**: http://localhost:8080 (dev mode only)
+- **Vite Dev Server**: http://localhost:5173 (dev mode only)
 
 ### Environment Variables
 
+- `RUNTIME_MODE` - Runtime mode: "prod" or "dev" (default: prod)
 - `DATABASE_URL` - PostgreSQL connection string
 - `POSTGRES_DB` - Database name (default: snaggle)
 - `POSTGRES_USER` - Database user (default: snaggle)

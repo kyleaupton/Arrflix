@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,12 +23,24 @@ type Reconciler struct {
 
 // New creates a new reconciler
 func New(dockerClient *docker.Client, cfg *config.Config) *Reconciler {
-	// Initialize static services
-	static := []services.Service{
-		services.NewPostgres(cfg),
-		services.NewProwlarr(cfg),
-		services.NewAPI(cfg),
-		services.NewNginx(cfg),
+	// Initialize static services based on runtime mode
+	var static []services.Service
+
+	if cfg.RuntimeMode == "dev" {
+		static = []services.Service{
+			services.NewPostgres(cfg),
+			services.NewProwlarr(cfg),
+			services.NewAPIDev(cfg),
+			services.NewWebDev(cfg),
+			services.NewNginxDev(cfg),
+		}
+	} else {
+		static = []services.Service{
+			services.NewPostgres(cfg),
+			services.NewProwlarr(cfg),
+			services.NewAPI(cfg),
+			services.NewNginx(cfg),
+		}
 	}
 
 	return &Reconciler{
@@ -39,14 +52,6 @@ func New(dockerClient *docker.Client, cfg *config.Config) *Reconciler {
 
 // Run starts the reconciliation loop
 func (r *Reconciler) Run(ctx context.Context) error {
-	// Connect to database
-	db, err := pgxpool.New(ctx, r.config.DatabaseURL)
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
-	}
-	defer db.Close()
-	r.db = db
-
 	log.Printf("Starting reconciler with interval: %v", r.config.ReconcileInterval)
 
 	ticker := time.NewTicker(r.config.ReconcileInterval)
@@ -61,6 +66,9 @@ func (r *Reconciler) Run(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			log.Println("Reconciler stopping...")
+			if r.db != nil {
+				r.db.Close()
+			}
 			return ctx.Err()
 		case <-ticker.C:
 			if err := r.Reconcile(ctx); err != nil {
@@ -78,6 +86,7 @@ func (r *Reconciler) Reconcile(ctx context.Context) error {
 	if err := r.docker.EnsureNetwork(ctx, r.config.NetworkName); err != nil {
 		return fmt.Errorf("failed to ensure network: %w", err)
 	}
+	log.Printf("Network %s ensured", r.config.NetworkName)
 
 	// Ensure required volumes
 	volumes := []string{"snaggle_pg_data", "snaggle_prowlarr_data"}
@@ -86,18 +95,21 @@ func (r *Reconciler) Reconcile(ctx context.Context) error {
 			return fmt.Errorf("failed to ensure volume %s: %w", vol, err)
 		}
 	}
+	log.Printf("Volumes ensured: %v", volumes)
 
 	// 2. Build desired state
 	desiredServices, err := r.buildDesiredState(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to build desired state: %w", err)
 	}
+	log.Printf("Desired state built with %d services", len(desiredServices))
 
 	// 3. Get actual state
 	actualContainers, err := r.docker.ListManagedContainers(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get actual state: %w", err)
 	}
+	log.Printf("Found %d actual containers", len(actualContainers))
 
 	// 4. Build dependency graph and reconcile
 	return r.reconcileServices(ctx, desiredServices, actualContainers)
@@ -122,10 +134,23 @@ func (r *Reconciler) buildDesiredState(ctx context.Context) ([]services.Service,
 
 // getDynamicServices queries the database for enabled service instances
 func (r *Reconciler) getDynamicServices(ctx context.Context) ([]services.Service, error) {
+	// Try to connect to database if not already connected
+	if r.db == nil {
+		db, err := pgxpool.New(ctx, r.config.DatabaseURL)
+		if err != nil {
+			// Database not available yet, return empty list
+			log.Printf("Database not available yet, skipping dynamic services: %v", err)
+			return []services.Service{}, nil
+		}
+		r.db = db
+	}
+
 	query := `SELECT id, name, type, enabled, config FROM service_instance WHERE enabled = true`
 	rows, err := r.db.Query(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query service instances: %w", err)
+		// Database query failed, return empty list
+		log.Printf("Failed to query service instances, skipping dynamic services: %v", err)
+		return []services.Service{}, nil
 	}
 	defer rows.Close()
 
@@ -136,7 +161,8 @@ func (r *Reconciler) getDynamicServices(ctx context.Context) ([]services.Service
 
 		err := rows.Scan(&instance.ID, &instance.Name, &instance.Type, &instance.Enabled, &configJSON)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan service instance: %w", err)
+			log.Printf("Failed to scan service instance: %v", err)
+			continue
 		}
 
 		// Parse JSON config
@@ -204,14 +230,10 @@ func (r *Reconciler) reconcileServices(ctx context.Context, desired []services.S
 func (r *Reconciler) reconcileService(ctx context.Context, service services.Service, actual *docker.ContainerStatus) error {
 	// Check dependencies first
 	for _, dep := range service.DependsOn() {
-		depStatus, err := r.docker.GetContainerStatus(ctx, dep)
-		if err != nil {
-			log.Printf("Dependency %s not ready for %s: %v", dep, service.Name(), err)
-			return fmt.Errorf("dependency %s not ready", dep)
-		}
-		if depStatus.Status != "running" {
-			log.Printf("Dependency %s not running for %s", dep, service.Name())
-			return fmt.Errorf("dependency %s not running", dep)
+		// Wait for dependency to be healthy (this handles all waiting logic)
+		if err := r.waitForDependencyHealthy(ctx, dep); err != nil {
+			log.Printf("Dependency %s not healthy for %s: %v", dep, service.Name(), err)
+			return fmt.Errorf("dependency %s not healthy", dep)
 		}
 	}
 
@@ -228,6 +250,110 @@ func (r *Reconciler) reconcileService(ctx context.Context, service services.Serv
 
 	log.Printf("Container %s is running", service.Name())
 	return nil
+}
+
+// waitForDependencyHealthy waits for a dependency container to be healthy
+func (r *Reconciler) waitForDependencyHealthy(ctx context.Context, depName string) error {
+	log.Printf("Waiting for dependency %s to be healthy...", depName)
+
+	// Poll every second for up to 60 seconds
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	timeout := time.After(60 * time.Second)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-timeout:
+			return fmt.Errorf("timeout waiting for dependency %s to be healthy", depName)
+		case <-ticker.C:
+			// First check if container exists and is running
+			status, err := r.docker.GetContainerStatus(ctx, depName)
+			if err != nil {
+				log.Printf("Dependency %s container not found yet: %v", depName, err)
+				continue
+			}
+			// Check if container is running (Docker status can be "Up X seconds (healthy)" etc.)
+			if !strings.Contains(status.Status, "Up") && status.Status != "running" {
+				log.Printf("Dependency %s not running yet (status: %s)", depName, status.Status)
+				continue
+			}
+
+			// Container is running, now check if it's healthy
+			healthy, err := r.checkDependencyHealth(ctx, depName)
+			if err != nil {
+				log.Printf("Health check failed for %s: %v", depName, err)
+				continue
+			}
+			if healthy {
+				log.Printf("Dependency %s is now healthy", depName)
+				return nil
+			}
+			log.Printf("Dependency %s not yet healthy, retrying...", depName)
+		}
+	}
+}
+
+// checkDependencyHealth performs a health check on a specific dependency
+func (r *Reconciler) checkDependencyHealth(ctx context.Context, depName string) (bool, error) {
+	switch depName {
+	case "snaggle-postgres":
+		return r.checkPostgresHealth(ctx)
+	case "snaggle-prowlarr":
+		return r.checkProwlarrHealth(ctx)
+	case "snaggle-api-dev":
+		return r.checkAPIHealth(ctx)
+	default:
+		// For unknown dependencies, just check if container is running
+		status, err := r.docker.GetContainerStatus(ctx, depName)
+		if err != nil {
+			return false, err
+		}
+		return status.Status == "running", nil
+	}
+}
+
+// checkPostgresHealth checks if PostgreSQL is ready to accept connections
+func (r *Reconciler) checkPostgresHealth(ctx context.Context) (bool, error) {
+	// Try to connect to PostgreSQL
+	db, err := pgxpool.New(ctx, r.config.DatabaseURL)
+	if err != nil {
+		return false, nil // Not ready yet, but not an error
+	}
+	defer db.Close()
+
+	// Test the connection
+	var result int
+	err = db.QueryRow(ctx, "SELECT 1").Scan(&result)
+	if err != nil {
+		return false, nil // Not ready yet, but not an error
+	}
+
+	return result == 1, nil
+}
+
+// checkProwlarrHealth checks if Prowlarr is responding
+func (r *Reconciler) checkProwlarrHealth(ctx context.Context) (bool, error) {
+	// For now, just check if container is running
+	// TODO: Add actual HTTP health check to Prowlarr API
+	status, err := r.docker.GetContainerStatus(ctx, "snaggle-prowlarr")
+	if err != nil {
+		return false, err
+	}
+	return status.Status == "running", nil
+}
+
+// checkAPIHealth checks if the API is responding
+func (r *Reconciler) checkAPIHealth(ctx context.Context) (bool, error) {
+	// For now, just check if container is running
+	// TODO: Add actual HTTP health check to API
+	status, err := r.docker.GetContainerStatus(ctx, "snaggle-api-dev")
+	if err != nil {
+		return false, err
+	}
+	return status.Status == "running", nil
 }
 
 // buildDependencyOrder builds a topological sort of services based on dependencies

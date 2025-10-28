@@ -21,7 +21,7 @@ func (p *ProwlarrService) Name() string {
 }
 
 func (p *ProwlarrService) Image() string {
-	return "snaggle-prowlarr:latest"
+	return "ghcr.io/hotio/prowlarr:latest"
 }
 
 func (p *ProwlarrService) Env() map[string]string {
@@ -32,9 +32,7 @@ func (p *ProwlarrService) Env() map[string]string {
 }
 
 func (p *ProwlarrService) Ports() []PortMapping {
-	return []PortMapping{
-		{Host: "9696", Container: "9696", Protocol: "tcp"},
-	}
+	return []PortMapping{} // No host port mapping - internal network only
 }
 
 func (p *ProwlarrService) Volumes() []VolumeMount {
