@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import Button from 'primevue/button'
 import { getV1IndexersConfiguredOptions } from '@/client/@tanstack/vue-query.gen'
-import { type JackettIndexerConfig } from '@/client/types.gen'
+import { type ModelIndexerDefinition } from '@/client/types.gen'
 import { PrimeIcons } from '@/icons'
 import {
   indexerColumns,
@@ -17,17 +17,17 @@ const { data: indexers, isLoading, error, refetch } = useQuery(getV1IndexersConf
 // Modal state
 const showAddModal = ref(false)
 
-const handleEdit = (indexer: JackettIndexerConfig) => {
+const handleEdit = (indexer: ModelIndexerDefinition) => {
   console.log('Edit indexer:', indexer)
   // TODO: Implement edit functionality
 }
 
-const handleToggle = (indexer: JackettIndexerConfig) => {
+const handleToggle = (indexer: ModelIndexerDefinition) => {
   console.log('Toggle indexer:', indexer)
   // TODO: Implement toggle functionality
 }
 
-const handleDelete = (indexer: JackettIndexerConfig) => {
+const handleDelete = (indexer: ModelIndexerDefinition) => {
   console.log('Delete indexer:', indexer)
   // TODO: Implement delete functionality
 }

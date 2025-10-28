@@ -75,11 +75,6 @@ export type ModelCategories = {
     subCategories: Array<ModelCategories>;
 };
 
-export type ModelFieldInput = {
-    name: string;
-    value?: unknown;
-};
-
 export type ModelFieldOutput = {
     advanced?: boolean;
     helpLink?: string;
@@ -165,20 +160,6 @@ export type ModelIndexerField = {
     type: string;
     unit?: string;
     value?: unknown;
-};
-
-export type ModelIndexerInput = {
-    appProfileId: number;
-    configContract: string;
-    enable: boolean;
-    fields: Array<ModelFieldInput>;
-    id?: number;
-    implementation: string;
-    name: string;
-    priority: number;
-    protocol: ModelProtocol;
-    redirect: boolean;
-    tags?: Array<number>;
 };
 
 export type ModelIndexerOutput = {
@@ -375,7 +356,7 @@ export type PostV1IndexerData = {
     /**
      * Save indexer
      */
-    body: ModelIndexerInput;
+    body: ModelIndexerDefinition;
     path?: never;
     query?: never;
     url: '/v1/indexer';
@@ -406,6 +387,42 @@ export type PostV1IndexerResponses = {
 };
 
 export type PostV1IndexerResponse = PostV1IndexerResponses[keyof PostV1IndexerResponses];
+
+export type PostV1IndexerActionByNameData = {
+    body?: never;
+    path: {
+        /**
+         * Action name
+         */
+        name: string;
+    };
+    query?: never;
+    url: '/v1/indexer/action/{name}';
+};
+
+export type PostV1IndexerActionByNameErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1IndexerActionByNameError = PostV1IndexerActionByNameErrors[keyof PostV1IndexerActionByNameErrors];
+
+export type PostV1IndexerActionByNameResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
 
 export type GetV1IndexersConfiguredData = {
     body?: never;

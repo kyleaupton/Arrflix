@@ -108,7 +108,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.IndexerInput"
+                            "$ref": "#/definitions/model.IndexerDefinition"
                         }
                     }
                 ],
@@ -118,6 +118,56 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/model.IndexerOutput"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/indexer/action/{name}": {
+            "post": {
+                "tags": [
+                    "indexers"
+                ],
+                "summary": "Perform an action on an indexer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Action name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Action input",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.IndexerDefinition"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
                     },
                     "400": {
                         "description": "Bad Request",
@@ -823,18 +873,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.FieldInput": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "value": {}
-            }
-        },
         "model.FieldOutput": {
             "type": "object",
             "required": [
@@ -1169,61 +1207,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "value": {}
-            }
-        },
-        "model.IndexerInput": {
-            "type": "object",
-            "required": [
-                "appProfileId",
-                "configContract",
-                "enable",
-                "fields",
-                "implementation",
-                "name",
-                "priority",
-                "protocol",
-                "redirect"
-            ],
-            "properties": {
-                "appProfileId": {
-                    "type": "integer"
-                },
-                "configContract": {
-                    "type": "string"
-                },
-                "enable": {
-                    "type": "boolean"
-                },
-                "fields": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.FieldInput"
-                    }
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "implementation": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "priority": {
-                    "type": "integer"
-                },
-                "protocol": {
-                    "$ref": "#/definitions/model.Protocol"
-                },
-                "redirect": {
-                    "type": "boolean"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
             }
         },
         "model.IndexerOutput": {

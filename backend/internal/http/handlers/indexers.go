@@ -19,6 +19,7 @@ func (h *Indexers) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/indexer/:id", h.GetIndexer)
 	v1.POST("/indexer", h.SaveConfig)
 	v1.DELETE("/indexer/:id", h.Delete)
+	v1.POST("/indexer/action/:name", h.Action)
 }
 
 // ListConfigured returns only configured indexers
@@ -124,4 +125,33 @@ func (h *Indexers) Delete(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+// Action performs an action on an indexer
+// @Summary Perform an action on an indexer
+// @Tags    indexers
+// @Param   name path string true "Action name"
+// @Param   payload body model.IndexerDefinition true "Action input"
+// @Success 200 {object} any
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router  /v1/indexer/action/{name} [post]
+func (h *Indexers) Action(c echo.Context) error {
+	actionName := c.Param("name")
+	if actionName == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "action name required"})
+	}
+
+	var input interface{}
+	if err := c.Bind(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
+	}
+
+	ctx := c.Request().Context()
+	action, err := h.svc.Indexer.Action(ctx, actionName, input)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to perform action"})
+	}
+
+	return c.JSON(http.StatusOK, action)
 }

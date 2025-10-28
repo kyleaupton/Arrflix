@@ -54,6 +54,7 @@ const handleValueChange = (fieldName: string, value: unknown) => {
         v-for="field in selectedIndexer.fields"
         :key="field.name"
         :field="field"
+        :selected-indexer="selectedIndexer"
         @value-change="handleValueChange"
       />
     </div>

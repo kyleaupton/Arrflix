@@ -172,14 +172,6 @@ definitions:
     - name
     - subCategories
     type: object
-  model.FieldInput:
-    properties:
-      name:
-        type: string
-      value: {}
-    required:
-    - name
-    type: object
   model.FieldOutput:
     properties:
       advanced:
@@ -417,45 +409,6 @@ definitions:
     - order
     - privacy
     - type
-    type: object
-  model.IndexerInput:
-    properties:
-      appProfileId:
-        type: integer
-      configContract:
-        type: string
-      enable:
-        type: boolean
-      fields:
-        items:
-          $ref: '#/definitions/model.FieldInput'
-        type: array
-      id:
-        type: integer
-      implementation:
-        type: string
-      name:
-        type: string
-      priority:
-        type: integer
-      protocol:
-        $ref: '#/definitions/model.Protocol'
-      redirect:
-        type: boolean
-      tags:
-        items:
-          type: integer
-        type: array
-    required:
-    - appProfileId
-    - configContract
-    - enable
-    - fields
-    - implementation
-    - name
-    - priority
-    - protocol
-    - redirect
     type: object
   model.IndexerOutput:
     properties:
@@ -887,7 +840,7 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/model.IndexerInput'
+          $ref: '#/definitions/model.IndexerDefinition'
       produces:
       - application/json
       responses:
@@ -908,6 +861,39 @@ paths:
               type: string
             type: object
       summary: Save indexer configuration
+      tags:
+      - indexers
+  /v1/indexer/action/{name}:
+    post:
+      parameters:
+      - description: Action name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Action input
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.IndexerDefinition'
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Perform an action on an indexer
       tags:
       - indexers
   /v1/indexers/{id}:

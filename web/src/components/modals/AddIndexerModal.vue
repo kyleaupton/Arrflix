@@ -5,7 +5,7 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Steps from 'primevue/steps'
 import { PrimeIcons } from '@/icons'
-import { type ModelIndexerDefinition, type ModelIndexerInput } from '@/client/types.gen'
+import { type ModelIndexerDefinition } from '@/client/types.gen'
 import { postV1IndexerMutation } from '@/client/@tanstack/vue-query.gen'
 import SelectIndexerTypeStep from './steps/SelectIndexerTypeStep.vue'
 import ConfigurationStep from './steps/ConfigurationStep.vue'
@@ -19,7 +19,7 @@ const emit = defineEmits<{
 // Form state
 const currentStep = ref(0)
 const selectedIndexerType = ref<ModelIndexerDefinition | null>(null)
-const saveData = ref<ModelIndexerInput | undefined>(undefined)
+const saveData = ref<ModelIndexerDefinition | undefined>(undefined)
 
 const createIndexerMutation = useMutation({
   ...postV1IndexerMutation(),

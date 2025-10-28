@@ -28,8 +28,9 @@ echo "[start-prowlarr-with-apikey] Environment file created at: $ENV_FILE"
 export PROWLARR_API_KEY
 export PROWLARR__AUTH__APIKEY="$PROWLARR_API_KEY"
 export PROWLARR__SERVER__PORT="$PROWLARR_PORT"
-export PROWLARR__AUTH__ENABLED="true"
-export PROWLARR__AUTH__REQUIRED="true"
+export PROWLARR__AUTH__METHOD="External"
+# export PROWLARR__AUTH__ENABLED="false"
+# export PROWLARR__AUTH__REQUIRED="false"
 
 # DB config
 export PROWLARR__POSTGRES__HOST="$PROWLARR_DB_HOST"

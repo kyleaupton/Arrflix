@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useMutation } from '@tanstack/vue-query'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
@@ -7,7 +8,8 @@ import MultiSelect from 'primevue/multiselect'
 import Password from 'primevue/password'
 import Message from 'primevue/message'
 import Checkbox from 'primevue/checkbox'
-import { type ModelIndexerField } from '@/client/types.gen'
+import { type ModelIndexerDefinition, type ModelIndexerField } from '@/client/types.gen'
+import { postV1IndexerActionByNameMutation } from '@/client/@tanstack/vue-query.gen'
 
 const model = computed({
   get: () => props.field.value,
@@ -21,6 +23,7 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
+  selectedIndexer: ModelIndexerDefinition
   field: ModelIndexerField
 }>()
 
@@ -31,7 +34,11 @@ const options = computed(() => {
       value: option.value,
       hint: option.hint,
     }))
+  } else if (isAsyncAction.value && actionMutation.data?.value) {
+    // @ts-expect-error shit ain't got types
+    return actionMutation.data.value.options || []
   }
+
   return []
 })
 
@@ -54,6 +61,36 @@ const helpSeverity = computed(() => {
 })
 
 const fieldId = computed(() => `field-${props.field.name}`)
+
+const isAsyncAction = computed(() => {
+  return props.field.selectOptionsProviderAction
+})
+
+const selectOptionLabel = computed(() => (isAsyncAction.value ? 'name' : 'label'))
+
+const actionMutation = useMutation({
+  ...postV1IndexerActionByNameMutation(),
+  onSuccess: (data) => {
+    console.log('Action performed successfully', data)
+  },
+  onError: (error) => {
+    console.error('Failed to perform action:', error)
+  },
+})
+
+const performAction = () => {
+  if (props.field.selectOptionsProviderAction) {
+    actionMutation.mutate({
+      path: { name: props.field.selectOptionsProviderAction },
+      // @ts-expect-error todo: fix the type here
+      body: props.selectedIndexer,
+    })
+  }
+}
+
+onMounted(() => {
+  performAction()
+})
 </script>
 
 <template>
@@ -126,7 +163,7 @@ const fieldId = computed(() => `field-${props.field.name}`)
         :id="fieldId"
         v-model="model"
         :options="options"
-        optionLabel="label"
+        :optionLabel="selectOptionLabel"
         optionValue="value"
         :placeholder="`Select ${field.label}`"
         variant="filled"
@@ -140,7 +177,7 @@ const fieldId = computed(() => `field-${props.field.name}`)
         :id="fieldId"
         v-model="model"
         :options="options"
-        optionLabel="label"
+        :optionLabel="selectOptionLabel"
         optionValue="value"
         :placeholder="`Select ${field.label}`"
         variant="filled"
