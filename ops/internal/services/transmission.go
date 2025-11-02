@@ -93,3 +93,8 @@ func (t *TransmissionService) Labels() map[string]string {
 		"snaggle.instance": t.instance.Name,
 	}
 }
+
+func (t *TransmissionService) BuildInfo() *BuildInfo {
+	// Transmission uses official image from registry
+	return nil
+}

@@ -21,7 +21,7 @@ func (p *PostgresService) Name() string {
 }
 
 func (p *PostgresService) Image() string {
-	return "postgres:17"
+	return "snaggle-postgres:latest"
 }
 
 func (p *PostgresService) Env() map[string]string {
@@ -68,4 +68,14 @@ func (p *PostgresService) Labels() map[string]string {
 		"snaggle.service": p.Name(),
 		"snaggle.type":    "postgres",
 	}
+}
+
+func (p *PostgresService) BuildInfo() *BuildInfo {
+	if p.config.RuntimeMode == "dev" {
+		return &BuildInfo{
+			Dockerfile: "ops/images/Dockerfile.postgres",
+			Context:    "/host", // Build context is the mounted host directory
+		}
+	}
+	return nil // Production images come from registry
 }

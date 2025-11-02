@@ -1,11 +1,15 @@
 package docker
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -108,11 +112,21 @@ func (c *Client) EnsureContainer(ctx context.Context, svc services.Service) erro
 		}
 	}
 
-	// Pull image if it doesn't exist locally
-	log.Printf("Pulling image %s for container %s", svc.Image(), svc.Name())
-	if err := c.pullImageIfNeeded(ctx, svc.Image()); err != nil {
-		log.Printf("Failed to pull image %s: %v", svc.Image(), err)
-		return fmt.Errorf("failed to pull image %s: %w", svc.Image(), err)
+	// Handle image preparation (build or pull)
+	if buildInfo := svc.BuildInfo(); buildInfo != nil {
+		// Build image locally
+		log.Printf("Building image %s for container %s", svc.Image(), svc.Name())
+		if err := c.BuildImage(ctx, svc.Image(), buildInfo.Dockerfile, buildInfo.Context); err != nil {
+			log.Printf("Failed to build image %s: %v", svc.Image(), err)
+			return fmt.Errorf("failed to build image %s: %w", svc.Image(), err)
+		}
+	} else {
+		// Pull image from registry
+		log.Printf("Pulling image %s for container %s", svc.Image(), svc.Name())
+		if err := c.pullImageIfNeeded(ctx, svc.Image()); err != nil {
+			log.Printf("Failed to pull image %s: %v", svc.Image(), err)
+			return fmt.Errorf("failed to pull image %s: %w", svc.Image(), err)
+		}
 	}
 
 	// Create container
@@ -284,6 +298,110 @@ func (c *Client) ListManagedContainers(ctx context.Context) ([]*ContainerStatus,
 	}
 
 	return statuses, nil
+}
+
+// BuildImage builds an image from a Dockerfile
+func (c *Client) BuildImage(ctx context.Context, imageName, dockerfilePath, buildContext string) error {
+	log.Printf("Building image %s from %s", imageName, dockerfilePath)
+
+	// Create tar archive from build context
+	tarReader, err := c.createTarArchive(buildContext)
+	if err != nil {
+		return fmt.Errorf("failed to create tar archive: %w", err)
+	}
+	defer tarReader.Close()
+
+	buildOptions := types.ImageBuildOptions{
+		Tags:       []string{imageName},
+		Dockerfile: dockerfilePath,
+		Remove:     true,
+	}
+
+	buildResponse, err := c.cli.ImageBuild(ctx, tarReader, buildOptions)
+	if err != nil {
+		return fmt.Errorf("failed to build image: %w", err)
+	}
+	defer buildResponse.Body.Close()
+
+	// Read the build output
+	buf := make([]byte, 1024)
+	for {
+		_, err := buildResponse.Body.Read(buf)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			log.Printf("Error reading build response: %v", err)
+			break
+		}
+	}
+
+	log.Printf("Successfully built image %s", imageName)
+	return nil
+}
+
+// createTarArchive creates a tar archive from the build context directory
+func (c *Client) createTarArchive(buildContext string) (io.ReadCloser, error) {
+	var buf bytes.Buffer
+	tarWriter := tar.NewWriter(&buf)
+
+	err := filepath.Walk(buildContext, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip hidden files and directories
+		if filepath.Base(path)[0] == '.' {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// Create tar header
+		header, err := tar.FileInfoHeader(info, "")
+		if err != nil {
+			return err
+		}
+
+		// Make path relative to build context
+		relPath, err := filepath.Rel(buildContext, path)
+		if err != nil {
+			return err
+		}
+		header.Name = relPath
+
+		// Write header
+		if err := tarWriter.WriteHeader(header); err != nil {
+			return err
+		}
+
+		// Write file content if it's a regular file
+		if info.Mode().IsRegular() {
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+
+			_, err = io.Copy(tarWriter, file)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err := tarWriter.Close(); err != nil {
+		return nil, err
+	}
+
+	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
 
 // envMapToSlice converts a map of environment variables to a slice

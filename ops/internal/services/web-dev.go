@@ -71,3 +71,10 @@ func (w *WebDevService) Labels() map[string]string {
 func (w *WebDevService) Command() []string {
 	return []string{"sh", "-c", "cd /web && npm run dev -- --host 0.0.0.0 --port 5173"}
 }
+
+func (w *WebDevService) BuildInfo() *BuildInfo {
+	return &BuildInfo{
+		Dockerfile: "ops/images/Dockerfile.web-dev",
+		Context:    "/host", // Build context is the mounted host directory
+	}
+}

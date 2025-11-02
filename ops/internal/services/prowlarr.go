@@ -21,23 +21,36 @@ func (p *ProwlarrService) Name() string {
 }
 
 func (p *ProwlarrService) Image() string {
-	return "ghcr.io/hotio/prowlarr:latest"
+	return "linuxserver/prowlarr:latest"
 }
 
 func (p *ProwlarrService) Env() map[string]string {
 	return map[string]string{
 		"PUID": "1000",
 		"PGID": "1000",
+		// PostgreSQL database configuration
+		"PROWLARR__POSTGRES__HOST":     "snaggle-postgres",
+		"PROWLARR__POSTGRES__PORT":     "5432",
+		"PROWLARR__POSTGRES__USER":     "prowlarr",
+		"PROWLARR__POSTGRES__PASSWORD": "prowlarrpw",
+		"PROWLARR__POSTGRES__DATABASE": "prowlarr",
+		"PROWLARR__AUTH__APIKEY":       p.config.ProwlarrAPIKey,
+		"PROWLARR__SERVER__PORT":       "9696",
+		"PROWLARR__AUTH__METHOD":       "External",
+		// "PROWLARR__AUTH__ENABLED":      "false",
+		// "PROWLARR__AUTH__REQUIRED":     "false",
 	}
 }
 
 func (p *ProwlarrService) Ports() []PortMapping {
-	return []PortMapping{} // No host port mapping - internal network only
+	return []PortMapping{
+		{Host: "9697", Container: "9696", Protocol: "tcp"}, // testing port
+	} // No host port mapping - internal network only
 }
 
 func (p *ProwlarrService) Volumes() []VolumeMount {
 	return []VolumeMount{
-		{Source: "snaggle_prowlarr_data", Target: "/var/lib/prowlarr", Type: "volume"},
+		// {Source: "snaggle_prowlarr_data", Target: "/var/lib/prowlarr", Type: "volume"},
 	}
 }
 
@@ -46,7 +59,7 @@ func (p *ProwlarrService) Networks() []string {
 }
 
 func (p *ProwlarrService) DependsOn() []string {
-	return []string{} // Prowlarr has no dependencies
+	return []string{"snaggle-postgres"} // Prowlarr depends on PostgreSQL
 }
 
 func (p *ProwlarrService) HealthCheck() *HealthCheckConfig {
@@ -64,4 +77,9 @@ func (p *ProwlarrService) Labels() map[string]string {
 		"snaggle.service": p.Name(),
 		"snaggle.type":    "prowlarr",
 	}
+}
+
+func (p *ProwlarrService) BuildInfo() *BuildInfo {
+	// Prowlarr uses official image from registry
+	return nil
 }

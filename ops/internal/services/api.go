@@ -69,3 +69,8 @@ func (a *APIService) Labels() map[string]string {
 		"snaggle.type":    "api",
 	}
 }
+
+func (a *APIService) BuildInfo() *BuildInfo {
+	// Production API images come from registry
+	return nil
+}

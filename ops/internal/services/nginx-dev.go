@@ -62,3 +62,10 @@ func (n *NginxDevService) Labels() map[string]string {
 		"snaggle.type":    "nginx-dev",
 	}
 }
+
+func (n *NginxDevService) BuildInfo() *BuildInfo {
+	return &BuildInfo{
+		Dockerfile: "ops/images/Dockerfile.nginx-dev",
+		Context:    "/host", // Build context is the mounted host directory
+	}
+}

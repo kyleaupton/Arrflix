@@ -115,3 +115,8 @@ func (q *QBittorrentService) Labels() map[string]string {
 		"snaggle.instance": q.instance.Name,
 	}
 }
+
+func (q *QBittorrentService) BuildInfo() *BuildInfo {
+	// qBittorrent uses official image from registry
+	return nil
+}

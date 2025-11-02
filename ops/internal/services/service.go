@@ -15,6 +15,7 @@ type Service interface {
 	DependsOn() []string
 	HealthCheck() *HealthCheckConfig
 	Labels() map[string]string
+	BuildInfo() *BuildInfo // Returns nil if image should be pulled from registry
 }
 
 // PortMapping defines port mappings for containers
@@ -37,6 +38,12 @@ type HealthCheckConfig struct {
 	Interval time.Duration
 	Timeout  time.Duration
 	Retries  int
+}
+
+// BuildInfo contains information needed to build a service image
+type BuildInfo struct {
+	Dockerfile string
+	Context    string
 }
 
 // ServiceInstance represents a dynamic service from the database

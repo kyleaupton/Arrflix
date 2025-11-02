@@ -62,3 +62,8 @@ func (n *NginxService) Labels() map[string]string {
 		"snaggle.type":    "nginx",
 	}
 }
+
+func (n *NginxService) BuildInfo() *BuildInfo {
+	// Production nginx images come from registry
+	return nil
+}

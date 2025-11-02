@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -336,13 +337,34 @@ func (r *Reconciler) checkPostgresHealth(ctx context.Context) (bool, error) {
 
 // checkProwlarrHealth checks if Prowlarr is responding
 func (r *Reconciler) checkProwlarrHealth(ctx context.Context) (bool, error) {
-	// For now, just check if container is running
-	// TODO: Add actual HTTP health check to Prowlarr API
-	status, err := r.docker.GetContainerStatus(ctx, "snaggle-prowlarr")
-	if err != nil {
-		return false, err
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 5 * time.Second,
 	}
-	return status.Status == "running", nil
+
+	// Create request to Prowlarr API
+	req, err := http.NewRequestWithContext(ctx, "GET", "http://snaggle-prowlarr:9696/api", nil)
+	if err != nil {
+		return false, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add API key header
+	req.Header.Set("X-Api-Key", r.config.ProwlarrAPIKey)
+
+	// Send request
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, nil // Not ready yet, but not a critical error
+	}
+	defer resp.Body.Close()
+
+	// Check if response is successful (200 OK)
+	if resp.StatusCode == http.StatusOK {
+		return true, nil
+	}
+
+	// Not ready yet
+	return false, nil
 }
 
 // checkAPIHealth checks if the API is responding

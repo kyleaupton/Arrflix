@@ -75,3 +75,10 @@ func (a *APIDevService) Labels() map[string]string {
 func (a *APIDevService) Command() []string {
 	return []string{"sh", "-c", "cd /app/backend && go run ./cmd/api"}
 }
+
+func (a *APIDevService) BuildInfo() *BuildInfo {
+	return &BuildInfo{
+		Dockerfile: "ops/images/Dockerfile.api-dev",
+		Context:    "/host", // Build context is the mounted host directory
+	}
+}
