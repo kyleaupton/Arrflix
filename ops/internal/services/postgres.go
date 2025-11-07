@@ -1,10 +1,14 @@
 package services
 
 import (
+	_ "embed"
 	"time"
 
 	"github.com/kyleaupton/snaggle/ops/internal/config"
 )
+
+//go:embed embed/init-postgres.sh
+var initPostgresScript string
 
 // PostgresService implements the Service interface for PostgreSQL
 type PostgresService struct {
@@ -21,7 +25,7 @@ func (p *PostgresService) Name() string {
 }
 
 func (p *PostgresService) Image() string {
-	return "snaggle-postgres:latest"
+	return "postgres:17"
 }
 
 func (p *PostgresService) Env() map[string]string {
@@ -71,11 +75,13 @@ func (p *PostgresService) Labels() map[string]string {
 }
 
 func (p *PostgresService) BuildInfo() *BuildInfo {
-	if p.config.RuntimeMode == "dev" {
-		return &BuildInfo{
-			Dockerfile: "ops/images/Dockerfile.postgres",
-			Context:    "/host", // Build context is the mounted host directory
-		}
+	// Always use base postgres image from registry
+	return nil
+}
+
+// EmbeddedFiles returns files that should be copied into the container before starting
+func (p *PostgresService) EmbeddedFiles() map[string][]byte {
+	return map[string][]byte{
+		"/docker-entrypoint-initdb.d/init-postgres.sh": []byte(initPostgresScript),
 	}
-	return nil // Production images come from registry
 }

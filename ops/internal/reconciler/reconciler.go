@@ -272,6 +272,7 @@ func (r *Reconciler) waitForDependencyHealthy(ctx context.Context, depName strin
 		case <-ticker.C:
 			// First check if container exists and is running
 			status, err := r.docker.GetContainerStatus(ctx, depName)
+			fmt.Printf("Status for %s: %+v\n", depName, status)
 			if err != nil {
 				log.Printf("Dependency %s container not found yet: %v", depName, err)
 				continue

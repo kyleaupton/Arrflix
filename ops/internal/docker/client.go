@@ -4,11 +4,13 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 
@@ -89,6 +91,54 @@ func (c *Client) EnsureVolume(ctx context.Context, name string) error {
 			return fmt.Errorf("failed to inspect volume %s: %w", name, err)
 		}
 	}
+	return nil
+}
+
+// CopyToContainer copies file content into a container at the specified path
+// The container must be created but not necessarily started.
+func (c *Client) CopyToContainer(ctx context.Context, containerID string, content []byte, destPath string, mode os.FileMode) error {
+	// Create a tar archive with the file
+	var buf bytes.Buffer
+	tarWriter := tar.NewWriter(&buf)
+
+	// Create tar header
+	// Use path.Base for container paths (always Unix-style)
+	fileName := path.Base(destPath)
+	header := &tar.Header{
+		Name:    fileName,
+		Size:    int64(len(content)),
+		Mode:    int64(mode),
+		ModTime: time.Now(),
+	}
+
+	if err := tarWriter.WriteHeader(header); err != nil {
+		return fmt.Errorf("failed to write tar header: %w", err)
+	}
+
+	if _, err := tarWriter.Write(content); err != nil {
+		return fmt.Errorf("failed to write file content: %w", err)
+	}
+
+	if err := tarWriter.Close(); err != nil {
+		return fmt.Errorf("failed to close tar writer: %w", err)
+	}
+
+	// Copy the tar archive into the container
+	// The destDir is the directory containing the file (container paths are Unix-style)
+	destDir := path.Dir(destPath)
+	if destDir == "." {
+		destDir = "/"
+	}
+
+	err := c.cli.CopyToContainer(ctx, containerID, destDir, bytes.NewReader(buf.Bytes()), types.CopyToContainerOptions{
+		AllowOverwriteDirWithFile: false,
+		CopyUIDGID:                false,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to copy file to container: %w", err)
+	}
+
+	log.Printf("Successfully copied file to %s in container %s", destPath, containerID)
 	return nil
 }
 
@@ -176,6 +226,7 @@ func (c *Client) EnsureContainer(ctx context.Context, svc services.Service) erro
 		} else if vol.Type == "bind" {
 			// For bind mounts, use source:target format (Docker auto-detects bind mounts)
 			hostConfig.Binds = append(hostConfig.Binds, fmt.Sprintf("%s:%s", vol.Source, vol.Target))
+			log.Printf("Adding bind mount: %s:%s", vol.Source, vol.Target)
 		} else {
 			// For other types (tmpfs, etc.), use source:target:mode format
 			hostConfig.Binds = append(hostConfig.Binds, fmt.Sprintf("%s:%s:%s", vol.Source, vol.Target, vol.Type))
@@ -190,6 +241,9 @@ func (c *Client) EnsureContainer(ctx context.Context, svc services.Service) erro
 		networkingConfig.EndpointsConfig[netName] = &network.EndpointSettings{}
 	}
 
+	hostConfigJson, _ := json.MarshalIndent(hostConfig, "", "  ")
+	log.Printf("Host config: %s", string(hostConfigJson))
+
 	// Create container
 	resp, err := c.cli.ContainerCreate(ctx, containerConfig, hostConfig, networkingConfig, nil, svc.Name())
 	if err != nil {
@@ -197,6 +251,22 @@ func (c *Client) EnsureContainer(ctx context.Context, svc services.Service) erro
 		return fmt.Errorf("failed to create container: %w", err)
 	}
 	log.Printf("Successfully created container %s with ID %s", svc.Name(), resp.ID)
+
+	// Copy embedded files into container before starting (if service implements EmbeddedFileService)
+	if embeddedFileSvc, ok := svc.(services.EmbeddedFileService); ok {
+		embeddedFiles := embeddedFileSvc.EmbeddedFiles()
+		if len(embeddedFiles) > 0 {
+			log.Printf("Copying %d embedded file(s) into container %s", len(embeddedFiles), svc.Name())
+			for destPath, content := range embeddedFiles {
+				// Use 0755 mode for scripts (executable)
+				mode := os.FileMode(0755)
+				if err := c.CopyToContainer(ctx, resp.ID, content, destPath, mode); err != nil {
+					log.Printf("Failed to copy embedded file %s: %v", destPath, err)
+					return fmt.Errorf("failed to copy embedded file %s: %w", destPath, err)
+				}
+			}
+		}
+	}
 
 	// Start container
 	if err := c.cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {

@@ -43,7 +43,7 @@ func (a *APIDevService) Ports() []PortMapping {
 
 func (a *APIDevService) Volumes() []VolumeMount {
 	return []VolumeMount{
-		{Source: "/host/backend", Target: "/app/backend", Type: "bind"},
+		{Source: "/home/kyleupton/Snaggle/backend", Target: "/app/backend", Type: "bind"},
 	}
 }
 
@@ -57,7 +57,7 @@ func (a *APIDevService) DependsOn() []string {
 
 func (a *APIDevService) HealthCheck() *HealthCheckConfig {
 	return &HealthCheckConfig{
-		Test:     []string{"CMD-SHELL", "curl -f http://localhost:8080/api/v1/health || exit 1"},
+		Test:     []string{"CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"},
 		Interval: 10 * time.Second,
 		Timeout:  5 * time.Second,
 		Retries:  5,

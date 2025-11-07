@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -39,6 +41,8 @@ func generateRandomKey(length int) string {
 }
 
 func Load() Config {
+	godotenv.Load()
+
 	reconcileInterval := 10 * time.Second
 	if interval := os.Getenv("RECONCILE_INTERVAL"); interval != "" {
 		if parsed, err := time.ParseDuration(interval); err == nil {

@@ -38,7 +38,7 @@ func (w *WebDevService) Ports() []PortMapping {
 
 func (w *WebDevService) Volumes() []VolumeMount {
 	return []VolumeMount{
-		{Source: "/host/web", Target: "/web", Type: "bind"},
+		{Source: "/home/kyleupton/Snaggle/web", Target: "/web", Type: "bind"},
 		{Source: "web_node_modules", Target: "/web/node_modules", Type: "volume"},
 	}
 }

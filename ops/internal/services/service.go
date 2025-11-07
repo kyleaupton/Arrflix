@@ -18,6 +18,13 @@ type Service interface {
 	BuildInfo() *BuildInfo // Returns nil if image should be pulled from registry
 }
 
+// EmbeddedFileService is an optional interface for services that need to copy files into containers
+// Services can implement this interface to provide files that should be copied into the container
+// before it starts. The map key is the destination path in the container, value is file content.
+type EmbeddedFileService interface {
+	EmbeddedFiles() map[string][]byte // Returns map of container path -> file content
+}
+
 // PortMapping defines port mappings for containers
 type PortMapping struct {
 	Host      string

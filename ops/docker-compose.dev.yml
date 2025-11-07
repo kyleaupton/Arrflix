@@ -26,8 +26,8 @@ services:
       - snaggle-network
     ports:
       - "8484:8484" # Main web interface
-      - "8080:8080" # API dev server (direct access)
-      - "5173:5173" # Vite dev server (direct access)
+      # - "8080:8080" # API dev server (direct access)
+      # - "5173:5173" # Vite dev server (direct access)
     restart: unless-stopped
 
 networks:
