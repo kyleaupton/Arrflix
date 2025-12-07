@@ -1,0 +1,66 @@
+FROM node:22 AS frontend-deps
+WORKDIR /src
+COPY web/package*.json app/web/
+RUN cd app/web && npm install
+
+FROM ubuntu:24.04
+
+ARG GO_VERSION=1.25.5
+ARG S6_VERSION=3.2.1.0
+ARG NODE_VERSION=22
+
+RUN apt-get update && \
+    apt-get install -y \
+        xz-utils \
+        curl \
+        postgresql \
+        postgresql-client \
+        nginx \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Go
+RUN curl -fsSL https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz -o /tmp/go.tgz && \
+    tar -C /usr/local -xzf /tmp/go.tgz && \
+    rm /tmp/go.tgz
+
+# Install Air for Go live reload
+RUN curl -fsSL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | bash -s -- -b /usr/local/bin
+
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
+  apt-get update && \
+  apt-get install -y --no-install-recommends nodejs && \
+  rm -rf /var/lib/apt/lists/*
+
+# Install s6-overlay
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-noarch.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-x86_64.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+
+# Install Prowlarr
+ARG PROWLARR_VERSION=2.3.0.5236
+# linux-core-x64, linux-core-arm64, linux-core-arm
+ARG PROWLARR_ARCH=linux-core-x64
+RUN set -eux; \
+    mkdir -p /opt/prowlarr && cd /opt/prowlarr && \
+    curl -fsSL https://github.com/Prowlarr/Prowlarr/releases/download/v${PROWLARR_VERSION}/Prowlarr.master.${PROWLARR_VERSION}.${PROWLARR_ARCH}.tar.gz -o prowlarr.tar.gz && \
+    tar -xzf prowlarr.tar.gz --strip-components=1 && \
+    rm prowlarr.tar.gz && \
+    ln -sf /opt/prowlarr/Prowlarr /usr/local/bin/prowlarr
+
+# Copy the project code
+WORKDIR /app
+COPY . .
+COPY --from=frontend-deps /src/app/web/node_modules /app/app/web/node_modules
+
+# s6 services
+COPY docker/s6 /etc/s6-overlay
+
+ENV PATH="/command:$PATH"
+
+ENV APP_ENV=dev
+ENTRYPOINT ["/init"]

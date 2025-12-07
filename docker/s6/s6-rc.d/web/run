@@ -1,0 +1,15 @@
+#!/command/with-contenv bash
+set -euo pipefail
+
+mode="${APP_ENV:-prod}"
+
+if [[ "$mode" == "dev" ]]; then
+  echo "[web] dev mode: vite dev"
+  cd /app/web
+  # bind on 0.0.0.0 so Docker can hit it from host/other containers
+  exec npm run dev -- --host 0.0.0.0 --port 5173
+else
+  echo "[web] prod mode: nginx serving built assets"
+  # simple example: nginx with /opt/app/frontend as root
+  exec nginx -g "daemon off;"
+fi
