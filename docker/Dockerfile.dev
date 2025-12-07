@@ -1,8 +1,3 @@
-FROM node:22 AS frontend-deps
-WORKDIR /src
-COPY web/package*.json app/web/
-RUN cd app/web && npm install
-
 FROM ubuntu:24.04
 
 ARG GO_VERSION=1.25.5
@@ -54,8 +49,8 @@ RUN set -eux; \
 
 # Copy the project code
 WORKDIR /app
-COPY . .
-COPY --from=frontend-deps /src/app/web/node_modules /app/app/web/node_modules
+# COPY . .
+# COPY --from=frontend-deps /src/app/web/node_modules /app/app/web/node_modules
 
 # s6 services
 COPY docker/s6 /etc/s6-overlay

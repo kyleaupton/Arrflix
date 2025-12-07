@@ -21,6 +21,7 @@ type Library = {
   type?: 'movie' | 'series' | string
   root_path?: string
   enabled?: boolean
+  default?: boolean
 }
 
 const libraries = ref<Library[]>([])
@@ -48,6 +49,7 @@ const newLib = ref<Required<Omit<Library, 'id'>>>({
   type: 'movie',
   root_path: '',
   enabled: true,
+  default: false,
 })
 const isCreating = ref(false)
 async function createLibrary() {
@@ -61,10 +63,11 @@ async function createLibrary() {
         type: newLib.value.type,
         root_path: newLib.value.root_path,
         enabled: newLib.value.enabled,
+        default: newLib.value.default,
       },
     })
     libraries.value = [...libraries.value, res.data as Library]
-    newLib.value = { name: '', type: 'movie', root_path: '', enabled: true }
+    newLib.value = { name: '', type: 'movie', root_path: '', enabled: true, default: false }
   } finally {
     isCreating.value = false
   }
@@ -77,6 +80,7 @@ const editBuf = ref<Required<Omit<Library, 'id'>>>({
   type: 'movie',
   root_path: '',
   enabled: true,
+  default: false,
 })
 
 function startEdit(lib: Library) {
@@ -86,6 +90,7 @@ function startEdit(lib: Library) {
     type: (lib.type as 'movie' | 'series') ?? 'movie',
     root_path: lib.root_path ?? '',
     enabled: lib.enabled ?? true,
+    default: lib.default ?? false,
   }
 }
 
@@ -98,6 +103,7 @@ async function saveEdit(id: string) {
       type: editBuf.value.type,
       root_path: editBuf.value.root_path,
       enabled: editBuf.value.enabled,
+      default: editBuf.value.default,
     },
   })
   libraries.value = libraries.value.map((l) => (l.id === id ? { ...l, ...editBuf.value } : l))
@@ -148,6 +154,10 @@ async function scanLib(lib: Library) {
               <div class="text-sm text-muted-color">Enabled</div>
               <ToggleSwitch v-model="newLib.enabled" />
             </div>
+            <div class="flex items-center justify-between">
+              <div class="text-sm text-muted-color">Default</div>
+              <ToggleSwitch v-model="newLib.default" />
+            </div>
             <div class="flex justify-end">
               <Button label="Create" :loading="isCreating" @click="createLibrary" />
             </div>
@@ -185,11 +195,19 @@ async function scanLib(lib: Library) {
                 </div>
               </div>
               <div class="text-sm text-muted-color">{{ lib.root_path }}</div>
-              <div class="text-xs">
-                Enabled:
-                <span :class="lib.enabled ? 'text-green-500' : 'text-red-500'">{{
-                  lib.enabled ? 'Yes' : 'No'
-                }}</span>
+              <div class="flex gap-4 text-xs">
+                <div>
+                  Enabled:
+                  <span :class="lib.enabled ? 'text-green-500' : 'text-red-500'">{{
+                    lib.enabled ? 'Yes' : 'No'
+                  }}</span>
+                </div>
+                <div>
+                  Default:
+                  <span :class="lib.default ? 'text-green-500' : 'text-muted-color'">{{
+                    lib.default ? 'Yes' : 'No'
+                  }}</span>
+                </div>
               </div>
 
               <div v-if="editingId === lib.id" class="mt-2 border-t pt-3 space-y-3">
@@ -217,6 +235,10 @@ async function scanLib(lib: Library) {
                   <div class="md:col-span-2 flex items-center justify-between">
                     <div class="text-sm text-muted-color">Enabled</div>
                     <ToggleSwitch v-model="editBuf.enabled" />
+                  </div>
+                  <div class="md:col-span-2 flex items-center justify-between">
+                    <div class="text-sm text-muted-color">Default</div>
+                    <ToggleSwitch v-model="editBuf.default" />
                   </div>
                 </div>
                 <div class="flex justify-end gap-2">

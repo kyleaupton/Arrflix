@@ -16,6 +16,7 @@ export type DbgenMediaItem = {
 };
 
 export type HandlersLibraryCreateRequest = {
+    default: boolean;
     enabled: boolean;
     name: string;
     root_path: string;
@@ -23,6 +24,7 @@ export type HandlersLibraryCreateRequest = {
 };
 
 export type HandlersLibraryUpdateRequest = {
+    default: boolean;
     enabled: boolean;
     name: string;
     root_path: string;
@@ -49,6 +51,7 @@ export type HandlersSettingsListResponse = {
 
 export type HandlersLibrarySwagger = {
     created_at: string;
+    default: boolean;
     enabled: boolean;
     id: string;
     name: string;
@@ -73,6 +76,11 @@ export type ModelCategories = {
     id: number;
     name: string;
     subCategories: Array<ModelCategories>;
+};
+
+export type ModelFieldInput = {
+    name: string;
+    value?: unknown;
 };
 
 export type ModelFieldOutput = {
@@ -160,6 +168,20 @@ export type ModelIndexerField = {
     type: string;
     unit?: string;
     value?: unknown;
+};
+
+export type ModelIndexerInput = {
+    appProfileId: number;
+    configContract: string;
+    enable: boolean;
+    fields: Array<ModelFieldInput>;
+    id?: number;
+    implementation: string;
+    name: string;
+    priority: number;
+    protocol: ModelProtocol;
+    redirect: boolean;
+    tags?: Array<number>;
 };
 
 export type ModelIndexerOutput = {
@@ -356,7 +378,7 @@ export type PostV1IndexerData = {
     /**
      * Save indexer
      */
-    body: ModelIndexerDefinition;
+    body: ModelIndexerInput;
     path?: never;
     query?: never;
     url: '/v1/indexer';

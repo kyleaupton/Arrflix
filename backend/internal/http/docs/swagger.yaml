@@ -30,6 +30,8 @@ definitions:
     type: object
   handlers.LibraryCreateRequest:
     properties:
+      default:
+        type: boolean
       enabled:
         type: boolean
       name:
@@ -39,6 +41,7 @@ definitions:
       type:
         type: string
     required:
+    - default
     - enabled
     - name
     - root_path
@@ -46,6 +49,8 @@ definitions:
     type: object
   handlers.LibraryUpdateRequest:
     properties:
+      default:
+        type: boolean
       enabled:
         type: boolean
       name:
@@ -55,6 +60,7 @@ definitions:
       type:
         type: string
     required:
+    - default
     - enabled
     - name
     - root_path
@@ -93,6 +99,8 @@ definitions:
     properties:
       created_at:
         type: string
+      default:
+        type: boolean
       enabled:
         type: boolean
       id:
@@ -107,6 +115,7 @@ definitions:
         type: string
     required:
     - created_at
+    - default
     - enabled
     - id
     - name
@@ -171,6 +180,14 @@ definitions:
     - id
     - name
     - subCategories
+    type: object
+  model.FieldInput:
+    properties:
+      name:
+        type: string
+      value: {}
+    required:
+    - name
     type: object
   model.FieldOutput:
     properties:
@@ -409,6 +426,45 @@ definitions:
     - order
     - privacy
     - type
+    type: object
+  model.IndexerInput:
+    properties:
+      appProfileId:
+        type: integer
+      configContract:
+        type: string
+      enable:
+        type: boolean
+      fields:
+        items:
+          $ref: '#/definitions/model.FieldInput'
+        type: array
+      id:
+        type: integer
+      implementation:
+        type: string
+      name:
+        type: string
+      priority:
+        type: integer
+      protocol:
+        $ref: '#/definitions/model.Protocol'
+      redirect:
+        type: boolean
+      tags:
+        items:
+          type: integer
+        type: array
+    required:
+    - appProfileId
+    - configContract
+    - enable
+    - fields
+    - implementation
+    - name
+    - priority
+    - protocol
+    - redirect
     type: object
   model.IndexerOutput:
     properties:
@@ -840,7 +896,7 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/model.IndexerDefinition'
+          $ref: '#/definitions/model.IndexerInput'
       produces:
       - application/json
       responses:

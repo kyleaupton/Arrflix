@@ -10,14 +10,8 @@ services:
       TMDB_API_KEY: ${TMDB_API_KEY}
     ports:
       - "8484:8484"
-    networks:
-      - snaggle-network
     volumes:
-      - snaggle_pg_data:/var/lib/postgresql/data
-
-networks:
-  snaggle-network:
-    name: snaggle-network
-
-volumes:
-  snaggle_pg_data:
+      - /mnt/media-pipeline/testing:/mnt/media-pipeline/testing
+      - ./postgres-data:/var/lib/postgresql/data
+      - ../web:/app/web
+      - ../backend:/app/backend

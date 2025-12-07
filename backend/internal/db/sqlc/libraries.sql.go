@@ -12,16 +12,17 @@ import (
 )
 
 const createLibrary = `-- name: CreateLibrary :one
-insert into library (name, type, root_path, enabled)
-values ($1, $2, $3, $4)
-returning id, name, type, root_path, enabled, created_at, updated_at
+insert into library (name, type, root_path, enabled, "default")
+values ($1, $2, $3, $4, $5)
+returning id, name, type, root_path, enabled, "default", created_at, updated_at
 `
 
 type CreateLibraryParams struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	RootPath string `json:"root_path"`
-	Enabled  bool   `json:"enabled"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	RootPath  string `json:"root_path"`
+	Enabled   bool   `json:"enabled"`
+	IsDefault bool   `json:"is_default"`
 }
 
 func (q *Queries) CreateLibrary(ctx context.Context, arg CreateLibraryParams) (Library, error) {
@@ -30,6 +31,7 @@ func (q *Queries) CreateLibrary(ctx context.Context, arg CreateLibraryParams) (L
 		arg.Type,
 		arg.RootPath,
 		arg.Enabled,
+		arg.IsDefault,
 	)
 	var i Library
 	err := row.Scan(
@@ -38,6 +40,7 @@ func (q *Queries) CreateLibrary(ctx context.Context, arg CreateLibraryParams) (L
 		&i.Type,
 		&i.RootPath,
 		&i.Enabled,
+		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -54,7 +57,7 @@ func (q *Queries) DeleteLibrary(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getLibrary = `-- name: GetLibrary :one
-select id, name, type, root_path, enabled, created_at, updated_at from library
+select id, name, type, root_path, enabled, "default", created_at, updated_at from library
 where id = $1
 `
 
@@ -67,6 +70,7 @@ func (q *Queries) GetLibrary(ctx context.Context, id pgtype.UUID) (Library, erro
 		&i.Type,
 		&i.RootPath,
 		&i.Enabled,
+		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -74,7 +78,7 @@ func (q *Queries) GetLibrary(ctx context.Context, id pgtype.UUID) (Library, erro
 }
 
 const listLibraries = `-- name: ListLibraries :many
-select id, name, type, root_path, enabled, created_at, updated_at from library
+select id, name, type, root_path, enabled, "default", created_at, updated_at from library
 order by name asc
 `
 
@@ -93,6 +97,7 @@ func (q *Queries) ListLibraries(ctx context.Context) ([]Library, error) {
 			&i.Type,
 			&i.RootPath,
 			&i.Enabled,
+			&i.Default,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -108,30 +113,33 @@ func (q *Queries) ListLibraries(ctx context.Context) ([]Library, error) {
 
 const updateLibrary = `-- name: UpdateLibrary :one
 update library
-set name = $2,
-    type = $3,
-    root_path = $4,
-    enabled = $5,
+set name = $1,
+    type = $2,
+    root_path = $3,
+    enabled = $4,
+    "default" = $5,
     updated_at = now()
-where id = $1
-returning id, name, type, root_path, enabled, created_at, updated_at
+where id = $6
+returning id, name, type, root_path, enabled, "default", created_at, updated_at
 `
 
 type UpdateLibraryParams struct {
-	ID       pgtype.UUID `json:"id"`
-	Name     string      `json:"name"`
-	Type     string      `json:"type"`
-	RootPath string      `json:"root_path"`
-	Enabled  bool        `json:"enabled"`
+	Name      string      `json:"name"`
+	Type      string      `json:"type"`
+	RootPath  string      `json:"root_path"`
+	Enabled   bool        `json:"enabled"`
+	IsDefault bool        `json:"is_default"`
+	ID        pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateLibrary(ctx context.Context, arg UpdateLibraryParams) (Library, error) {
 	row := q.db.QueryRow(ctx, updateLibrary,
-		arg.ID,
 		arg.Name,
 		arg.Type,
 		arg.RootPath,
 		arg.Enabled,
+		arg.IsDefault,
+		arg.ID,
 	)
 	var i Library
 	err := row.Scan(
@@ -140,6 +148,7 @@ func (q *Queries) UpdateLibrary(ctx context.Context, arg UpdateLibraryParams) (L
 		&i.Type,
 		&i.RootPath,
 		&i.Enabled,
+		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

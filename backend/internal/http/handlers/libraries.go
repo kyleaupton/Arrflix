@@ -30,6 +30,7 @@ type librarySwagger struct {
 	Type      string `json:"type"`
 	RootPath  string `json:"root_path"`
 	Enabled   bool   `json:"enabled"`
+	Default   bool   `json:"default"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
@@ -40,6 +41,7 @@ type LibraryCreateRequest struct {
 	Type     string `json:"type"`
 	RootPath string `json:"root_path"`
 	Enabled  bool   `json:"enabled"`
+	Default  bool   `json:"default"`
 }
 
 // LibraryUpdateRequest payload
@@ -48,6 +50,7 @@ type LibraryUpdateRequest struct {
 	Type     string `json:"type"`
 	RootPath string `json:"root_path"`
 	Enabled  bool   `json:"enabled"`
+	Default  bool   `json:"default"`
 }
 
 // List libraries
@@ -80,7 +83,7 @@ func (h *Libraries) Create(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}
 	ctx := c.Request().Context()
-	lib, err := h.svc.Libraries.Create(ctx, req.Name, req.Type, req.RootPath, req.Enabled)
+	lib, err := h.svc.Libraries.Create(ctx, req.Name, req.Type, req.RootPath, req.Enabled, req.Default)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -126,7 +129,7 @@ func (h *Libraries) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
 	}
 	ctx := c.Request().Context()
-	lib, err := h.svc.Libraries.Update(ctx, id, req.Name, req.Type, req.RootPath, req.Enabled)
+	lib, err := h.svc.Libraries.Update(ctx, id, req.Name, req.Type, req.RootPath, req.Enabled, req.Default)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

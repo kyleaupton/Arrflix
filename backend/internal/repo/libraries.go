@@ -10,8 +10,8 @@ import (
 type LibraryRepo interface {
 	ListLibraries(ctx context.Context) ([]dbgen.Library, error)
 	GetLibrary(ctx context.Context, id pgtype.UUID) (dbgen.Library, error)
-	CreateLibrary(ctx context.Context, name, typ, rootPath string, enabled *bool) (dbgen.Library, error)
-	UpdateLibrary(ctx context.Context, id pgtype.UUID, name, typ, rootPath string, enabled bool) (dbgen.Library, error)
+	CreateLibrary(ctx context.Context, name, typ, rootPath string, enabled bool, isDefault bool) (dbgen.Library, error)
+	UpdateLibrary(ctx context.Context, id pgtype.UUID, name, typ, rootPath string, enabled bool, isDefault bool) (dbgen.Library, error)
 	DeleteLibrary(ctx context.Context, id pgtype.UUID) error
 }
 
@@ -23,22 +23,24 @@ func (r *Repository) GetLibrary(ctx context.Context, id pgtype.UUID) (dbgen.Libr
 	return r.Q.GetLibrary(ctx, id)
 }
 
-func (r *Repository) CreateLibrary(ctx context.Context, name, typ, rootPath string, enabled bool) (dbgen.Library, error) {
+func (r *Repository) CreateLibrary(ctx context.Context, name, typ, rootPath string, enabled bool, isDefault bool) (dbgen.Library, error) {
 	return r.Q.CreateLibrary(ctx, dbgen.CreateLibraryParams{
-		Name:     name,
-		Type:     typ,
-		RootPath: rootPath,
-		Enabled:  enabled,
+		Name:      name,
+		Type:      typ,
+		RootPath:  rootPath,
+		Enabled:   enabled,
+		IsDefault: isDefault,
 	})
 }
 
-func (r *Repository) UpdateLibrary(ctx context.Context, id pgtype.UUID, name, typ, rootPath string, enabled bool) (dbgen.Library, error) {
+func (r *Repository) UpdateLibrary(ctx context.Context, id pgtype.UUID, name, typ, rootPath string, enabled bool, isDefault bool) (dbgen.Library, error) {
 	return r.Q.UpdateLibrary(ctx, dbgen.UpdateLibraryParams{
-		ID:       id,
-		Name:     name,
-		Type:     typ,
-		RootPath: rootPath,
-		Enabled:  enabled,
+		ID:        id,
+		Name:      name,
+		Type:      typ,
+		RootPath:  rootPath,
+		Enabled:   enabled,
+		IsDefault: isDefault,
 	})
 }
 

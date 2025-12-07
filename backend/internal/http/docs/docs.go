@@ -108,7 +108,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.IndexerDefinition"
+                            "$ref": "#/definitions/model.IndexerInput"
                         }
                     }
                 ],
@@ -669,12 +669,16 @@ const docTemplate = `{
         "handlers.LibraryCreateRequest": {
             "type": "object",
             "required": [
+                "default",
                 "enabled",
                 "name",
                 "root_path",
                 "type"
             ],
             "properties": {
+                "default": {
+                    "type": "boolean"
+                },
                 "enabled": {
                     "type": "boolean"
                 },
@@ -692,12 +696,16 @@ const docTemplate = `{
         "handlers.LibraryUpdateRequest": {
             "type": "object",
             "required": [
+                "default",
                 "enabled",
                 "name",
                 "root_path",
                 "type"
             ],
             "properties": {
+                "default": {
+                    "type": "boolean"
+                },
                 "enabled": {
                     "type": "boolean"
                 },
@@ -759,6 +767,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "created_at",
+                "default",
                 "enabled",
                 "id",
                 "name",
@@ -769,6 +778,9 @@ const docTemplate = `{
             "properties": {
                 "created_at": {
                     "type": "string"
+                },
+                "default": {
+                    "type": "boolean"
                 },
                 "enabled": {
                     "type": "boolean"
@@ -871,6 +883,18 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Categories"
                     }
                 }
+            }
+        },
+        "model.FieldInput": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {}
             }
         },
         "model.FieldOutput": {
@@ -1207,6 +1231,61 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "value": {}
+            }
+        },
+        "model.IndexerInput": {
+            "type": "object",
+            "required": [
+                "appProfileId",
+                "configContract",
+                "enable",
+                "fields",
+                "implementation",
+                "name",
+                "priority",
+                "protocol",
+                "redirect"
+            ],
+            "properties": {
+                "appProfileId": {
+                    "type": "integer"
+                },
+                "configContract": {
+                    "type": "string"
+                },
+                "enable": {
+                    "type": "boolean"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.FieldInput"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "implementation": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "protocol": {
+                    "$ref": "#/definitions/model.Protocol"
+                },
+                "redirect": {
+                    "type": "boolean"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
             }
         },
         "model.IndexerOutput": {

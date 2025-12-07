@@ -183,6 +183,7 @@ type Library struct {
 	Type      string      `json:"type"`
 	RootPath  string      `json:"root_path"`
 	Enabled   bool        `json:"enabled"`
+	Default   bool        `json:"default"`
 	CreatedAt time.Time   `json:"created_at"`
 	UpdatedAt time.Time   `json:"updated_at"`
 }
@@ -251,17 +252,27 @@ type Role struct {
 	CreatedAt   time.Time   `json:"created_at"`
 }
 
+type ServiceInstance struct {
+	ID        pgtype.UUID `json:"id"`
+	Name      string      `json:"name"`
+	Type      string      `json:"type"`
+	Enabled   bool        `json:"enabled"`
+	Config    []byte      `json:"config"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
+}
+
 type UserIdentity struct {
-	ID             pgtype.UUID  `json:"id"`
-	UserID         pgtype.UUID  `json:"user_id"`
-	Provider       AuthProvider `json:"provider"`
-	Subject        string       `json:"subject"`
-	Username       *string      `json:"username"`
-	AccessToken    *string      `json:"access_token"`
-	RefreshToken   *string      `json:"refresh_token"`
-	TokenExpiresAt time.Time    `json:"token_expires_at"`
-	Raw            []byte       `json:"raw"`
-	CreatedAt      time.Time    `json:"created_at"`
+	ID             pgtype.UUID        `json:"id"`
+	UserID         pgtype.UUID        `json:"user_id"`
+	Provider       AuthProvider       `json:"provider"`
+	Subject        string             `json:"subject"`
+	Username       *string            `json:"username"`
+	AccessToken    *string            `json:"access_token"`
+	RefreshToken   *string            `json:"refresh_token"`
+	TokenExpiresAt pgtype.Timestamptz `json:"token_expires_at"`
+	Raw            []byte             `json:"raw"`
+	CreatedAt      time.Time          `json:"created_at"`
 }
 
 type UserRole struct {

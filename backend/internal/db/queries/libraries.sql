@@ -7,18 +7,19 @@ select * from library
 where id = $1;
 
 -- name: CreateLibrary :one
-insert into library (name, type, root_path, enabled)
-values (sqlc.arg(name), sqlc.arg(type), sqlc.arg(root_path), sqlc.arg(enabled))
+insert into library (name, type, root_path, enabled, "default")
+values (sqlc.arg(name), sqlc.arg(type), sqlc.arg(root_path), sqlc.arg(enabled), sqlc.arg(is_default))
 returning *;
 
 -- name: UpdateLibrary :one
 update library
-set name = $2,
-    type = $3,
-    root_path = $4,
-    enabled = $5,
+set name = sqlc.arg(name),
+    type = sqlc.arg(type),
+    root_path = sqlc.arg(root_path),
+    enabled = sqlc.arg(enabled),
+    "default" = sqlc.arg(is_default),
     updated_at = now()
-where id = $1
+where id = sqlc.arg(id)
 returning *;
 
 -- name: DeleteLibrary :exec

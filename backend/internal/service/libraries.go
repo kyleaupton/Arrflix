@@ -26,7 +26,7 @@ func (s *LibrariesService) Get(ctx context.Context, id pgtype.UUID) (dbgen.Libra
 	return s.repo.GetLibrary(ctx, id)
 }
 
-func (s *LibrariesService) Create(ctx context.Context, name, typ, rootPath string, enabled bool) (dbgen.Library, error) {
+func (s *LibrariesService) Create(ctx context.Context, name, typ, rootPath string, enabled bool, isDefault bool) (dbgen.Library, error) {
 	if name == "" {
 		return dbgen.Library{}, errors.New("name required")
 	}
@@ -39,10 +39,10 @@ func (s *LibrariesService) Create(ctx context.Context, name, typ, rootPath strin
 	if _, err := os.Stat(rootPath); err != nil {
 		return dbgen.Library{}, errors.New("root_path not found on server")
 	}
-	return s.repo.CreateLibrary(ctx, name, typ, rootPath, enabled)
+	return s.repo.CreateLibrary(ctx, name, typ, rootPath, enabled, isDefault)
 }
 
-func (s *LibrariesService) Update(ctx context.Context, id pgtype.UUID, name, typ, rootPath string, enabled bool) (dbgen.Library, error) {
+func (s *LibrariesService) Update(ctx context.Context, id pgtype.UUID, name, typ, rootPath string, enabled bool, isDefault bool) (dbgen.Library, error) {
 	if name == "" {
 		return dbgen.Library{}, errors.New("name required")
 	}
@@ -55,7 +55,7 @@ func (s *LibrariesService) Update(ctx context.Context, id pgtype.UUID, name, typ
 	if _, err := os.Stat(rootPath); err != nil {
 		return dbgen.Library{}, errors.New("root_path not found on server")
 	}
-	return s.repo.UpdateLibrary(ctx, id, name, typ, rootPath, enabled)
+	return s.repo.UpdateLibrary(ctx, id, name, typ, rootPath, enabled, isDefault)
 }
 
 func (s *LibrariesService) Delete(ctx context.Context, id pgtype.UUID) error {
