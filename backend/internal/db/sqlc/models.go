@@ -138,6 +138,16 @@ func (ns NullGrantSubject) Value() (driver.Value, error) {
 	return string(ns.GrantSubject), nil
 }
 
+type Action struct {
+	ID        pgtype.UUID `json:"id"`
+	PolicyID  pgtype.UUID `json:"policy_id"`
+	Type      string      `json:"type"`
+	Value     string      `json:"value"`
+	Order     int32       `json:"order"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
+}
+
 type ApiCache struct {
 	ID          pgtype.UUID `json:"id"`
 	Key         string      `json:"key"`
@@ -254,12 +264,32 @@ type PermissionGrant struct {
 	CreatedAt     time.Time    `json:"created_at"`
 }
 
+type Policy struct {
+	ID          pgtype.UUID `json:"id"`
+	Name        string      `json:"name"`
+	Description *string     `json:"description"`
+	Enabled     bool        `json:"enabled"`
+	Priority    int32       `json:"priority"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
+}
+
 type Role struct {
 	ID          pgtype.UUID `json:"id"`
 	Name        string      `json:"name"`
 	Description *string     `json:"description"`
 	BuiltIn     bool        `json:"built_in"`
 	CreatedAt   time.Time   `json:"created_at"`
+}
+
+type Rule struct {
+	ID           pgtype.UUID `json:"id"`
+	PolicyID     pgtype.UUID `json:"policy_id"`
+	LeftOperand  string      `json:"left_operand"`
+	Operator     string      `json:"operator"`
+	RightOperand string      `json:"right_operand"`
+	CreatedAt    time.Time   `json:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at"`
 }
 
 type ServiceInstance struct {

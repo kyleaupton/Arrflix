@@ -12,6 +12,7 @@ type Services struct {
 	Libraries     *LibrariesService
 	Media         *MediaService
 	NameTemplates *NameTemplatesService
+	Policies      *PoliciesService
 	Rails         *RailsService
 	Scanner       *ScannerService
 	Settings      *SettingsService
@@ -32,6 +33,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 		Libraries:     NewLibrariesService(r),
 		Media:         NewMediaService(r, l, tmdb),
 		NameTemplates: NewNameTemplatesService(r),
+		Policies:     NewPoliciesService(r),
 		Rails:         NewRailsService(r, tmdb),
 		Scanner:       NewScannerService(r, l, tmdb),
 		Settings:      NewSettingsService(r),
