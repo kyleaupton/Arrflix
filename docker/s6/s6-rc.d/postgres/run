@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${PGDATA:=/var/lib/postgresql/data}"
+: "${PG_BINDIR:=/usr/lib/postgresql/16/bin}"
+
+export PATH="$PG_BINDIR:$PATH"
+
+echo "[postgres] starting postgres with PGDATA=${PGDATA}"
+exec s6-setuidgid postgres postgres -D "$PGDATA" -c listen_addresses=127.0.0.1

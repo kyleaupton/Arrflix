@@ -1,0 +1,15 @@
+#!/command/with-contenv bash
+set -euo pipefail
+
+mode="${APP_ENV:-prod}"
+
+export PROWLARR_API_KEY=$(bash /etc/s6-overlay/scripts/get-prowlarr-api-key.sh)
+
+if [[ "$mode" == "dev" ]]; then
+  echo "[backend] dev mode: go run ./cmd/backend"
+  cd /app/backend
+  exec air
+else
+  echo "[backend] prod mode: /opt/app/backend"
+  exec /opt/app/backend
+fi

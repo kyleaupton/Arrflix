@@ -1,0 +1,23 @@
+services:
+  snaggle:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    image: snaggle:dev
+    container_name: snaggle
+    environment:
+      APP_ENV: dev
+      TMDB_API_KEY: ${TMDB_API_KEY}
+    ports:
+      - "8484:8484"
+    networks:
+      - snaggle-network
+    volumes:
+      - snaggle_pg_data:/var/lib/postgresql/data
+
+networks:
+  snaggle-network:
+    name: snaggle-network
+
+volumes:
+  snaggle_pg_data:

@@ -1,0 +1,17 @@
+#!/command/with-contenv bash
+set -euo pipefail
+
+mode="${APP_ENV:-prod}"
+
+# copy the default.conf file to /etc/nginx/conf.d/default.conf
+# or if dev, copy the default.dev.conf file
+if [[ "$mode" == "dev" ]]; then
+  echo "[nginx] dev mode: copying default.dev.conf"
+  cp /etc/s6-overlay/s6-rc.d/nginx/default.dev.conf /etc/nginx/conf.d/default.conf
+else
+  echo "[nginx] prod mode: copying default.conf"
+  cp /etc/s6-overlay/s6-rc.d/nginx/default.conf /etc/nginx/conf.d/default.conf
+fi
+
+# start nginx
+exec nginx -g "daemon off;"
