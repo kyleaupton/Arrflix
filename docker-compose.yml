@@ -1,7 +1,7 @@
 services:
   snaggle:
     build:
-      context: ..
+      context: .
       dockerfile: docker/Dockerfile.dev
     image: snaggle:dev
     container_name: snaggle
@@ -11,7 +11,9 @@ services:
     ports:
       - "8484:8484"
     volumes:
-      - /mnt/media-pipeline/testing:/mnt/media-pipeline/testing
-      - ./postgres-data:/var/lib/postgresql/data
-      - ../web:/app/web
-      - ../backend:/app/backend
+      - ${MEDIA_LIBRARIES}:/libraries
+      - ./.data/postgres-data:/var/lib/postgresql/data
+
+      # app code for dev
+      - ./web:/app/web
+      - ./backend:/app/backend
