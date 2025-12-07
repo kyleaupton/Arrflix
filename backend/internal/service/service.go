@@ -7,14 +7,15 @@ import (
 )
 
 type Services struct {
-	Auth      *AuthService
-	Indexer   *IndexerService
-	Libraries *LibrariesService
-	Media     *MediaService
-	Rails     *RailsService
-	Scanner   *ScannerService
-	Settings  *SettingsService
-	Tmdb      *TmdbService
+	Auth          *AuthService
+	Indexer       *IndexerService
+	Libraries     *LibrariesService
+	Media         *MediaService
+	NameTemplates *NameTemplatesService
+	Rails         *RailsService
+	Scanner       *ScannerService
+	Settings      *SettingsService
+	Tmdb          *TmdbService
 }
 
 func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option) *Services {
@@ -26,14 +27,15 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 	tmdb := NewTmdbService(r, l)
 
 	return &Services{
-		Auth:      NewAuthService(r, cfg),
-		Indexer:   NewIndexerService(r, l, c),
-		Libraries: NewLibrariesService(r),
-		Media:     NewMediaService(r, l, tmdb),
-		Rails:     NewRailsService(r, tmdb),
-		Scanner:   NewScannerService(r, l, tmdb),
-		Settings:  NewSettingsService(r),
-		Tmdb:      tmdb,
+		Auth:          NewAuthService(r, cfg),
+		Indexer:       NewIndexerService(r, l, c),
+		Libraries:     NewLibrariesService(r),
+		Media:         NewMediaService(r, l, tmdb),
+		NameTemplates: NewNameTemplatesService(r),
+		Rails:         NewRailsService(r, tmdb),
+		Scanner:       NewScannerService(r, l, tmdb),
+		Settings:      NewSettingsService(r),
+		Tmdb:          tmdb,
 	}
 }
 

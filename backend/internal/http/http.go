@@ -28,6 +28,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	indexers := handlers.NewIndexers(services)
 	libraries := handlers.NewLibraries(services)
 	media := handlers.NewMedia(services)
+	nameTemplates := handlers.NewNameTemplates(services)
 	rails := handlers.NewRails(services)
 	settings := handlers.NewSettings(services)
 
@@ -44,6 +45,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	indexers.RegisterProtected(protected)
 	libraries.RegisterProtected(protected)
 	media.RegisterProtected(protected)
+	nameTemplates.RegisterProtected(protected)
 	rails.RegisterProtected(protected)
 	settings.RegisterProtected(protected)
 

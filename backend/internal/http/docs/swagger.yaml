@@ -83,6 +83,38 @@ definitions:
     required:
     - token
     type: object
+  handlers.NameTemplateCreateRequest:
+    properties:
+      default:
+        type: boolean
+      name:
+        type: string
+      template:
+        type: string
+      type:
+        type: string
+    required:
+    - default
+    - name
+    - template
+    - type
+    type: object
+  handlers.NameTemplateUpdateRequest:
+    properties:
+      default:
+        type: boolean
+      name:
+        type: string
+      template:
+        type: string
+      type:
+        type: string
+    required:
+    - default
+    - name
+    - template
+    - type
+    type: object
   handlers.PatchRequest:
     properties:
       key:
@@ -120,6 +152,31 @@ definitions:
     - id
     - name
     - root_path
+    - type
+    - updated_at
+    type: object
+  handlers.nameTemplateSwagger:
+    properties:
+      created_at:
+        type: string
+      default:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      template:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - created_at
+    - default
+    - id
+    - name
+    - template
     - type
     - updated_at
     type: object
@@ -1179,6 +1236,128 @@ paths:
       summary: Get movie
       tags:
       - media
+  /v1/name-templates:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.nameTemplateSwagger'
+            type: array
+      summary: List name templates
+      tags:
+      - name-templates
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create name template
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.NameTemplateCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.nameTemplateSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create name template
+      tags:
+      - name-templates
+  /v1/name-templates/{id}:
+    delete:
+      parameters:
+      - description: Name Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Delete name template
+      tags:
+      - name-templates
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.nameTemplateSwagger'
+      summary: Get name template
+      tags:
+      - name-templates
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Name Template ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update name template
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.NameTemplateUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.nameTemplateSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update name template
+      tags:
+      - name-templates
+  /v1/name-templates/default/{type}:
+    get:
+      parameters:
+      - description: Template type (movie or series)
+        in: path
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.nameTemplateSwagger'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get default name template by type
+      tags:
+      - name-templates
   /v1/series/{id}:
     get:
       parameters:

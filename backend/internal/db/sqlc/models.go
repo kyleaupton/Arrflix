@@ -227,6 +227,16 @@ type MediaSeason struct {
 	CreatedAt    time.Time   `json:"created_at"`
 }
 
+type NameTemplate struct {
+	ID        pgtype.UUID `json:"id"`
+	Name      string      `json:"name"`
+	Type      string      `json:"type"`
+	Template  string      `json:"template"`
+	Default   bool        `json:"default"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
+}
+
 type Permission struct {
 	ID          pgtype.UUID `json:"id"`
 	Key         string      `json:"key"`

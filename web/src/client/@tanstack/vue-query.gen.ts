@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { deleteV1IndexersById, deleteV1LibrariesById, getHealth, getV1Home, getV1IndexersById, getV1IndexersConfigured, getV1IndexersSchema, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1SeriesById, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Indexer, postV1IndexerActionByName, postV1Libraries, postV1LibrariesByIdScan, putV1LibrariesById } from '../sdk.gen';
-import type { DeleteV1IndexersByIdData, DeleteV1IndexersByIdError, DeleteV1IndexersByIdResponse, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, GetHealthData, GetV1HomeData, GetV1IndexersByIdData, GetV1IndexersConfiguredData, GetV1IndexersSchemaData, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1MovieByIdData, GetV1SeriesByIdData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1IndexerActionByNameData, PostV1IndexerActionByNameError, PostV1IndexerData, PostV1IndexerError, PostV1IndexerResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse } from '../types.gen';
+import { deleteV1IndexersById, deleteV1LibrariesById, deleteV1NameTemplatesById, getHealth, getV1Home, getV1IndexersById, getV1IndexersConfigured, getV1IndexersSchema, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1NameTemplates, getV1NameTemplatesById, getV1NameTemplatesDefaultByType, getV1SeriesById, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Indexer, postV1IndexerActionByName, postV1Libraries, postV1LibrariesByIdScan, postV1NameTemplates, putV1LibrariesById, putV1NameTemplatesById } from '../sdk.gen';
+import type { DeleteV1IndexersByIdData, DeleteV1IndexersByIdError, DeleteV1IndexersByIdResponse, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponse, GetHealthData, GetV1HomeData, GetV1IndexersByIdData, GetV1IndexersConfiguredData, GetV1IndexersSchemaData, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1MovieByIdData, GetV1NameTemplatesByIdData, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1SeriesByIdData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1IndexerActionByNameData, PostV1IndexerActionByNameError, PostV1IndexerData, PostV1IndexerError, PostV1IndexerResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PostV1NameTemplatesData, PostV1NameTemplatesError, PostV1NameTemplatesResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdError, PutV1NameTemplatesByIdResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -355,6 +355,117 @@ export const getV1MovieByIdOptions = (options: Options<GetV1MovieByIdData>) => {
         },
         queryKey: getV1MovieByIdQueryKey(options)
     });
+};
+
+export const getV1NameTemplatesQueryKey = (options?: Options<GetV1NameTemplatesData>) => createQueryKey('getV1NameTemplates', options);
+
+/**
+ * List name templates
+ */
+export const getV1NameTemplatesOptions = (options?: Options<GetV1NameTemplatesData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1NameTemplates({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1NameTemplatesQueryKey(options)
+    });
+};
+
+/**
+ * Create name template
+ */
+export const postV1NameTemplatesMutation = (options?: Partial<Options<PostV1NameTemplatesData>>): UseMutationOptions<PostV1NameTemplatesResponse, PostV1NameTemplatesError, Options<PostV1NameTemplatesData>> => {
+    const mutationOptions: UseMutationOptions<PostV1NameTemplatesResponse, PostV1NameTemplatesError, Options<PostV1NameTemplatesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postV1NameTemplates({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getV1NameTemplatesDefaultByTypeQueryKey = (options: Options<GetV1NameTemplatesDefaultByTypeData>) => createQueryKey('getV1NameTemplatesDefaultByType', options);
+
+/**
+ * Get default name template by type
+ */
+export const getV1NameTemplatesDefaultByTypeOptions = (options: Options<GetV1NameTemplatesDefaultByTypeData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1NameTemplatesDefaultByType({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1NameTemplatesDefaultByTypeQueryKey(options)
+    });
+};
+
+/**
+ * Delete name template
+ */
+export const deleteV1NameTemplatesByIdMutation = (options?: Partial<Options<DeleteV1NameTemplatesByIdData>>): UseMutationOptions<DeleteV1NameTemplatesByIdResponse, DefaultError, Options<DeleteV1NameTemplatesByIdData>> => {
+    const mutationOptions: UseMutationOptions<DeleteV1NameTemplatesByIdResponse, DefaultError, Options<DeleteV1NameTemplatesByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteV1NameTemplatesById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getV1NameTemplatesByIdQueryKey = (options?: Options<GetV1NameTemplatesByIdData>) => createQueryKey('getV1NameTemplatesById', options);
+
+/**
+ * Get name template
+ */
+export const getV1NameTemplatesByIdOptions = (options?: Options<GetV1NameTemplatesByIdData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1NameTemplatesById({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1NameTemplatesByIdQueryKey(options)
+    });
+};
+
+/**
+ * Update name template
+ */
+export const putV1NameTemplatesByIdMutation = (options?: Partial<Options<PutV1NameTemplatesByIdData>>): UseMutationOptions<PutV1NameTemplatesByIdResponse, PutV1NameTemplatesByIdError, Options<PutV1NameTemplatesByIdData>> => {
+    const mutationOptions: UseMutationOptions<PutV1NameTemplatesByIdResponse, PutV1NameTemplatesByIdError, Options<PutV1NameTemplatesByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await putV1NameTemplatesById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
 };
 
 export const getV1SeriesByIdQueryKey = (options: Options<GetV1SeriesByIdData>) => createQueryKey('getV1SeriesById', options);

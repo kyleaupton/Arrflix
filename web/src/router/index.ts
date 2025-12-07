@@ -40,6 +40,10 @@ const router = createRouter({
           path: 'indexers',
           component: () => import('@/views/settings/IndexersSettings.vue'),
         },
+        {
+          path: 'name-templates',
+          component: () => import('@/views/settings/NameTemplateSettings.vue'),
+        },
       ],
     },
     {

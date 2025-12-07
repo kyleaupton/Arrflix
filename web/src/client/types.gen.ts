@@ -40,6 +40,20 @@ export type HandlersLoginResponse = {
     token: string;
 };
 
+export type HandlersNameTemplateCreateRequest = {
+    default: boolean;
+    name: string;
+    template: string;
+    type: string;
+};
+
+export type HandlersNameTemplateUpdateRequest = {
+    default: boolean;
+    name: string;
+    template: string;
+    type: string;
+};
+
 export type HandlersPatchRequest = {
     key: string;
     value: unknown;
@@ -56,6 +70,16 @@ export type HandlersLibrarySwagger = {
     id: string;
     name: string;
     root_path: string;
+    type: string;
+    updated_at: string;
+};
+
+export type HandlersNameTemplateSwagger = {
+    created_at: string;
+    default: boolean;
+    id: string;
+    name: string;
+    template: string;
     type: string;
     updated_at: string;
 };
@@ -723,6 +747,156 @@ export type GetV1MovieByIdResponses = {
 };
 
 export type GetV1MovieByIdResponse = GetV1MovieByIdResponses[keyof GetV1MovieByIdResponses];
+
+export type GetV1NameTemplatesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/name-templates';
+};
+
+export type GetV1NameTemplatesResponses = {
+    /**
+     * OK
+     */
+    200: Array<HandlersNameTemplateSwagger>;
+};
+
+export type GetV1NameTemplatesResponse = GetV1NameTemplatesResponses[keyof GetV1NameTemplatesResponses];
+
+export type PostV1NameTemplatesData = {
+    /**
+     * Create name template
+     */
+    body: HandlersNameTemplateCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/name-templates';
+};
+
+export type PostV1NameTemplatesErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1NameTemplatesError = PostV1NameTemplatesErrors[keyof PostV1NameTemplatesErrors];
+
+export type PostV1NameTemplatesResponses = {
+    /**
+     * Created
+     */
+    201: HandlersNameTemplateSwagger;
+};
+
+export type PostV1NameTemplatesResponse = PostV1NameTemplatesResponses[keyof PostV1NameTemplatesResponses];
+
+export type GetV1NameTemplatesDefaultByTypeData = {
+    body?: never;
+    path: {
+        /**
+         * Template type (movie or series)
+         */
+        type: string;
+    };
+    query?: never;
+    url: '/v1/name-templates/default/{type}';
+};
+
+export type GetV1NameTemplatesDefaultByTypeErrors = {
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1NameTemplatesDefaultByTypeError = GetV1NameTemplatesDefaultByTypeErrors[keyof GetV1NameTemplatesDefaultByTypeErrors];
+
+export type GetV1NameTemplatesDefaultByTypeResponses = {
+    /**
+     * OK
+     */
+    200: HandlersNameTemplateSwagger;
+};
+
+export type GetV1NameTemplatesDefaultByTypeResponse = GetV1NameTemplatesDefaultByTypeResponses[keyof GetV1NameTemplatesDefaultByTypeResponses];
+
+export type DeleteV1NameTemplatesByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Name Template ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/name-templates/{id}';
+};
+
+export type DeleteV1NameTemplatesByIdResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type DeleteV1NameTemplatesByIdResponse = DeleteV1NameTemplatesByIdResponses[keyof DeleteV1NameTemplatesByIdResponses];
+
+export type GetV1NameTemplatesByIdData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/name-templates/{id}';
+};
+
+export type GetV1NameTemplatesByIdResponses = {
+    /**
+     * OK
+     */
+    200: HandlersNameTemplateSwagger;
+};
+
+export type GetV1NameTemplatesByIdResponse = GetV1NameTemplatesByIdResponses[keyof GetV1NameTemplatesByIdResponses];
+
+export type PutV1NameTemplatesByIdData = {
+    /**
+     * Update name template
+     */
+    body: HandlersNameTemplateUpdateRequest;
+    path: {
+        /**
+         * Name Template ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/name-templates/{id}';
+};
+
+export type PutV1NameTemplatesByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PutV1NameTemplatesByIdError = PutV1NameTemplatesByIdErrors[keyof PutV1NameTemplatesByIdErrors];
+
+export type PutV1NameTemplatesByIdResponses = {
+    /**
+     * OK
+     */
+    200: HandlersNameTemplateSwagger;
+};
+
+export type PutV1NameTemplatesByIdResponse = PutV1NameTemplatesByIdResponses[keyof PutV1NameTemplatesByIdResponses];
 
 export type GetV1SeriesByIdData = {
     body?: never;

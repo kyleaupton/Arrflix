@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteV1IndexersByIdData, DeleteV1IndexersByIdErrors, DeleteV1IndexersByIdResponses, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, GetHealthData, GetHealthResponses, GetV1HomeData, GetV1HomeResponses, GetV1IndexersByIdData, GetV1IndexersByIdErrors, GetV1IndexersByIdResponses, GetV1IndexersConfiguredData, GetV1IndexersConfiguredResponses, GetV1IndexersSchemaData, GetV1IndexersSchemaResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1IndexerActionByNameData, PostV1IndexerActionByNameErrors, PostV1IndexerActionByNameResponses, PostV1IndexerData, PostV1IndexerErrors, PostV1IndexerResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses } from './types.gen';
+import type { DeleteV1IndexersByIdData, DeleteV1IndexersByIdErrors, DeleteV1IndexersByIdResponses, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponses, GetHealthData, GetHealthResponses, GetV1HomeData, GetV1HomeResponses, GetV1IndexersByIdData, GetV1IndexersByIdErrors, GetV1IndexersByIdResponses, GetV1IndexersConfiguredData, GetV1IndexersConfiguredResponses, GetV1IndexersSchemaData, GetV1IndexersSchemaResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1NameTemplatesByIdData, GetV1NameTemplatesByIdResponses, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1NameTemplatesDefaultByTypeErrors, GetV1NameTemplatesDefaultByTypeResponses, GetV1NameTemplatesResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1IndexerActionByNameData, PostV1IndexerActionByNameErrors, PostV1IndexerActionByNameResponses, PostV1IndexerData, PostV1IndexerErrors, PostV1IndexerResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PostV1NameTemplatesData, PostV1NameTemplatesErrors, PostV1NameTemplatesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdErrors, PutV1NameTemplatesByIdResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -201,6 +201,74 @@ export const getV1MovieById = <ThrowOnError extends boolean = false>(options: Op
     return (options.client ?? client).get<GetV1MovieByIdResponses, unknown, ThrowOnError>({
         url: '/v1/movie/{id}',
         ...options
+    });
+};
+
+/**
+ * List name templates
+ */
+export const getV1NameTemplates = <ThrowOnError extends boolean = false>(options?: Options<GetV1NameTemplatesData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1NameTemplatesResponses, unknown, ThrowOnError>({
+        url: '/v1/name-templates',
+        ...options
+    });
+};
+
+/**
+ * Create name template
+ */
+export const postV1NameTemplates = <ThrowOnError extends boolean = false>(options: Options<PostV1NameTemplatesData, ThrowOnError>) => {
+    return (options.client ?? client).post<PostV1NameTemplatesResponses, PostV1NameTemplatesErrors, ThrowOnError>({
+        url: '/v1/name-templates',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Get default name template by type
+ */
+export const getV1NameTemplatesDefaultByType = <ThrowOnError extends boolean = false>(options: Options<GetV1NameTemplatesDefaultByTypeData, ThrowOnError>) => {
+    return (options.client ?? client).get<GetV1NameTemplatesDefaultByTypeResponses, GetV1NameTemplatesDefaultByTypeErrors, ThrowOnError>({
+        url: '/v1/name-templates/default/{type}',
+        ...options
+    });
+};
+
+/**
+ * Delete name template
+ */
+export const deleteV1NameTemplatesById = <ThrowOnError extends boolean = false>(options: Options<DeleteV1NameTemplatesByIdData, ThrowOnError>) => {
+    return (options.client ?? client).delete<DeleteV1NameTemplatesByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/name-templates/{id}',
+        ...options
+    });
+};
+
+/**
+ * Get name template
+ */
+export const getV1NameTemplatesById = <ThrowOnError extends boolean = false>(options?: Options<GetV1NameTemplatesByIdData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1NameTemplatesByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/name-templates/{id}',
+        ...options
+    });
+};
+
+/**
+ * Update name template
+ */
+export const putV1NameTemplatesById = <ThrowOnError extends boolean = false>(options: Options<PutV1NameTemplatesByIdData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1NameTemplatesByIdResponses, PutV1NameTemplatesByIdErrors, ThrowOnError>({
+        url: '/v1/name-templates/{id}',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
     });
 };
 

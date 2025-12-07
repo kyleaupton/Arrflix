@@ -541,6 +541,194 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/name-templates": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "name-templates"
+                ],
+                "summary": "List name templates",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.nameTemplateSwagger"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "name-templates"
+                ],
+                "summary": "Create name template",
+                "parameters": [
+                    {
+                        "description": "Create name template",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NameTemplateCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.nameTemplateSwagger"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/name-templates/default/{type}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "name-templates"
+                ],
+                "summary": "Get default name template by type",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Template type (movie or series)",
+                        "name": "type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.nameTemplateSwagger"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/name-templates/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "name-templates"
+                ],
+                "summary": "Get name template",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.nameTemplateSwagger"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "name-templates"
+                ],
+                "summary": "Update name template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name Template ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update name template",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NameTemplateUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.nameTemplateSwagger"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "name-templates"
+                ],
+                "summary": "Delete name template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name Template ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/series/{id}": {
             "get": {
                 "produces": [
@@ -746,6 +934,52 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.NameTemplateCreateRequest": {
+            "type": "object",
+            "required": [
+                "default",
+                "name",
+                "template",
+                "type"
+            ],
+            "properties": {
+                "default": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "template": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.NameTemplateUpdateRequest": {
+            "type": "object",
+            "required": [
+                "default",
+                "name",
+                "template",
+                "type"
+            ],
+            "properties": {
+                "default": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "template": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.PatchRequest": {
             "type": "object",
             "required": [
@@ -792,6 +1026,41 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "root_path": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.nameTemplateSwagger": {
+            "type": "object",
+            "required": [
+                "created_at",
+                "default",
+                "id",
+                "name",
+                "template",
+                "type",
+                "updated_at"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "default": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "template": {
                     "type": "string"
                 },
                 "type": {
