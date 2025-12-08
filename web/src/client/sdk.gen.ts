@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteV1IndexersByIdData, DeleteV1IndexersByIdErrors, DeleteV1IndexersByIdResponses, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponses, GetHealthData, GetHealthResponses, GetV1HomeData, GetV1HomeResponses, GetV1IndexersByIdData, GetV1IndexersByIdErrors, GetV1IndexersByIdResponses, GetV1IndexersConfiguredData, GetV1IndexersConfiguredResponses, GetV1IndexersSchemaData, GetV1IndexersSchemaResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1NameTemplatesByIdData, GetV1NameTemplatesByIdResponses, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1NameTemplatesDefaultByTypeErrors, GetV1NameTemplatesDefaultByTypeResponses, GetV1NameTemplatesResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1IndexerActionByNameData, PostV1IndexerActionByNameErrors, PostV1IndexerActionByNameResponses, PostV1IndexerData, PostV1IndexerErrors, PostV1IndexerResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PostV1NameTemplatesData, PostV1NameTemplatesErrors, PostV1NameTemplatesResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdErrors, PutV1NameTemplatesByIdResponses } from './types.gen';
+import type { DeleteV1DownloadersByIdData, DeleteV1DownloadersByIdResponses, DeleteV1IndexersByIdData, DeleteV1IndexersByIdErrors, DeleteV1IndexersByIdResponses, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponses, DeleteV1PoliciesByIdActionsByActionIdData, DeleteV1PoliciesByIdActionsByActionIdResponses, DeleteV1PoliciesByIdData, DeleteV1PoliciesByIdResponses, DeleteV1PoliciesByIdRuleData, DeleteV1PoliciesByIdRuleResponses, GetHealthData, GetHealthResponses, GetV1DownloadersByIdData, GetV1DownloadersByIdResponses, GetV1DownloadersData, GetV1DownloadersDefaultByProtocolData, GetV1DownloadersDefaultByProtocolResponses, GetV1DownloadersResponses, GetV1HomeData, GetV1HomeResponses, GetV1IndexersByIdData, GetV1IndexersByIdErrors, GetV1IndexersByIdResponses, GetV1IndexersConfiguredData, GetV1IndexersConfiguredResponses, GetV1IndexersSchemaData, GetV1IndexersSchemaResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdData, GetV1MovieByIdResponses, GetV1NameTemplatesByIdData, GetV1NameTemplatesByIdResponses, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1NameTemplatesDefaultByTypeErrors, GetV1NameTemplatesDefaultByTypeResponses, GetV1NameTemplatesResponses, GetV1PoliciesByIdActionsByActionIdData, GetV1PoliciesByIdActionsByActionIdResponses, GetV1PoliciesByIdActionsData, GetV1PoliciesByIdActionsResponses, GetV1PoliciesByIdData, GetV1PoliciesByIdResponses, GetV1PoliciesByIdRuleData, GetV1PoliciesByIdRuleResponses, GetV1PoliciesData, GetV1PoliciesResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1DownloadersByIdTestData, PostV1DownloadersByIdTestErrors, PostV1DownloadersByIdTestResponses, PostV1DownloadersData, PostV1DownloadersErrors, PostV1DownloadersResponses, PostV1IndexerActionByNameData, PostV1IndexerActionByNameErrors, PostV1IndexerActionByNameResponses, PostV1IndexerData, PostV1IndexerErrors, PostV1IndexerResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PostV1NameTemplatesData, PostV1NameTemplatesErrors, PostV1NameTemplatesResponses, PostV1PoliciesByIdActionsData, PostV1PoliciesByIdActionsErrors, PostV1PoliciesByIdActionsResponses, PostV1PoliciesByIdRuleData, PostV1PoliciesByIdRuleErrors, PostV1PoliciesByIdRuleResponses, PostV1PoliciesData, PostV1PoliciesErrors, PostV1PoliciesEvaluateData, PostV1PoliciesEvaluateErrors, PostV1PoliciesEvaluateResponses, PostV1PoliciesResponses, PutV1DownloadersByIdData, PutV1DownloadersByIdErrors, PutV1DownloadersByIdResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdErrors, PutV1NameTemplatesByIdResponses, PutV1PoliciesByIdActionsByActionIdData, PutV1PoliciesByIdActionsByActionIdErrors, PutV1PoliciesByIdActionsByActionIdResponses, PutV1PoliciesByIdData, PutV1PoliciesByIdErrors, PutV1PoliciesByIdResponses, PutV1PoliciesByIdRuleData, PutV1PoliciesByIdRuleErrors, PutV1PoliciesByIdRuleResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -39,6 +39,84 @@ export const postV1AuthLogin = <ThrowOnError extends boolean = false>(options: O
             'Content-Type': 'application/json',
             ...options.headers
         }
+    });
+};
+
+/**
+ * List downloaders
+ */
+export const getV1Downloaders = <ThrowOnError extends boolean = false>(options?: Options<GetV1DownloadersData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1DownloadersResponses, unknown, ThrowOnError>({
+        url: '/v1/downloaders',
+        ...options
+    });
+};
+
+/**
+ * Create downloader
+ */
+export const postV1Downloaders = <ThrowOnError extends boolean = false>(options: Options<PostV1DownloadersData, ThrowOnError>) => {
+    return (options.client ?? client).post<PostV1DownloadersResponses, PostV1DownloadersErrors, ThrowOnError>({
+        url: '/v1/downloaders',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Get default downloader by protocol
+ */
+export const getV1DownloadersDefaultByProtocol = <ThrowOnError extends boolean = false>(options?: Options<GetV1DownloadersDefaultByProtocolData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1DownloadersDefaultByProtocolResponses, unknown, ThrowOnError>({
+        url: '/v1/downloaders/default/{protocol}',
+        ...options
+    });
+};
+
+/**
+ * Delete downloader
+ */
+export const deleteV1DownloadersById = <ThrowOnError extends boolean = false>(options: Options<DeleteV1DownloadersByIdData, ThrowOnError>) => {
+    return (options.client ?? client).delete<DeleteV1DownloadersByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/downloaders/{id}',
+        ...options
+    });
+};
+
+/**
+ * Get downloader
+ */
+export const getV1DownloadersById = <ThrowOnError extends boolean = false>(options?: Options<GetV1DownloadersByIdData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1DownloadersByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/downloaders/{id}',
+        ...options
+    });
+};
+
+/**
+ * Update downloader
+ */
+export const putV1DownloadersById = <ThrowOnError extends boolean = false>(options: Options<PutV1DownloadersByIdData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1DownloadersByIdResponses, PutV1DownloadersByIdErrors, ThrowOnError>({
+        url: '/v1/downloaders/{id}',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Test downloader connection
+ */
+export const postV1DownloadersByIdTest = <ThrowOnError extends boolean = false>(options: Options<PostV1DownloadersByIdTestData, ThrowOnError>) => {
+    return (options.client ?? client).post<PostV1DownloadersByIdTestResponses, PostV1DownloadersByIdTestErrors, ThrowOnError>({
+        url: '/v1/downloaders/{id}/test',
+        ...options
     });
 };
 
@@ -264,6 +342,184 @@ export const getV1NameTemplatesById = <ThrowOnError extends boolean = false>(opt
 export const putV1NameTemplatesById = <ThrowOnError extends boolean = false>(options: Options<PutV1NameTemplatesByIdData, ThrowOnError>) => {
     return (options.client ?? client).put<PutV1NameTemplatesByIdResponses, PutV1NameTemplatesByIdErrors, ThrowOnError>({
         url: '/v1/name-templates/{id}',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * List policies
+ */
+export const getV1Policies = <ThrowOnError extends boolean = false>(options?: Options<GetV1PoliciesData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1PoliciesResponses, unknown, ThrowOnError>({
+        url: '/v1/policies',
+        ...options
+    });
+};
+
+/**
+ * Create policy
+ */
+export const postV1Policies = <ThrowOnError extends boolean = false>(options: Options<PostV1PoliciesData, ThrowOnError>) => {
+    return (options.client ?? client).post<PostV1PoliciesResponses, PostV1PoliciesErrors, ThrowOnError>({
+        url: '/v1/policies',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Evaluate policies against torrent metadata
+ */
+export const postV1PoliciesEvaluate = <ThrowOnError extends boolean = false>(options: Options<PostV1PoliciesEvaluateData, ThrowOnError>) => {
+    return (options.client ?? client).post<PostV1PoliciesEvaluateResponses, PostV1PoliciesEvaluateErrors, ThrowOnError>({
+        url: '/v1/policies/evaluate',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Delete policy
+ */
+export const deleteV1PoliciesById = <ThrowOnError extends boolean = false>(options: Options<DeleteV1PoliciesByIdData, ThrowOnError>) => {
+    return (options.client ?? client).delete<DeleteV1PoliciesByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/policies/{id}',
+        ...options
+    });
+};
+
+/**
+ * Get policy
+ */
+export const getV1PoliciesById = <ThrowOnError extends boolean = false>(options?: Options<GetV1PoliciesByIdData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1PoliciesByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/policies/{id}',
+        ...options
+    });
+};
+
+/**
+ * Update policy
+ */
+export const putV1PoliciesById = <ThrowOnError extends boolean = false>(options: Options<PutV1PoliciesByIdData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1PoliciesByIdResponses, PutV1PoliciesByIdErrors, ThrowOnError>({
+        url: '/v1/policies/{id}',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * List actions for policy
+ */
+export const getV1PoliciesByIdActions = <ThrowOnError extends boolean = false>(options?: Options<GetV1PoliciesByIdActionsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1PoliciesByIdActionsResponses, unknown, ThrowOnError>({
+        url: '/v1/policies/{id}/actions',
+        ...options
+    });
+};
+
+/**
+ * Create action for policy
+ */
+export const postV1PoliciesByIdActions = <ThrowOnError extends boolean = false>(options: Options<PostV1PoliciesByIdActionsData, ThrowOnError>) => {
+    return (options.client ?? client).post<PostV1PoliciesByIdActionsResponses, PostV1PoliciesByIdActionsErrors, ThrowOnError>({
+        url: '/v1/policies/{id}/actions',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Delete action
+ */
+export const deleteV1PoliciesByIdActionsByActionId = <ThrowOnError extends boolean = false>(options: Options<DeleteV1PoliciesByIdActionsByActionIdData, ThrowOnError>) => {
+    return (options.client ?? client).delete<DeleteV1PoliciesByIdActionsByActionIdResponses, unknown, ThrowOnError>({
+        url: '/v1/policies/{id}/actions/{actionId}',
+        ...options
+    });
+};
+
+/**
+ * Get action
+ */
+export const getV1PoliciesByIdActionsByActionId = <ThrowOnError extends boolean = false>(options?: Options<GetV1PoliciesByIdActionsByActionIdData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1PoliciesByIdActionsByActionIdResponses, unknown, ThrowOnError>({
+        url: '/v1/policies/{id}/actions/{actionId}',
+        ...options
+    });
+};
+
+/**
+ * Update action
+ */
+export const putV1PoliciesByIdActionsByActionId = <ThrowOnError extends boolean = false>(options: Options<PutV1PoliciesByIdActionsByActionIdData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1PoliciesByIdActionsByActionIdResponses, PutV1PoliciesByIdActionsByActionIdErrors, ThrowOnError>({
+        url: '/v1/policies/{id}/actions/{actionId}',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Delete rule for policy
+ */
+export const deleteV1PoliciesByIdRule = <ThrowOnError extends boolean = false>(options: Options<DeleteV1PoliciesByIdRuleData, ThrowOnError>) => {
+    return (options.client ?? client).delete<DeleteV1PoliciesByIdRuleResponses, unknown, ThrowOnError>({
+        url: '/v1/policies/{id}/rule',
+        ...options
+    });
+};
+
+/**
+ * Get rule for policy
+ */
+export const getV1PoliciesByIdRule = <ThrowOnError extends boolean = false>(options?: Options<GetV1PoliciesByIdRuleData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1PoliciesByIdRuleResponses, unknown, ThrowOnError>({
+        url: '/v1/policies/{id}/rule',
+        ...options
+    });
+};
+
+/**
+ * Create rule for policy
+ */
+export const postV1PoliciesByIdRule = <ThrowOnError extends boolean = false>(options: Options<PostV1PoliciesByIdRuleData, ThrowOnError>) => {
+    return (options.client ?? client).post<PostV1PoliciesByIdRuleResponses, PostV1PoliciesByIdRuleErrors, ThrowOnError>({
+        url: '/v1/policies/{id}/rule',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Update rule for policy
+ */
+export const putV1PoliciesByIdRule = <ThrowOnError extends boolean = false>(options: Options<PutV1PoliciesByIdRuleData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1PoliciesByIdRuleResponses, PutV1PoliciesByIdRuleErrors, ThrowOnError>({
+        url: '/v1/policies/{id}/rule',
         ...options,
         headers: {
             'Content-Type': 'application/json',

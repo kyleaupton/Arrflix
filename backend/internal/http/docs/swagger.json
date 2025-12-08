@@ -59,6 +59,213 @@
                 }
             }
         },
+        "/v1/downloaders": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "downloaders"
+                ],
+                "summary": "List downloaders",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.Downloader"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "downloaders"
+                ],
+                "summary": "Create downloader",
+                "parameters": [
+                    {
+                        "description": "Create downloader",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DownloaderCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Downloader"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/downloaders/default/{protocol}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "downloaders"
+                ],
+                "summary": "Get default downloader by protocol",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Downloader"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/downloaders/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "downloaders"
+                ],
+                "summary": "Get downloader",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Downloader"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "downloaders"
+                ],
+                "summary": "Update downloader",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Downloader ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update downloader",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DownloaderUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Downloader"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "downloaders"
+                ],
+                "summary": "Delete downloader",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Downloader ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/downloaders/{id}/test": {
+            "post": {
+                "tags": [
+                    "downloaders"
+                ],
+                "summary": "Test downloader connection",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Downloader ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/home": {
             "get": {
                 "produces": [
@@ -721,6 +928,507 @@
                 }
             }
         },
+        "/v1/policies": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "List policies",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.Policy"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Create policy",
+                "parameters": [
+                    {
+                        "description": "Create policy",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PolicyCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Policy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/policies/evaluate": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Evaluate policies against torrent metadata",
+                "parameters": [
+                    {
+                        "description": "Evaluate request",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.EvaluateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Plan"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/policies/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Get policy",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Policy"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Update policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update policy",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PolicyUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Policy"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Delete policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/policies/{id}/actions": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "List actions for policy",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.Action"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Create action for policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Create action",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ActionCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Action"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/policies/{id}/actions/{actionId}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Get action",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Action"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Update action",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Action ID",
+                        "name": "actionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update action",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ActionUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Action"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Delete action",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Action ID",
+                        "name": "actionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/policies/{id}/rule": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Get rule for policy",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Rule"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Update rule for policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update rule",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RuleUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Rule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Create rule for policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Create rule",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RuleCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.Rule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Delete rule for policy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Policy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/series/{id}": {
             "get": {
                 "produces": [
@@ -807,6 +1515,99 @@
         }
     },
     "definitions": {
+        "dbgen.Action": {
+            "type": "object",
+            "required": [
+                "created_at",
+                "id",
+                "order",
+                "policy_id",
+                "type",
+                "updated_at",
+                "value"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "policy_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "dbgen.Downloader": {
+            "type": "object",
+            "required": [
+                "config_json",
+                "created_at",
+                "default",
+                "enabled",
+                "id",
+                "name",
+                "password",
+                "protocol",
+                "type",
+                "updated_at",
+                "url",
+                "username"
+            ],
+            "properties": {
+                "config_json": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "default": {
+                    "type": "boolean"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "dbgen.MediaItem": {
             "type": "object",
             "required": [
@@ -843,6 +1644,217 @@
                 },
                 "year": {
                     "type": "integer"
+                }
+            }
+        },
+        "dbgen.Policy": {
+            "type": "object",
+            "required": [
+                "created_at",
+                "description",
+                "enabled",
+                "id",
+                "name",
+                "priority",
+                "updated_at"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dbgen.Rule": {
+            "type": "object",
+            "required": [
+                "created_at",
+                "id",
+                "left_operand",
+                "operator",
+                "policy_id",
+                "right_operand",
+                "updated_at"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "left_operand": {
+                    "type": "string"
+                },
+                "operator": {
+                    "type": "string"
+                },
+                "policy_id": {
+                    "type": "string"
+                },
+                "right_operand": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.ActionCreateRequest": {
+            "type": "object",
+            "required": [
+                "order",
+                "type",
+                "value"
+            ],
+            "properties": {
+                "order": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.ActionUpdateRequest": {
+            "type": "object",
+            "required": [
+                "order",
+                "type",
+                "value"
+            ],
+            "properties": {
+                "order": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.DownloaderCreateRequest": {
+            "type": "object",
+            "required": [
+                "config_json",
+                "default",
+                "enabled",
+                "name",
+                "password",
+                "protocol",
+                "type",
+                "url",
+                "username"
+            ],
+            "properties": {
+                "config_json": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "default": {
+                    "type": "boolean"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.DownloaderUpdateRequest": {
+            "type": "object",
+            "required": [
+                "config_json",
+                "default",
+                "enabled",
+                "name",
+                "password",
+                "protocol",
+                "type",
+                "url",
+                "username"
+            ],
+            "properties": {
+                "config_json": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "default": {
+                    "type": "boolean"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.EvaluateRequest": {
+            "type": "object",
+            "required": [
+                "metadata",
+                "torrentUrl"
+            ],
+            "properties": {
+                "metadata": {
+                    "$ref": "#/definitions/model.TorrentMetadata"
+                },
+                "torrentUrl": {
+                    "type": "string"
                 }
             }
         },
@@ -983,6 +1995,90 @@
                     "type": "string"
                 },
                 "value": {}
+            }
+        },
+        "handlers.PolicyCreateRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "enabled",
+                "name",
+                "priority"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.PolicyUpdateRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "enabled",
+                "name",
+                "priority"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.RuleCreateRequest": {
+            "type": "object",
+            "required": [
+                "left_operand",
+                "operator",
+                "right_operand"
+            ],
+            "properties": {
+                "left_operand": {
+                    "type": "string"
+                },
+                "operator": {
+                    "type": "string"
+                },
+                "right_operand": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.RuleUpdateRequest": {
+            "type": "object",
+            "required": [
+                "left_operand",
+                "operator",
+                "right_operand"
+            ],
+            "properties": {
+                "left_operand": {
+                    "type": "string"
+                },
+                "operator": {
+                    "type": "string"
+                },
+                "right_operand": {
+                    "type": "string"
+                }
             }
         },
         "handlers.SettingsListResponse": {
@@ -1823,6 +2919,27 @@
                 }
             }
         },
+        "model.Plan": {
+            "type": "object",
+            "properties": {
+                "downloaderID": {
+                    "description": "these are determined by the policy engine",
+                    "type": "string"
+                },
+                "libraryID": {
+                    "description": "where to move/hardlink/copy the file to",
+                    "type": "string"
+                },
+                "nameTemplateID": {
+                    "description": "how to name the file",
+                    "type": "string"
+                },
+                "torrentURL": {
+                    "description": "this is given to us",
+                    "type": "string"
+                }
+            }
+        },
         "model.ProductionCompany": {
             "type": "object",
             "required": [
@@ -2063,6 +3180,43 @@
                 },
                 "tmdbId": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.TorrentMetadata": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "description": "category tags",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "peers": {
+                    "description": "number of peers",
+                    "type": "integer"
+                },
+                "seeders": {
+                    "description": "number of seeders",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "file size in bytes",
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "title": {
+                    "description": "torrent title",
+                    "type": "string"
+                },
+                "tracker": {
+                    "description": "tracker/indexer name",
+                    "type": "string"
+                },
+                "trackerID": {
+                    "description": "tracker/indexer ID",
+                    "type": "string"
                 }
             }
         }

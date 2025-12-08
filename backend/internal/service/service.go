@@ -8,6 +8,7 @@ import (
 
 type Services struct {
 	Auth          *AuthService
+	Downloaders   *DownloadersService
 	Indexer       *IndexerService
 	Libraries     *LibrariesService
 	Media         *MediaService
@@ -29,6 +30,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 
 	return &Services{
 		Auth:          NewAuthService(r, cfg),
+		Downloaders:   NewDownloadersService(r),
 		Indexer:       NewIndexerService(r, l, c),
 		Libraries:     NewLibrariesService(r),
 		Media:         NewMediaService(r, l, tmdb),

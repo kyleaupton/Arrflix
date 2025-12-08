@@ -4,6 +4,31 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}/api` | (string & {});
 };
 
+export type DbgenAction = {
+    created_at: string;
+    id: string;
+    order: number;
+    policy_id: string;
+    type: string;
+    updated_at: string;
+    value: string;
+};
+
+export type DbgenDownloader = {
+    config_json: Array<number>;
+    created_at: string;
+    default: boolean;
+    enabled: boolean;
+    id: string;
+    name: string;
+    password: string;
+    protocol: string;
+    type: string;
+    updated_at: string;
+    url: string;
+    username: string;
+};
+
 export type DbgenMediaItem = {
     created_at: string;
     id: string;
@@ -13,6 +38,71 @@ export type DbgenMediaItem = {
     type: string;
     updated_at: string;
     year: number;
+};
+
+export type DbgenPolicy = {
+    created_at: string;
+    description: string;
+    enabled: boolean;
+    id: string;
+    name: string;
+    priority: number;
+    updated_at: string;
+};
+
+export type DbgenRule = {
+    created_at: string;
+    id: string;
+    left_operand: string;
+    operator: string;
+    policy_id: string;
+    right_operand: string;
+    updated_at: string;
+};
+
+export type HandlersActionCreateRequest = {
+    order: number;
+    type: string;
+    value: string;
+};
+
+export type HandlersActionUpdateRequest = {
+    order: number;
+    type: string;
+    value: string;
+};
+
+export type HandlersDownloaderCreateRequest = {
+    config_json: {
+        [key: string]: unknown;
+    };
+    default: boolean;
+    enabled: boolean;
+    name: string;
+    password: string;
+    protocol: string;
+    type: string;
+    url: string;
+    username: string;
+};
+
+export type HandlersDownloaderUpdateRequest = {
+    config_json: {
+        [key: string]: unknown;
+    };
+    default: boolean;
+    enabled: boolean;
+    name: string;
+    password: string;
+    protocol: string;
+    type: string;
+    url: string;
+    username: string;
+};
+
+export type HandlersEvaluateRequest = {
+    metadata: ModelTorrentMetadata;
+    torrentUrl: string;
 };
 
 export type HandlersLibraryCreateRequest = {
@@ -57,6 +147,32 @@ export type HandlersNameTemplateUpdateRequest = {
 export type HandlersPatchRequest = {
     key: string;
     value: unknown;
+};
+
+export type HandlersPolicyCreateRequest = {
+    description: string;
+    enabled: boolean;
+    name: string;
+    priority: number;
+};
+
+export type HandlersPolicyUpdateRequest = {
+    description: string;
+    enabled: boolean;
+    name: string;
+    priority: number;
+};
+
+export type HandlersRuleCreateRequest = {
+    left_operand: string;
+    operator: string;
+    right_operand: string;
+};
+
+export type HandlersRuleUpdateRequest = {
+    left_operand: string;
+    operator: string;
+    right_operand: string;
 };
 
 export type HandlersSettingsListResponse = {
@@ -283,6 +399,25 @@ export type ModelPerson = {
     tmdbId: number;
 };
 
+export type ModelPlan = {
+    /**
+     * these are determined by the policy engine
+     */
+    downloaderID?: string;
+    /**
+     * where to move/hardlink/copy the file to
+     */
+    libraryID?: string;
+    /**
+     * how to name the file
+     */
+    nameTemplateID?: string;
+    /**
+     * this is given to us
+     */
+    torrentURL?: string;
+};
+
 export type ModelProductionCompany = {
     logoPath: string;
     name: string;
@@ -347,6 +482,37 @@ export type ModelSeriesRail = {
     tmdbId: number;
 };
 
+export type ModelTorrentMetadata = {
+    /**
+     * category tags
+     */
+    categories?: Array<string>;
+    /**
+     * number of peers
+     */
+    peers?: number;
+    /**
+     * number of seeders
+     */
+    seeders?: number;
+    /**
+     * file size in bytes
+     */
+    size?: number;
+    /**
+     * torrent title
+     */
+    title?: string;
+    /**
+     * tracker/indexer name
+     */
+    tracker?: string;
+    /**
+     * tracker/indexer ID
+     */
+    trackerID?: string;
+};
+
 export type GetHealthData = {
     body?: never;
     path?: never;
@@ -381,6 +547,174 @@ export type PostV1AuthLoginResponses = {
 };
 
 export type PostV1AuthLoginResponse = PostV1AuthLoginResponses[keyof PostV1AuthLoginResponses];
+
+export type GetV1DownloadersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/downloaders';
+};
+
+export type GetV1DownloadersResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenDownloader>;
+};
+
+export type GetV1DownloadersResponse = GetV1DownloadersResponses[keyof GetV1DownloadersResponses];
+
+export type PostV1DownloadersData = {
+    /**
+     * Create downloader
+     */
+    body: HandlersDownloaderCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/downloaders';
+};
+
+export type PostV1DownloadersErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1DownloadersError = PostV1DownloadersErrors[keyof PostV1DownloadersErrors];
+
+export type PostV1DownloadersResponses = {
+    /**
+     * Created
+     */
+    201: DbgenDownloader;
+};
+
+export type PostV1DownloadersResponse = PostV1DownloadersResponses[keyof PostV1DownloadersResponses];
+
+export type GetV1DownloadersDefaultByProtocolData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/downloaders/default/{protocol}';
+};
+
+export type GetV1DownloadersDefaultByProtocolResponses = {
+    /**
+     * OK
+     */
+    200: DbgenDownloader;
+};
+
+export type GetV1DownloadersDefaultByProtocolResponse = GetV1DownloadersDefaultByProtocolResponses[keyof GetV1DownloadersDefaultByProtocolResponses];
+
+export type DeleteV1DownloadersByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Downloader ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/downloaders/{id}';
+};
+
+export type DeleteV1DownloadersByIdResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type DeleteV1DownloadersByIdResponse = DeleteV1DownloadersByIdResponses[keyof DeleteV1DownloadersByIdResponses];
+
+export type GetV1DownloadersByIdData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/downloaders/{id}';
+};
+
+export type GetV1DownloadersByIdResponses = {
+    /**
+     * OK
+     */
+    200: DbgenDownloader;
+};
+
+export type GetV1DownloadersByIdResponse = GetV1DownloadersByIdResponses[keyof GetV1DownloadersByIdResponses];
+
+export type PutV1DownloadersByIdData = {
+    /**
+     * Update downloader
+     */
+    body: HandlersDownloaderUpdateRequest;
+    path: {
+        /**
+         * Downloader ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/downloaders/{id}';
+};
+
+export type PutV1DownloadersByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PutV1DownloadersByIdError = PutV1DownloadersByIdErrors[keyof PutV1DownloadersByIdErrors];
+
+export type PutV1DownloadersByIdResponses = {
+    /**
+     * OK
+     */
+    200: DbgenDownloader;
+};
+
+export type PutV1DownloadersByIdResponse = PutV1DownloadersByIdResponses[keyof PutV1DownloadersByIdResponses];
+
+export type PostV1DownloadersByIdTestData = {
+    body?: never;
+    path: {
+        /**
+         * Downloader ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/downloaders/{id}/test';
+};
+
+export type PostV1DownloadersByIdTestErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1DownloadersByIdTestError = PostV1DownloadersByIdTestErrors[keyof PostV1DownloadersByIdTestErrors];
+
+export type PostV1DownloadersByIdTestResponses = {
+    /**
+     * OK
+     */
+    200: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1DownloadersByIdTestResponse = PostV1DownloadersByIdTestResponses[keyof PostV1DownloadersByIdTestResponses];
 
 export type GetV1HomeData = {
     body?: never;
@@ -897,6 +1231,392 @@ export type PutV1NameTemplatesByIdResponses = {
 };
 
 export type PutV1NameTemplatesByIdResponse = PutV1NameTemplatesByIdResponses[keyof PutV1NameTemplatesByIdResponses];
+
+export type GetV1PoliciesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/policies';
+};
+
+export type GetV1PoliciesResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenPolicy>;
+};
+
+export type GetV1PoliciesResponse = GetV1PoliciesResponses[keyof GetV1PoliciesResponses];
+
+export type PostV1PoliciesData = {
+    /**
+     * Create policy
+     */
+    body: HandlersPolicyCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/policies';
+};
+
+export type PostV1PoliciesErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1PoliciesError = PostV1PoliciesErrors[keyof PostV1PoliciesErrors];
+
+export type PostV1PoliciesResponses = {
+    /**
+     * Created
+     */
+    201: DbgenPolicy;
+};
+
+export type PostV1PoliciesResponse = PostV1PoliciesResponses[keyof PostV1PoliciesResponses];
+
+export type PostV1PoliciesEvaluateData = {
+    /**
+     * Evaluate request
+     */
+    body: HandlersEvaluateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/policies/evaluate';
+};
+
+export type PostV1PoliciesEvaluateErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1PoliciesEvaluateError = PostV1PoliciesEvaluateErrors[keyof PostV1PoliciesEvaluateErrors];
+
+export type PostV1PoliciesEvaluateResponses = {
+    /**
+     * OK
+     */
+    200: ModelPlan;
+};
+
+export type PostV1PoliciesEvaluateResponse = PostV1PoliciesEvaluateResponses[keyof PostV1PoliciesEvaluateResponses];
+
+export type DeleteV1PoliciesByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Policy ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/policies/{id}';
+};
+
+export type DeleteV1PoliciesByIdResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type DeleteV1PoliciesByIdResponse = DeleteV1PoliciesByIdResponses[keyof DeleteV1PoliciesByIdResponses];
+
+export type GetV1PoliciesByIdData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/policies/{id}';
+};
+
+export type GetV1PoliciesByIdResponses = {
+    /**
+     * OK
+     */
+    200: DbgenPolicy;
+};
+
+export type GetV1PoliciesByIdResponse = GetV1PoliciesByIdResponses[keyof GetV1PoliciesByIdResponses];
+
+export type PutV1PoliciesByIdData = {
+    /**
+     * Update policy
+     */
+    body: HandlersPolicyUpdateRequest;
+    path: {
+        /**
+         * Policy ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/policies/{id}';
+};
+
+export type PutV1PoliciesByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PutV1PoliciesByIdError = PutV1PoliciesByIdErrors[keyof PutV1PoliciesByIdErrors];
+
+export type PutV1PoliciesByIdResponses = {
+    /**
+     * OK
+     */
+    200: DbgenPolicy;
+};
+
+export type PutV1PoliciesByIdResponse = PutV1PoliciesByIdResponses[keyof PutV1PoliciesByIdResponses];
+
+export type GetV1PoliciesByIdActionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/policies/{id}/actions';
+};
+
+export type GetV1PoliciesByIdActionsResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenAction>;
+};
+
+export type GetV1PoliciesByIdActionsResponse = GetV1PoliciesByIdActionsResponses[keyof GetV1PoliciesByIdActionsResponses];
+
+export type PostV1PoliciesByIdActionsData = {
+    /**
+     * Create action
+     */
+    body: HandlersActionCreateRequest;
+    path: {
+        /**
+         * Policy ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/policies/{id}/actions';
+};
+
+export type PostV1PoliciesByIdActionsErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1PoliciesByIdActionsError = PostV1PoliciesByIdActionsErrors[keyof PostV1PoliciesByIdActionsErrors];
+
+export type PostV1PoliciesByIdActionsResponses = {
+    /**
+     * Created
+     */
+    201: DbgenAction;
+};
+
+export type PostV1PoliciesByIdActionsResponse = PostV1PoliciesByIdActionsResponses[keyof PostV1PoliciesByIdActionsResponses];
+
+export type DeleteV1PoliciesByIdActionsByActionIdData = {
+    body?: never;
+    path: {
+        /**
+         * Policy ID
+         */
+        id: string;
+        /**
+         * Action ID
+         */
+        actionId: string;
+    };
+    query?: never;
+    url: '/v1/policies/{id}/actions/{actionId}';
+};
+
+export type DeleteV1PoliciesByIdActionsByActionIdResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type DeleteV1PoliciesByIdActionsByActionIdResponse = DeleteV1PoliciesByIdActionsByActionIdResponses[keyof DeleteV1PoliciesByIdActionsByActionIdResponses];
+
+export type GetV1PoliciesByIdActionsByActionIdData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/policies/{id}/actions/{actionId}';
+};
+
+export type GetV1PoliciesByIdActionsByActionIdResponses = {
+    /**
+     * OK
+     */
+    200: DbgenAction;
+};
+
+export type GetV1PoliciesByIdActionsByActionIdResponse = GetV1PoliciesByIdActionsByActionIdResponses[keyof GetV1PoliciesByIdActionsByActionIdResponses];
+
+export type PutV1PoliciesByIdActionsByActionIdData = {
+    /**
+     * Update action
+     */
+    body: HandlersActionUpdateRequest;
+    path: {
+        /**
+         * Policy ID
+         */
+        id: string;
+        /**
+         * Action ID
+         */
+        actionId: string;
+    };
+    query?: never;
+    url: '/v1/policies/{id}/actions/{actionId}';
+};
+
+export type PutV1PoliciesByIdActionsByActionIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PutV1PoliciesByIdActionsByActionIdError = PutV1PoliciesByIdActionsByActionIdErrors[keyof PutV1PoliciesByIdActionsByActionIdErrors];
+
+export type PutV1PoliciesByIdActionsByActionIdResponses = {
+    /**
+     * OK
+     */
+    200: DbgenAction;
+};
+
+export type PutV1PoliciesByIdActionsByActionIdResponse = PutV1PoliciesByIdActionsByActionIdResponses[keyof PutV1PoliciesByIdActionsByActionIdResponses];
+
+export type DeleteV1PoliciesByIdRuleData = {
+    body?: never;
+    path: {
+        /**
+         * Policy ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/policies/{id}/rule';
+};
+
+export type DeleteV1PoliciesByIdRuleResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type DeleteV1PoliciesByIdRuleResponse = DeleteV1PoliciesByIdRuleResponses[keyof DeleteV1PoliciesByIdRuleResponses];
+
+export type GetV1PoliciesByIdRuleData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/policies/{id}/rule';
+};
+
+export type GetV1PoliciesByIdRuleResponses = {
+    /**
+     * OK
+     */
+    200: DbgenRule;
+};
+
+export type GetV1PoliciesByIdRuleResponse = GetV1PoliciesByIdRuleResponses[keyof GetV1PoliciesByIdRuleResponses];
+
+export type PostV1PoliciesByIdRuleData = {
+    /**
+     * Create rule
+     */
+    body: HandlersRuleCreateRequest;
+    path: {
+        /**
+         * Policy ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/policies/{id}/rule';
+};
+
+export type PostV1PoliciesByIdRuleErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1PoliciesByIdRuleError = PostV1PoliciesByIdRuleErrors[keyof PostV1PoliciesByIdRuleErrors];
+
+export type PostV1PoliciesByIdRuleResponses = {
+    /**
+     * Created
+     */
+    201: DbgenRule;
+};
+
+export type PostV1PoliciesByIdRuleResponse = PostV1PoliciesByIdRuleResponses[keyof PostV1PoliciesByIdRuleResponses];
+
+export type PutV1PoliciesByIdRuleData = {
+    /**
+     * Update rule
+     */
+    body: HandlersRuleUpdateRequest;
+    path: {
+        /**
+         * Policy ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/policies/{id}/rule';
+};
+
+export type PutV1PoliciesByIdRuleErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PutV1PoliciesByIdRuleError = PutV1PoliciesByIdRuleErrors[keyof PutV1PoliciesByIdRuleErrors];
+
+export type PutV1PoliciesByIdRuleResponses = {
+    /**
+     * OK
+     */
+    200: DbgenRule;
+};
+
+export type PutV1PoliciesByIdRuleResponse = PutV1PoliciesByIdRuleResponses[keyof PutV1PoliciesByIdRuleResponses];
 
 export type GetV1SeriesByIdData = {
     body?: never;

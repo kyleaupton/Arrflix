@@ -44,6 +44,10 @@ const router = createRouter({
           path: 'name-templates',
           component: () => import('@/views/settings/NameTemplateSettings.vue'),
         },
+        {
+          path: 'downloaders',
+          component: () => import('@/views/settings/DownloaderSettings.vue'),
+        },
       ],
     },
     {

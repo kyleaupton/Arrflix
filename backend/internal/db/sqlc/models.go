@@ -187,6 +187,21 @@ type AuthAudit struct {
 	CreatedAt time.Time   `json:"created_at"`
 }
 
+type Downloader struct {
+	ID         pgtype.UUID `json:"id"`
+	Name       string      `json:"name"`
+	Type       string      `json:"type"`
+	Protocol   string      `json:"protocol"`
+	Url        string      `json:"url"`
+	Username   *string     `json:"username"`
+	Password   *string     `json:"password"`
+	ConfigJson []byte      `json:"config_json"`
+	Enabled    bool        `json:"enabled"`
+	Default    bool        `json:"default"`
+	CreatedAt  time.Time   `json:"created_at"`
+	UpdatedAt  time.Time   `json:"updated_at"`
+}
+
 type Library struct {
 	ID        pgtype.UUID `json:"id"`
 	Name      string      `json:"name"`

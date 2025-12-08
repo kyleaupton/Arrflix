@@ -1,5 +1,72 @@
 basePath: /api
 definitions:
+  dbgen.Action:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      order:
+        type: integer
+      policy_id:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+      value:
+        type: string
+    required:
+    - created_at
+    - id
+    - order
+    - policy_id
+    - type
+    - updated_at
+    - value
+    type: object
+  dbgen.Downloader:
+    properties:
+      config_json:
+        items:
+          type: integer
+        type: array
+      created_at:
+        type: string
+      default:
+        type: boolean
+      enabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      protocol:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+      username:
+        type: string
+    required:
+    - config_json
+    - created_at
+    - default
+    - enabled
+    - id
+    - name
+    - password
+    - protocol
+    - type
+    - updated_at
+    - url
+    - username
+    type: object
   dbgen.MediaItem:
     properties:
       created_at:
@@ -27,6 +94,156 @@ definitions:
     - type
     - updated_at
     - year
+    type: object
+  dbgen.Policy:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      priority:
+        type: integer
+      updated_at:
+        type: string
+    required:
+    - created_at
+    - description
+    - enabled
+    - id
+    - name
+    - priority
+    - updated_at
+    type: object
+  dbgen.Rule:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      left_operand:
+        type: string
+      operator:
+        type: string
+      policy_id:
+        type: string
+      right_operand:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - created_at
+    - id
+    - left_operand
+    - operator
+    - policy_id
+    - right_operand
+    - updated_at
+    type: object
+  handlers.ActionCreateRequest:
+    properties:
+      order:
+        type: integer
+      type:
+        type: string
+      value:
+        type: string
+    required:
+    - order
+    - type
+    - value
+    type: object
+  handlers.ActionUpdateRequest:
+    properties:
+      order:
+        type: integer
+      type:
+        type: string
+      value:
+        type: string
+    required:
+    - order
+    - type
+    - value
+    type: object
+  handlers.DownloaderCreateRequest:
+    properties:
+      config_json:
+        additionalProperties: true
+        type: object
+      default:
+        type: boolean
+      enabled:
+        type: boolean
+      name:
+        type: string
+      password:
+        type: string
+      protocol:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+      username:
+        type: string
+    required:
+    - config_json
+    - default
+    - enabled
+    - name
+    - password
+    - protocol
+    - type
+    - url
+    - username
+    type: object
+  handlers.DownloaderUpdateRequest:
+    properties:
+      config_json:
+        additionalProperties: true
+        type: object
+      default:
+        type: boolean
+      enabled:
+        type: boolean
+      name:
+        type: string
+      password:
+        type: string
+      protocol:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+      username:
+        type: string
+    required:
+    - config_json
+    - default
+    - enabled
+    - name
+    - password
+    - protocol
+    - type
+    - url
+    - username
+    type: object
+  handlers.EvaluateRequest:
+    properties:
+      metadata:
+        $ref: '#/definitions/model.TorrentMetadata'
+      torrentUrl:
+        type: string
+    required:
+    - metadata
+    - torrentUrl
     type: object
   handlers.LibraryCreateRequest:
     properties:
@@ -123,6 +340,64 @@ definitions:
     required:
     - key
     - value
+    type: object
+  handlers.PolicyCreateRequest:
+    properties:
+      description:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        type: string
+      priority:
+        type: integer
+    required:
+    - description
+    - enabled
+    - name
+    - priority
+    type: object
+  handlers.PolicyUpdateRequest:
+    properties:
+      description:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        type: string
+      priority:
+        type: integer
+    required:
+    - description
+    - enabled
+    - name
+    - priority
+    type: object
+  handlers.RuleCreateRequest:
+    properties:
+      left_operand:
+        type: string
+      operator:
+        type: string
+      right_operand:
+        type: string
+    required:
+    - left_operand
+    - operator
+    - right_operand
+    type: object
+  handlers.RuleUpdateRequest:
+    properties:
+      left_operand:
+        type: string
+      operator:
+        type: string
+      right_operand:
+        type: string
+    required:
+    - left_operand
+    - operator
+    - right_operand
     type: object
   handlers.SettingsListResponse:
     additionalProperties: {}
@@ -719,6 +994,21 @@ definitions:
     - profilePath
     - tmdbId
     type: object
+  model.Plan:
+    properties:
+      downloaderID:
+        description: these are determined by the policy engine
+        type: string
+      libraryID:
+        description: where to move/hardlink/copy the file to
+        type: string
+      nameTemplateID:
+        description: how to name the file
+        type: string
+      torrentURL:
+        description: this is given to us
+        type: string
+    type: object
   model.ProductionCompany:
     properties:
       logoPath:
@@ -891,6 +1181,33 @@ definitions:
     - title
     - tmdbId
     type: object
+  model.TorrentMetadata:
+    properties:
+      categories:
+        description: category tags
+        items:
+          type: string
+        type: array
+      peers:
+        description: number of peers
+        type: integer
+      seeders:
+        description: number of seeders
+        type: integer
+      size:
+        description: file size in bytes
+        format: int64
+        type: integer
+      title:
+        description: torrent title
+        type: string
+      tracker:
+        description: tracker/indexer name
+        type: string
+      trackerID:
+        description: tracker/indexer ID
+        type: string
+    type: object
 info:
   contact: {}
   title: Snaggle API
@@ -929,6 +1246,140 @@ paths:
       summary: Login
       tags:
       - auth
+  /v1/downloaders:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.Downloader'
+            type: array
+      summary: List downloaders
+      tags:
+      - downloaders
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create downloader
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.DownloaderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dbgen.Downloader'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create downloader
+      tags:
+      - downloaders
+  /v1/downloaders/{id}:
+    delete:
+      parameters:
+      - description: Downloader ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Delete downloader
+      tags:
+      - downloaders
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.Downloader'
+      summary: Get downloader
+      tags:
+      - downloaders
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Downloader ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update downloader
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.DownloaderUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.Downloader'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update downloader
+      tags:
+      - downloaders
+  /v1/downloaders/{id}/test:
+    post:
+      parameters:
+      - description: Downloader ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Test downloader connection
+      tags:
+      - downloaders
+  /v1/downloaders/default/{protocol}:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.Downloader'
+      summary: Get default downloader by protocol
+      tags:
+      - downloaders
   /v1/home:
     get:
       produces:
@@ -1358,6 +1809,333 @@ paths:
       summary: Get default name template by type
       tags:
       - name-templates
+  /v1/policies:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.Policy'
+            type: array
+      summary: List policies
+      tags:
+      - policies
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create policy
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PolicyCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dbgen.Policy'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create policy
+      tags:
+      - policies
+  /v1/policies/{id}:
+    delete:
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Delete policy
+      tags:
+      - policies
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.Policy'
+      summary: Get policy
+      tags:
+      - policies
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update policy
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PolicyUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.Policy'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update policy
+      tags:
+      - policies
+  /v1/policies/{id}/actions:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.Action'
+            type: array
+      summary: List actions for policy
+      tags:
+      - policies
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Create action
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ActionCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dbgen.Action'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create action for policy
+      tags:
+      - policies
+  /v1/policies/{id}/actions/{actionId}:
+    delete:
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Action ID
+        in: path
+        name: actionId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Delete action
+      tags:
+      - policies
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.Action'
+      summary: Get action
+      tags:
+      - policies
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Action ID
+        in: path
+        name: actionId
+        required: true
+        type: string
+      - description: Update action
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ActionUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.Action'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update action
+      tags:
+      - policies
+  /v1/policies/{id}/rule:
+    delete:
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Delete rule for policy
+      tags:
+      - policies
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.Rule'
+      summary: Get rule for policy
+      tags:
+      - policies
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Create rule
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RuleCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dbgen.Rule'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create rule for policy
+      tags:
+      - policies
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Policy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update rule
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RuleUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.Rule'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update rule for policy
+      tags:
+      - policies
+  /v1/policies/evaluate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Evaluate request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.EvaluateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Plan'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Evaluate policies against torrent metadata
+      tags:
+      - policies
   /v1/series/{id}:
     get:
       parameters:

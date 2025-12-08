@@ -24,6 +24,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 
 	// Handlers
 	auth := handlers.NewAuth(cfg, log, pool, services)
+	downloaders := handlers.NewDownloaders(services)
 	health := handlers.NewHealth()
 	indexers := handlers.NewIndexers(services)
 	libraries := handlers.NewLibraries(services)
@@ -43,6 +44,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 
 	// Protected routes
 	auth.RegisterProtected(protected)
+	downloaders.RegisterProtected(protected)
 	indexers.RegisterProtected(protected)
 	libraries.RegisterProtected(protected)
 	media.RegisterProtected(protected)

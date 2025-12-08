@@ -12,10 +12,11 @@ const currentTab = computed(() => {
   if (path.endsWith('/libraries')) return 'libraries'
   if (path.endsWith('/indexers')) return 'indexers'
   if (path.endsWith('/name-templates')) return 'name-templates'
+  if (path.endsWith('/downloaders')) return 'downloaders'
   return 'general'
 })
 
-const navigateToTab = (tab: 'general' | 'libraries' | 'indexers' | 'name-templates') => {
+const navigateToTab = (tab: 'general' | 'libraries' | 'indexers' | 'name-templates' | 'downloaders') => {
   router.push(`/settings/${tab}`)
 }
 
@@ -44,6 +45,12 @@ const settingsItems = [
     icon: PrimeIcons.FILE_EDIT,
     to: '/settings/name-templates',
   },
+  {
+    key: 'downloaders',
+    label: 'Downloaders',
+    icon: PrimeIcons.DOWNLOAD,
+    to: '/settings/downloaders',
+  },
 ]
 </script>
 
@@ -58,7 +65,7 @@ const settingsItems = [
         :severity="currentTab === item.key ? 'primary' : 'secondary'"
         :text="currentTab !== item.key"
         class="settings-nav-item"
-        @click="navigateToTab(item.key as 'general' | 'libraries' | 'indexers' | 'name-templates')"
+        @click="navigateToTab(item.key as 'general' | 'libraries' | 'indexers' | 'name-templates' | 'downloaders')"
       />
     </nav>
   </div>

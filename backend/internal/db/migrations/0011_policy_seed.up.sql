@@ -17,14 +17,16 @@ values (
     'movie'
 );
 
--- set downloader for default movie policy
+-- set downloader for default movie policy (will be set to default torrent downloader if exists)
 insert into action (policy_id, type, value, "order")
-values (
+select 
     (select id from policy where name = 'Default Movie Policy'), 
     'set_downloader',
-    'qbittorrent',
+    d.id::text,
     1
-);
+from downloader d
+where d.protocol = 'torrent' and d."default" = true
+limit 1;
 
 -- set library for default movie policy
 insert into action (policy_id, type, value, "order")

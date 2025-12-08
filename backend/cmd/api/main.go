@@ -55,7 +55,7 @@ func main() {
 		Categories: []string{"Test Category"},
 	})
 	if err != nil {
-		logg.Fatal().Err(err).Msg("evaluate plan")
+		logg.Err(err).Msg("evaluate plan")
 	}
 
 	logg.Info().Msgf("plan: %+v", plan)
