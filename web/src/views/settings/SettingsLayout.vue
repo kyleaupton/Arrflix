@@ -13,10 +13,11 @@ const currentTab = computed(() => {
   if (path.endsWith('/indexers')) return 'indexers'
   if (path.endsWith('/name-templates')) return 'name-templates'
   if (path.endsWith('/downloaders')) return 'downloaders'
+  if (path.endsWith('/policies')) return 'policies'
   return 'general'
 })
 
-const navigateToTab = (tab: 'general' | 'libraries' | 'indexers' | 'name-templates' | 'downloaders') => {
+const navigateToTab = (tab: 'general' | 'libraries' | 'indexers' | 'name-templates' | 'downloaders' | 'policies') => {
   router.push(`/settings/${tab}`)
 }
 </script>
@@ -62,6 +63,12 @@ const navigateToTab = (tab: 'general' | 'libraries' | 'indexers' | 'name-templat
             :severity="currentTab === 'downloaders' ? 'primary' : 'secondary'"
             :text="currentTab !== 'downloaders'"
             @click="navigateToTab('downloaders')"
+          />
+          <Button
+            :label="'Policies'"
+            :severity="currentTab === 'policies' ? 'primary' : 'secondary'"
+            :text="currentTab !== 'policies'"
+            @click="navigateToTab('policies')"
           />
         </div>
       </div>

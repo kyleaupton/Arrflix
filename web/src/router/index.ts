@@ -48,6 +48,10 @@ const router = createRouter({
           path: 'downloaders',
           component: () => import('@/views/settings/DownloaderSettings.vue'),
         },
+        {
+          path: 'policies',
+          component: () => import('@/views/settings/PolicySettings.vue'),
+        },
       ],
     },
     {
