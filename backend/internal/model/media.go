@@ -95,3 +95,10 @@ type ProductionCountry struct {
 	Iso3166_1 string `json:"iso3166_1"`
 	Name      string `json:"name"`
 }
+
+type MediaType string
+
+const (
+	MediaTypeMovie  MediaType = "movie"
+	MediaTypeSeries MediaType = "series"
+)

@@ -56,6 +56,27 @@ func (q *Queries) DeleteLibrary(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const getDefaultLibrary = `-- name: GetDefaultLibrary :one
+select id, name, type, root_path, enabled, "default", created_at, updated_at from library
+where type = $1 and "default" = true
+`
+
+func (q *Queries) GetDefaultLibrary(ctx context.Context, type_ string) (Library, error) {
+	row := q.db.QueryRow(ctx, getDefaultLibrary, type_)
+	var i Library
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Type,
+		&i.RootPath,
+		&i.Enabled,
+		&i.Default,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getLibrary = `-- name: GetLibrary :one
 select id, name, type, root_path, enabled, "default", created_at, updated_at from library
 where id = $1

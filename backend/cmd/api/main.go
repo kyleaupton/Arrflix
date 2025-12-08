@@ -45,14 +45,18 @@ func main() {
 	// testing
 	engine := policy.NewEngine(repo)
 
-	plan, err := engine.Evaluate(context.Background(), "https://example.com/torrent.torrent", model.TorrentMetadata{
-		Size:       1000,
-		Seeders:    10,
-		Peers:      10,
-		Title:      "Test Torrent",
-		Tracker:    "Test Tracker",
-		TrackerID:  "1234567890",
-		Categories: []string{"Test Category"},
+	plan, err := engine.Evaluate(context.Background(), model.EvaluateParams{
+		TorrentURL: "https://example.com/torrent.torrent",
+		Metadata: model.TorrentMetadata{
+			Size:       1000,
+			Seeders:    10,
+			Peers:      10,
+			Title:      "Test Torrent",
+			Tracker:    "Test Tracker",
+			TrackerID:  "1234567890",
+			Categories: []string{"Test Category"},
+		},
+		MediaType: model.MediaTypeMovie,
 	})
 	if err != nil {
 		logg.Err(err).Msg("evaluate plan")

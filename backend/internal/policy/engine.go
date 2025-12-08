@@ -24,9 +24,11 @@ func NewEngine(r *repo.Repository) *Engine {
 }
 
 // Evaluate evaluates all enabled policies in priority order and returns a Plan
-func (e *Engine) Evaluate(ctx context.Context, torrentURL string, metadata model.TorrentMetadata) (model.Plan, error) {
+func (e *Engine) Evaluate(ctx context.Context, params model.EvaluateParams) (model.Plan, error) {
 	plan := model.Plan{
-		TorrentURL: torrentURL,
+		DownloaderID:   "",
+		LibraryID:      "",
+		NameTemplateID: "",
 	}
 
 	policies, err := e.repo.ListPolicies(ctx)
@@ -54,7 +56,7 @@ func (e *Engine) Evaluate(ctx context.Context, torrentURL string, metadata model
 		}
 
 		// Evaluate rule
-		matches, err := e.evaluateRule(ctx, rule, metadata)
+		matches, err := e.evaluateRule(ctx, rule, params.Metadata)
 		if err != nil {
 			return plan, fmt.Errorf("evaluate rule for policy %s: %w", policy.ID.String(), err)
 		}
@@ -80,6 +82,34 @@ func (e *Engine) Evaluate(ctx context.Context, torrentURL string, metadata model
 				return plan, nil
 			}
 		}
+	}
+
+	// Default logic
+	// If we get to this point and there are decisions that are not made, we should
+	// attempt to set the missing decisions to the default values. If the user does
+	// not have default items set then we should return an error.
+	if plan.DownloaderID == "" {
+		downloader, err := e.repo.GetDefaultDownloader(ctx, "torrent")
+		if err != nil {
+			return plan, fmt.Errorf("get default downloader: %w", err)
+		}
+		plan.DownloaderID = downloader.ID.String()
+	}
+
+	if plan.LibraryID == "" {
+		library, err := e.repo.GetDefaultLibrary(ctx, string(params.MediaType))
+		if err != nil {
+			return plan, fmt.Errorf("get default library: %w", err)
+		}
+		plan.LibraryID = library.ID.String()
+	}
+
+	if plan.NameTemplateID == "" {
+		nameTemplate, err := e.repo.GetDefaultNameTemplate(ctx, string(params.MediaType))
+		if err != nil {
+			return plan, fmt.Errorf("get default name template: %w", err)
+		}
+		plan.NameTemplateID = nameTemplate.ID.String()
 	}
 
 	return plan, nil

@@ -26,6 +26,10 @@ func (s *LibrariesService) Get(ctx context.Context, id pgtype.UUID) (dbgen.Libra
 	return s.repo.GetLibrary(ctx, id)
 }
 
+func (s *LibrariesService) GetDefault(ctx context.Context, typ string) (dbgen.Library, error) {
+	return s.repo.GetDefaultLibrary(ctx, typ)
+}
+
 func (s *LibrariesService) Create(ctx context.Context, name, typ, rootPath string, enabled bool, isDefault bool) (dbgen.Library, error) {
 	if name == "" {
 		return dbgen.Library{}, errors.New("name required")

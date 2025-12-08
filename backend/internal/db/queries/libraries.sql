@@ -25,4 +25,8 @@ returning *;
 -- name: DeleteLibrary :exec
 delete from library where id = $1;
 
+-- name: GetDefaultLibrary :one
+select * from library
+where type = $1 and "default" = true;
+
 
