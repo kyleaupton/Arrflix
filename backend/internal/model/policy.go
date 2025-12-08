@@ -4,17 +4,12 @@ import "github.com/google/uuid"
 
 type Plan struct {
 	// this is given to us
-	Torrent Torrent // what to download
+	TorrentURL string // what to download
 
 	// these are determined by the policy engine
 	DownloaderID   string // how to download
 	LibraryID      string // where to move/hardlink/copy the file to
 	NameTemplateID string // how to name the file
-}
-
-type Torrent struct {
-	ID        string
-	IndexerID string
 }
 
 // TorrentMetadata represents metadata about a torrent for policy evaluation

@@ -80,8 +80,8 @@ type ActionUpdateRequest struct {
 
 // EvaluateRequest payload for testing policy evaluation
 type EvaluateRequest struct {
-	Torrent  model.Torrent        `json:"torrent"`
-	Metadata model.TorrentMetadata `json:"metadata"`
+	TorrentURL string                `json:"torrentUrl"`
+	Metadata   model.TorrentMetadata `json:"metadata"`
 }
 
 // List policies
@@ -412,10 +412,9 @@ func (h *Policies) Evaluate(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}
 	ctx := c.Request().Context()
-	plan, err := h.svc.Policies.Evaluate(ctx, req.Torrent, req.Metadata)
+	plan, err := h.svc.Policies.Evaluate(ctx, req.TorrentURL, req.Metadata)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, plan)
 }
-

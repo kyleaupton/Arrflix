@@ -2,6 +2,7 @@ package policy
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -23,9 +24,9 @@ func NewEngine(r *repo.Repository) *Engine {
 }
 
 // Evaluate evaluates all enabled policies in priority order and returns a Plan
-func (e *Engine) Evaluate(ctx context.Context, torrent model.Torrent, metadata model.TorrentMetadata) (model.Plan, error) {
+func (e *Engine) Evaluate(ctx context.Context, torrentURL string, metadata model.TorrentMetadata) (model.Plan, error) {
 	plan := model.Plan{
-		Torrent: torrent,
+		TorrentURL: torrentURL,
 	}
 
 	policies, err := e.repo.ListPolicies(ctx)
@@ -40,6 +41,9 @@ func (e *Engine) Evaluate(ctx context.Context, torrent model.Torrent, metadata m
 			enabledPolicies = append(enabledPolicies, p)
 		}
 	}
+
+	json, _ := json.MarshalIndent(enabledPolicies, "", "  ")
+	fmt.Println(string(json))
 
 	// Evaluate policies in priority order (already sorted DESC by query)
 	for _, policy := range enabledPolicies {
@@ -332,7 +336,7 @@ func (e *Engine) contains(left, right interface{}) (bool, error) {
 
 func (e *Engine) in(left, right interface{}) (bool, error) {
 	leftStr := fmt.Sprintf("%v", left)
-	
+
 	// Right should be a comma-separated list or array
 	rightStr := fmt.Sprintf("%v", right)
 	values := strings.Split(rightStr, ",")
@@ -341,7 +345,7 @@ func (e *Engine) in(left, right interface{}) (bool, error) {
 			return true, nil
 		}
 	}
-	
+
 	// Also check if right is a slice
 	if categories, ok := right.([]string); ok {
 		for _, cat := range categories {
@@ -350,14 +354,14 @@ func (e *Engine) in(left, right interface{}) (bool, error) {
 			}
 		}
 	}
-	
+
 	return false, nil
 }
 
 // applyAction applies an action to the plan
 func (e *Engine) applyAction(plan *model.Plan, action dbgen.Action) error {
 	actionType := model.ActionType(action.Type)
-	
+
 	switch actionType {
 	case model.ActionSetDownloader:
 		plan.DownloaderID = action.Value
@@ -370,7 +374,6 @@ func (e *Engine) applyAction(plan *model.Plan, action dbgen.Action) error {
 	default:
 		return fmt.Errorf("unknown action type: %s", actionType)
 	}
-	
+
 	return nil
 }
-
