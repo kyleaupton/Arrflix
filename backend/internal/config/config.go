@@ -37,7 +37,7 @@ func Load(log *logger.Logger) Config {
 		JWTSecret:      envOr("JWT_SECRET", "dev-insecure-change-me"),
 		TmdbAPIKey:     envOr("TMDB_API_KEY", ""),
 		ProwlarrPort:   envOr("PROWLARR_PORT", "9696"),
-		ProwlarrAPIKey: envOr("PROWLARR_API_KEY", ""),
+		ProwlarrAPIKey: envOr("PROWLARR_API_KEY", "prowlarr-api-key"),
 	}
 
 	log.Debug().Interface("config", config).Msg("config")
