@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import Button from 'primevue/button'
 import { getV1IndexersConfiguredOptions } from '@/client/@tanstack/vue-query.gen'
@@ -11,11 +10,10 @@ import {
 } from '@/components/tables/configs/indexerTableConfig'
 import DataTable from '@/components/tables/DataTable.vue'
 import AddIndexerModal from '@/components/modals/AddIndexerModal.vue'
+import { useModal } from '@/composables/useModal'
 
 const { data: indexers, isLoading, error, refetch } = useQuery(getV1IndexersConfiguredOptions())
-
-// Modal state
-const showAddModal = ref(false)
+const modal = useModal()
 
 const handleEdit = (indexer: ModelIndexerDefinition) => {
   console.log('Edit indexer:', indexer)
@@ -33,12 +31,20 @@ const handleDelete = (indexer: ModelIndexerDefinition) => {
 }
 
 const handleAddIndexer = () => {
-  showAddModal.value = true
-}
-
-const handleIndexerAdded = () => {
-  // Refetch the indexers list to show the new one
-  refetch()
+  modal.open(AddIndexerModal, {
+    props: {
+      header: 'Add New Indexer',
+      modal: true,
+      closable: true,
+      dismissableMask: true,
+      style: { width: '90vw', maxWidth: '1024px' },
+    },
+    onClose: (result) => {
+      if (result?.data?.indexerAdded) {
+        refetch()
+      }
+    },
+  })
 }
 
 const indexerActions = createIndexerActions(handleEdit, handleToggle, handleDelete)
@@ -74,13 +80,6 @@ const indexerActions = createIndexerActions(handleEdit, handleToggle, handleDele
         />
       </div>
     </div>
-
-    <!-- Add Indexer Modal -->
-    <AddIndexerModal
-      v-if="showAddModal"
-      @indexer-added="handleIndexerAdded"
-      @close="showAddModal = false"
-    />
   </div>
 </template>
 

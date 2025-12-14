@@ -1,260 +1,233 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import Card from 'primevue/card'
+import { ref } from 'vue'
+import { useQuery, useMutation } from '@tanstack/vue-query'
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import ToggleSwitch from 'primevue/toggleswitch'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
-import Skeleton from 'primevue/skeleton'
 import Select from 'primevue/select'
+import Message from 'primevue/message'
+import { PrimeIcons } from '@/icons'
 import {
-  getV1Libraries,
-  postV1Libraries,
-  putV1LibrariesById,
-  deleteV1LibrariesById,
-  postV1LibrariesByIdScan,
-} from '@/client/sdk.gen'
+  getV1LibrariesOptions,
+  postV1LibrariesMutation,
+  putV1LibrariesByIdMutation,
+  deleteV1LibrariesByIdMutation,
+  postV1LibrariesByIdScanMutation,
+} from '@/client/@tanstack/vue-query.gen'
+import { type HandlersLibrarySwagger } from '@/client/types.gen'
+import DataTable from '@/components/tables/DataTable.vue'
+import {
+  libraryColumns,
+  createLibraryActions,
+} from '@/components/tables/configs/libraryTableConfig'
+import { useModal } from '@/composables/useModal'
 
-type Library = {
-  id?: string
-  name?: string
-  type?: 'movie' | 'series' | string
-  root_path?: string
-  enabled?: boolean
-  default?: boolean
-}
+// Data queries
+const { data: libraries, isLoading, refetch } = useQuery(getV1LibrariesOptions())
+const modal = useModal()
 
-const libraries = ref<Library[]>([])
-const libsLoading = ref(false)
-const libsError = ref<string | null>(null)
+// Mutations
+const createLibraryMutation = useMutation(postV1LibrariesMutation())
+const updateLibraryMutation = useMutation(putV1LibrariesByIdMutation())
+const deleteLibraryMutation = useMutation(deleteV1LibrariesByIdMutation())
+const scanLibraryMutation = useMutation(postV1LibrariesByIdScanMutation())
 
-async function loadLibraries() {
-  libsLoading.value = true
-  libsError.value = null
-  try {
-    const res = await getV1Libraries<true>({ throwOnError: true })
-    libraries.value = (res.data as Library[]) ?? []
-  } catch {
-    libsError.value = 'Failed to load libraries'
-  } finally {
-    libsLoading.value = false
-  }
-}
+// Modal state
+const showLibraryModal = ref(false)
+const editingLibrary = ref<HandlersLibrarySwagger | null>(null)
+const libraryError = ref<string | null>(null)
+const scanningId = ref<string | null>(null)
 
-onMounted(loadLibraries)
-
-// Create form
-const newLib = ref<Required<Omit<Library, 'id'>>>({
+// Library form
+const libraryForm = ref({
   name: '',
-  type: 'movie',
-  root_path: '',
-  enabled: true,
-  default: false,
-})
-const isCreating = ref(false)
-async function createLibrary() {
-  if (!newLib.value.name || !newLib.value.root_path) return
-  isCreating.value = true
-  try {
-    const res = await postV1Libraries<true>({
-      throwOnError: true,
-      body: {
-        name: newLib.value.name,
-        type: newLib.value.type,
-        root_path: newLib.value.root_path,
-        enabled: newLib.value.enabled,
-        default: newLib.value.default,
-      },
-    })
-    libraries.value = [...libraries.value, res.data as Library]
-    newLib.value = { name: '', type: 'movie', root_path: '', enabled: true, default: false }
-  } finally {
-    isCreating.value = false
-  }
-}
-
-// Edit helpers
-const editingId = ref<string | null>(null)
-const editBuf = ref<Required<Omit<Library, 'id'>>>({
-  name: '',
-  type: 'movie',
+  type: 'movie' as 'movie' | 'series',
   root_path: '',
   enabled: true,
   default: false,
 })
 
-function startEdit(lib: Library) {
-  editingId.value = lib.id ?? null
-  editBuf.value = {
-    name: lib.name ?? '',
-    type: (lib.type as 'movie' | 'series') ?? 'movie',
-    root_path: lib.root_path ?? '',
-    enabled: lib.enabled ?? true,
-    default: lib.default ?? false,
+// Handlers
+const handleAddLibrary = () => {
+  editingLibrary.value = null
+  libraryForm.value = { name: '', type: 'movie', root_path: '', enabled: true, default: false }
+  libraryError.value = null
+  showLibraryModal.value = true
+}
+
+const handleEditLibrary = (library: HandlersLibrarySwagger) => {
+  editingLibrary.value = library
+  libraryForm.value = {
+    name: library.name || '',
+    type: (library.type as 'movie' | 'series') || 'movie',
+    root_path: library.root_path || '',
+    enabled: library.enabled ?? true,
+    default: library.default || false,
+  }
+  libraryError.value = null
+  showLibraryModal.value = true
+}
+
+const handleSaveLibrary = async () => {
+  if (!libraryForm.value.name || !libraryForm.value.root_path) {
+    libraryError.value = 'Name and root path are required'
+    return
+  }
+
+  try {
+    if (editingLibrary.value?.id) {
+      await updateLibraryMutation.mutateAsync({
+        path: { id: editingLibrary.value.id },
+        body: {
+          name: libraryForm.value.name,
+          type: libraryForm.value.type,
+          root_path: libraryForm.value.root_path,
+          enabled: libraryForm.value.enabled,
+          default: libraryForm.value.default,
+        },
+      })
+    } else {
+      await createLibraryMutation.mutateAsync({
+        body: {
+          name: libraryForm.value.name,
+          type: libraryForm.value.type,
+          root_path: libraryForm.value.root_path,
+          enabled: libraryForm.value.enabled,
+          default: libraryForm.value.default,
+        },
+      })
+    }
+    showLibraryModal.value = false
+    refetch()
+  } catch (err: any) {
+    libraryError.value = err.message || 'Failed to save library'
   }
 }
 
-async function saveEdit(id: string) {
-  await putV1LibrariesById<true>({
-    throwOnError: true,
-    path: { id },
-    body: {
-      name: editBuf.value.name,
-      type: editBuf.value.type,
-      root_path: editBuf.value.root_path,
-      enabled: editBuf.value.enabled,
-      default: editBuf.value.default,
-    },
+const handleDeleteLibrary = async (library: HandlersLibrarySwagger) => {
+  if (!library.id) return
+  const confirmed = await modal.confirm({
+    title: 'Delete Library',
+    message: `Are you sure you want to delete "${library.name}"?`,
+    severity: 'danger',
   })
-  libraries.value = libraries.value.map((l) => (l.id === id ? { ...l, ...editBuf.value } : l))
-  editingId.value = null
+  if (!confirmed) return
+  try {
+    await deleteLibraryMutation.mutateAsync({ path: { id: library.id } })
+    refetch()
+  } catch (err: any) {
+    libraryError.value = err.message || 'Failed to delete library'
+  }
 }
 
-async function removeLib(id: string) {
-  await deleteV1LibrariesById<true>({ throwOnError: true, path: { id } })
-  libraries.value = libraries.value.filter((l) => l.id !== id)
+const handleScanLibrary = async (library: HandlersLibrarySwagger) => {
+  if (!library.id) return
+  scanningId.value = library.id
+  try {
+    await scanLibraryMutation.mutateAsync({ path: { id: library.id } })
+    libraryError.value = null
+  } catch (err: any) {
+    libraryError.value = err.message || 'Failed to scan library'
+  } finally {
+    scanningId.value = null
+  }
 }
 
-async function scanLib(lib: Library) {
-  if (!lib.id) return
-  await postV1LibrariesByIdScan({ throwOnError: true, path: { id: lib.id } })
-}
+const libraryActions = createLibraryActions(
+  handleScanLibrary,
+  handleEditLibrary,
+  handleDeleteLibrary,
+)
 </script>
 
 <template>
-  <div>
-    <Message v-if="libsError" severity="error">{{ libsError }}</Message>
-
-    <div class="grid gap-4 md:grid-cols-2">
-      <Card>
-        <template #title>Add Library</template>
-        <template #content>
-          <div class="flex flex-col gap-3">
-            <div class="flex flex-col gap-1">
-              <label class="text-sm text-muted-color">Name</label>
-              <InputText v-model="newLib.name" />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-sm text-muted-color">Type</label>
-              <Select
-                v-model="newLib.type"
-                :options="[
-                  { label: 'Movies', value: 'movie' },
-                  { label: 'Series', value: 'series' },
-                ]"
-                optionLabel="label"
-                optionValue="value"
-              />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-sm text-muted-color">Root Path</label>
-              <InputText v-model="newLib.root_path" placeholder="/mnt/media/Movies" />
-            </div>
-            <div class="flex items-center justify-between">
-              <div class="text-sm text-muted-color">Enabled</div>
-              <ToggleSwitch v-model="newLib.enabled" />
-            </div>
-            <div class="flex items-center justify-between">
-              <div class="text-sm text-muted-color">Default</div>
-              <ToggleSwitch v-model="newLib.default" />
-            </div>
-            <div class="flex justify-end">
-              <Button label="Create" :loading="isCreating" @click="createLibrary" />
-            </div>
+  <div class="libraries-settings">
+    <div class="card">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-semibold mb-2">Libraries</h3>
+            <p class="text-muted-color">Configure media libraries for organizing your content.</p>
           </div>
-        </template>
-      </Card>
+          <Button
+            label="Add Library"
+            :icon="PrimeIcons.PLUS"
+            severity="primary"
+            raised
+            @click="handleAddLibrary"
+          />
+        </div>
 
-      <Card>
-        <template #title>Libraries</template>
-        <template #content>
-          <div v-if="libsLoading" class="space-y-2">
-            <Skeleton height="2.5rem" />
-            <Skeleton height="2.5rem" />
-          </div>
-          <div v-else class="space-y-3">
-            <div
-              v-for="lib in libraries"
-              :key="lib.id"
-              class="border rounded p-3 flex flex-col gap-2"
-            >
-              <div class="flex items-center justify-between">
-                <div class="font-medium">
-                  {{ lib.name }}
-                  <span class="text-sm text-muted-color">({{ lib.type }})</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <Button size="small" label="Scan" @click="scanLib(lib)" />
-                  <Button size="small" label="Edit" @click="startEdit(lib)" />
-                  <Button
-                    size="small"
-                    label="Delete"
-                    severity="danger"
-                    @click="lib.id && removeLib(lib.id)"
-                  />
-                </div>
-              </div>
-              <div class="text-sm text-muted-color">{{ lib.root_path }}</div>
-              <div class="flex gap-4 text-xs">
-                <div>
-                  Enabled:
-                  <span :class="lib.enabled ? 'text-green-500' : 'text-red-500'">{{
-                    lib.enabled ? 'Yes' : 'No'
-                  }}</span>
-                </div>
-                <div>
-                  Default:
-                  <span :class="lib.default ? 'text-green-500' : 'text-muted-color'">{{
-                    lib.default ? 'Yes' : 'No'
-                  }}</span>
-                </div>
-              </div>
+        <Message v-if="libraryError" severity="error" @close="libraryError = null">{{
+          libraryError
+        }}</Message>
 
-              <div v-if="editingId === lib.id" class="mt-2 border-t pt-3 space-y-3">
-                <div class="grid gap-3 md:grid-cols-2">
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm text-muted-color">Name</label>
-                    <InputText v-model="editBuf.name" />
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm text-muted-color">Type</label>
-                    <Select
-                      v-model="editBuf.type"
-                      :options="[
-                        { label: 'Movies', value: 'movie' },
-                        { label: 'Series', value: 'series' },
-                      ]"
-                      optionLabel="label"
-                      optionValue="value"
-                    />
-                  </div>
-                  <div class="md:col-span-2 flex flex-col gap-1">
-                    <label class="text-sm text-muted-color">Root Path</label>
-                    <InputText v-model="editBuf.root_path" />
-                  </div>
-                  <div class="md:col-span-2 flex items-center justify-between">
-                    <div class="text-sm text-muted-color">Enabled</div>
-                    <ToggleSwitch v-model="editBuf.enabled" />
-                  </div>
-                  <div class="md:col-span-2 flex items-center justify-between">
-                    <div class="text-sm text-muted-color">Default</div>
-                    <ToggleSwitch v-model="editBuf.default" />
-                  </div>
-                </div>
-                <div class="flex justify-end gap-2">
-                  <Button
-                    size="small"
-                    label="Cancel"
-                    severity="secondary"
-                    @click="editingId = null"
-                  />
-                  <Button size="small" label="Save" @click="lib.id && saveEdit(lib.id)" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </template>
-      </Card>
+        <DataTable
+          :data="libraries || []"
+          :columns="libraryColumns"
+          :actions="libraryActions"
+          :loading="isLoading"
+          empty-message="No libraries configured"
+          searchable
+          search-placeholder="Search libraries..."
+          paginator
+          :rows="10"
+        />
+      </div>
     </div>
+
+    <!-- Library Modal -->
+    <Dialog
+      v-model:visible="showLibraryModal"
+      :header="editingLibrary ? 'Edit Library' : 'Add Library'"
+      :modal="true"
+      :style="{ width: '600px' }"
+    >
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium">Name</label>
+          <InputText v-model="libraryForm.name" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium">Type</label>
+          <Select
+            v-model="libraryForm.type"
+            :options="[
+              { label: 'Movies', value: 'movie' },
+              { label: 'Series', value: 'series' },
+            ]"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium">Root Path</label>
+          <InputText v-model="libraryForm.root_path" placeholder="/mnt/media/Movies" />
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium">Enabled</label>
+          <ToggleSwitch v-model="libraryForm.enabled" />
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium">Default</label>
+          <ToggleSwitch v-model="libraryForm.default" />
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" severity="secondary" @click="showLibraryModal = false" />
+        <Button
+          label="Save"
+          :loading="createLibraryMutation.isPending.value || updateLibraryMutation.isPending.value"
+          @click="handleSaveLibrary"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
+
+<style scoped>
+.libraries-settings {
+  max-width: 100%;
+}
+</style>

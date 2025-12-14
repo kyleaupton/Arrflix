@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useLayoutStore } from '@/stores/layout'
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/sidebar/AppSidebar.vue'
+import DynamicDialog from 'primevue/dynamicdialog'
 import '@/main.css'
 
 const mobileSidebarVisible = ref(false)
@@ -34,6 +35,8 @@ onMounted(async () => {
       <RouterView />
     </main>
   </div>
+
+  <DynamicDialog />
 </template>
 
 <style scoped>

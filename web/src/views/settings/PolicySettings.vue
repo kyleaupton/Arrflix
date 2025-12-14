@@ -31,8 +31,10 @@ import { type DbgenPolicy, type DbgenRule, type DbgenAction } from '@/client/typ
 import DataTable from '@/components/tables/DataTable.vue'
 import { policyColumns, createPolicyActions } from '@/components/tables/configs/policyTableConfig'
 import policyOptions from '@/config/policyOptions.json'
+import { useModal } from '@/composables/useModal'
 
 const queryClient = useQueryClient()
+const modal = useModal()
 
 // Data queries
 const { data: policies, isLoading, refetch } = useQuery(getV1PoliciesOptions())
@@ -168,7 +170,13 @@ const handleSavePolicy = async () => {
 }
 
 const handleDeletePolicy = async (policy: DbgenPolicy) => {
-  if (!policy.id || !confirm(`Are you sure you want to delete "${policy.name}"?`)) return
+  if (!policy.id) return
+  const confirmed = await modal.confirm({
+    title: 'Delete Policy',
+    message: `Are you sure you want to delete "${policy.name}"?`,
+    severity: 'danger',
+  })
+  if (!confirmed) return
   try {
     await deletePolicyMutation.mutateAsync({ path: { id: policy.id } })
     refetch()
@@ -227,7 +235,13 @@ const handleSaveRule = async () => {
 }
 
 const handleDeleteRule = async (policy: DbgenPolicy) => {
-  if (!policy.id || !confirm('Are you sure you want to delete this rule?')) return
+  if (!policy.id) return
+  const confirmed = await modal.confirm({
+    title: 'Delete Rule',
+    message: 'Are you sure you want to delete this rule?',
+    severity: 'danger',
+  })
+  if (!confirmed) return
   try {
     await deleteRuleMutation.mutateAsync({ path: { id: policy.id } })
     refetch()

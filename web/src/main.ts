@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
+import DialogService from 'primevue/dialogservice'
 import App from '@/App.vue'
 import router from '@/router'
 import SnagglePreset from '@/theme/preset'
@@ -21,6 +22,7 @@ app.use(PrimeVue, {
     },
   },
 })
+app.use(DialogService)
 app.use(VueQueryPlugin, {
   enableDevtoolsV6Plugin: import.meta.env.DEV,
 })

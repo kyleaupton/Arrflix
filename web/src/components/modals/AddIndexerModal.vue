@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Steps from 'primevue/steps'
 import { PrimeIcons } from '@/icons'
@@ -11,10 +10,7 @@ import SelectIndexerTypeStep from './steps/SelectIndexerTypeStep.vue'
 import ConfigurationStep from './steps/ConfigurationStep.vue'
 import ReviewStep from './steps/ReviewStep.vue'
 
-const emit = defineEmits<{
-  close: []
-  'indexer-added': []
-}>()
+const dialogRef = inject('dialogRef') as { value: { close: (data?: unknown) => void } }
 
 // Form state
 const currentStep = ref(0)
@@ -24,8 +20,7 @@ const saveData = ref<ModelIndexerDefinition | undefined>(undefined)
 const createIndexerMutation = useMutation({
   ...postV1IndexerMutation(),
   onSuccess: () => {
-    emit('indexer-added')
-    closeModal()
+    dialogRef.value.close({ indexerAdded: true })
   },
   onError: (error) => {
     console.error('Failed to create indexer:', error)
@@ -81,85 +76,69 @@ const createIndexer = () => {
 }
 
 const closeModal = () => {
-  emit('close')
-}
-
-const handleUpdateVisible = (visible: boolean) => {
-  if (!visible) {
-    closeModal()
-  }
+  dialogRef.value.close()
 }
 </script>
 
 <template>
-  <Dialog
-    :visible="true"
-    :modal="true"
-    :closable="true"
-    :dismissable-mask="true"
-    header="Add New Indexer"
-    class="w-full max-w-4xl"
-    @update:visible="handleUpdateVisible"
-  >
-    <div class="add-indexer-modal overflow-hidden h-full">
-      <!-- Progress Steps -->
-      <div class="mb-6">
-        <Steps :model="steps" :active-index="currentStep" />
-      </div>
+  <div class="add-indexer-modal overflow-hidden h-full">
+    <!-- Progress Steps -->
+    <div class="mb-6">
+      <Steps :model="steps" :active-index="currentStep" />
+    </div>
 
-      <!-- Step Content -->
-      <div class="max-h-[calc(100vh*0.6)] overflow-y-auto">
-        <!-- Step 1: Select Indexer Type -->
-        <div v-if="currentStep === 0" class="step-1 h-full overflow-hidden">
-          <SelectIndexerTypeStep
-            ref="selectStepRef"
-            :selected-indexer="selectedIndexerType"
-            @indexer-selected="selectIndexerType"
-          />
-        </div>
-
-        <!-- Step 2: Configuration -->
-        <div v-if="currentStep === 1 && selectedIndexerType" class="step-2 overflow-hidden">
-          <ConfigurationStep v-model="saveData" :selected-indexer="selectedIndexerType" />
-        </div>
-
-        <!-- Step 4: Review -->
-        <div v-if="currentStep === 3" class="step-4">
-          <ReviewStep :selected-indexer="selectedIndexerType" :save-data="saveData" />
-        </div>
-      </div>
-
-      <!-- Footer Actions -->
-      <div class="flex justify-between items-center pt-6">
-        <Button
-          :label="isFirstStep ? 'Cancel' : 'Previous'"
-          :icon="isFirstStep ? PrimeIcons.TIMES : PrimeIcons.ANGLE_LEFT"
-          severity="secondary"
-          variant="outlined"
-          @click="isFirstStep ? closeModal() : prevStep()"
+    <!-- Step Content -->
+    <div class="max-h-[calc(100vh*0.6)] overflow-y-auto">
+      <!-- Step 1: Select Indexer Type -->
+      <div v-if="currentStep === 0" class="step-1 h-full overflow-hidden">
+        <SelectIndexerTypeStep
+          ref="selectStepRef"
+          :selected-indexer="selectedIndexerType"
+          @indexer-selected="selectIndexerType"
         />
+      </div>
 
-        <div class="flex gap-2">
-          <Button
-            v-if="!isLastStep"
-            label="Next"
-            :icon="PrimeIcons.ANGLE_RIGHT"
-            icon-pos="right"
-            :disabled="!canProceed"
-            @click="nextStep"
-          />
-          <Button
-            v-else
-            label="Create Indexer"
-            :icon="PrimeIcons.PLUS"
-            :loading="createIndexerMutation.isPending.value"
-            :disabled="!canProceed"
-            @click="createIndexer"
-          />
-        </div>
+      <!-- Step 2: Configuration -->
+      <div v-if="currentStep === 1 && selectedIndexerType" class="step-2 overflow-hidden">
+        <ConfigurationStep v-model="saveData" :selected-indexer="selectedIndexerType" />
+      </div>
+
+      <!-- Step 4: Review -->
+      <div v-if="currentStep === 3" class="step-4">
+        <ReviewStep :selected-indexer="selectedIndexerType" :save-data="saveData" />
       </div>
     </div>
-  </Dialog>
+
+    <!-- Footer Actions -->
+    <div class="flex justify-between items-center pt-6">
+      <Button
+        :label="isFirstStep ? 'Cancel' : 'Previous'"
+        :icon="isFirstStep ? PrimeIcons.TIMES : PrimeIcons.ANGLE_LEFT"
+        severity="secondary"
+        variant="outlined"
+        @click="isFirstStep ? closeModal() : prevStep()"
+      />
+
+      <div class="flex gap-2">
+        <Button
+          v-if="!isLastStep"
+          label="Next"
+          :icon="PrimeIcons.ANGLE_RIGHT"
+          icon-pos="right"
+          :disabled="!canProceed"
+          @click="nextStep"
+        />
+        <Button
+          v-else
+          label="Create Indexer"
+          :icon="PrimeIcons.PLUS"
+          :loading="createIndexerMutation.isPending.value"
+          :disabled="!canProceed"
+          @click="createIndexer"
+        />
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped></style>
