@@ -37,21 +37,22 @@
 
     <div class="flex items-center gap-2">
       <div class="avatar-wrap">
-        <Avatar class="cursor-pointer" label="S" shape="circle" @click="handleAvatarClick" />
+        <Avatar
+          class="cursor-pointer"
+          :label="avatarLabel"
+          shape="circle"
+          @click="handleAvatarClick"
+        />
 
         <Menu ref="menu" :model="items" class="w-full md:w-60" :popup="true">
           <template #start>
             <div
               class="relative overflow-hidden w-full rounded-border bg-transparent flex items-center p-2 pl-4 transition-colors duration-200"
             >
-              <Avatar
-                image="https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png"
-                class="mr-2"
-                shape="circle"
-              />
+              <Avatar :label="avatarLabel" class="mr-2" shape="circle" />
               <span class="inline-flex flex-col items-start">
-                <span class="font-bold">Amy Elsner</span>
-                <span class="text-sm">Admin</span>
+                <span class="font-bold">{{ user?.name }}</span>
+                <span class="text-sm">{{ user?.email }}</span>
               </span>
             </div>
           </template>
@@ -82,6 +83,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, RouterLink, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import IconField from 'primevue/iconfield'
 import InputText from 'primevue/inputtext'
 import InputIcon from 'primevue/inputicon'
@@ -94,6 +96,10 @@ import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
+
+const { user } = storeToRefs(authStore)
+const avatarLabel = computed(() => user.value?.name?.[0])
 
 const query = ref('')
 const windowWidth = ref(window.innerWidth)

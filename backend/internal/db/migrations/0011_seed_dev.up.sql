@@ -7,7 +7,7 @@ insert into library (name, type, root_path, enabled, "default")
 values ('Main Movie Library', 'movie', '/libraries/movies', true, true);
 
 insert into library (name, type, root_path, enabled, "default")
-values ('Main Series Library', 'series', '/libraries/tv', true, false);
+values ('Main Series Library', 'series', '/libraries/tv', true, true);
 
 -- seed name templates
 insert into name_template (name, type, template, "default")

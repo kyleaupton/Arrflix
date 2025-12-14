@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/vue-query'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
+import Menu, { type MenuMethods } from 'primevue/menu'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
@@ -87,6 +88,9 @@ const emit = defineEmits<{
 const selectedRows = ref<T | T[] | null>(null)
 const globalFilter = ref('')
 
+// Menu refs for each row - using a Map to track menu instances by row ID
+const menuRefs = ref<Map<string | number, MenuMethods | null>>(new Map())
+
 // Async loading state (legacy)
 const legacyAsyncData = ref<T[]>([])
 const asyncLoading = ref(false)
@@ -153,20 +157,51 @@ const renderCell = (column: TableColumn<T>, row: T) => {
   return value
 }
 
-const getActionSeverity = (action: TableAction<T>) => {
-  return action.severity || 'secondary'
-}
-
-const getActionVariant = (action: TableAction<T>) => {
-  return action.variant || 'text'
-}
-
 const isActionDisabled = (action: TableAction<T>, row: T) => {
   return action.disabled ? action.disabled(row) : false
 }
 
 const isActionVisible = (action: TableAction<T>, row: T) => {
   return action.visible ? action.visible(row) : true
+}
+
+// Get row ID for tracking
+const getRowId = (row: T): string | number => {
+  return (row as any).id || JSON.stringify(row)
+}
+
+// Convert TableAction to Menu item format
+const getMenuItems = (row: T) => {
+  if (!props.actions) return []
+
+  return props.actions
+    .filter((action) => isActionVisible(action, row))
+    .map((action) => ({
+      label: action.label,
+      icon: action.icon,
+      command: () => {
+        if (!isActionDisabled(action, row)) {
+          action.command(row)
+        }
+      },
+      disabled: isActionDisabled(action, row),
+      class: action.severity === 'danger' ? 'text-red-500' : '',
+    }))
+}
+
+// Handle menu toggle
+const toggleMenu = (event: MouseEvent, row: T) => {
+  const rowId = getRowId(row)
+  const menu = menuRefs.value.get(rowId)
+  menu?.toggle(event)
+}
+
+// Set menu ref for a row
+const setMenuRef = (row: T, el: MenuMethods | null) => {
+  const rowId = getRowId(row)
+  if (el) {
+    menuRefs.value.set(rowId, el)
+  }
 }
 
 // Async loading functions
@@ -284,11 +319,11 @@ defineExpose({
       :sort-order="sortOrder"
       :global-filter-fields="searchable ? columns.map((col) => col.key as string) : undefined"
       data-key="id"
-      class="p-datatable-sm"
       @selection-change="handleSelectionChange"
       @row-select="emit('rowSelect', $event.data)"
       @row-unselect="emit('rowUnselect', $event.data)"
     >
+      <!-- class="p-datatable-sm" -->
       <!-- Selection Column -->
       <Column v-if="selectable" selection-mode="multiple" header-style="width: 3rem" />
 
@@ -310,24 +345,27 @@ defineExpose({
       <!-- Actions Column -->
       <Column
         v-if="actions && actions.length > 0"
-        header="Actions"
-        header-style="width: 8rem"
+        header=""
+        header-style="width: 4rem"
         body-style="text-align: center"
       >
         <template #body="{ data }">
-          <div class="flex gap-1 justify-center">
-            <Button
-              v-for="action in actions"
-              :key="action.key"
-              :label="action.label"
-              :icon="action.icon"
-              :severity="getActionSeverity(action)"
-              :variant="getActionVariant(action)"
-              :disabled="isActionDisabled(action, data)"
-              size="small"
-              v-show="isActionVisible(action, data)"
-              @click="action.command(data)"
-            />
+          <div class="flex justify-center">
+            <div class="relative">
+              <Button
+                icon="pi pi-ellipsis-v"
+                variant="text"
+                severity="secondary"
+                size="small"
+                rounded
+                @click="toggleMenu($event, data)"
+              />
+              <Menu
+                :ref="(el: any) => setMenuRef(data, el as MenuMethods)"
+                :model="getMenuItems(data)"
+                :popup="true"
+              />
+            </div>
           </div>
         </template>
       </Column>
@@ -368,5 +406,11 @@ defineExpose({
 :deep(.p-datatable-tbody > tr.p-highlight) {
   background: var(--p-primary-color);
   color: var(--p-primary-contrast-color);
+}
+</style>
+
+<style>
+.data-table-container .p-paginator {
+  border-radius: 0;
 }
 </style>

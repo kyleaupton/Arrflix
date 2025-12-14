@@ -17,7 +17,9 @@ const currentTab = computed(() => {
   return 'general'
 })
 
-const navigateToTab = (tab: 'general' | 'libraries' | 'indexers' | 'name-templates' | 'downloaders' | 'policies') => {
+const navigateToTab = (
+  tab: 'general' | 'libraries' | 'indexers' | 'name-templates' | 'downloaders' | 'policies',
+) => {
   router.push(`/settings/${tab}`)
 }
 
@@ -41,21 +43,21 @@ const settingsItems = [
     to: '/settings/indexers',
   },
   {
-    key: 'name-templates',
-    label: 'Name Templates',
-    icon: PrimeIcons.FILE_EDIT,
-    to: '/settings/name-templates',
-  },
-  {
     key: 'downloaders',
     label: 'Downloaders',
     icon: PrimeIcons.DOWNLOAD,
     to: '/settings/downloaders',
   },
   {
+    key: 'name-templates',
+    label: 'Name Templates',
+    icon: PrimeIcons.FILE_EDIT,
+    to: '/settings/name-templates',
+  },
+  {
     key: 'policies',
     label: 'Policies',
-    icon: PrimeIcons.SLIDERS,
+    icon: PrimeIcons.SLIDERS_H,
     to: '/settings/policies',
   },
 ]
@@ -72,7 +74,17 @@ const settingsItems = [
         :severity="currentTab === item.key ? 'primary' : 'secondary'"
         :text="currentTab !== item.key"
         class="settings-nav-item"
-        @click="navigateToTab(item.key as 'general' | 'libraries' | 'indexers' | 'name-templates' | 'downloaders' | 'policies')"
+        @click="
+          navigateToTab(
+            item.key as
+              | 'general'
+              | 'libraries'
+              | 'indexers'
+              | 'name-templates'
+              | 'downloaders'
+              | 'policies',
+          )
+        "
       />
     </nav>
   </div>
@@ -91,15 +103,14 @@ const settingsItems = [
 .settings-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 1.5rem 1rem;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
 }
 
 .settings-nav-item {
   justify-content: flex-start;
   text-align: left;
   width: 100%;
-  padding: 0.75rem 1rem;
   border-radius: 8px;
   transition: all 0.2s ease;
   font-weight: 500;
