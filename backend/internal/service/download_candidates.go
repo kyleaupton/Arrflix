@@ -132,7 +132,7 @@ func (s *DownloadCandidatesService) SearchDownloadCandidates(ctx context.Context
 }
 
 // EnqueueCandidate enqueues a download candidate through the policy engine
-func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieID int64, indexerID int64, guid string) (model.Plan, error) {
+func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieID int64, indexerID int64, guid string) (model.EvaluationTrace, error) {
 	// Lookup torrent from cache
 	cacheKey := s.cacheKey(indexerID, guid)
 	s.cacheMu.RLock()
@@ -140,7 +140,7 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 	s.cacheMu.RUnlock()
 
 	if !exists {
-		return model.Plan{}, ErrCandidateNotFound
+		return model.EvaluationTrace{}, ErrCandidateNotFound
 	}
 
 	// Check if expired
@@ -148,7 +148,7 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 		s.cacheMu.Lock()
 		delete(s.cache, cacheKey)
 		s.cacheMu.Unlock()
-		return model.Plan{}, ErrCandidateExpired
+		return model.EvaluationTrace{}, ErrCandidateExpired
 	}
 
 	result := cached.result
@@ -172,18 +172,24 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 		Categories: categories,
 	}
 
-	// Evaluate through policy engine
-	plan, err := s.policyEngine.Evaluate(ctx, model.EvaluateParams{
+	// Evaluate through policy engine (now returns trace)
+	trace, err := s.policyEngine.Evaluate(ctx, model.EvaluateParams{
 		TorrentURL: result.DownloadURL,
 		Metadata:   metadata,
 		MediaType:  model.MediaTypeMovie,
 	})
 	if err != nil {
 		s.logger.Error().Err(err).Msg("Failed to evaluate policy")
-		return model.Plan{}, fmt.Errorf("failed to evaluate policy: %w", err)
+		return model.EvaluationTrace{}, fmt.Errorf("failed to evaluate policy: %w", err)
 	}
 
-	return plan, nil
+	return trace, nil
+}
+
+// PreviewCandidate previews what will happen when a candidate is enqueued
+// This is now just an alias for EnqueueCandidate since Evaluate always returns trace
+func (s *DownloadCandidatesService) PreviewCandidate(ctx context.Context, movieID int64, indexerID int64, guid string) (model.EvaluationTrace, error) {
+	return s.EnqueueCandidate(ctx, movieID, indexerID, guid)
 }
 
 // cacheKey generates a cache key from indexer ID and GUID

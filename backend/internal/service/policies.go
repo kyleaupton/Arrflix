@@ -145,7 +145,7 @@ func (s *PoliciesService) DeleteAction(ctx context.Context, id pgtype.UUID) erro
 	return s.repo.DeleteAction(ctx, id)
 }
 
-// Evaluate evaluates policies against torrent metadata and returns a Plan
-func (s *PoliciesService) Evaluate(ctx context.Context, params model.EvaluateParams) (model.Plan, error) {
+// Evaluate evaluates policies against torrent metadata and returns an EvaluationTrace
+func (s *PoliciesService) Evaluate(ctx context.Context, params model.EvaluateParams) (model.EvaluationTrace, error) {
 	return s.engine.Evaluate(ctx, params)
 }

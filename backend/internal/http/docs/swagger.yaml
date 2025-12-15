@@ -468,6 +468,19 @@ definitions:
     - type
     - updated_at
     type: object
+  model.ActionInfo:
+    properties:
+      order:
+        type: integer
+      type:
+        type: string
+      value:
+        type: string
+    required:
+    - order
+    - type
+    - value
+    type: object
   model.Capabilities:
     properties:
       bookSearchParams:
@@ -580,6 +593,18 @@ definitions:
     - seeders
     - size
     - title
+    type: object
+  model.EvaluationTrace:
+    properties:
+      finalPlan:
+        $ref: '#/definitions/model.Plan'
+      policies:
+        items:
+          $ref: '#/definitions/model.PolicyEvaluation'
+        type: array
+    required:
+    - finalPlan
+    - policies
     type: object
   model.FieldInput:
     properties:
@@ -1082,6 +1107,32 @@ definitions:
         description: how to name the file
         type: string
     type: object
+  model.PolicyEvaluation:
+    properties:
+      actionsApplied:
+        items:
+          $ref: '#/definitions/model.ActionInfo'
+        type: array
+      matched:
+        type: boolean
+      policyId:
+        type: string
+      policyName:
+        type: string
+      priority:
+        type: integer
+      ruleEvaluated:
+        $ref: '#/definitions/model.RuleInfo'
+      stoppedProcessing:
+        type: boolean
+    required:
+    - actionsApplied
+    - matched
+    - policyId
+    - policyName
+    - priority
+    - stoppedProcessing
+    type: object
   model.ProductionCompany:
     properties:
       logoPath:
@@ -1140,6 +1191,19 @@ definitions:
     - series
     - title
     - type
+    type: object
+  model.RuleInfo:
+    properties:
+      leftOperand:
+        type: string
+      operator:
+        type: string
+      rightOperand:
+        type: string
+    required:
+    - leftOperand
+    - operator
+    - rightOperand
     type: object
   model.Season:
     properties:
@@ -1814,7 +1878,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Plan'
+            $ref: '#/definitions/model.EvaluationTrace'
         "400":
           description: Bad Request
           schema:
@@ -1834,6 +1898,50 @@ paths:
               type: string
             type: object
       summary: Enqueue a download candidate
+      tags:
+      - download-candidates
+  /v1/movie/{id}/preview-candidate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Movie ID (TMDB ID)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Preview request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.EnqueueCandidateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.EvaluationTrace'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Preview policy evaluation for a download candidate
       tags:
       - download-candidates
   /v1/name-templates:
@@ -2275,7 +2383,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Plan'
+            $ref: '#/definitions/model.EvaluationTrace'
         "400":
           description: Bad Request
           schema:

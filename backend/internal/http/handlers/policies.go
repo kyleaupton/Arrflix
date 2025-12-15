@@ -404,7 +404,7 @@ func (h *Policies) DeleteAction(c echo.Context) error {
 // @Accept  json
 // @Produce json
 // @Param   payload body handlers.EvaluateRequest true "Evaluate request"
-// @Success 200 {object} model.Plan
+// @Success 200 {object} model.EvaluationTrace
 // @Failure 400 {object} map[string]string
 // @Router  /v1/policies/evaluate [post]
 func (h *Policies) Evaluate(c echo.Context) error {
@@ -413,7 +413,7 @@ func (h *Policies) Evaluate(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}
 	ctx := c.Request().Context()
-	plan, err := h.svc.Policies.Evaluate(ctx, model.EvaluateParams{
+	trace, err := h.svc.Policies.Evaluate(ctx, model.EvaluateParams{
 		TorrentURL: req.TorrentURL,
 		Metadata:   req.Metadata,
 		MediaType:  req.MediaType,
@@ -421,5 +421,5 @@ func (h *Policies) Evaluate(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, plan)
+	return c.JSON(http.StatusOK, trace)
 }

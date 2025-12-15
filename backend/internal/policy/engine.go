@@ -2,7 +2,6 @@ package policy
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -23,17 +22,20 @@ func NewEngine(r *repo.Repository) *Engine {
 	return &Engine{repo: r}
 }
 
-// Evaluate evaluates all enabled policies in priority order and returns a Plan
-func (e *Engine) Evaluate(ctx context.Context, params model.EvaluateParams) (model.Plan, error) {
-	plan := model.Plan{
-		DownloaderID:   "",
-		LibraryID:      "",
-		NameTemplateID: "",
+// Evaluate evaluates all enabled policies in priority order and returns an EvaluationTrace
+func (e *Engine) Evaluate(ctx context.Context, params model.EvaluateParams) (model.EvaluationTrace, error) {
+	trace := model.EvaluationTrace{
+		Policies: []model.PolicyEvaluation{},
+		FinalPlan: model.Plan{
+			DownloaderID:   "",
+			LibraryID:      "",
+			NameTemplateID: "",
+		},
 	}
 
 	policies, err := e.repo.ListPolicies(ctx)
 	if err != nil {
-		return plan, fmt.Errorf("list policies: %w", err)
+		return trace, fmt.Errorf("list policies: %w", err)
 	}
 
 	// Filter to only enabled policies
@@ -44,75 +46,105 @@ func (e *Engine) Evaluate(ctx context.Context, params model.EvaluateParams) (mod
 		}
 	}
 
-	json, _ := json.MarshalIndent(enabledPolicies, "", "  ")
-	fmt.Println(string(json))
-
 	// Evaluate policies in priority order (already sorted DESC by query)
 	for _, policy := range enabledPolicies {
+		policyEval := model.PolicyEvaluation{
+			PolicyID:          policy.ID.String(),
+			PolicyName:        policy.Name,
+			Priority:          int(policy.Priority),
+			Matched:           false,
+			ActionsApplied:    []model.ActionInfo{},
+			StoppedProcessing: false,
+		}
+
 		rule, err := e.repo.GetRuleForPolicy(ctx, policy.ID)
 		if err != nil {
 			// Policy without a rule doesn't match
+			policyEval.RuleEvaluated = nil
+			trace.Policies = append(trace.Policies, policyEval)
 			continue
+		}
+
+		// Store rule info
+		policyEval.RuleEvaluated = &model.RuleInfo{
+			LeftOperand:  rule.LeftOperand,
+			Operator:     rule.Operator,
+			RightOperand: rule.RightOperand,
 		}
 
 		// Evaluate rule
 		matches, err := e.evaluateRule(ctx, rule, params.Metadata)
 		if err != nil {
-			return plan, fmt.Errorf("evaluate rule for policy %s: %w", policy.ID.String(), err)
+			return trace, fmt.Errorf("evaluate rule for policy %s: %w", policy.ID.String(), err)
 		}
 
 		if !matches {
+			trace.Policies = append(trace.Policies, policyEval)
 			continue
 		}
+
+		// Policy matched!
+		policyEval.Matched = true
 
 		// Get actions for this policy
 		actions, err := e.repo.ListActionsForPolicy(ctx, policy.ID)
 		if err != nil {
-			return plan, fmt.Errorf("list actions for policy %s: %w", policy.ID.String(), err)
+			return trace, fmt.Errorf("list actions for policy %s: %w", policy.ID.String(), err)
 		}
 
-		// Apply actions in order
+		// Apply actions in order and track them
 		for _, action := range actions {
-			if err := e.applyAction(&plan, action); err != nil {
-				return plan, fmt.Errorf("apply action %s: %w", action.ID.String(), err)
+			actionInfo := model.ActionInfo{
+				Type:  action.Type,
+				Value: action.Value,
+				Order: action.Order,
+			}
+			policyEval.ActionsApplied = append(policyEval.ActionsApplied, actionInfo)
+
+			if err := e.applyAction(&trace.FinalPlan, action); err != nil {
+				return trace, fmt.Errorf("apply action %s: %w", action.ID.String(), err)
 			}
 
 			// Stop processing if stop_processing action
 			if action.Type == string(model.ActionStopProcessing) {
-				return plan, nil
+				policyEval.StoppedProcessing = true
+				trace.Policies = append(trace.Policies, policyEval)
+				return trace, nil
 			}
 		}
+
+		trace.Policies = append(trace.Policies, policyEval)
 	}
 
 	// Default logic
 	// If we get to this point and there are decisions that are not made, we should
 	// attempt to set the missing decisions to the default values. If the user does
 	// not have default items set then we should return an error.
-	if plan.DownloaderID == "" {
+	if trace.FinalPlan.DownloaderID == "" {
 		downloader, err := e.repo.GetDefaultDownloader(ctx, "torrent")
 		if err != nil {
-			return plan, fmt.Errorf("get default downloader: %w", err)
+			return trace, fmt.Errorf("get default downloader: %w", err)
 		}
-		plan.DownloaderID = downloader.ID.String()
+		trace.FinalPlan.DownloaderID = downloader.ID.String()
 	}
 
-	if plan.LibraryID == "" {
+	if trace.FinalPlan.LibraryID == "" {
 		library, err := e.repo.GetDefaultLibrary(ctx, string(params.MediaType))
 		if err != nil {
-			return plan, fmt.Errorf("get default library: %w", err)
+			return trace, fmt.Errorf("get default library: %w", err)
 		}
-		plan.LibraryID = library.ID.String()
+		trace.FinalPlan.LibraryID = library.ID.String()
 	}
 
-	if plan.NameTemplateID == "" {
+	if trace.FinalPlan.NameTemplateID == "" {
 		nameTemplate, err := e.repo.GetDefaultNameTemplate(ctx, string(params.MediaType))
 		if err != nil {
-			return plan, fmt.Errorf("get default name template: %w", err)
+			return trace, fmt.Errorf("get default name template: %w", err)
 		}
-		plan.NameTemplateID = nameTemplate.ID.String()
+		trace.FinalPlan.NameTemplateID = nameTemplate.ID.String()
 	}
 
-	return plan, nil
+	return trace, nil
 }
 
 // evaluateRule evaluates a rule against torrent metadata

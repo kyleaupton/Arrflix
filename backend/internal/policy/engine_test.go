@@ -12,7 +12,7 @@ func TestEngine_Evaluate(t *testing.T) {
 	r := internal.GetRepo()
 	engine := NewEngine(r)
 
-	plan, err := engine.Evaluate(context.Background(), model.EvaluateParams{
+	trace, err := engine.Evaluate(context.Background(), model.EvaluateParams{
 		TorrentURL: "https://example.com/torrent.torrent",
 		Metadata: model.TorrentMetadata{
 			Size:       1000,
@@ -30,6 +30,7 @@ func TestEngine_Evaluate(t *testing.T) {
 		t.Fatalf("error evaluating plan: %v", err)
 	}
 
+	plan := trace.FinalPlan
 	if plan.DownloaderID != "Test Downloader" {
 		t.Fatalf("expected downloader ID to be Test Downloader, got %s", plan.DownloaderID)
 	}

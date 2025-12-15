@@ -831,7 +831,74 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Plan"
+                            "$ref": "#/definitions/model.EvaluationTrace"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/movie/{id}/preview-candidate": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-candidates"
+                ],
+                "summary": "Preview policy evaluation for a download candidate",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID (TMDB ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Preview request",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.EnqueueCandidateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.EvaluationTrace"
                         }
                     },
                     "400": {
@@ -1141,7 +1208,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Plan"
+                            "$ref": "#/definitions/model.EvaluationTrace"
                         }
                     },
                     "400": {
@@ -2302,6 +2369,25 @@ const docTemplate = `{
                 }
             }
         },
+        "model.ActionInfo": {
+            "type": "object",
+            "required": [
+                "order",
+                "type",
+                "value"
+            ],
+            "properties": {
+                "order": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Capabilities": {
             "type": "object",
             "required": [
@@ -2456,6 +2542,24 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "model.EvaluationTrace": {
+            "type": "object",
+            "required": [
+                "finalPlan",
+                "policies"
+            ],
+            "properties": {
+                "finalPlan": {
+                    "$ref": "#/definitions/model.Plan"
+                },
+                "policies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.PolicyEvaluation"
+                    }
                 }
             }
         },
@@ -3164,6 +3268,43 @@ const docTemplate = `{
                 }
             }
         },
+        "model.PolicyEvaluation": {
+            "type": "object",
+            "required": [
+                "actionsApplied",
+                "matched",
+                "policyId",
+                "policyName",
+                "priority",
+                "stoppedProcessing"
+            ],
+            "properties": {
+                "actionsApplied": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ActionInfo"
+                    }
+                },
+                "matched": {
+                    "type": "boolean"
+                },
+                "policyId": {
+                    "type": "string"
+                },
+                "policyName": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "ruleEvaluated": {
+                    "$ref": "#/definitions/model.RuleInfo"
+                },
+                "stoppedProcessing": {
+                    "type": "boolean"
+                }
+            }
+        },
         "model.ProductionCompany": {
             "type": "object",
             "required": [
@@ -3244,6 +3385,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.RuleInfo": {
+            "type": "object",
+            "required": [
+                "leftOperand",
+                "operator",
+                "rightOperand"
+            ],
+            "properties": {
+                "leftOperand": {
+                    "type": "string"
+                },
+                "operator": {
+                    "type": "string"
+                },
+                "rightOperand": {
                     "type": "string"
                 }
             }

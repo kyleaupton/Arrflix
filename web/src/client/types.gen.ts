@@ -206,6 +206,12 @@ export type HandlersNameTemplateSwagger = {
     updated_at: string;
 };
 
+export type ModelActionInfo = {
+    order: number;
+    type: string;
+    value: string;
+};
+
 export type ModelCapabilities = {
     bookSearchParams: Array<string>;
     categories: Array<ModelCategories>;
@@ -252,6 +258,11 @@ export type ModelDownloadCandidate = {
      */
     size: number;
     title: string;
+};
+
+export type ModelEvaluationTrace = {
+    finalPlan: ModelPlan;
+    policies: Array<ModelPolicyEvaluation>;
 };
 
 export type ModelFieldInput = {
@@ -452,6 +463,16 @@ export type ModelPlan = {
     nameTemplateID?: string;
 };
 
+export type ModelPolicyEvaluation = {
+    actionsApplied: Array<ModelActionInfo>;
+    matched: boolean;
+    policyId: string;
+    policyName: string;
+    priority: number;
+    ruleEvaluated?: ModelRuleInfo;
+    stoppedProcessing: boolean;
+};
+
 export type ModelProductionCompany = {
     logoPath: string;
     name: string;
@@ -472,6 +493,12 @@ export type ModelRail = {
     series: Array<ModelSeriesRail>;
     title: string;
     type: string;
+};
+
+export type ModelRuleInfo = {
+    leftOperand: string;
+    operator: string;
+    rightOperand: string;
 };
 
 export type ModelSeason = {
@@ -1196,10 +1223,57 @@ export type PostV1MovieByIdEnqueueCandidateResponses = {
     /**
      * OK
      */
-    200: ModelPlan;
+    200: ModelEvaluationTrace;
 };
 
 export type PostV1MovieByIdEnqueueCandidateResponse = PostV1MovieByIdEnqueueCandidateResponses[keyof PostV1MovieByIdEnqueueCandidateResponses];
+
+export type PostV1MovieByIdPreviewCandidateData = {
+    /**
+     * Preview request
+     */
+    body: HandlersEnqueueCandidateRequest;
+    path: {
+        /**
+         * Movie ID (TMDB ID)
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1/movie/{id}/preview-candidate';
+};
+
+export type PostV1MovieByIdPreviewCandidateErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1MovieByIdPreviewCandidateError = PostV1MovieByIdPreviewCandidateErrors[keyof PostV1MovieByIdPreviewCandidateErrors];
+
+export type PostV1MovieByIdPreviewCandidateResponses = {
+    /**
+     * OK
+     */
+    200: ModelEvaluationTrace;
+};
+
+export type PostV1MovieByIdPreviewCandidateResponse = PostV1MovieByIdPreviewCandidateResponses[keyof PostV1MovieByIdPreviewCandidateResponses];
 
 export type GetV1NameTemplatesData = {
     body?: never;
@@ -1422,7 +1496,7 @@ export type PostV1PoliciesEvaluateResponses = {
     /**
      * OK
      */
-    200: ModelPlan;
+    200: ModelEvaluationTrace;
 };
 
 export type PostV1PoliciesEvaluateResponse = PostV1PoliciesEvaluateResponses[keyof PostV1PoliciesEvaluateResponses];

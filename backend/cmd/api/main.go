@@ -45,7 +45,7 @@ func main() {
 	// testing
 	engine := policy.NewEngine(repo)
 
-	plan, err := engine.Evaluate(context.Background(), model.EvaluateParams{
+	trace, err := engine.Evaluate(context.Background(), model.EvaluateParams{
 		TorrentURL: "https://example.com/torrent.torrent",
 		Metadata: model.TorrentMetadata{
 			Size:       1000,
@@ -62,7 +62,8 @@ func main() {
 		logg.Err(err).Msg("evaluate plan")
 	}
 
-	logg.Info().Msgf("plan: %+v", plan)
+	logg.Info().Msgf("trace: %+v", trace)
+	logg.Info().Msgf("plan: %+v", trace.FinalPlan)
 
 	// HTTP
 	e := http.NewServer(cfg, logg, pool, services, repo)

@@ -1,38 +1,33 @@
 <template>
-  <div class="download-candidates">
-    <div class="mb-4">
-      <!-- <h3 class="text-lg font-semibold mb-2">Download Candidates</h3> -->
-      <!-- <p class="text-sm text-muted-color">
-        Search results for download candidates. Select a candidate to enqueue it for download.
-      </p> -->
+  <div class="download-candidates-container flex flex-col h-full">
+    <div class="flex-1 overflow-auto">
+      <DownloadCandidateList v-if="!selectedCandidate" @enqueue="handlePreview" />
+      <DownloadCandidatePreview v-else :candidate="selectedCandidate" />
     </div>
 
-    <DataTable
-      :query-options="queryOptions"
-      :columns="downloadCandidateColumns"
-      :actions="candidateActions"
-      searchable
-      search-placeholder="Search candidates..."
-      paginator
-      :rows="20"
-    />
+    <div v-if="selectedCandidate" class="flex justify-end gap-2 p-4 border-t">
+      <Button label="Cancel" variant="secondary" @click="handleCancel" />
+      <Button
+        label="Enqueue"
+        variant="primary"
+        :loading="enqueueMutation.isPending.value"
+        @click="handleEnqueue"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import {
-  getV1MovieByIdDownloadCandidatesOptions,
-  postV1MovieByIdEnqueueCandidateMutation,
-} from '@/client/@tanstack/vue-query.gen'
+import Button from 'primevue/button'
+import { postV1MovieByIdEnqueueCandidateMutation } from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate } from '@/client/types.gen'
-import DataTable from '@/components/tables/DataTable.vue'
-import {
-  downloadCandidateColumns,
-  createDownloadCandidateActions,
-} from '@/components/tables/configs/downloadCandidateTableConfig'
+import DownloadCandidateList from './DownloadCandidatesList.vue'
+import DownloadCandidatePreview from './DownloadCandidatePreview.vue'
 import { useModal } from '@/composables/useModal'
+
+const modal = useModal()
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const dialogRef = inject('dialogRef') as any
@@ -45,56 +40,53 @@ const movieId = computed(() => {
   return id
 })
 
-const modal = useModal()
+const selectedCandidate = ref<ModelDownloadCandidate | null>(null)
 
-// Query options for fetching download candidates
-const queryOptions = computed(() =>
-  getV1MovieByIdDownloadCandidatesOptions({
-    path: { id: movieId.value },
-  }),
-)
+const handlePreview = (candidate: ModelDownloadCandidate) => {
+  selectedCandidate.value = candidate
+}
 
-// Query is handled by DataTable component via queryOptions prop
+const handleCancel = () => {
+  selectedCandidate.value = null
+}
 
 // Enqueue mutation
 const enqueueMutation = useMutation({
   ...postV1MovieByIdEnqueueCandidateMutation(),
-  onSuccess: (plan) => {
+  onSuccess: () => {
     modal.alert({
       title: 'Download Enqueued',
-      message: `Download has been enqueued successfully. Plan: ${JSON.stringify(plan, null, 2)}`,
+      message: 'The download has been successfully enqueued.',
       severity: 'success',
     })
-    // Optionally close the modal after successful enqueue
-    // dialogRef.value.close()
+    dialogRef.value?.close()
   },
   onError: (error) => {
     modal.alert({
       title: 'Enqueue Failed',
-      message: error.message || 'Failed to enqueue download candidate',
+      message: error?.message || 'Failed to enqueue download candidate',
       severity: 'error',
     })
   },
 })
 
-// Handle enqueue action
-const handleEnqueue = (candidate: ModelDownloadCandidate) => {
+const handleEnqueue = () => {
+  if (!selectedCandidate.value) return
+
   enqueueMutation.mutate({
     path: { id: movieId.value },
     body: {
-      indexerId: candidate.indexerId,
-      guid: candidate.guid,
+      indexerId: selectedCandidate.value.indexerId,
+      guid: selectedCandidate.value.guid,
     },
   })
 }
-
-// Create actions
-const candidateActions = createDownloadCandidateActions(handleEnqueue)
 </script>
 
 <style scoped>
-.download-candidates {
-  width: 100%;
-  height: 100%;
+.download-candidates-container {
+  min-height: 500px;
 }
 </style>
+
+<style scoped></style>
