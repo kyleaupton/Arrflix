@@ -99,11 +99,13 @@ export function useModal() {
   const open = <T = unknown>(
     component: unknown,
     options?: {
+      data?: unknown
       props?: Record<string, unknown>
       onClose?: (result?: { data?: T }) => void
     },
   ) => {
     const instance = dialog.open(component, {
+      data: options?.data,
       props: {
         modal: true,
         ...options?.props,

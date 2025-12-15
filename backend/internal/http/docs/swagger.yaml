@@ -235,13 +235,26 @@ definitions:
     - url
     - username
     type: object
+  handlers.EnqueueCandidateRequest:
+    properties:
+      guid:
+        type: string
+      indexerId:
+        type: integer
+    required:
+    - guid
+    - indexerId
+    type: object
   handlers.EvaluateRequest:
     properties:
+      mediaType:
+        $ref: '#/definitions/model.MediaType'
       metadata:
         $ref: '#/definitions/model.TorrentMetadata'
       torrentUrl:
         type: string
     required:
+    - mediaType
     - metadata
     - torrentUrl
     type: object
@@ -512,6 +525,61 @@ definitions:
     - id
     - name
     - subCategories
+    type: object
+  model.DownloadCandidate:
+    properties:
+      age:
+        description: age in seconds
+        type: integer
+      ageHours:
+        type: number
+      categories:
+        items:
+          type: string
+        type: array
+      filename:
+        type: string
+      grabs:
+        type: integer
+      guid:
+        type: string
+      indexer:
+        type: string
+      indexerId:
+        type: integer
+      link:
+        type: string
+      peers:
+        description: leechers
+        type: integer
+      protocol:
+        type: string
+      publishDate:
+        type: string
+      seeders:
+        description: seeders
+        type: integer
+      size:
+        description: size in bytes
+        type: integer
+      title:
+        type: string
+    required:
+    - age
+    - ageHours
+    - categories
+    - filename
+    - grabs
+    - guid
+    - indexer
+    - indexerId
+    - link
+    - peers
+    - protocol
+    - publishDate
+    - seeders
+    - size
+    - title
     type: object
   model.FieldInput:
     properties:
@@ -899,6 +967,14 @@ definitions:
     - order
     - value
     type: object
+  model.MediaType:
+    enum:
+    - movie
+    - series
+    type: string
+    x-enum-varnames:
+    - MediaTypeMovie
+    - MediaTypeSeries
   model.Movie:
     properties:
       backdropPath:
@@ -997,16 +1073,13 @@ definitions:
   model.Plan:
     properties:
       downloaderID:
-        description: these are determined by the policy engine
+        description: how to download
         type: string
       libraryID:
         description: where to move/hardlink/copy the file to
         type: string
       nameTemplateID:
         description: how to name the file
-        type: string
-      torrentURL:
-        description: this is given to us
         type: string
     type: object
   model.ProductionCompany:
@@ -1687,6 +1760,82 @@ paths:
       summary: Get movie
       tags:
       - media
+  /v1/movie/{id}/download-candidates:
+    get:
+      parameters:
+      - description: Movie ID (TMDB ID)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.DownloadCandidate'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get download candidates for a movie
+      tags:
+      - download-candidates
+  /v1/movie/{id}/enqueue-candidate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Movie ID (TMDB ID)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Enqueue request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.EnqueueCandidateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Plan'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Enqueue a download candidate
+      tags:
+      - download-candidates
   /v1/name-templates:
     get:
       produces:

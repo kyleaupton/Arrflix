@@ -10,7 +10,11 @@
         :poster-url="posterUrl"
         :backdrop-url="backdropUrl"
         :chips="movieChips"
-      />
+      >
+        <template #actions>
+          <Button @click="searchForDownloadCandidates">Search for Download Candidates</Button>
+        </template>
+      </MediaHero>
 
       <!-- TODO: sections like cast, recommendations, similar, etc. -->
     </div>
@@ -21,11 +25,15 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
+import Button from 'primevue/button'
 import { getV1MovieByIdOptions } from '@/client/@tanstack/vue-query.gen'
+import { useModal } from '@/composables/useModal'
 import Page from '@/components/Page.vue'
 import MediaHero from '@/components/media/MediaHero.vue'
+import DownloadCandidatesModal from '@/components/download-candidates/DownloadCandidatesModal.vue'
 
 const route = useRoute()
+const modal = useModal()
 
 const id = computed(() => {
   const castAttept = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)
@@ -61,6 +69,21 @@ const movieChips = computed(() => {
   // if (data.value?.genres?.length) chips.push(...data.value.genres.slice(0, 3))
   return chips
 })
+
+const searchForDownloadCandidates = () => {
+  modal.open(DownloadCandidatesModal, {
+    props: {
+      header: 'Download Candidates',
+      modal: true,
+      closable: true,
+      dismissableMask: true,
+      style: { width: '90vw', maxWidth: '1200px' },
+    },
+    data: {
+      movieId: id.value,
+    },
+  })
+}
 </script>
 
 <style scoped></style>

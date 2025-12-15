@@ -101,6 +101,16 @@ func (s *IndexerService) DeleteIndexer(ctx context.Context, indexerID string) er
 	return nil
 }
 
+// Search performs a search query against Prowlarr
+func (s *IndexerService) Search(ctx context.Context, input prowlarr.SearchInput) ([]*prowlarr.Search, error) {
+	results, err := s.prowlarr.SearchContext(ctx, input)
+	if err != nil {
+		s.logger.Error().Err(err).Str("query", input.Query).Msg("Failed to search Prowlarr")
+		return nil, err
+	}
+	return results, nil
+}
+
 func (s *IndexerService) Action(ctx context.Context, actionName string, input interface{}) (any, error) {
 	// hand-roll action call
 	url := fmt.Sprintf("%s/api/v1/indexer/action/%s", s.prowlarrURL, actionName)

@@ -3,21 +3,23 @@ package service
 import (
 	"github.com/kyleaupton/snaggle/backend/internal/config"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
+	"github.com/kyleaupton/snaggle/backend/internal/policy"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
 
 type Services struct {
-	Auth          *AuthService
-	Downloaders   *DownloadersService
-	Indexer       *IndexerService
-	Libraries     *LibrariesService
-	Media         *MediaService
-	NameTemplates *NameTemplatesService
-	Policies      *PoliciesService
-	Rails         *RailsService
-	Scanner       *ScannerService
-	Settings      *SettingsService
-	Tmdb          *TmdbService
+	Auth               *AuthService
+	Downloaders        *DownloadersService
+	DownloadCandidates *DownloadCandidatesService
+	Indexer            *IndexerService
+	Libraries          *LibrariesService
+	Media              *MediaService
+	NameTemplates      *NameTemplatesService
+	Policies           *PoliciesService
+	Rails              *RailsService
+	Scanner            *ScannerService
+	Settings           *SettingsService
+	Tmdb               *TmdbService
 }
 
 func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option) *Services {
@@ -27,19 +29,24 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 	}
 
 	tmdb := NewTmdbService(r, l)
+	indexer := NewIndexerService(r, l, c)
+	media := NewMediaService(r, l, tmdb)
+	policies := NewPoliciesService(r)
+	policyEngine := policy.NewEngine(r)
 
 	return &Services{
-		Auth:          NewAuthService(r, cfg),
-		Downloaders:   NewDownloadersService(r),
-		Indexer:       NewIndexerService(r, l, c),
-		Libraries:     NewLibrariesService(r),
-		Media:         NewMediaService(r, l, tmdb),
-		NameTemplates: NewNameTemplatesService(r),
-		Policies:     NewPoliciesService(r),
-		Rails:         NewRailsService(r, tmdb),
-		Scanner:       NewScannerService(r, l, tmdb),
-		Settings:      NewSettingsService(r),
-		Tmdb:          tmdb,
+		Auth:               NewAuthService(r, cfg),
+		Downloaders:        NewDownloadersService(r),
+		DownloadCandidates: NewDownloadCandidatesService(r, l, indexer, media, policyEngine),
+		Indexer:            indexer,
+		Libraries:          NewLibrariesService(r),
+		Media:              media,
+		NameTemplates:      NewNameTemplatesService(r),
+		Policies:           policies,
+		Rails:              NewRailsService(r, tmdb),
+		Scanner:            NewScannerService(r, l, tmdb),
+		Settings:           NewSettingsService(r),
+		Tmdb:               tmdb,
 	}
 }
 

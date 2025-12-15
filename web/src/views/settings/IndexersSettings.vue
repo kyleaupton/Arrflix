@@ -33,7 +33,7 @@ const handleDelete = (indexer: ModelIndexerDefinition) => {
 const handleAddIndexer = () => {
   modal.open(AddIndexerModal, {
     props: {
-      header: 'Add New Indexer',
+      header: 'Add New Indexer test',
       modal: true,
       closable: true,
       dismissableMask: true,

@@ -748,6 +748,122 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/movie/{id}/download-candidates": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-candidates"
+                ],
+                "summary": "Get download candidates for a movie",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID (TMDB ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.DownloadCandidate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/movie/{id}/enqueue-candidate": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-candidates"
+                ],
+                "summary": "Enqueue a download candidate",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID (TMDB ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Enqueue request",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.EnqueueCandidateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Plan"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/name-templates": {
             "get": {
                 "produces": [
@@ -1851,13 +1967,32 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.EnqueueCandidateRequest": {
+            "type": "object",
+            "required": [
+                "guid",
+                "indexerId"
+            ],
+            "properties": {
+                "guid": {
+                    "type": "string"
+                },
+                "indexerId": {
+                    "type": "integer"
+                }
+            }
+        },
         "handlers.EvaluateRequest": {
             "type": "object",
             "required": [
+                "mediaType",
                 "metadata",
                 "torrentUrl"
             ],
             "properties": {
+                "mediaType": {
+                    "$ref": "#/definitions/model.MediaType"
+                },
                 "metadata": {
                     "$ref": "#/definitions/model.TorrentMetadata"
                 },
@@ -2247,6 +2382,80 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.Categories"
                     }
+                }
+            }
+        },
+        "model.DownloadCandidate": {
+            "type": "object",
+            "required": [
+                "age",
+                "ageHours",
+                "categories",
+                "filename",
+                "grabs",
+                "guid",
+                "indexer",
+                "indexerId",
+                "link",
+                "peers",
+                "protocol",
+                "publishDate",
+                "seeders",
+                "size",
+                "title"
+            ],
+            "properties": {
+                "age": {
+                    "description": "age in seconds",
+                    "type": "integer"
+                },
+                "ageHours": {
+                    "type": "number"
+                },
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "grabs": {
+                    "type": "integer"
+                },
+                "guid": {
+                    "type": "string"
+                },
+                "indexer": {
+                    "type": "string"
+                },
+                "indexerId": {
+                    "type": "integer"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "peers": {
+                    "description": "leechers",
+                    "type": "integer"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "publishDate": {
+                    "type": "string"
+                },
+                "seeders": {
+                    "description": "seeders",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "size in bytes",
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
@@ -2793,6 +3002,17 @@ const docTemplate = `{
                 "value": {}
             }
         },
+        "model.MediaType": {
+            "type": "string",
+            "enum": [
+                "movie",
+                "series"
+            ],
+            "x-enum-varnames": [
+                "MediaTypeMovie",
+                "MediaTypeSeries"
+            ]
+        },
         "model.Movie": {
             "type": "object",
             "required": [
@@ -2931,7 +3151,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "downloaderID": {
-                    "description": "these are determined by the policy engine",
+                    "description": "how to download",
                     "type": "string"
                 },
                 "libraryID": {
@@ -2940,10 +3160,6 @@ const docTemplate = `{
                 },
                 "nameTemplateID": {
                     "description": "how to name the file",
-                    "type": "string"
-                },
-                "torrentURL": {
-                    "description": "this is given to us",
                     "type": "string"
                 }
             }
