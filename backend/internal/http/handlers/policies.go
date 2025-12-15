@@ -20,6 +20,8 @@ func (h *Policies) RegisterProtected(v1 *echo.Group) {
 	v1.PUT("/policies/:id", h.Update)
 	v1.DELETE("/policies/:id", h.Delete)
 
+	v1.GET("/policies/fields", h.GetFields)
+
 	v1.GET("/policies/:id/rule", h.GetRule)
 	v1.POST("/policies/:id/rule", h.CreateRule)
 	v1.PUT("/policies/:id/rule", h.UpdateRule)
@@ -389,6 +391,21 @@ func (h *Policies) DeleteAction(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to delete"})
 	}
 	return c.NoContent(http.StatusNoContent)
+}
+
+// GetFields returns all available field definitions for policy rules
+// @Summary Get field definitions
+// @Tags    policies
+// @Produce json
+// @Success 200 {array} model.FieldDefinition
+// @Router  /v1/policies/fields [get]
+func (h *Policies) GetFields(c echo.Context) error {
+	ctx := c.Request().Context()
+	fields, err := h.svc.Policies.GetFieldDefinitions(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, fields)
 }
 
 // Evaluate policies

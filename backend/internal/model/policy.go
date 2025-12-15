@@ -97,3 +97,31 @@ type ActionInfo struct {
 	Value string `json:"value"`
 	Order int32  `json:"order"`
 }
+
+// FieldType represents the type of a policy field
+type FieldType string
+
+const (
+	FieldTypeText    FieldType = "text"
+	FieldTypeNumber  FieldType = "number"
+	FieldTypeEnum    FieldType = "enum"
+	FieldTypeDynamic FieldType = "dynamic"
+	FieldTypeBoolean FieldType = "boolean"
+)
+
+// EnumValue represents a single enum value option
+type EnumValue struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
+// FieldDefinition represents metadata about a policy field
+type FieldDefinition struct {
+	Path          string      `json:"path"`           // e.g., "candidate.size", "quality.resolution"
+	Label         string      `json:"label"`          // Display name
+	Type          FieldType   `json:"type"`          // "text", "number", "enum", "dynamic", "boolean"
+	ValueType     string      `json:"valueType"`     // "string", "int64", "float64", "[]string", "bool"
+	EnumValues    []EnumValue `json:"enumValues,omitempty"`    // For enum type
+	DynamicSource string      `json:"dynamicSource,omitempty"` // API endpoint for dynamic fields
+	Operators     []string    `json:"operators"`               // Valid operators for this field
+}

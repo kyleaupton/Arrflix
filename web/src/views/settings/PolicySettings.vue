@@ -8,7 +8,6 @@ import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
-import Message from 'primevue/message'
 import { PrimeIcons } from '@/icons'
 import {
   getV1PoliciesOptions,
@@ -21,7 +20,6 @@ import {
   deleteV1PoliciesByIdRuleMutation,
   getV1PoliciesByIdActionsOptions,
   postV1PoliciesByIdActionsMutation,
-  putV1PoliciesByIdActionsByActionIdMutation,
   deleteV1PoliciesByIdActionsByActionIdMutation,
   getV1LibrariesOptions,
   getV1NameTemplatesOptions,
@@ -32,9 +30,15 @@ import DataTable from '@/components/tables/DataTable.vue'
 import { policyColumns, createPolicyActions } from '@/components/tables/configs/policyTableConfig'
 import policyOptions from '@/config/policyOptions.json'
 import { useModal } from '@/composables/useModal'
+import { usePolicyFields } from '@/composables/usePolicyFields'
+import { getV1IndexersConfiguredOptions } from '@/client/@tanstack/vue-query.gen'
 
 const queryClient = useQueryClient()
 const modal = useModal()
+
+// Policy fields
+const { fields: fieldDefinitions, getFieldByPath, getValidOperators } = usePolicyFields()
+const { data: indexers } = useQuery(getV1IndexersConfiguredOptions())
 
 // Data queries
 const { data: policies, isLoading, refetch } = useQuery(getV1PoliciesOptions())
@@ -50,7 +54,6 @@ const createRuleMutation = useMutation(postV1PoliciesByIdRuleMutation())
 const updateRuleMutation = useMutation(putV1PoliciesByIdRuleMutation())
 const deleteRuleMutation = useMutation(deleteV1PoliciesByIdRuleMutation())
 const createActionMutation = useMutation(postV1PoliciesByIdActionsMutation())
-const updateActionMutation = useMutation(putV1PoliciesByIdActionsByActionIdMutation())
 const deleteActionMutation = useMutation(deleteV1PoliciesByIdActionsByActionIdMutation())
 
 // Modal states
@@ -85,28 +88,85 @@ const actionForm = ref({
 
 // Computed values
 const actionTypeOptions = computed(() => policyOptions.actionTypes)
-const operatorOptions = computed(() => policyOptions.operators)
-const torrentFieldOptions = computed(() => policyOptions.torrentFields)
+
+// Field options for left operand dropdown
+const fieldOptions = computed(() => {
+  return (
+    fieldDefinitions.value?.map((f) => ({
+      label: f.label,
+      value: f.path,
+    })) || []
+  )
+})
+
+// Selected field definition
+const selectedField = computed(() => {
+  if (!ruleForm.value.left_operand) return undefined
+  return getFieldByPath(ruleForm.value.left_operand)
+})
+
+// Valid operators for selected field
+const validOperators = computed(() => {
+  const ops = getValidOperators(selectedField.value)
+  return policyOptions.operators.filter((op) => ops.includes(op.value))
+})
+
+// Right operand options (for enum/dynamic fields)
+const rightOperandOptions = computed(() => {
+  const field = selectedField.value
+  if (!field) return []
+
+  if (field.type === 'enum' && field.enumValues) {
+    return field.enumValues.map((ev) => ({
+      label: ev.label,
+      value: ev.value,
+    }))
+  }
+
+  if (field.type === 'dynamic' && field.dynamicSource === '/api/v1/indexers/configured') {
+    return (
+      indexers.value?.map((idx) => ({
+        label: idx.name || 'Unknown',
+        value: idx.name || '',
+      })) || []
+    )
+  }
+
+  if (field.type === 'boolean') {
+    return [
+      { label: 'True', value: 'true' },
+      { label: 'False', value: 'false' },
+    ]
+  }
+
+  return []
+})
 
 const libraryOptions = computed(() => {
-  return libraries.value?.map((lib) => ({
-    label: `${lib.name} (${lib.type})`,
-    value: lib.id,
-  })) || []
+  return (
+    libraries.value?.map((lib) => ({
+      label: `${lib.name} (${lib.type})`,
+      value: lib.id,
+    })) || []
+  )
 })
 
 const nameTemplateOptions = computed(() => {
-  return nameTemplates.value?.map((nt) => ({
-    label: `${nt.name} (${nt.type})`,
-    value: nt.id,
-  })) || []
+  return (
+    nameTemplates.value?.map((nt) => ({
+      label: `${nt.name} (${nt.type})`,
+      value: nt.id,
+    })) || []
+  )
 })
 
 const downloaderOptions = computed(() => {
-  return downloaders.value?.map((d) => ({
-    label: `${d.name} (${d.type}/${d.protocol})`,
-    value: d.id,
-  })) || []
+  return (
+    downloaders.value?.map((d) => ({
+      label: `${d.name} (${d.type}/${d.protocol})`,
+      value: d.id,
+    })) || []
+  )
 })
 
 const getActionValueOptions = (actionType: string) => {
@@ -147,7 +207,7 @@ const handleSavePolicy = async () => {
         path: { id: editingPolicy.value.id },
         body: {
           name: policyForm.value.name,
-          description: policyForm.value.description || undefined,
+          description: policyForm.value.description || '',
           enabled: policyForm.value.enabled,
           priority: policyForm.value.priority,
         },
@@ -156,7 +216,7 @@ const handleSavePolicy = async () => {
       await createPolicyMutation.mutateAsync({
         body: {
           name: policyForm.value.name,
-          description: policyForm.value.description || undefined,
+          description: policyForm.value.description || '',
           enabled: policyForm.value.enabled,
           priority: policyForm.value.priority,
         },
@@ -190,22 +250,23 @@ const handleEditRule = async (policy: DbgenPolicy) => {
   if (!policy.id) return
   editingPolicy.value = policy
   try {
-    const { data: rule } = await queryClient.fetchQuery(
-      getV1PoliciesByIdRuleOptions({ path: { id: policy.id } })
+    const rule = await queryClient.fetchQuery(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      getV1PoliciesByIdRuleOptions({ path: { id: String(policy.id) } } as any),
     )
     if (rule) {
-      editingRule.value = rule
+      editingRule.value = rule as DbgenRule
       ruleForm.value = {
-        left_operand: rule.left_operand || '',
-        operator: rule.operator || '',
-        right_operand: rule.right_operand || '',
+        left_operand: rule.left_operand ?? '',
+        operator: rule.operator ?? '',
+        right_operand: rule.right_operand ?? '',
       }
     } else {
       editingRule.value = null
       ruleForm.value = { left_operand: '', operator: '', right_operand: '' }
     }
     showRuleModal.value = true
-  } catch (error) {
+  } catch {
     // No rule exists yet
     editingRule.value = null
     ruleForm.value = { left_operand: '', operator: '', right_operand: '' }
@@ -241,12 +302,12 @@ const handleDeleteRule = async (policy: DbgenPolicy) => {
     message: 'Are you sure you want to delete this rule?',
     severity: 'danger',
   })
-  if (!confirmed) return
+  if (!confirmed || !policy.id) return
   try {
-    await deleteRuleMutation.mutateAsync({ path: { id: policy.id } })
+    await deleteRuleMutation.mutateAsync({ path: { id: String(policy.id) } })
     refetch()
-  } catch (error) {
-    console.error('Failed to delete rule:', error)
+  } catch (err) {
+    console.error('Failed to delete rule:', err)
   }
 }
 
@@ -256,11 +317,12 @@ const handleEditActions = async (policy: DbgenPolicy) => {
   editingPolicy.value = policy
   try {
     const result = await queryClient.fetchQuery(
-      getV1PoliciesByIdActionsOptions({ path: { id: policy.id } })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      getV1PoliciesByIdActionsOptions({ path: { id: String(policy.id) } } as any),
     )
     editingActions.value = (result as DbgenAction[]) || []
     showActionsModal.value = true
-  } catch (error) {
+  } catch {
     editingActions.value = []
     showActionsModal.value = true
   }
@@ -273,7 +335,7 @@ const handleAddAction = () => {
     type: '',
     value: '',
     order: editingActions.value.length,
-  } as any)
+  } as unknown as DbgenAction)
 }
 
 const handleRemoveAction = (index: number) => {
@@ -288,14 +350,16 @@ const handleSaveActions = async () => {
   if (!editingPolicy.value?.id) return
   try {
     // Delete all existing actions first
-    const existingActions = editingActions.value.filter((a) => a.id && !a.id.toString().startsWith('new-'))
+    const existingActions = editingActions.value.filter(
+      (a) => a.id && !String(a.id).startsWith('new-'),
+    )
     for (const action of existingActions) {
-      if (action.id) {
+      if (action.id && editingPolicy.value?.id) {
         try {
           await deleteActionMutation.mutateAsync({
-            path: { id: editingPolicy.value.id, actionId: action.id },
+            path: { id: String(editingPolicy.value.id), actionId: String(action.id) },
           })
-        } catch (error) {
+        } catch {
           // Ignore errors
         }
       }
@@ -314,12 +378,17 @@ const handleSaveActions = async () => {
     }
     showActionsModal.value = false
     refetch()
-  } catch (error) {
-    console.error('Failed to save actions:', error)
+  } catch (err) {
+    console.error('Failed to save actions:', err)
   }
 }
 
-const policyActions = createPolicyActions(handleEditPolicy, handleEditRule, handleEditActions, handleDeletePolicy)
+const policyActions = createPolicyActions(
+  handleEditPolicy,
+  handleEditRule,
+  handleEditActions,
+  handleDeletePolicy,
+)
 </script>
 
 <template>
@@ -329,7 +398,9 @@ const policyActions = createPolicyActions(handleEditPolicy, handleEditRule, hand
         <div class="flex items-center justify-between mb-6">
           <div>
             <h3 class="text-xl font-semibold mb-2">Policies</h3>
-            <p class="text-muted-color">Configure policies to automatically handle torrent downloads.</p>
+            <p class="text-muted-color">
+              Configure policies to automatically handle torrent downloads.
+            </p>
           </div>
           <Button
             label="Add Policy"
@@ -401,32 +472,66 @@ const policyActions = createPolicyActions(handleEditPolicy, handleEditRule, hand
           <label class="text-sm font-medium">Left Operand</label>
           <Select
             v-model="ruleForm.left_operand"
-            :options="torrentFieldOptions"
+            :options="fieldOptions"
             option-label="label"
             option-value="value"
-            placeholder="Select field or enter value"
+            placeholder="Select field"
             :filter="true"
             :show-clear="true"
-          />
-          <InputText
-            v-if="!ruleForm.left_operand || !torrentFieldOptions.find((f) => f.value === ruleForm.left_operand)"
-            v-model="ruleForm.left_operand"
-            placeholder="Or enter custom value"
+            @update:model-value="
+              () => {
+                ruleForm.operator = ''
+                ruleForm.right_operand = ''
+              }
+            "
           />
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium">Operator</label>
           <Select
             v-model="ruleForm.operator"
-            :options="operatorOptions"
+            :options="validOperators"
             option-label="label"
             option-value="value"
             placeholder="Select operator"
+            :disabled="!selectedField"
           />
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-sm font-medium">Right Operand</label>
-          <InputText v-model="ruleForm.right_operand" placeholder="Enter value" />
+          <!-- Enum or Dynamic dropdown -->
+          <Select
+            v-if="
+              selectedField &&
+              (selectedField.type === 'enum' ||
+                selectedField.type === 'dynamic' ||
+                selectedField.type === 'boolean')
+            "
+            v-model="ruleForm.right_operand"
+            :options="rightOperandOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="Select value"
+            :loading="selectedField.type === 'dynamic' && rightOperandOptions.length === 0"
+          />
+          <!-- Number input -->
+          <InputNumber
+            v-else-if="selectedField && selectedField.type === 'number'"
+            :model-value="Number(ruleForm.right_operand) || 0"
+            @update:model-value="
+              (val) => {
+                ruleForm.right_operand = String(val ?? 0)
+              }
+            "
+            placeholder="Enter number"
+          />
+          <!-- Text input -->
+          <InputText
+            v-else
+            v-model="ruleForm.right_operand"
+            placeholder="Enter value"
+            :disabled="!selectedField"
+          />
         </div>
       </div>
       <template #footer>
@@ -450,10 +555,16 @@ const policyActions = createPolicyActions(handleEditPolicy, handleEditRule, hand
     >
       <div class="flex flex-col gap-4">
         <div class="flex justify-between items-center">
-          <p class="text-sm text-muted-color">Actions are executed in order when the policy matches.</p>
+          <p class="text-sm text-muted-color">
+            Actions are executed in order when the policy matches.
+          </p>
           <Button label="Add Action" size="small" @click="handleAddAction" />
         </div>
-        <div v-for="(action, index) in editingActions" :key="index" class="border rounded p-4 flex flex-col gap-3">
+        <div
+          v-for="(action, index) in editingActions"
+          :key="index"
+          class="border rounded p-4 flex flex-col gap-3"
+        >
           <div class="flex items-center justify-between">
             <span class="text-sm font-medium">Action {{ index + 1 }}</span>
             <Button
@@ -473,7 +584,14 @@ const policyActions = createPolicyActions(handleEditPolicy, handleEditRule, hand
                 option-label="label"
                 option-value="value"
                 placeholder="Select action type"
-                @update:model-value="(val) => { editingActions[index].type = val; editingActions[index].value = '' }"
+                @update:model-value="
+                  (val) => {
+                    if (editingActions[index]) {
+                      editingActions[index].type = val
+                      editingActions[index].value = ''
+                    }
+                  }
+                "
               />
             </div>
             <div class="flex flex-col gap-1">
@@ -486,16 +604,8 @@ const policyActions = createPolicyActions(handleEditPolicy, handleEditRule, hand
                 option-value="value"
                 placeholder="Select value"
               />
-              <InputText
-                v-else-if="action.type === 'stop_processing'"
-                value="N/A"
-                disabled
-              />
-              <InputText
-                v-else
-                v-model="action.value"
-                placeholder="Enter value"
-              />
+              <InputText v-else-if="action.type === 'stop_processing'" model-value="N/A" disabled />
+              <InputText v-else v-model="action.value" placeholder="Enter value" />
             </div>
           </div>
         </div>
@@ -516,4 +626,3 @@ const policyActions = createPolicyActions(handleEditPolicy, handleEditRule, hand
   max-width: 100%;
 }
 </style>
-

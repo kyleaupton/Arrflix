@@ -287,27 +287,23 @@ func (e *Engine) getRuleByID(ctx context.Context, ruleIDStr string) (dbgen.Rule,
 
 // getValue gets a value from metadata or returns the literal value
 func (e *Engine) getValue(operand string, candidateContext model.CandidateContext) (interface{}, error) {
-	// Check if it's a field reference (torrent.*)
+	// Check if it's a field reference (candidate.*)
+	if strings.HasPrefix(operand, "candidate.") {
+		field := strings.TrimPrefix(operand, "candidate.")
+		return e.getCandidateField(field, candidateContext)
+	}
+
+	// Check if it's a field reference (quality.*)
+	if strings.HasPrefix(operand, "quality.") {
+		field := strings.TrimPrefix(operand, "quality.")
+		return e.getQualityField(field, candidateContext)
+	}
+
+	// Backward compatibility: support torrent.* (deprecated)
 	if strings.HasPrefix(operand, "torrent.") {
+		e.logger.Warn().Str("field", operand).Msg("Using deprecated torrent.* field, please migrate to candidate.*")
 		field := strings.TrimPrefix(operand, "torrent.")
-		switch field {
-		case "size":
-			return int64(candidateContext.Candidate.Size), nil
-		case "seeders":
-			return int64(candidateContext.Candidate.Seeders), nil
-		case "peers":
-			return int64(candidateContext.Candidate.Peers), nil
-		case "title":
-			return candidateContext.Candidate.Title, nil
-		case "tracker":
-			return candidateContext.Candidate.Indexer, nil
-		case "tracker_id":
-			return candidateContext.Candidate.IndexerID, nil
-		case "categories":
-			return candidateContext.Candidate.Categories, nil
-		default:
-			return nil, fmt.Errorf("unknown field: %s", field)
-		}
+		return e.getCandidateField(field, candidateContext)
 	}
 
 	// Try to parse as number
@@ -320,6 +316,93 @@ func (e *Engine) getValue(operand string, candidateContext model.CandidateContex
 
 	// Return as string
 	return operand, nil
+}
+
+// getCandidateField gets a value from the candidate
+func (e *Engine) getCandidateField(field string, candidateContext model.CandidateContext) (interface{}, error) {
+	candidate := candidateContext.Candidate
+	switch field {
+	case "size":
+		return int64(candidate.Size), nil
+	case "title":
+		return candidate.Title, nil
+	case "indexer":
+		return candidate.Indexer, nil
+	case "indexer_id":
+		return int64(candidate.IndexerID), nil
+	case "categories":
+		return candidate.Categories, nil
+	case "protocol":
+		return candidate.Protocol, nil
+	case "torrent_seeders":
+		if candidate.Protocol == "torrent" {
+			return int64(candidate.Seeders), nil
+		}
+		return nil, fmt.Errorf("field torrent_seeders only available for torrent protocol")
+	case "torrent_peers":
+		if candidate.Protocol == "torrent" {
+			return int64(candidate.Peers), nil
+		}
+		return nil, fmt.Errorf("field torrent_peers only available for torrent protocol")
+	// Backward compatibility mappings
+	case "seeders":
+		return int64(candidate.Seeders), nil
+	case "peers":
+		return int64(candidate.Peers), nil
+	case "tracker":
+		return candidate.Indexer, nil
+	case "tracker_id":
+		return int64(candidate.IndexerID), nil
+	default:
+		return nil, fmt.Errorf("unknown candidate field: %s", field)
+	}
+}
+
+// getQualityField gets a value from the parsed quality
+func (e *Engine) getQualityField(field string, candidateContext model.CandidateContext) (interface{}, error) {
+	quality := candidateContext.Quality
+	
+	// Handle nested audio fields
+	if strings.HasPrefix(field, "audio.") {
+		audioField := strings.TrimPrefix(field, "audio.")
+		switch audioField {
+		case "codec":
+			return string(quality.Audio.Codec), nil
+		case "channels":
+			return string(quality.Audio.Channels), nil
+		default:
+			return nil, fmt.Errorf("unknown quality.audio field: %s", audioField)
+		}
+	}
+	
+	switch field {
+	case "resolution":
+		return string(quality.Resolution), nil
+	case "source":
+		return string(quality.Source), nil
+	case "codec":
+		return string(quality.Codec), nil
+	case "container":
+		return string(quality.Container), nil
+	case "hdr":
+		return string(quality.HDR), nil
+	case "bit_depth":
+		return string(quality.BitDepth), nil
+	case "tier":
+		return string(quality.Tier), nil
+	case "is_remux":
+		return quality.IsRemux, nil
+	case "is_proper":
+		return quality.IsProper, nil
+	case "is_repack":
+		return quality.IsRepack, nil
+	case "is_extended":
+		return quality.IsExtended, nil
+	case "release_group":
+		return quality.ReleaseGroup, nil
+	default:
+		return nil, fmt.Errorf("unknown quality field: %s", field)
+	}
 }
 
 // compare compares two values based on operator

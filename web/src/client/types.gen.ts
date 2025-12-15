@@ -254,9 +254,45 @@ export type ModelDownloadCandidate = {
     title: string;
 };
 
+export type ModelEnumValue = {
+    label: string;
+    value: string;
+};
+
 export type ModelEvaluationTrace = {
     finalPlan: ModelPlan;
     policies: Array<ModelPolicyEvaluation>;
+};
+
+export type ModelFieldDefinition = {
+    /**
+     * API endpoint for dynamic fields
+     */
+    dynamicSource?: string;
+    /**
+     * For enum type
+     */
+    enumValues?: Array<ModelEnumValue>;
+    /**
+     * Display name
+     */
+    label: string;
+    /**
+     * Valid operators for this field
+     */
+    operators: Array<string>;
+    /**
+     * e.g., "candidate.size", "quality.resolution"
+     */
+    path: string;
+    /**
+     * "text", "number", "enum", "dynamic", "boolean"
+     */
+    type: ModelFieldType;
+    /**
+     * "string", "int64", "float64", "[]string", "bool"
+     */
+    valueType: string;
 };
 
 export type ModelFieldInput = {
@@ -278,6 +314,8 @@ export type ModelFieldOutput = {
     type?: string;
     value?: unknown;
 };
+
+export type ModelFieldType = 'text' | 'number' | 'enum' | 'dynamic' | 'boolean';
 
 export type ModelGenre = {
     name: string;
@@ -1461,6 +1499,22 @@ export type PostV1PoliciesEvaluateResponses = {
 };
 
 export type PostV1PoliciesEvaluateResponse = PostV1PoliciesEvaluateResponses[keyof PostV1PoliciesEvaluateResponses];
+
+export type GetV1PoliciesFieldsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/policies/fields';
+};
+
+export type GetV1PoliciesFieldsResponses = {
+    /**
+     * OK
+     */
+    200: Array<ModelFieldDefinition>;
+};
+
+export type GetV1PoliciesFieldsResponse = GetV1PoliciesFieldsResponses[keyof GetV1PoliciesFieldsResponses];
 
 export type DeleteV1PoliciesByIdData = {
     body?: never;

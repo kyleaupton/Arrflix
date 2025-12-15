@@ -1223,6 +1223,28 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/policies/fields": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Get field definitions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.FieldDefinition"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/policies/{id}": {
             "get": {
                 "produces": [
@@ -2526,6 +2548,21 @@ const docTemplate = `{
                 }
             }
         },
+        "model.EnumValue": {
+            "type": "object",
+            "required": [
+                "label",
+                "value"
+            ],
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "model.EvaluationTrace": {
             "type": "object",
             "required": [
@@ -2541,6 +2578,56 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.PolicyEvaluation"
                     }
+                }
+            }
+        },
+        "model.FieldDefinition": {
+            "type": "object",
+            "required": [
+                "label",
+                "operators",
+                "path",
+                "type",
+                "valueType"
+            ],
+            "properties": {
+                "dynamicSource": {
+                    "description": "API endpoint for dynamic fields",
+                    "type": "string"
+                },
+                "enumValues": {
+                    "description": "For enum type",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.EnumValue"
+                    }
+                },
+                "label": {
+                    "description": "Display name",
+                    "type": "string"
+                },
+                "operators": {
+                    "description": "Valid operators for this field",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "path": {
+                    "description": "e.g., \"candidate.size\", \"quality.resolution\"",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"text\", \"number\", \"enum\", \"dynamic\", \"boolean\"",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.FieldType"
+                        }
+                    ]
+                },
+                "valueType": {
+                    "description": "\"string\", \"int64\", \"float64\", \"[]string\", \"bool\"",
+                    "type": "string"
                 }
             }
         },
@@ -2601,6 +2688,23 @@ const docTemplate = `{
                 },
                 "value": {}
             }
+        },
+        "model.FieldType": {
+            "type": "string",
+            "enum": [
+                "text",
+                "number",
+                "enum",
+                "dynamic",
+                "boolean"
+            ],
+            "x-enum-varnames": [
+                "FieldTypeText",
+                "FieldTypeNumber",
+                "FieldTypeEnum",
+                "FieldTypeDynamic",
+                "FieldTypeBoolean"
+            ]
         },
         "model.Genre": {
             "type": "object",
