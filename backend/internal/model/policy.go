@@ -1,12 +1,9 @@
 package model
 
-import "github.com/google/uuid"
-
-type EvaluateParams struct {
-	TorrentURL string          `json:"torrentUrl"`
-	Metadata   TorrentMetadata `json:"metadata"`
-	MediaType  MediaType       `json:"mediaType"`
-}
+import (
+	"github.com/google/uuid"
+	"github.com/kyleaupton/snaggle/backend/internal/quality"
+)
 
 type Plan struct {
 	DownloaderID   string // how to download
@@ -15,14 +12,9 @@ type Plan struct {
 }
 
 // TorrentMetadata represents metadata about a torrent for policy evaluation
-type TorrentMetadata struct {
-	Size       uint64   // file size in bytes
-	Seeders    uint     // number of seeders
-	Peers      uint     // number of peers
-	Title      string   // torrent title
-	Tracker    string   // tracker/indexer name
-	TrackerID  string   // tracker/indexer ID
-	Categories []string // category tags
+type CandidateContext struct {
+	Candidate DownloadCandidate
+	Quality   quality.ParsedQuality
 }
 
 type Policy struct {
@@ -77,19 +69,19 @@ type Action struct {
 
 // EvaluationTrace represents the detailed trace of policy evaluation
 type EvaluationTrace struct {
-	Policies []PolicyEvaluation `json:"policies"`
+	Policies  []PolicyEvaluation `json:"policies"`
 	FinalPlan Plan               `json:"finalPlan"`
 }
 
 // PolicyEvaluation represents the evaluation result for a single policy
 type PolicyEvaluation struct {
-	PolicyID          string      `json:"policyId"`
-	PolicyName        string      `json:"policyName"`
-	Priority          int         `json:"priority"`
-	Matched           bool        `json:"matched"`
-	RuleEvaluated     *RuleInfo   `json:"ruleEvaluated,omitempty"`
+	PolicyID          string       `json:"policyId"`
+	PolicyName        string       `json:"policyName"`
+	Priority          int          `json:"priority"`
+	Matched           bool         `json:"matched"`
+	RuleEvaluated     *RuleInfo    `json:"ruleEvaluated,omitempty"`
 	ActionsApplied    []ActionInfo `json:"actionsApplied"`
-	StoppedProcessing bool        `json:"stoppedProcessing"`
+	StoppedProcessing bool         `json:"stoppedProcessing"`
 }
 
 // RuleInfo represents information about a rule

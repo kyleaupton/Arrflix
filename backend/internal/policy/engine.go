@@ -2,6 +2,7 @@ package policy
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,21 +10,28 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
+	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
+	"github.com/kyleaupton/snaggle/backend/internal/quality"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
 
 // Engine evaluates policies against torrent metadata to produce plans
 type Engine struct {
-	repo *repo.Repository
+	repo   *repo.Repository
+	logger *logger.Logger
 }
 
-func NewEngine(r *repo.Repository) *Engine {
-	return &Engine{repo: r}
+func NewEngine(r *repo.Repository, l *logger.Logger) *Engine {
+	return &Engine{repo: r, logger: l}
 }
 
 // Evaluate evaluates all enabled policies in priority order and returns an EvaluationTrace
-func (e *Engine) Evaluate(ctx context.Context, params model.EvaluateParams) (model.EvaluationTrace, error) {
+func (e *Engine) Evaluate(ctx context.Context, candidate model.DownloadCandidate) (model.EvaluationTrace, error) {
+	// print candidate
+	jsonData, _ := json.MarshalIndent(candidate, "", "  ")
+	e.logger.Debug().Msgf("candidate: %+v", string(jsonData))
+
 	trace := model.EvaluationTrace{
 		Policies: []model.PolicyEvaluation{},
 		FinalPlan: model.Plan{
@@ -72,8 +80,13 @@ func (e *Engine) Evaluate(ctx context.Context, params model.EvaluateParams) (mod
 			RightOperand: rule.RightOperand,
 		}
 
+		candidateContext := model.CandidateContext{
+			Candidate: candidate,
+			Quality:   quality.NewParser().Parse(candidate.Title),
+		}
+
 		// Evaluate rule
-		matches, err := e.evaluateRule(ctx, rule, params.Metadata)
+		matches, err := e.evaluateRule(ctx, rule, candidateContext)
 		if err != nil {
 			return trace, fmt.Errorf("evaluate rule for policy %s: %w", policy.ID.String(), err)
 		}
@@ -128,8 +141,13 @@ func (e *Engine) Evaluate(ctx context.Context, params model.EvaluateParams) (mod
 		trace.FinalPlan.DownloaderID = downloader.ID.String()
 	}
 
+	mediaType, err := candidate.GetMediaType()
+	if err != nil {
+		return trace, fmt.Errorf("get media type: %w", err)
+	}
+
 	if trace.FinalPlan.LibraryID == "" {
-		library, err := e.repo.GetDefaultLibrary(ctx, string(params.MediaType))
+		library, err := e.repo.GetDefaultLibrary(ctx, string(mediaType))
 		if err != nil {
 			return trace, fmt.Errorf("get default library: %w", err)
 		}
@@ -137,7 +155,7 @@ func (e *Engine) Evaluate(ctx context.Context, params model.EvaluateParams) (mod
 	}
 
 	if trace.FinalPlan.NameTemplateID == "" {
-		nameTemplate, err := e.repo.GetDefaultNameTemplate(ctx, string(params.MediaType))
+		nameTemplate, err := e.repo.GetDefaultNameTemplate(ctx, string(mediaType))
 		if err != nil {
 			return trace, fmt.Errorf("get default name template: %w", err)
 		}
@@ -148,27 +166,27 @@ func (e *Engine) Evaluate(ctx context.Context, params model.EvaluateParams) (mod
 }
 
 // evaluateRule evaluates a rule against torrent metadata
-func (e *Engine) evaluateRule(ctx context.Context, rule dbgen.Rule, metadata model.TorrentMetadata) (bool, error) {
+func (e *Engine) evaluateRule(ctx context.Context, rule dbgen.Rule, candidateContext model.CandidateContext) (bool, error) {
 	operator := model.Operator(rule.Operator)
 
 	// Handle logical operators (and, or, not) which reference other rules
 	switch operator {
 	case model.OpAnd:
-		return e.evaluateLogicalAnd(ctx, rule, metadata)
+		return e.evaluateLogicalAnd(ctx, rule, candidateContext)
 	case model.OpOr:
-		return e.evaluateLogicalOr(ctx, rule, metadata)
+		return e.evaluateLogicalOr(ctx, rule, candidateContext)
 	case model.OpNot:
-		return e.evaluateLogicalNot(ctx, rule, metadata)
+		return e.evaluateLogicalNot(ctx, rule, candidateContext)
 	}
 
 	// Evaluate left operand
-	leftVal, err := e.getValue(rule.LeftOperand, metadata)
+	leftVal, err := e.getValue(rule.LeftOperand, candidateContext)
 	if err != nil {
 		return false, fmt.Errorf("get left value: %w", err)
 	}
 
 	// Evaluate right operand
-	rightVal, err := e.getValue(rule.RightOperand, metadata)
+	rightVal, err := e.getValue(rule.RightOperand, candidateContext)
 	if err != nil {
 		return false, fmt.Errorf("get right value: %w", err)
 	}
@@ -178,7 +196,7 @@ func (e *Engine) evaluateRule(ctx context.Context, rule dbgen.Rule, metadata mod
 }
 
 // evaluateLogicalAnd evaluates an AND rule (left and right are rule UUIDs)
-func (e *Engine) evaluateLogicalAnd(ctx context.Context, rule dbgen.Rule, metadata model.TorrentMetadata) (bool, error) {
+func (e *Engine) evaluateLogicalAnd(ctx context.Context, rule dbgen.Rule, candidateContext model.CandidateContext) (bool, error) {
 	leftRule, err := e.getRuleByID(ctx, rule.LeftOperand)
 	if err != nil {
 		return false, err
@@ -188,11 +206,11 @@ func (e *Engine) evaluateLogicalAnd(ctx context.Context, rule dbgen.Rule, metada
 		return false, err
 	}
 
-	leftResult, err := e.evaluateRule(ctx, leftRule, metadata)
+	leftResult, err := e.evaluateRule(ctx, leftRule, candidateContext)
 	if err != nil {
 		return false, err
 	}
-	rightResult, err := e.evaluateRule(ctx, rightRule, metadata)
+	rightResult, err := e.evaluateRule(ctx, rightRule, candidateContext)
 	if err != nil {
 		return false, err
 	}
@@ -201,7 +219,7 @@ func (e *Engine) evaluateLogicalAnd(ctx context.Context, rule dbgen.Rule, metada
 }
 
 // evaluateLogicalOr evaluates an OR rule (left and right are rule UUIDs)
-func (e *Engine) evaluateLogicalOr(ctx context.Context, rule dbgen.Rule, metadata model.TorrentMetadata) (bool, error) {
+func (e *Engine) evaluateLogicalOr(ctx context.Context, rule dbgen.Rule, candidateContext model.CandidateContext) (bool, error) {
 	leftRule, err := e.getRuleByID(ctx, rule.LeftOperand)
 	if err != nil {
 		return false, err
@@ -211,11 +229,11 @@ func (e *Engine) evaluateLogicalOr(ctx context.Context, rule dbgen.Rule, metadat
 		return false, err
 	}
 
-	leftResult, err := e.evaluateRule(ctx, leftRule, metadata)
+	leftResult, err := e.evaluateRule(ctx, leftRule, candidateContext)
 	if err != nil {
 		return false, err
 	}
-	rightResult, err := e.evaluateRule(ctx, rightRule, metadata)
+	rightResult, err := e.evaluateRule(ctx, rightRule, candidateContext)
 	if err != nil {
 		return false, err
 	}
@@ -224,13 +242,13 @@ func (e *Engine) evaluateLogicalOr(ctx context.Context, rule dbgen.Rule, metadat
 }
 
 // evaluateLogicalNot evaluates a NOT rule (right is a rule UUID)
-func (e *Engine) evaluateLogicalNot(ctx context.Context, rule dbgen.Rule, metadata model.TorrentMetadata) (bool, error) {
+func (e *Engine) evaluateLogicalNot(ctx context.Context, rule dbgen.Rule, candidateContext model.CandidateContext) (bool, error) {
 	rightRule, err := e.getRuleByID(ctx, rule.RightOperand)
 	if err != nil {
 		return false, err
 	}
 
-	result, err := e.evaluateRule(ctx, rightRule, metadata)
+	result, err := e.evaluateRule(ctx, rightRule, candidateContext)
 	if err != nil {
 		return false, err
 	}
@@ -268,25 +286,25 @@ func (e *Engine) getRuleByID(ctx context.Context, ruleIDStr string) (dbgen.Rule,
 }
 
 // getValue gets a value from metadata or returns the literal value
-func (e *Engine) getValue(operand string, metadata model.TorrentMetadata) (interface{}, error) {
+func (e *Engine) getValue(operand string, candidateContext model.CandidateContext) (interface{}, error) {
 	// Check if it's a field reference (torrent.*)
 	if strings.HasPrefix(operand, "torrent.") {
 		field := strings.TrimPrefix(operand, "torrent.")
 		switch field {
 		case "size":
-			return int64(metadata.Size), nil
+			return int64(candidateContext.Candidate.Size), nil
 		case "seeders":
-			return int64(metadata.Seeders), nil
+			return int64(candidateContext.Candidate.Seeders), nil
 		case "peers":
-			return int64(metadata.Peers), nil
+			return int64(candidateContext.Candidate.Peers), nil
 		case "title":
-			return metadata.Title, nil
+			return candidateContext.Candidate.Title, nil
 		case "tracker":
-			return metadata.Tracker, nil
+			return candidateContext.Candidate.Indexer, nil
 		case "tracker_id":
-			return metadata.TrackerID, nil
+			return candidateContext.Candidate.IndexerID, nil
 		case "categories":
-			return metadata.Categories, nil
+			return candidateContext.Candidate.Categories, nil
 		default:
 			return nil, fmt.Errorf("unknown field: %s", field)
 		}

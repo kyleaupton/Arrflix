@@ -101,30 +101,7 @@ func (s *DownloadCandidatesService) SearchDownloadCandidates(ctx context.Context
 		s.cacheMu.Unlock()
 
 		// Transform to DownloadCandidate
-		categories := make([]string, 0, len(result.Categories))
-		for _, cat := range result.Categories {
-			if cat != nil && cat.Name != "" {
-				categories = append(categories, cat.Name)
-			}
-		}
-
-		candidate := model.DownloadCandidate{
-			Protocol:    string(result.Protocol),
-			Filename:    result.FileName,
-			Link:        result.DownloadURL,
-			Indexer:     result.Indexer,
-			IndexerID:   result.IndexerID,
-			GUID:        result.GUID,
-			Peers:       result.Leechers,
-			Seeders:     result.Seeders,
-			Age:         result.Age,
-			AgeHours:    result.AgeHours,
-			Size:        result.Size,
-			Grabs:       result.Grabs,
-			Categories:  categories,
-			PublishDate: result.PublishDate,
-			Title:       result.Title,
-		}
+		candidate := s.searchResultToCandidate(result)
 		candidates = append(candidates, candidate)
 	}
 
@@ -153,31 +130,10 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 
 	result := cached.result
 
-	// Extract categories
-	categories := make([]string, 0, len(result.Categories))
-	for _, cat := range result.Categories {
-		if cat != nil && cat.Name != "" {
-			categories = append(categories, cat.Name)
-		}
-	}
+	// Transform to DownloadCandidate
+	candidate := s.searchResultToCandidate(result)
 
-	// Build torrent metadata
-	metadata := model.TorrentMetadata{
-		Size:       uint64(result.Size),
-		Seeders:    uint(result.Seeders),
-		Peers:      uint(result.Leechers),
-		Title:      result.Title,
-		Tracker:    result.Indexer,
-		TrackerID:  fmt.Sprintf("%d", result.IndexerID),
-		Categories: categories,
-	}
-
-	// Evaluate through policy engine (now returns trace)
-	trace, err := s.policyEngine.Evaluate(ctx, model.EvaluateParams{
-		TorrentURL: result.DownloadURL,
-		Metadata:   metadata,
-		MediaType:  model.MediaTypeMovie,
-	})
+	trace, err := s.policyEngine.Evaluate(ctx, candidate)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("Failed to evaluate policy")
 		return model.EvaluationTrace{}, fmt.Errorf("failed to evaluate policy: %w", err)
@@ -190,6 +146,35 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 // This is now just an alias for EnqueueCandidate since Evaluate always returns trace
 func (s *DownloadCandidatesService) PreviewCandidate(ctx context.Context, movieID int64, indexerID int64, guid string) (model.EvaluationTrace, error) {
 	return s.EnqueueCandidate(ctx, movieID, indexerID, guid)
+}
+
+// searchResultToCandidate converts a prowlarr.Search result to a model.DownloadCandidate
+func (s *DownloadCandidatesService) searchResultToCandidate(result *prowlarr.Search) model.DownloadCandidate {
+	// Extract categories
+	categories := make([]string, 0, len(result.Categories))
+	for _, cat := range result.Categories {
+		if cat != nil && cat.Name != "" {
+			categories = append(categories, cat.Name)
+		}
+	}
+
+	return model.DownloadCandidate{
+		Protocol:    string(result.Protocol),
+		Filename:    result.FileName,
+		Link:        result.DownloadURL,
+		Indexer:     result.Indexer,
+		IndexerID:   result.IndexerID,
+		GUID:        result.GUID,
+		Peers:       result.Leechers,
+		Seeders:     result.Seeders,
+		Age:         result.Age,
+		AgeHours:    result.AgeHours,
+		Size:        result.Size,
+		Grabs:       result.Grabs,
+		Categories:  categories,
+		PublishDate: result.PublishDate,
+		Title:       result.Title,
+	}
 }
 
 // cacheKey generates a cache key from indexer ID and GUID

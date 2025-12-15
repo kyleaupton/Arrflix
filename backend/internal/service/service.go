@@ -31,8 +31,8 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 	tmdb := NewTmdbService(r, l)
 	indexer := NewIndexerService(r, l, c)
 	media := NewMediaService(r, l, tmdb)
-	policies := NewPoliciesService(r)
-	policyEngine := policy.NewEngine(r)
+	policies := NewPoliciesService(r, l)
+	policyEngine := policy.NewEngine(r, l)
 
 	return &Services{
 		Auth:               NewAuthService(r, cfg),

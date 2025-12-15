@@ -5,25 +5,25 @@ import (
 	"testing"
 
 	"github.com/kyleaupton/snaggle/backend/internal"
+	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
 )
 
 func TestEngine_Evaluate(t *testing.T) {
 	r := internal.GetRepo()
-	engine := NewEngine(r)
-
-	trace, err := engine.Evaluate(context.Background(), model.EvaluateParams{
-		TorrentURL: "https://example.com/torrent.torrent",
-		Metadata: model.TorrentMetadata{
-			Size:       1000,
-			Seeders:    10,
-			Peers:      10,
-			Title:      "Test Torrent",
-			Tracker:    "Test Tracker",
-			TrackerID:  "1234567890",
-			Categories: []string{"Test Category"},
-		},
-		MediaType: model.MediaTypeMovie,
+	logg := logger.New(true)
+	engine := NewEngine(r, logg)
+	trace, err := engine.Evaluate(context.Background(), model.DownloadCandidate{
+		Protocol:  "http",
+		Filename:  "test.torrent",
+		Link:      "https://example.com/torrent.torrent",
+		Indexer:   "Test Indexer",
+		IndexerID: 1234567890,
+		GUID:      "1234567890",
+		Peers:     10,
+		Seeders:   10,
+		Age:       1000,
+		AgeHours:  10,
 	})
 
 	if err != nil {

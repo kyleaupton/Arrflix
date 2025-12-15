@@ -78,13 +78,6 @@ type ActionUpdateRequest struct {
 	Order int32  `json:"order"`
 }
 
-// EvaluateRequest payload for testing policy evaluation
-type EvaluateRequest struct {
-	TorrentURL string                 `json:"torrentUrl"`
-	Metadata   model.TorrentMetadata `json:"metadata"`
-	MediaType  model.MediaType       `json:"mediaType"`
-}
-
 // List policies
 // @Summary List policies
 // @Tags    policies
@@ -403,21 +396,17 @@ func (h *Policies) DeleteAction(c echo.Context) error {
 // @Tags    policies
 // @Accept  json
 // @Produce json
-// @Param   payload body handlers.EvaluateRequest true "Evaluate request"
+// @Param   payload body model.DownloadCandidate true "Download candidate"
 // @Success 200 {object} model.EvaluationTrace
 // @Failure 400 {object} map[string]string
 // @Router  /v1/policies/evaluate [post]
 func (h *Policies) Evaluate(c echo.Context) error {
-	var req EvaluateRequest
+	var req model.DownloadCandidate
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}
 	ctx := c.Request().Context()
-	trace, err := h.svc.Policies.Evaluate(ctx, model.EvaluateParams{
-		TorrentURL: req.TorrentURL,
-		Metadata:   req.Metadata,
-		MediaType:  req.MediaType,
-	})
+	trace, err := h.svc.Policies.Evaluate(ctx, req)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

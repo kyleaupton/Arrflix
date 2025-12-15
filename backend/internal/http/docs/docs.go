@@ -1195,12 +1195,12 @@ const docTemplate = `{
                 "summary": "Evaluate policies against torrent metadata",
                 "parameters": [
                     {
-                        "description": "Evaluate request",
+                        "description": "Download candidate",
                         "name": "payload",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.EvaluateRequest"
+                            "$ref": "#/definitions/model.DownloadCandidate"
                         }
                     }
                 ],
@@ -2046,25 +2046,6 @@ const docTemplate = `{
                 },
                 "indexerId": {
                     "type": "integer"
-                }
-            }
-        },
-        "handlers.EvaluateRequest": {
-            "type": "object",
-            "required": [
-                "mediaType",
-                "metadata",
-                "torrentUrl"
-            ],
-            "properties": {
-                "mediaType": {
-                    "$ref": "#/definitions/model.MediaType"
-                },
-                "metadata": {
-                    "$ref": "#/definitions/model.TorrentMetadata"
-                },
-                "torrentUrl": {
-                    "type": "string"
                 }
             }
         },
@@ -3106,17 +3087,6 @@ const docTemplate = `{
                 "value": {}
             }
         },
-        "model.MediaType": {
-            "type": "string",
-            "enum": [
-                "movie",
-                "series"
-            ],
-            "x-enum-varnames": [
-                "MediaTypeMovie",
-                "MediaTypeSeries"
-            ]
-        },
         "model.Movie": {
             "type": "object",
             "required": [
@@ -3564,43 +3534,6 @@ const docTemplate = `{
                 },
                 "tmdbId": {
                     "type": "integer"
-                }
-            }
-        },
-        "model.TorrentMetadata": {
-            "type": "object",
-            "properties": {
-                "categories": {
-                    "description": "category tags",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "peers": {
-                    "description": "number of peers",
-                    "type": "integer"
-                },
-                "seeders": {
-                    "description": "number of seeders",
-                    "type": "integer"
-                },
-                "size": {
-                    "description": "file size in bytes",
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "title": {
-                    "description": "torrent title",
-                    "type": "string"
-                },
-                "tracker": {
-                    "description": "tracker/indexer name",
-                    "type": "string"
-                },
-                "trackerID": {
-                    "description": "tracker/indexer ID",
-                    "type": "string"
                 }
             }
         }

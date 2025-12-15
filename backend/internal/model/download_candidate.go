@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"errors"
+	"strings"
+	"time"
+)
 
 // DownloadCandidate represents a download candidate from Prowlarr search results
 type DownloadCandidate struct {
@@ -19,6 +23,20 @@ type DownloadCandidate struct {
 	Categories  []string  `json:"categories"`
 	PublishDate time.Time `json:"publishDate"`
 	Title       string    `json:"title"`
+}
+
+func (c *DownloadCandidate) GetMediaType() (MediaType, error) {
+	// For now, we'll look for a category that is either "Movies/*", "Movies", "TV/*", or "TV"
+	for _, category := range c.Categories {
+		if strings.HasPrefix(category, "Movies/") || category == "Movies" {
+			return MediaTypeMovie, nil
+		}
+		if strings.HasPrefix(category, "TV/") || category == "TV" {
+			return MediaTypeSeries, nil
+		}
+	}
+
+	return "", errors.New("no media type found")
 }
 
 // EnqueueCandidateRequest is the request body for enqueueing a download candidate

@@ -105,12 +105,6 @@ export type HandlersEnqueueCandidateRequest = {
     indexerId: number;
 };
 
-export type HandlersEvaluateRequest = {
-    mediaType: ModelMediaType;
-    metadata: ModelTorrentMetadata;
-    torrentUrl: string;
-};
-
 export type HandlersLibraryCreateRequest = {
     default: boolean;
     enabled: boolean;
@@ -407,8 +401,6 @@ export type ModelIndexerSelectOption = {
     value: unknown;
 };
 
-export type ModelMediaType = 'movie' | 'series';
-
 export type ModelMovie = {
     backdropPath: string;
     originCountry: Array<string>;
@@ -541,37 +533,6 @@ export type ModelSeriesRail = {
     releaseDate: string;
     title: string;
     tmdbId: number;
-};
-
-export type ModelTorrentMetadata = {
-    /**
-     * category tags
-     */
-    categories?: Array<string>;
-    /**
-     * number of peers
-     */
-    peers?: number;
-    /**
-     * number of seeders
-     */
-    seeders?: number;
-    /**
-     * file size in bytes
-     */
-    size?: number;
-    /**
-     * torrent title
-     */
-    title?: string;
-    /**
-     * tracker/indexer name
-     */
-    tracker?: string;
-    /**
-     * tracker/indexer ID
-     */
-    trackerID?: string;
 };
 
 export type GetHealthData = {
@@ -1473,9 +1434,9 @@ export type PostV1PoliciesResponse = PostV1PoliciesResponses[keyof PostV1Policie
 
 export type PostV1PoliciesEvaluateData = {
     /**
-     * Evaluate request
+     * Download candidate
      */
-    body: HandlersEvaluateRequest;
+    body: ModelDownloadCandidate;
     path?: never;
     query?: never;
     url: '/v1/policies/evaluate';

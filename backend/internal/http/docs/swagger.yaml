@@ -245,19 +245,6 @@ definitions:
     - guid
     - indexerId
     type: object
-  handlers.EvaluateRequest:
-    properties:
-      mediaType:
-        $ref: '#/definitions/model.MediaType'
-      metadata:
-        $ref: '#/definitions/model.TorrentMetadata'
-      torrentUrl:
-        type: string
-    required:
-    - mediaType
-    - metadata
-    - torrentUrl
-    type: object
   handlers.LibraryCreateRequest:
     properties:
       default:
@@ -992,14 +979,6 @@ definitions:
     - order
     - value
     type: object
-  model.MediaType:
-    enum:
-    - movie
-    - series
-    type: string
-    x-enum-varnames:
-    - MediaTypeMovie
-    - MediaTypeSeries
   model.Movie:
     properties:
       backdropPath:
@@ -1317,33 +1296,6 @@ definitions:
     - releaseDate
     - title
     - tmdbId
-    type: object
-  model.TorrentMetadata:
-    properties:
-      categories:
-        description: category tags
-        items:
-          type: string
-        type: array
-      peers:
-        description: number of peers
-        type: integer
-      seeders:
-        description: number of seeders
-        type: integer
-      size:
-        description: file size in bytes
-        format: int64
-        type: integer
-      title:
-        description: torrent title
-        type: string
-      tracker:
-        description: tracker/indexer name
-        type: string
-      trackerID:
-        description: tracker/indexer ID
-        type: string
     type: object
 info:
   contact: {}
@@ -2371,12 +2323,12 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Evaluate request
+      - description: Download candidate
         in: body
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/handlers.EvaluateRequest'
+          $ref: '#/definitions/model.DownloadCandidate'
       produces:
       - application/json
       responses:

@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
+	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/policy"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
@@ -16,10 +17,10 @@ type PoliciesService struct {
 	engine *policy.Engine
 }
 
-func NewPoliciesService(r *repo.Repository) *PoliciesService {
+func NewPoliciesService(r *repo.Repository, logg *logger.Logger) *PoliciesService {
 	return &PoliciesService{
 		repo:   r,
-		engine: policy.NewEngine(r),
+		engine: policy.NewEngine(r, logg),
 	}
 }
 
@@ -146,6 +147,6 @@ func (s *PoliciesService) DeleteAction(ctx context.Context, id pgtype.UUID) erro
 }
 
 // Evaluate evaluates policies against torrent metadata and returns an EvaluationTrace
-func (s *PoliciesService) Evaluate(ctx context.Context, params model.EvaluateParams) (model.EvaluationTrace, error) {
-	return s.engine.Evaluate(ctx, params)
+func (s *PoliciesService) Evaluate(ctx context.Context, candidate model.DownloadCandidate) (model.EvaluationTrace, error) {
+	return s.engine.Evaluate(ctx, candidate)
 }
