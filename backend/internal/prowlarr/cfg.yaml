@@ -1,5 +1,0 @@
-package: prowlarr
-output: prowlarr.gen.go
-generate:
-  models: true
-  client: true
