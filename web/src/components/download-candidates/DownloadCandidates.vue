@@ -1,10 +1,10 @@
 <template>
   <div class="download-candidates">
     <div class="mb-4">
-      <h3 class="text-lg font-semibold mb-2">Download Candidates</h3>
-      <p class="text-sm text-muted-color">
+      <!-- <h3 class="text-lg font-semibold mb-2">Download Candidates</h3> -->
+      <!-- <p class="text-sm text-muted-color">
         Search results for download candidates. Select a candidate to enqueue it for download.
-      </p>
+      </p> -->
     </div>
 
     <DataTable

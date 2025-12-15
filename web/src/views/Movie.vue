@@ -12,7 +12,7 @@
         :chips="movieChips"
       >
         <template #actions>
-          <Button @click="searchForDownloadCandidates">Search for Download Candidates</Button>
+          <Button label="Snag" :icon="PrimeIcons.DOWNLOAD" @click="searchForDownloadCandidates" />
         </template>
       </MediaHero>
 
@@ -26,6 +26,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import Button from 'primevue/button'
+import { PrimeIcons } from '@/icons'
 import { getV1MovieByIdOptions } from '@/client/@tanstack/vue-query.gen'
 import { useModal } from '@/composables/useModal'
 import Page from '@/components/Page.vue'
