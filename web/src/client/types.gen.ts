@@ -482,15 +482,15 @@ export type ModelPlan = {
     /**
      * how to download
      */
-    downloaderID?: string;
+    downloaderId: string;
     /**
      * where to move/hardlink/copy the file to
      */
-    libraryID?: string;
+    libraryId: string;
     /**
      * how to name the file
      */
-    nameTemplateID?: string;
+    nameTemplateId: string;
 };
 
 export type ModelPolicyEvaluation = {

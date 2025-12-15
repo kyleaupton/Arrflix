@@ -1135,15 +1135,19 @@ definitions:
     type: object
   model.Plan:
     properties:
-      downloaderID:
+      downloaderId:
         description: how to download
         type: string
-      libraryID:
+      libraryId:
         description: where to move/hardlink/copy the file to
         type: string
-      nameTemplateID:
+      nameTemplateId:
         description: how to name the file
         type: string
+    required:
+    - downloaderId
+    - libraryId
+    - nameTemplateId
     type: object
   model.PolicyEvaluation:
     properties:

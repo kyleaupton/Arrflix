@@ -2,7 +2,6 @@ package policy
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -28,10 +27,6 @@ func NewEngine(r *repo.Repository, l *logger.Logger) *Engine {
 
 // Evaluate evaluates all enabled policies in priority order and returns an EvaluationTrace
 func (e *Engine) Evaluate(ctx context.Context, candidate model.DownloadCandidate) (model.EvaluationTrace, error) {
-	// print candidate
-	jsonData, _ := json.MarshalIndent(candidate, "", "  ")
-	e.logger.Debug().Msgf("candidate: %+v", string(jsonData))
-
 	trace := model.EvaluationTrace{
 		Policies: []model.PolicyEvaluation{},
 		FinalPlan: model.Plan{
@@ -128,6 +123,8 @@ func (e *Engine) Evaluate(ctx context.Context, candidate model.DownloadCandidate
 
 		trace.Policies = append(trace.Policies, policyEval)
 	}
+
+	e.logger.Debug().Msgf("final plan: %+v", trace.FinalPlan)
 
 	// Default logic
 	// If we get to this point and there are decisions that are not made, we should
@@ -361,7 +358,7 @@ func (e *Engine) getCandidateField(field string, candidateContext model.Candidat
 // getQualityField gets a value from the parsed quality
 func (e *Engine) getQualityField(field string, candidateContext model.CandidateContext) (interface{}, error) {
 	quality := candidateContext.Quality
-	
+
 	// Handle nested audio fields
 	if strings.HasPrefix(field, "audio.") {
 		audioField := strings.TrimPrefix(field, "audio.")
@@ -374,7 +371,7 @@ func (e *Engine) getQualityField(field string, candidateContext model.CandidateC
 			return nil, fmt.Errorf("unknown quality.audio field: %s", audioField)
 		}
 	}
-	
+
 	switch field {
 	case "resolution":
 		return string(quality.Resolution), nil

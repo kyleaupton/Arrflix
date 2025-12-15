@@ -6,9 +6,9 @@ import (
 )
 
 type Plan struct {
-	DownloaderID   string // how to download
-	LibraryID      string // where to move/hardlink/copy the file to
-	NameTemplateID string // how to name the file
+	DownloaderID   string `json:"downloaderId"`   // how to download
+	LibraryID      string `json:"libraryId"`      // where to move/hardlink/copy the file to
+	NameTemplateID string `json:"nameTemplateId"` // how to name the file
 }
 
 // TorrentMetadata represents metadata about a torrent for policy evaluation
@@ -117,10 +117,10 @@ type EnumValue struct {
 
 // FieldDefinition represents metadata about a policy field
 type FieldDefinition struct {
-	Path          string      `json:"path"`           // e.g., "candidate.size", "quality.resolution"
-	Label         string      `json:"label"`          // Display name
-	Type          FieldType   `json:"type"`          // "text", "number", "enum", "dynamic", "boolean"
-	ValueType     string      `json:"valueType"`     // "string", "int64", "float64", "[]string", "bool"
+	Path          string      `json:"path"`                    // e.g., "candidate.size", "quality.resolution"
+	Label         string      `json:"label"`                   // Display name
+	Type          FieldType   `json:"type"`                    // "text", "number", "enum", "dynamic", "boolean"
+	ValueType     string      `json:"valueType"`               // "string", "int64", "float64", "[]string", "bool"
 	EnumValues    []EnumValue `json:"enumValues,omitempty"`    // For enum type
 	DynamicSource string      `json:"dynamicSource,omitempty"` // API endpoint for dynamic fields
 	Operators     []string    `json:"operators"`               // Valid operators for this field

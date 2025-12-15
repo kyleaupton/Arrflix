@@ -5,14 +5,13 @@
       <DownloadCandidatePreview v-else :candidate="selectedCandidate" />
     </div>
 
-    <div v-if="selectedCandidate" class="flex justify-end gap-2 p-4 border-t">
-      <Button label="Cancel" variant="secondary" @click="handleCancel" />
-      <Button
-        label="Enqueue"
-        variant="primary"
-        :loading="enqueueMutation.isPending.value"
-        @click="handleEnqueue"
-      />
+    <div v-if="selectedCandidate" class="flex flex-col">
+      <Divider />
+
+      <div class="flex justify-end gap-2">
+        <Button label="Cancel" severity="secondary" @click="handleCancel" />
+        <Button label="Enqueue" :loading="enqueueMutation.isPending.value" @click="handleEnqueue" />
+      </div>
     </div>
   </div>
 </template>
@@ -21,6 +20,7 @@
 import { ref, computed, inject } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
 import Button from 'primevue/button'
+import Divider from 'primevue/divider'
 import { postV1MovieByIdEnqueueCandidateMutation } from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate } from '@/client/types.gen'
 import DownloadCandidateList from './DownloadCandidatesList.vue'

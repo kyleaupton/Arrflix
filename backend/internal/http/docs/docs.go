@@ -3327,16 +3327,21 @@ const docTemplate = `{
         },
         "model.Plan": {
             "type": "object",
+            "required": [
+                "downloaderId",
+                "libraryId",
+                "nameTemplateId"
+            ],
             "properties": {
-                "downloaderID": {
+                "downloaderId": {
                     "description": "how to download",
                     "type": "string"
                 },
-                "libraryID": {
+                "libraryId": {
                     "description": "where to move/hardlink/copy the file to",
                     "type": "string"
                 },
-                "nameTemplateID": {
+                "nameTemplateId": {
                     "description": "how to name the file",
                     "type": "string"
                 }

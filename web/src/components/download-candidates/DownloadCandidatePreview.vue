@@ -41,8 +41,63 @@
         </template>
       </Card>
 
+      <!-- Final Plan -->
+      <Card class="final-plan-card mb-4">
+        <template #title>
+          <div class="flex items-center gap-2">
+            <i class="pi pi-check-circle text-primary"></i>
+            <span>Final Download Plan</span>
+          </div>
+        </template>
+        <template #content>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <i class="pi pi-download text-primary"></i>
+              <div>
+                <div class="text-sm text-muted-color">Downloader</div>
+                <div class="font-semibold">
+                  <DownloaderReference
+                    v-if="trace.finalPlan.downloaderId"
+                    :downloader-id="trace.finalPlan.downloaderId"
+                  />
+                  <span v-else class="text-muted-color">Not set</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <i class="pi pi-folder text-primary"></i>
+              <div>
+                <div class="text-sm text-muted-color">Library</div>
+                <div class="font-semibold">
+                  <LibraryReference
+                    v-if="trace.finalPlan.libraryId"
+                    :library-id="trace.finalPlan.libraryId"
+                  />
+                  <span v-else class="text-muted-color">Not set</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <i class="pi pi-file-edit text-primary"></i>
+              <div>
+                <div class="text-sm text-muted-color">Name Template</div>
+                <div class="font-semibold">
+                  <NameTemplateReference
+                    v-if="trace.finalPlan.nameTemplateId"
+                    :name-template-id="trace.finalPlan.nameTemplateId"
+                  />
+                  <span v-else class="text-muted-color">Not set</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </Card>
+
+      <Divider />
+
       <!-- Policy Evaluation -->
-      <div class="mb-4">
+      <div>
         <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
           <i class="pi pi-list-check"></i>
           Policy Evaluation
@@ -110,49 +165,6 @@
           </div>
         </div>
       </div>
-
-      <Divider />
-
-      <!-- Final Plan -->
-      <Card class="final-plan-card">
-        <template #title>
-          <div class="flex items-center gap-2">
-            <i class="pi pi-check-circle text-primary"></i>
-            <span>Final Download Plan</span>
-          </div>
-        </template>
-        <template #content>
-          <div class="space-y-3">
-            <div class="flex items-center gap-3">
-              <i class="pi pi-download text-primary"></i>
-              <div>
-                <div class="text-sm text-muted-color">Downloader</div>
-                <div class="font-semibold">
-                  {{ trace.finalPlan.downloaderID || 'Default' }}
-                </div>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <i class="pi pi-folder text-primary"></i>
-              <div>
-                <div class="text-sm text-muted-color">Library</div>
-                <div class="font-semibold">
-                  {{ trace.finalPlan.libraryID || 'Default' }}
-                </div>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <i class="pi pi-file-edit text-primary"></i>
-              <div>
-                <div class="text-sm text-muted-color">Name Template</div>
-                <div class="font-semibold">
-                  {{ trace.finalPlan.nameTemplateID || 'Default' }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </template>
-      </Card>
     </div>
   </div>
 </template>
@@ -165,6 +177,9 @@ import Badge from 'primevue/badge'
 import Divider from 'primevue/divider'
 import { postV1MovieByIdPreviewCandidateMutation } from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate, type ModelEvaluationTrace } from '@/client/types.gen'
+import LibraryReference from '@/components/references/LibraryReference.vue'
+import DownloaderReference from '@/components/references/DownloaderReference.vue'
+import NameTemplateReference from '@/components/references/NameTemplateReference.vue'
 
 const props = defineProps<{
   candidate: ModelDownloadCandidate
