@@ -31,6 +31,12 @@ const settingsItems = [
     to: '/settings/general',
   },
   {
+    key: 'policies',
+    label: 'Policies',
+    icon: PrimeIcons.SLIDERS_H,
+    to: '/settings/policies',
+  },
+  {
     key: 'libraries',
     label: 'Libraries',
     icon: PrimeIcons.FOLDER,
@@ -53,12 +59,6 @@ const settingsItems = [
     label: 'Name Templates',
     icon: PrimeIcons.FILE_EDIT,
     to: '/settings/name-templates',
-  },
-  {
-    key: 'policies',
-    label: 'Policies',
-    icon: PrimeIcons.SLIDERS_H,
-    to: '/settings/policies',
   },
 ]
 </script>
