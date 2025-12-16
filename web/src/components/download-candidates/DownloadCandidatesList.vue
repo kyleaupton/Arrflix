@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { computed, inject } from 'vue'
-import { getV1MovieByIdDownloadCandidatesOptions } from '@/client/@tanstack/vue-query.gen'
+import { getV1MovieByIdCandidatesOptions } from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate } from '@/client/types.gen'
 import DataTable from '@/components/tables/DataTable.vue'
 import {
@@ -46,7 +46,7 @@ const movieId = computed(() => {
 
 // Query options for fetching download candidates
 const queryOptions = computed(() =>
-  getV1MovieByIdDownloadCandidatesOptions({
+  getV1MovieByIdCandidatesOptions({
     path: { id: movieId.value },
   }),
 )

@@ -175,7 +175,7 @@ import { useMutation } from '@tanstack/vue-query'
 import Card from 'primevue/card'
 import Badge from 'primevue/badge'
 import Divider from 'primevue/divider'
-import { postV1MovieByIdPreviewCandidateMutation } from '@/client/@tanstack/vue-query.gen'
+import { postV1MovieByIdCandidatePreviewMutation } from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate, type ModelEvaluationTrace } from '@/client/types.gen'
 import LibraryReference from '@/components/references/LibraryReference.vue'
 import DownloaderReference from '@/components/references/DownloaderReference.vue'
@@ -202,7 +202,7 @@ const error = ref<string | undefined>(undefined)
 
 // Preview mutation
 const previewMutation = useMutation({
-  ...postV1MovieByIdPreviewCandidateMutation(),
+  ...postV1MovieByIdCandidatePreviewMutation(),
   onSuccess: (data) => {
     trace.value = data
     error.value = undefined
