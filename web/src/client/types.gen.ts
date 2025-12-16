@@ -1142,7 +1142,54 @@ export type GetV1MovieByIdResponses = {
 
 export type GetV1MovieByIdResponse = GetV1MovieByIdResponses[keyof GetV1MovieByIdResponses];
 
-export type GetV1MovieByIdDownloadCandidatesData = {
+export type PostV1MovieByIdCandidatePreviewData = {
+    /**
+     * Preview request
+     */
+    body: HandlersEnqueueCandidateRequest;
+    path: {
+        /**
+         * Movie ID (TMDB ID)
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1/movie/{id}/candidate/preview';
+};
+
+export type PostV1MovieByIdCandidatePreviewErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1MovieByIdCandidatePreviewError = PostV1MovieByIdCandidatePreviewErrors[keyof PostV1MovieByIdCandidatePreviewErrors];
+
+export type PostV1MovieByIdCandidatePreviewResponses = {
+    /**
+     * OK
+     */
+    200: ModelEvaluationTrace;
+};
+
+export type PostV1MovieByIdCandidatePreviewResponse = PostV1MovieByIdCandidatePreviewResponses[keyof PostV1MovieByIdCandidatePreviewResponses];
+
+export type GetV1MovieByIdCandidatesData = {
     body?: never;
     path: {
         /**
@@ -1151,10 +1198,10 @@ export type GetV1MovieByIdDownloadCandidatesData = {
         id: number;
     };
     query?: never;
-    url: '/v1/movie/{id}/download-candidates';
+    url: '/v1/movie/{id}/candidates';
 };
 
-export type GetV1MovieByIdDownloadCandidatesErrors = {
+export type GetV1MovieByIdCandidatesErrors = {
     /**
      * Bad Request
      */
@@ -1169,16 +1216,16 @@ export type GetV1MovieByIdDownloadCandidatesErrors = {
     };
 };
 
-export type GetV1MovieByIdDownloadCandidatesError = GetV1MovieByIdDownloadCandidatesErrors[keyof GetV1MovieByIdDownloadCandidatesErrors];
+export type GetV1MovieByIdCandidatesError = GetV1MovieByIdCandidatesErrors[keyof GetV1MovieByIdCandidatesErrors];
 
-export type GetV1MovieByIdDownloadCandidatesResponses = {
+export type GetV1MovieByIdCandidatesResponses = {
     /**
      * OK
      */
     200: Array<ModelDownloadCandidate>;
 };
 
-export type GetV1MovieByIdDownloadCandidatesResponse = GetV1MovieByIdDownloadCandidatesResponses[keyof GetV1MovieByIdDownloadCandidatesResponses];
+export type GetV1MovieByIdCandidatesResponse = GetV1MovieByIdCandidatesResponses[keyof GetV1MovieByIdCandidatesResponses];
 
 export type PostV1MovieByIdEnqueueCandidateData = {
     /**
@@ -1226,53 +1273,6 @@ export type PostV1MovieByIdEnqueueCandidateResponses = {
 };
 
 export type PostV1MovieByIdEnqueueCandidateResponse = PostV1MovieByIdEnqueueCandidateResponses[keyof PostV1MovieByIdEnqueueCandidateResponses];
-
-export type PostV1MovieByIdPreviewCandidateData = {
-    /**
-     * Preview request
-     */
-    body: HandlersEnqueueCandidateRequest;
-    path: {
-        /**
-         * Movie ID (TMDB ID)
-         */
-        id: number;
-    };
-    query?: never;
-    url: '/v1/movie/{id}/preview-candidate';
-};
-
-export type PostV1MovieByIdPreviewCandidateErrors = {
-    /**
-     * Bad Request
-     */
-    400: {
-        [key: string]: string;
-    };
-    /**
-     * Not Found
-     */
-    404: {
-        [key: string]: string;
-    };
-    /**
-     * Internal Server Error
-     */
-    500: {
-        [key: string]: string;
-    };
-};
-
-export type PostV1MovieByIdPreviewCandidateError = PostV1MovieByIdPreviewCandidateErrors[keyof PostV1MovieByIdPreviewCandidateErrors];
-
-export type PostV1MovieByIdPreviewCandidateResponses = {
-    /**
-     * OK
-     */
-    200: ModelEvaluationTrace;
-};
-
-export type PostV1MovieByIdPreviewCandidateResponse = PostV1MovieByIdPreviewCandidateResponses[keyof PostV1MovieByIdPreviewCandidateResponses];
 
 export type GetV1NameTemplatesData = {
     body?: never;

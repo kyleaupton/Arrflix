@@ -1839,7 +1839,51 @@ paths:
       summary: Get movie
       tags:
       - media
-  /v1/movie/{id}/download-candidates:
+  /v1/movie/{id}/candidate/preview:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Movie ID (TMDB ID)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Preview request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.EnqueueCandidateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.EvaluationTrace'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Preview policy evaluation for a download candidate
+      tags:
+      - download-candidates
+  /v1/movie/{id}/candidates:
     get:
       parameters:
       - description: Movie ID (TMDB ID)
@@ -1913,50 +1957,6 @@ paths:
               type: string
             type: object
       summary: Enqueue a download candidate
-      tags:
-      - download-candidates
-  /v1/movie/{id}/preview-candidate:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Movie ID (TMDB ID)
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Preview request
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.EnqueueCandidateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.EvaluationTrace'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Preview policy evaluation for a download candidate
       tags:
       - download-candidates
   /v1/name-templates:

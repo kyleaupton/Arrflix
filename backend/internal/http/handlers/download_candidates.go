@@ -16,9 +16,9 @@ func NewDownloadCandidates(s *service.Services) *DownloadCandidates {
 }
 
 func (h *DownloadCandidates) RegisterProtected(v1 *echo.Group) {
-	v1.GET("/movie/:id/download-candidates", h.GetDownloadCandidates)
+	v1.GET("/movie/:id/candidates", h.GetDownloadCandidates)
 	v1.POST("/movie/:id/enqueue-candidate", h.EnqueueCandidate)
-	v1.POST("/movie/:id/preview-candidate", h.PreviewCandidate)
+	v1.POST("/movie/:id/candidate/preview", h.PreviewCandidate)
 }
 
 // GetDownloadCandidates searches for download candidates for a movie
@@ -29,7 +29,7 @@ func (h *DownloadCandidates) RegisterProtected(v1 *echo.Group) {
 // @Success 200 {array} model.DownloadCandidate
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router  /v1/movie/{id}/download-candidates [get]
+// @Router  /v1/movie/{id}/candidates [get]
 func (h *DownloadCandidates) GetDownloadCandidates(c echo.Context) error {
 	movieID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -102,7 +102,7 @@ func (h *DownloadCandidates) EnqueueCandidate(c echo.Context) error {
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router  /v1/movie/{id}/preview-candidate [post]
+// @Router  /v1/movie/{id}/candidate/preview [post]
 func (h *DownloadCandidates) PreviewCandidate(c echo.Context) error {
 	movieID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
