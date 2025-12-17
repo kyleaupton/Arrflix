@@ -158,6 +158,35 @@ const handleTestDownloader = async (downloader: DbgenDownloader) => {
   }
 }
 
+const handleTestDownloaderFromForm = async () => {
+  // For new downloaders, we need to save first, then test
+  if (!editingDownloader.value?.id) {
+    downloaderError.value = 'Please save the downloader first before testing'
+    return
+  }
+  
+  testingId.value = editingDownloader.value.id
+  downloaderError.value = null
+  try {
+    const result = await testDownloaderMutation.mutateAsync({ path: { id: editingDownloader.value.id } })
+    if (result.success) {
+      downloaderError.value = null
+      // Show success message using alert
+      await modal.alert({
+        title: 'Connection Test Successful',
+        message: result.message || `Connection test passed. Version: ${result.version || 'unknown'}`,
+        severity: 'success',
+      })
+    } else {
+      downloaderError.value = result.error || 'Connection test failed'
+    }
+  } catch (err: any) {
+    downloaderError.value = err.message || 'Connection test failed'
+  } finally {
+    testingId.value = null
+  }
+}
+
 const downloaderActions = createDownloaderActions(handleTestDownloader, handleEditDownloader, handleDeleteDownloader)
 </script>
 
@@ -257,12 +286,25 @@ const downloaderActions = createDownloaderActions(handleTestDownloader, handleEd
         </div>
       </div>
       <template #footer>
-        <Button label="Cancel" severity="secondary" @click="showDownloaderModal = false" />
-        <Button
-          label="Save"
-          :loading="createDownloaderMutation.isPending.value || updateDownloaderMutation.isPending.value"
-          @click="handleSaveDownloader"
-        />
+        <div class="flex items-center justify-between w-full">
+          <Button
+            v-if="editingDownloader?.id"
+            label="Test Connection"
+            :icon="PrimeIcons.CHECK"
+            severity="secondary"
+            :loading="testingId === editingDownloader?.id"
+            :disabled="!editingDownloader?.id || testDownloaderMutation.isPending.value"
+            @click="handleTestDownloaderFromForm"
+          />
+          <div class="flex gap-2 ml-auto">
+            <Button label="Cancel" severity="secondary" @click="showDownloaderModal = false" />
+            <Button
+              label="Save"
+              :loading="createDownloaderMutation.isPending.value || updateDownloaderMutation.isPending.value"
+              @click="handleSaveDownloader"
+            />
+          </div>
+        </div>
       </template>
     </Dialog>
   </div>

@@ -1,16 +1,27 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/kyleaupton/snaggle/backend/internal/downloader"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 	"github.com/labstack/echo/v4"
 )
 
-type Downloaders struct{ svc *service.Services }
+type Downloaders struct {
+	svc               *service.Services
+	downloaderManager *downloader.Manager
+}
 
-func NewDownloaders(s *service.Services) *Downloaders { return &Downloaders{svc: s} }
+func NewDownloaders(s *service.Services, manager *downloader.Manager) *Downloaders {
+	return &Downloaders{
+		svc:               s,
+		downloaderManager: manager,
+	}
+}
 
 func (h *Downloaders) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/downloaders", h.List)
@@ -60,7 +71,39 @@ func (h *Downloaders) List(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list downloaders"})
 	}
-	return c.JSON(http.StatusOK, downloaders)
+
+	// Get list of initialized client IDs
+	initializedClients := h.downloaderManager.ListClients(ctx)
+	initializedIDs := make(map[string]bool)
+	for _, client := range initializedClients {
+		initializedIDs[string(client.InstanceID())] = true
+	}
+
+	// Add initialized status to each downloader
+	result := make([]map[string]interface{}, 0, len(downloaders))
+	for _, dl := range downloaders {
+		dlID := dl.ID.String()
+		isInitialized := initializedIDs[dlID] && dl.Enabled
+
+		downloaderMap := map[string]interface{}{
+			"id":          dl.ID,
+			"name":        dl.Name,
+			"type":        dl.Type,
+			"protocol":    dl.Protocol,
+			"url":         dl.Url,
+			"username":    dl.Username,
+			"password":    dl.Password,
+			"config_json": dl.ConfigJson,
+			"enabled":     dl.Enabled,
+			"default":     dl.Default,
+			"created_at":  dl.CreatedAt,
+			"updated_at":  dl.UpdatedAt,
+			"initialized": isInitialized,
+		}
+		result = append(result, downloaderMap)
+	}
+
+	return c.JSON(http.StatusOK, result)
 }
 
 // Create downloader
@@ -172,8 +215,9 @@ func (h *Downloaders) GetDefault(c echo.Context) error {
 // @Summary Test downloader connection
 // @Tags    downloaders
 // @Param   id path string true "Downloader ID"
-// @Success 200 {object} map[string]string
+// @Success 200 {object} downloader.TestResult
 // @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
 // @Router  /v1/downloaders/{id}/test [post]
 func (h *Downloaders) Test(c echo.Context) error {
 	var id pgtype.UUID
@@ -186,13 +230,21 @@ func (h *Downloaders) Test(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "not found"})
 	}
 
-	// Test connection by attempting to get version
-	switch downloader.Type {
-	case "qbittorrent":
-		// For now, just return success - full test can be implemented later
-		return c.JSON(http.StatusOK, map[string]string{"status": "ok", "message": "Connection test not yet implemented"})
-	default:
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "unsupported downloader type"})
-	}
-}
+	// Create a context with timeout for testing (10 seconds)
+	testCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
+	// Build a fresh client instance for testing (not cached)
+	client, err := h.downloaderManager.BuildTestClient(ctx, downloader.ID.String())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to build test client: " + err.Error()})
+	}
+
+	// Call the client's Test method
+	result, err := client.Test(testCtx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}

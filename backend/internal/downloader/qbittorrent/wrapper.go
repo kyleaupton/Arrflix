@@ -2,7 +2,6 @@ package qbittorrent
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/kyleaupton/snaggle/backend/internal/downloader"
+	qbt "github.com/superturkey650/go-qbittorrent/qbt"
 )
 
 const (
@@ -18,17 +18,21 @@ const (
 	retryDelay = 1 * time.Second
 )
 
-// qBittorrentClient wraps the HTTP client to implement downloader.Client interface
+// qBittorrentClient wraps the library client to implement downloader.Client interface
 type qBittorrentClient struct {
 	instanceID downloader.InstanceID
-	client     *Client
+	client     *qbt.Client
+	username   string
+	password   string
 }
 
 // NewQBittorrentClient creates a new qBittorrent client wrapper
 func NewQBittorrentClient(instanceID downloader.InstanceID, baseURL, username, password string) *qBittorrentClient {
 	return &qBittorrentClient{
 		instanceID: instanceID,
-		client:     NewClient(baseURL, username, password),
+		client:     qbt.NewClient(baseURL),
+		username:   username,
+		password:   password,
 	}
 }
 
@@ -40,6 +44,48 @@ func (c *qBittorrentClient) Type() downloader.Type {
 // InstanceID returns the instance ID
 func (c *qBittorrentClient) InstanceID() downloader.InstanceID {
 	return c.instanceID
+}
+
+// Test tests the connection to qBittorrent
+func (c *qBittorrentClient) Test(ctx context.Context) (downloader.TestResult, error) {
+	result := downloader.TestResult{}
+
+	// Test 1: Attempt to login
+	if err := c.ensureLoggedIn(ctx); err != nil {
+		// Determine error type
+		errMsg := err.Error()
+		var errorType string
+		if strings.Contains(errMsg, "timeout") || strings.Contains(errMsg, "connection refused") || strings.Contains(errMsg, "no such host") {
+			errorType = "Unable to connect to qBittorrent. Check if qBittorrent is running and the URL is correct."
+		} else if strings.Contains(errMsg, "401") || strings.Contains(errMsg, "403") || strings.Contains(errMsg, "unauthorized") || strings.Contains(errMsg, "Fails") {
+			errorType = "Authentication failed - check username and password"
+		} else {
+			errorType = "Connection test failed: " + errMsg
+		}
+
+		result.Success = false
+		result.Error = errorType
+		return result, nil // Return result with error, don't wrap in error
+	}
+
+	// Test 2: Get application version
+	// Make direct HTTP call to check status code since library doesn't validate it
+	version, err := c.getVersionWithStatusCheck(ctx)
+	if err != nil {
+		result.Success = false
+		result.Error = "Connected but unable to retrieve version information: " + err.Error()
+		return result, nil
+	}
+
+	// Test 3: Get Web API version (optional, don't fail if it errors)
+	webAPIVersion, _ := c.getWebAPIVersionWithStatusCheck(ctx)
+
+	// Success!
+	result.Success = true
+	result.Message = "Connection test successful"
+	result.Version = version
+	result.WebAPIVersion = webAPIVersion
+	return result, nil
 }
 
 // Add adds a download (magnet URL or torrent file)
@@ -64,12 +110,25 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 			continue
 		}
 
-		// Add the torrent
-		err = c.client.AddTorrent(ctx, torrentURL, req.SavePath, req.Category, req.Tags)
+		// Build download options
+		opts := qbt.DownloadOptions{}
+		if req.SavePath != "" {
+			opts.Savepath = &req.SavePath
+		}
+		if req.Category != "" {
+			opts.Category = &req.Category
+		}
+		if req.Paused {
+			paused := true
+			opts.Paused = &paused
+		}
+
+		// Add the torrent using library
+		err = c.client.DownloadLinks([]string{torrentURL}, opts)
 		if err != nil {
 			// If it's an auth error, clear session and retry
-			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") {
-				c.client.sid = ""
+			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "unauthorized") {
+				c.client.Authenticated = false
 				continue
 			}
 			continue
@@ -82,6 +141,15 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 			hash, err = c.getHashFromName(ctx, req.MagnetURL)
 			if err != nil {
 				return result, fmt.Errorf("failed to get torrent hash: %w", err)
+			}
+		}
+
+		// Add tags if provided
+		if len(req.Tags) > 0 {
+			_, tagErr := c.client.AddTorrentTags([]string{hash}, req.Tags)
+			if tagErr != nil {
+				// Log but don't fail - tags are optional
+				// Could log this if we had a logger
 			}
 		}
 
@@ -108,10 +176,14 @@ func (c *qBittorrentClient) Get(ctx context.Context, externalID string) (downloa
 			continue
 		}
 
-		torrents, err := c.getTorrents(ctx, externalID)
+		// Use Torrents with hash filter
+		opts := qbt.TorrentsOptions{
+			Hashes: []string{externalID},
+		}
+		torrents, err := c.client.Torrents(opts)
 		if err != nil {
-			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") {
-				c.client.sid = ""
+			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "unauthorized") {
+				c.client.Authenticated = false
 				continue
 			}
 			continue
@@ -128,7 +200,7 @@ func (c *qBittorrentClient) Get(ctx context.Context, externalID string) (downloa
 		item.Progress = t.Progress
 		item.SavePath = t.SavePath
 		item.ContentPath = t.ContentPath
-		item.AddedAt = t.AddedOn
+		item.AddedAt = time.Unix(t.AddedOn, 0)
 
 		return item, nil
 	}
@@ -150,10 +222,11 @@ func (c *qBittorrentClient) List(ctx context.Context) ([]downloader.Item, error)
 			continue
 		}
 
-		torrents, err := c.getTorrents(ctx, "")
+		// Get all torrents
+		torrents, err := c.client.Torrents(qbt.TorrentsOptions{})
 		if err != nil {
-			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") {
-				c.client.sid = ""
+			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "unauthorized") {
+				c.client.Authenticated = false
 				continue
 			}
 			continue
@@ -163,12 +236,12 @@ func (c *qBittorrentClient) List(ctx context.Context) ([]downloader.Item, error)
 		for i, t := range torrents {
 			items[i] = downloader.Item{
 				ExternalID:  t.Hash,
-				Name:         t.Name,
-				Status:       mapStateToStatus(t.State),
-				Progress:     t.Progress,
-				SavePath:     t.SavePath,
-				ContentPath:   t.ContentPath,
-				AddedAt:      t.AddedOn,
+				Name:        t.Name,
+				Status:      mapStateToStatus(t.State),
+				Progress:    t.Progress,
+				SavePath:    t.SavePath,
+				ContentPath: t.ContentPath,
+				AddedAt:     time.Unix(t.AddedOn, 0),
 			}
 		}
 
@@ -192,13 +265,24 @@ func (c *qBittorrentClient) ListFiles(ctx context.Context, externalID string) ([
 			continue
 		}
 
-		files, err = c.getTorrentFiles(ctx, externalID)
+		// Use library's TorrentFiles method
+		torrentFiles, err := c.client.TorrentFiles(externalID)
 		if err != nil {
-			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") {
-				c.client.sid = ""
+			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "unauthorized") {
+				c.client.Authenticated = false
 				continue
 			}
 			continue
+		}
+
+		files = make([]downloader.File, len(torrentFiles))
+		for i, f := range torrentFiles {
+			files[i] = downloader.File{
+				Path:     f.Name,
+				Size:     int64(f.Size),
+				Progress: f.Progress,
+				Priority: f.Priority,
+			}
 		}
 
 		return files, nil
@@ -210,28 +294,28 @@ func (c *qBittorrentClient) ListFiles(ctx context.Context, externalID string) ([
 // Pause pauses a torrent
 func (c *qBittorrentClient) Pause(ctx context.Context, externalID string) error {
 	return c.withRetry(ctx, func() error {
-		return c.pauseTorrent(ctx, externalID)
+		return c.client.Pause([]string{externalID})
 	})
 }
 
 // Resume resumes a torrent
 func (c *qBittorrentClient) Resume(ctx context.Context, externalID string) error {
 	return c.withRetry(ctx, func() error {
-		return c.resumeTorrent(ctx, externalID)
+		return c.client.Resume([]string{externalID})
 	})
 }
 
 // Remove removes a torrent
 func (c *qBittorrentClient) Remove(ctx context.Context, externalID string, deleteData bool) error {
 	return c.withRetry(ctx, func() error {
-		return c.removeTorrent(ctx, externalID, deleteData)
+		return c.client.Delete([]string{externalID}, deleteData)
 	})
 }
 
 // ensureLoggedIn ensures the client is logged in
 func (c *qBittorrentClient) ensureLoggedIn(ctx context.Context) error {
-	if c.client.sid == "" {
-		return c.client.Login(ctx)
+	if !c.client.Authenticated {
+		return c.client.Login(c.username, c.password)
 	}
 	return nil
 }
@@ -253,139 +337,12 @@ func (c *qBittorrentClient) withRetry(ctx context.Context, fn func() error) erro
 			return nil
 		}
 
-		if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") {
-			c.client.sid = ""
+		if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "unauthorized") {
+			c.client.Authenticated = false
 			continue
 		}
 	}
 	return fmt.Errorf("failed after %d attempts: %w", maxRetries+1, err)
-}
-
-// getTorrents gets torrents from qBittorrent API
-func (c *qBittorrentClient) getTorrents(ctx context.Context, hash string) ([]torrentInfo, error) {
-	torrentsURL := fmt.Sprintf("%s/api/v2/torrents/info", c.client.baseURL)
-	if hash != "" {
-		torrentsURL += "?hashes=" + hash
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "GET", torrentsURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
-	}
-
-	c.client.addAuthHeader(req)
-
-	resp, err := c.client.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	var torrents []torrentInfo
-	if err := json.NewDecoder(resp.Body).Decode(&torrents); err != nil {
-		return nil, fmt.Errorf("decode response: %w", err)
-	}
-
-	return torrents, nil
-}
-
-// getTorrentFiles gets files for a torrent
-func (c *qBittorrentClient) getTorrentFiles(ctx context.Context, hash string) ([]downloader.File, error) {
-	filesURL := fmt.Sprintf("%s/api/v2/torrents/files?hash=%s", c.client.baseURL, hash)
-
-	req, err := http.NewRequestWithContext(ctx, "GET", filesURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
-	}
-
-	c.client.addAuthHeader(req)
-
-	resp, err := c.client.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	var files []torrentFile
-	if err := json.NewDecoder(resp.Body).Decode(&files); err != nil {
-		return nil, fmt.Errorf("decode response: %w", err)
-	}
-
-	result := make([]downloader.File, len(files))
-	for i, f := range files {
-		result[i] = downloader.File{
-			Path:     f.Name,
-			Size:     f.Size,
-			Progress: f.Progress,
-			Priority: f.Priority,
-		}
-	}
-
-	return result, nil
-}
-
-// pauseTorrent pauses a torrent
-func (c *qBittorrentClient) pauseTorrent(ctx context.Context, hash string) error {
-	return c.controlTorrent(ctx, "pause", hash)
-}
-
-// resumeTorrent resumes a torrent
-func (c *qBittorrentClient) resumeTorrent(ctx context.Context, hash string) error {
-	return c.controlTorrent(ctx, "resume", hash)
-}
-
-// removeTorrent removes a torrent
-func (c *qBittorrentClient) removeTorrent(ctx context.Context, hash string, deleteData bool) error {
-	action := "delete"
-	if deleteData {
-		action = "deletePerm"
-	}
-	return c.controlTorrent(ctx, action, hash)
-}
-
-// controlTorrent sends a control command to qBittorrent
-func (c *qBittorrentClient) controlTorrent(ctx context.Context, action, hash string) error {
-	controlURL := fmt.Sprintf("%s/api/v2/torrents/%s", c.client.baseURL, action)
-
-	data := url.Values{}
-	data.Set("hashes", hash)
-
-	req, err := http.NewRequestWithContext(ctx, "POST", controlURL, strings.NewReader(data.Encode()))
-	if err != nil {
-		return fmt.Errorf("create request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	c.client.addAuthHeader(req)
-
-	resp, err := c.client.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	body, _ := io.ReadAll(resp.Body)
-	responseText := strings.TrimSpace(string(body))
-	if responseText != "Ok." {
-		return fmt.Errorf("control failed: %s", responseText)
-	}
-
-	return nil
 }
 
 // getHashFromName tries to find a torrent hash by searching for the name
@@ -395,7 +352,7 @@ func (c *qBittorrentClient) getHashFromName(ctx context.Context, magnetURL strin
 		return "", fmt.Errorf("could not extract name from magnet URL")
 	}
 
-	torrents, err := c.getTorrents(ctx, "")
+	torrents, err := c.client.Torrents(qbt.TorrentsOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -432,62 +389,128 @@ func mapStateToStatus(state string) downloader.JobStatus {
 
 // extractHashFromMagnet extracts the hash from a magnet URL
 func extractHashFromMagnet(magnetURL string) (string, error) {
-	u, err := url.Parse(magnetURL)
-	if err != nil {
-		return "", err
-	}
-
-	// Magnet URLs have format: magnet:?xt=urn:btih:HASH
-	if u.Scheme != "magnet" {
+	// Parse magnet URL
+	if !strings.HasPrefix(magnetURL, "magnet:") {
 		return "", fmt.Errorf("not a magnet URL")
 	}
 
-	xt := u.Query().Get("xt")
-	if xt == "" {
-		return "", fmt.Errorf("no xt parameter")
+	// Extract hash from magnet URL format: magnet:?xt=urn:btih:HASH
+	parts := strings.Split(magnetURL, "?")
+	if len(parts) < 2 {
+		return "", fmt.Errorf("invalid magnet URL format")
 	}
 
-	// Extract hash from urn:btih:HASH
-	parts := strings.Split(xt, ":")
-	if len(parts) < 3 {
-		return "", fmt.Errorf("invalid xt parameter")
+	query := parts[1]
+	params := strings.Split(query, "&")
+	for _, param := range params {
+		if strings.HasPrefix(param, "xt=urn:btih:") {
+			hash := strings.TrimPrefix(param, "xt=urn:btih:")
+			// Hash might be followed by & or end of string
+			if idx := strings.Index(hash, "&"); idx != -1 {
+				hash = hash[:idx]
+			}
+			if len(hash) != 40 && len(hash) != 32 {
+				return "", fmt.Errorf("invalid hash length")
+			}
+			return hash, nil
+		}
 	}
 
-	hash := parts[len(parts)-1]
-	if len(hash) != 40 && len(hash) != 32 {
-		return "", fmt.Errorf("invalid hash length")
-	}
-
-	return hash, nil
+	return "", fmt.Errorf("no hash found in magnet URL")
 }
 
 // extractNameFromMagnet extracts the name from a magnet URL
 func extractNameFromMagnet(magnetURL string) string {
+	// Parse magnet URL to extract dn parameter
 	u, err := url.Parse(magnetURL)
 	if err != nil {
 		return ""
 	}
 
-	return u.Query().Get("dn")
+	// Get dn parameter from query string
+	name := u.Query().Get("dn")
+	if name != "" {
+		// URL decode the name
+		decoded, err := url.QueryUnescape(name)
+		if err == nil {
+			return decoded
+		}
+		return name
+	}
+	return ""
 }
 
-// torrentInfo represents a torrent from qBittorrent API
-type torrentInfo struct {
-	Hash         string    `json:"hash"`
-	Name         string    `json:"name"`
-	Size         int64     `json:"size"`
-	Progress     float64   `json:"progress"`
-	State        string    `json:"state"`
-	SavePath     string    `json:"save_path"`
-	ContentPath  string    `json:"content_path"`
-	AddedOn      time.Time `json:"added_on"`
+// getVersionWithStatusCheck makes a direct HTTP request to check status code
+// This works around the library's issue where it returns "Forbidden" as a string instead of an error
+func (c *qBittorrentClient) getVersionWithStatusCheck(ctx context.Context) (string, error) {
+	// Build the URL
+	versionURL := strings.TrimSuffix(c.client.URL, "/") + "/api/v2/app/version"
+
+	req, err := http.NewRequestWithContext(ctx, "GET", versionURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("create request: %w", err)
+	}
+
+	// Create HTTP client with same cookie jar to preserve authentication
+	httpClient := &http.Client{
+		Jar: c.client.Jar,
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check status code - this is the key fix
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("authentication failed: received status code %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("read response: %w", err)
+	}
+
+	version := strings.TrimSpace(string(body))
+	// Additional validation: version should not be empty and should look like a version
+	if version == "" {
+		return "", fmt.Errorf("empty version response")
+	}
+
+	return version, nil
 }
 
-// torrentFile represents a file in a torrent from qBittorrent API
-type torrentFile struct {
-	Name     string  `json:"name"`
-	Size     int64   `json:"size"`
-	Progress float64 `json:"progress"`
-	Priority int     `json:"priority"`
-}
+// getWebAPIVersionWithStatusCheck makes a direct HTTP request to check status code
+func (c *qBittorrentClient) getWebAPIVersionWithStatusCheck(ctx context.Context) (string, error) {
+	// Build the URL
+	versionURL := strings.TrimSuffix(c.client.URL, "/") + "/api/v2/app/webapiVersion"
 
+	req, err := http.NewRequestWithContext(ctx, "GET", versionURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("create request: %w", err)
+	}
+
+	// Create HTTP client with same cookie jar to preserve authentication
+	httpClient := &http.Client{
+		Jar: c.client.Jar,
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check status code
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("authentication failed: received status code %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("read response: %w", err)
+	}
+
+	return strings.TrimSpace(string(body)), nil
+}

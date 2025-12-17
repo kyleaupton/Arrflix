@@ -66,7 +66,29 @@ func (m *Manager) Initialize(ctx context.Context) error {
 				Str("downloader_id", dl.ID.String()).
 				Str("downloader_name", dl.Name).
 				Str("downloader_type", dl.Type).
-				Msg("failed to initialize downloader")
+				Msg("failed to build downloader client")
+			continue
+		}
+
+		// Test connectivity before adding to active clients
+		testResult, err := client.Test(ctx)
+		if err != nil {
+			m.logger.Error().
+				Err(err).
+				Str("downloader_id", dl.ID.String()).
+				Str("downloader_name", dl.Name).
+				Str("downloader_type", dl.Type).
+				Msg("failed to test downloader connection")
+			continue
+		}
+
+		if !testResult.Success {
+			m.logger.Warn().
+				Str("downloader_id", dl.ID.String()).
+				Str("downloader_name", dl.Name).
+				Str("downloader_type", dl.Type).
+				Str("error", testResult.Error).
+				Msg("downloader connection test failed - not adding to active clients")
 			continue
 		}
 
@@ -74,6 +96,7 @@ func (m *Manager) Initialize(ctx context.Context) error {
 			Str("downloader_id", dl.ID.String()).
 			Str("downloader_name", dl.Name).
 			Str("downloader_type", dl.Type).
+			Str("version", testResult.Version).
 			Msg("initialized downloader")
 
 		m.clients[instanceID] = client
@@ -126,6 +149,31 @@ func (m *Manager) ListClients(ctx context.Context) []Client {
 	}
 
 	return clients
+}
+
+// BuildTestClient builds a fresh client instance for testing (not cached)
+func (m *Manager) BuildTestClient(ctx context.Context, id string) (Client, error) {
+	var uuid pgtype.UUID
+	if err := uuid.Scan(id); err != nil {
+		return nil, fmt.Errorf("invalid UUID: %w", err)
+	}
+
+	dl, err := m.repo.GetDownloader(ctx, uuid)
+	if err != nil {
+		return nil, fmt.Errorf("get downloader: %w", err)
+	}
+
+	instanceID := InstanceID(dl.ID.String())
+	rec := ConfigRecord{
+		ID:       instanceID,
+		Type:     Type(dl.Type),
+		URL:      dl.Url,
+		Username: dl.Username,
+		Password: dl.Password,
+		Config:   dl.ConfigJson,
+	}
+
+	return m.registry.Build(rec)
 }
 
 // Close closes all clients and cleans up resources

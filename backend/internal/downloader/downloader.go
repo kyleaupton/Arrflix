@@ -72,9 +72,21 @@ type File struct {
 	Priority int     // optional
 }
 
+// TestResult represents the result of a downloader connection test
+type TestResult struct {
+	Success       bool   `json:"success"`
+	Message       string `json:"message"`
+	Version       string `json:"version,omitempty"`
+	WebAPIVersion string `json:"webApiVersion,omitempty"`
+	Error         string `json:"error,omitempty"`
+}
+
 type Client interface {
 	Type() Type
 	InstanceID() InstanceID
+
+	// Test tests the connection to the downloader
+	Test(ctx context.Context) (TestResult, error)
 
 	// Add a download (magnet/NZB/etc)
 	Add(ctx context.Context, req AddRequest) (AddResult, error)

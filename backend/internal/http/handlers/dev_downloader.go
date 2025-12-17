@@ -23,7 +23,7 @@ func NewDevDownloaderTest(manager *downloader.Manager, repo *repo.Repository) *D
 func (h *DevDownloaderTest) RegisterDev(e *echo.Echo) {
 	dev := e.Group("/dev")
 	dev.GET("/downloader-test", h.ServeUI)
-	
+
 	api := dev.Group("/api")
 	api.GET("/downloaders", h.ListDownloaders)
 	api.POST("/downloaders/:id/add", h.AddMagnet)
@@ -155,6 +155,41 @@ func (h *DevDownloaderTest) ServeUI(c echo.Context) error {
 		.refresh-btn:hover {
 			background: #5a6268;
 		}
+		.status-badge {
+			display: inline-block;
+			padding: 2px 6px;
+			border-radius: 3px;
+			font-size: 11px;
+			font-weight: 500;
+			margin-left: 8px;
+		}
+		.status-active {
+			background: #28a745;
+			color: white;
+		}
+		.status-inactive {
+			background: #dc3545;
+			color: white;
+		}
+		.status-disabled {
+			background: #6c757d;
+			color: white;
+		}
+		.clients-list {
+			margin-top: 15px;
+			padding-top: 15px;
+			border-top: 1px solid #e9ecef;
+		}
+		.client-item {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 8px 0;
+			font-size: 13px;
+		}
+		.client-name {
+			font-weight: 500;
+		}
 	</style>
 </head>
 <body>
@@ -168,6 +203,11 @@ func (h *DevDownloaderTest) ServeUI(c echo.Context) error {
 			<select id="downloader">
 				<option value="">Loading...</option>
 			</select>
+		</div>
+		
+		<div class="clients-list">
+			<strong>Active Clients:</strong>
+			<div id="clients-status">Loading...</div>
 		</div>
 		
 		<div class="form-group">
@@ -196,12 +236,66 @@ func (h *DevDownloaderTest) ServeUI(c echo.Context) error {
 			.then(data => {
 				const select = document.getElementById('downloader');
 				select.innerHTML = '<option value="">Select a downloader...</option>';
+				
+				// Update clients status
+				const clientsDiv = document.getElementById('clients-status');
+				const activeClients = data.filter(dl => dl.initialized);
+				const inactiveClients = data.filter(dl => dl.enabled && !dl.initialized);
+				const disabledClients = data.filter(dl => !dl.enabled);
+				
+				if (activeClients.length === 0 && inactiveClients.length === 0 && disabledClients.length === 0) {
+					clientsDiv.innerHTML = '<div style="color: #666;">No downloaders configured</div>';
+				} else {
+					let html = '';
+					if (activeClients.length > 0) {
+						html += '<div style="margin-top: 8px;"><strong style="color: #28a745;">Active (' + activeClients.length + '):</strong>';
+						activeClients.forEach(dl => {
+							html += '<div class="client-item">' +
+								'<span class="client-name">' + escapeHtml(dl.name) + '</span>' +
+								'<span class="status-badge status-active">Active</span>' +
+								'</div>';
+						});
+						html += '</div>';
+					}
+					if (inactiveClients.length > 0) {
+						html += '<div style="margin-top: 8px;"><strong style="color: #dc3545;">Failed to Initialize (' + inactiveClients.length + '):</strong>';
+						inactiveClients.forEach(dl => {
+							html += '<div class="client-item">' +
+								'<span class="client-name">' + escapeHtml(dl.name) + '</span>' +
+								'<span class="status-badge status-inactive">Inactive</span>' +
+								'</div>';
+						});
+						html += '</div>';
+					}
+					if (disabledClients.length > 0) {
+						html += '<div style="margin-top: 8px;"><strong style="color: #6c757d;">Disabled (' + disabledClients.length + '):</strong>';
+						disabledClients.forEach(dl => {
+							html += '<div class="client-item">' +
+								'<span class="client-name">' + escapeHtml(dl.name) + '</span>' +
+								'<span class="status-badge status-disabled">Disabled</span>' +
+								'</div>';
+						});
+						html += '</div>';
+					}
+					clientsDiv.innerHTML = html;
+				}
+				
+				// Populate dropdown with status indicators
 				data.forEach(dl => {
 					const option = document.createElement('option');
 					option.value = dl.id;
-					option.textContent = dl.name + ' (' + dl.type + ')';
+					let statusText = '';
+					if (!dl.enabled) {
+						statusText = ' [Disabled]';
+					} else if (dl.initialized) {
+						statusText = ' [Active]';
+					} else {
+						statusText = ' [Inactive]';
+					}
+					option.textContent = dl.name + ' (' + dl.type + ')' + statusText;
 					select.appendChild(option);
 				});
+				
 				select.onchange = function() {
 					downloaderId = this.value;
 					if (downloaderId) {
@@ -325,7 +419,7 @@ func (h *DevDownloaderTest) ServeUI(c echo.Context) error {
 	return c.HTML(http.StatusOK, html)
 }
 
-// ListDownloaders lists all downloaders
+// ListDownloaders lists all downloaders with their initialization status
 func (h *DevDownloaderTest) ListDownloaders(c echo.Context) error {
 	ctx := c.Request().Context()
 	downloaders, err := h.repo.ListDownloaders(ctx)
@@ -333,14 +427,25 @@ func (h *DevDownloaderTest) ListDownloaders(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
+	// Get list of initialized client IDs
+	initializedClients := h.manager.ListClients(ctx)
+	initializedIDs := make(map[string]bool)
+	for _, client := range initializedClients {
+		initializedIDs[string(client.InstanceID())] = true
+	}
+
 	result := make([]map[string]interface{}, 0, len(downloaders))
 	for _, dl := range downloaders {
+		dlID := dl.ID.String()
+		isInitialized := initializedIDs[dlID] && dl.Enabled
+
 		result = append(result, map[string]interface{}{
-			"id":       dl.ID.String(),
-			"name":     dl.Name,
-			"type":     dl.Type,
-			"protocol": dl.Protocol,
-			"enabled":  dl.Enabled,
+			"id":          dlID,
+			"name":        dl.Name,
+			"type":        dl.Type,
+			"protocol":    dl.Protocol,
+			"enabled":     dl.Enabled,
+			"initialized": isInitialized,
 		})
 	}
 
@@ -453,4 +558,3 @@ func (h *DevDownloaderTest) GetItemFiles(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, files)
 }
-

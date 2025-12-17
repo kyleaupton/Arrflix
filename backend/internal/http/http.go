@@ -26,7 +26,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	// Handlers
 	auth := handlers.NewAuth(cfg, log, pool, services)
 	downloadCandidates := handlers.NewDownloadCandidates(services)
-	downloaders := handlers.NewDownloaders(services)
+	downloaders := handlers.NewDownloaders(services, downloaderManager)
 	health := handlers.NewHealth()
 	indexers := handlers.NewIndexers(services)
 	libraries := handlers.NewLibraries(services)
