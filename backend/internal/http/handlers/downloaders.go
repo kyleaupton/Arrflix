@@ -125,6 +125,15 @@ func (h *Downloaders) Create(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
+
+	// Initialize the downloader if enabled
+	if downloader.Enabled {
+		if err := h.downloaderManager.InitializeDownloader(ctx, downloader.ID.String()); err != nil {
+			// Log error but don't fail the request - the downloader is saved, just not initialized
+			// This allows the user to retry initialization later
+		}
+	}
+
 	return c.JSON(http.StatusCreated, downloader)
 }
 
@@ -171,6 +180,13 @@ func (h *Downloaders) Update(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
+
+	// Re-initialize the downloader (will remove if disabled, or update if enabled)
+	if err := h.downloaderManager.InitializeDownloader(ctx, downloader.ID.String()); err != nil {
+		// Log error but don't fail the request - the downloader is saved, just not initialized
+		// This allows the user to retry initialization later
+	}
+
 	return c.JSON(http.StatusOK, downloader)
 }
 
@@ -186,6 +202,10 @@ func (h *Downloaders) Delete(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
 	}
 	ctx := c.Request().Context()
+
+	// Remove from active clients before deleting from DB
+	h.downloaderManager.RemoveClient(ctx, id.String())
+
 	if err := h.svc.Downloaders.Delete(ctx, id); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to delete"})
 	}

@@ -176,6 +176,92 @@ func (m *Manager) BuildTestClient(ctx context.Context, id string) (Client, error
 	return m.registry.Build(rec)
 }
 
+// InitializeDownloader initializes a single downloader by ID
+// If the downloader is disabled, it will be removed from active clients
+// If enabled, it will be tested and added to active clients if the test succeeds
+func (m *Manager) InitializeDownloader(ctx context.Context, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var uuid pgtype.UUID
+	if err := uuid.Scan(id); err != nil {
+		return fmt.Errorf("invalid UUID: %w", err)
+	}
+
+	dl, err := m.repo.GetDownloader(ctx, uuid)
+	if err != nil {
+		return fmt.Errorf("get downloader: %w", err)
+	}
+
+	instanceID := InstanceID(dl.ID.String())
+
+	// Remove existing client if it exists (for updates)
+	delete(m.clients, instanceID)
+
+	// Only initialize if enabled
+	if !dl.Enabled {
+		m.logger.Info().
+			Str("downloader_id", dl.ID.String()).
+			Str("downloader_name", dl.Name).
+			Msg("downloader disabled - removed from active clients")
+		return nil
+	}
+
+	// Convert DB model to ConfigRecord
+	rec := ConfigRecord{
+		ID:       instanceID,
+		Type:     Type(dl.Type),
+		URL:      dl.Url,
+		Username: dl.Username,
+		Password: dl.Password,
+		Config:   dl.ConfigJson,
+	}
+
+	// Build client
+	client, err := m.registry.Build(rec)
+	if err != nil {
+		return fmt.Errorf("build client: %w", err)
+	}
+
+	// Test connectivity before adding to active clients
+	testResult, err := client.Test(ctx)
+	if err != nil {
+		return fmt.Errorf("test connection: %w", err)
+	}
+
+	if !testResult.Success {
+		return fmt.Errorf("connection test failed: %s", testResult.Error)
+	}
+
+	m.logger.Info().
+		Str("downloader_id", dl.ID.String()).
+		Str("downloader_name", dl.Name).
+		Str("downloader_type", dl.Type).
+		Str("version", testResult.Version).
+		Msg("initialized downloader")
+
+	m.clients[instanceID] = client
+	return nil
+}
+
+// RemoveClient removes a client from active clients by ID
+func (m *Manager) RemoveClient(ctx context.Context, id string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var uuid pgtype.UUID
+	if err := uuid.Scan(id); err != nil {
+		return
+	}
+
+	instanceID := InstanceID(uuid.String())
+	delete(m.clients, instanceID)
+
+	m.logger.Info().
+		Str("downloader_id", id).
+		Msg("removed downloader from active clients")
+}
+
 // Close closes all clients and cleans up resources
 func (m *Manager) Close() error {
 	m.mu.Lock()

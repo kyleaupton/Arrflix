@@ -64,3 +64,8 @@ select,
 textarea {
   font: inherit;
 }
+
+/* Because the primevue password component is not full width */
+.p-password input {
+  width: 100%;
+}

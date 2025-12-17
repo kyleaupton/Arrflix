@@ -18,7 +18,7 @@ import { useModal } from '@/composables/useModal'
 const dialogRef = inject('dialogRef') as any
 const modal = useModal()
 
-const data = computed(() => dialogRef.value.data)
+const data = computed(() => dialogRef.value?.data || {})
 
 // Mutations
 const createDownloaderMutation = useMutation(postV1DownloadersMutation())
@@ -32,7 +32,7 @@ const downloaderForm = ref({
   protocol: (data.value.downloader?.protocol as 'torrent' | 'usenet') || 'torrent',
   url: data.value.downloader?.url || '',
   username: data.value.downloader?.username || '',
-  password: '',
+  password: data.value.downloader?.password || '',
   config_json: {} as Record<string, unknown>,
   enabled: data.value.downloader?.enabled ?? true,
   default: data.value.downloader?.default || false,
