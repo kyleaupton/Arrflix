@@ -1,0 +1,456 @@
+package handlers
+
+import (
+	"net/http"
+
+	"github.com/kyleaupton/snaggle/backend/internal/downloader"
+	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	"github.com/labstack/echo/v4"
+)
+
+type DevDownloaderTest struct {
+	manager *downloader.Manager
+	repo    *repo.Repository
+}
+
+func NewDevDownloaderTest(manager *downloader.Manager, repo *repo.Repository) *DevDownloaderTest {
+	return &DevDownloaderTest{
+		manager: manager,
+		repo:    repo,
+	}
+}
+
+func (h *DevDownloaderTest) RegisterDev(e *echo.Echo) {
+	dev := e.Group("/dev")
+	dev.GET("/downloader-test", h.ServeUI)
+	
+	api := dev.Group("/api")
+	api.GET("/downloaders", h.ListDownloaders)
+	api.POST("/downloaders/:id/add", h.AddMagnet)
+	api.GET("/downloaders/:id/items", h.ListItems)
+	api.GET("/downloaders/:id/items/:hash", h.GetItem)
+	api.GET("/downloaders/:id/items/:hash/files", h.GetItemFiles)
+}
+
+// ServeUI serves the HTML testing interface
+func (h *DevDownloaderTest) ServeUI(c echo.Context) error {
+	html := `<!DOCTYPE html>
+<html>
+<head>
+	<title>Downloader Test</title>
+	<style>
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 20px;
+			background: #f5f5f5;
+		}
+		.container {
+			background: white;
+			padding: 20px;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+			margin-bottom: 20px;
+		}
+		h1 {
+			margin-top: 0;
+			color: #333;
+		}
+		.form-group {
+			margin-bottom: 15px;
+		}
+		label {
+			display: block;
+			margin-bottom: 5px;
+			font-weight: 500;
+			color: #555;
+		}
+		select, input {
+			width: 100%;
+			padding: 8px 12px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			font-size: 14px;
+			box-sizing: border-box;
+		}
+		button {
+			background: #007bff;
+			color: white;
+			border: none;
+			padding: 10px 20px;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 14px;
+		}
+		button:hover {
+			background: #0056b3;
+		}
+		button:disabled {
+			background: #ccc;
+			cursor: not-allowed;
+		}
+		.items-list {
+			margin-top: 20px;
+		}
+		.item {
+			background: #f8f9fa;
+			padding: 15px;
+			margin-bottom: 10px;
+			border-radius: 4px;
+			border-left: 4px solid #007bff;
+		}
+		.item-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 10px;
+		}
+		.item-name {
+			font-weight: 600;
+			color: #333;
+		}
+		.item-status {
+			padding: 4px 8px;
+			border-radius: 4px;
+			font-size: 12px;
+			font-weight: 500;
+		}
+		.status-downloading { background: #17a2b8; color: white; }
+		.status-seeding { background: #28a745; color: white; }
+		.status-completed { background: #28a745; color: white; }
+		.status-paused { background: #ffc107; color: #333; }
+		.status-queued { background: #6c757d; color: white; }
+		.status-errored { background: #dc3545; color: white; }
+		.status-unknown { background: #6c757d; color: white; }
+		.progress-bar {
+			width: 100%;
+			height: 20px;
+			background: #e9ecef;
+			border-radius: 10px;
+			overflow: hidden;
+			margin: 10px 0;
+		}
+		.progress-fill {
+			height: 100%;
+			background: #007bff;
+			transition: width 0.3s;
+		}
+		.item-info {
+			font-size: 12px;
+			color: #666;
+			margin-top: 5px;
+		}
+		.error {
+			background: #f8d7da;
+			color: #721c24;
+			padding: 10px;
+			border-radius: 4px;
+			margin-bottom: 15px;
+		}
+		.refresh-btn {
+			background: #6c757d;
+			margin-left: 10px;
+		}
+		.refresh-btn:hover {
+			background: #5a6268;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>Downloader Test</h1>
+		
+		<div id="error" class="error" style="display: none;"></div>
+		
+		<div class="form-group">
+			<label for="downloader">Downloader:</label>
+			<select id="downloader">
+				<option value="">Loading...</option>
+			</select>
+		</div>
+		
+		<div class="form-group">
+			<label for="magnet">Magnet URL:</label>
+			<input type="text" id="magnet" placeholder="magnet:?xt=urn:btih:...">
+		</div>
+		
+		<button onclick="addMagnet()">Add Download</button>
+		<button class="refresh-btn" onclick="refreshItems()">Refresh</button>
+	</div>
+	
+	<div class="container">
+		<h2>Active Downloads</h2>
+		<div id="items" class="items-list">
+			<div>Select a downloader to view items</div>
+		</div>
+	</div>
+	
+	<script>
+		let downloaderId = '';
+		let refreshInterval = null;
+		
+		// Load downloaders on page load
+		fetch('/dev/api/downloaders')
+			.then(r => r.json())
+			.then(data => {
+				const select = document.getElementById('downloader');
+				select.innerHTML = '<option value="">Select a downloader...</option>';
+				data.forEach(dl => {
+					const option = document.createElement('option');
+					option.value = dl.id;
+					option.textContent = dl.name + ' (' + dl.type + ')';
+					select.appendChild(option);
+				});
+				select.onchange = function() {
+					downloaderId = this.value;
+					if (downloaderId) {
+						refreshItems();
+						startAutoRefresh();
+					} else {
+						stopAutoRefresh();
+						document.getElementById('items').innerHTML = '<div>Select a downloader to view items</div>';
+					}
+				};
+			})
+			.catch(err => showError('Failed to load downloaders: ' + err));
+		
+		function showError(msg) {
+			const errorDiv = document.getElementById('error');
+			errorDiv.textContent = msg;
+			errorDiv.style.display = 'block';
+			setTimeout(() => {
+				errorDiv.style.display = 'none';
+			}, 5000);
+		}
+		
+		function addMagnet() {
+			const magnet = document.getElementById('magnet').value.trim();
+			if (!magnet) {
+				showError('Please enter a magnet URL');
+				return;
+			}
+			if (!downloaderId) {
+				showError('Please select a downloader');
+				return;
+			}
+			
+			const btn = event.target;
+			btn.disabled = true;
+			btn.textContent = 'Adding...';
+			
+			fetch('/dev/api/downloaders/' + downloaderId + '/add', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ magnet: magnet })
+			})
+			.then(r => r.json())
+			.then(data => {
+				if (data.error) {
+					showError(data.error);
+				} else {
+					document.getElementById('magnet').value = '';
+					refreshItems();
+				}
+			})
+			.catch(err => showError('Failed to add magnet: ' + err))
+			.finally(() => {
+				btn.disabled = false;
+				btn.textContent = 'Add Download';
+			});
+		}
+		
+		function refreshItems() {
+			if (!downloaderId) return;
+			
+			fetch('/dev/api/downloaders/' + downloaderId + '/items')
+				.then(r => r.json())
+				.then(data => {
+					const itemsDiv = document.getElementById('items');
+					if (data.error) {
+						itemsDiv.innerHTML = '<div class="error">' + data.error + '</div>';
+						return;
+					}
+					if (data.length === 0) {
+						itemsDiv.innerHTML = '<div>No active downloads</div>';
+						return;
+					}
+					
+					itemsDiv.innerHTML = data.map(item => {
+						const progress = Math.round((item.progress || 0) * 100);
+						const status = item.status || 'unknown';
+						const statusClass = 'status-' + status.toLowerCase();
+						const name = escapeHtml(item.name || 'Unknown');
+						const hash = item.externalId || 'N/A';
+						const path = item.savePath ? 'Path: ' + escapeHtml(item.savePath) : '';
+						return '<div class="item">' +
+							'<div class="item-header">' +
+							'<div class="item-name">' + name + '</div>' +
+							'<div class="item-status ' + statusClass + '">' + status + '</div>' +
+							'</div>' +
+							'<div class="progress-bar">' +
+							'<div class="progress-fill" style="width: ' + progress + '%"></div>' +
+							'</div>' +
+							'<div class="item-info">' +
+							'Hash: ' + hash + ' | Progress: ' + progress + '% | ' + path +
+							'</div>' +
+							'</div>';
+					}).join('');
+				})
+				.catch(err => {
+					document.getElementById('items').innerHTML = '<div class="error">Failed to load items: ' + err + '</div>';
+				});
+		}
+		
+		function startAutoRefresh() {
+			stopAutoRefresh();
+			refreshInterval = setInterval(refreshItems, 5000);
+		}
+		
+		function stopAutoRefresh() {
+			if (refreshInterval) {
+				clearInterval(refreshInterval);
+				refreshInterval = null;
+			}
+		}
+		
+		function escapeHtml(text) {
+			const div = document.createElement('div');
+			div.textContent = text;
+			return div.innerHTML;
+		}
+	</script>
+</body>
+</html>`
+	return c.HTML(http.StatusOK, html)
+}
+
+// ListDownloaders lists all downloaders
+func (h *DevDownloaderTest) ListDownloaders(c echo.Context) error {
+	ctx := c.Request().Context()
+	downloaders, err := h.repo.ListDownloaders(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	result := make([]map[string]interface{}, 0, len(downloaders))
+	for _, dl := range downloaders {
+		result = append(result, map[string]interface{}{
+			"id":       dl.ID.String(),
+			"name":     dl.Name,
+			"type":     dl.Type,
+			"protocol": dl.Protocol,
+			"enabled":  dl.Enabled,
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+// AddMagnetRequest is the request body for adding a magnet link
+type AddMagnetRequest struct {
+	Magnet string `json:"magnet"`
+}
+
+// AddMagnet adds a magnet link to a downloader
+func (h *DevDownloaderTest) AddMagnet(c echo.Context) error {
+	downloaderID := c.Param("id")
+	if downloaderID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "downloader ID required"})
+	}
+
+	var req AddMagnetRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+	}
+
+	if req.Magnet == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "magnet URL required"})
+	}
+
+	ctx := c.Request().Context()
+	client, err := h.manager.GetClientByID(ctx, downloaderID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+	}
+
+	addReq := downloader.AddRequest{
+		MagnetURL: req.Magnet,
+	}
+
+	result, err := client.Add(ctx, addReq)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+// ListItems lists all items (torrents) for a downloader
+func (h *DevDownloaderTest) ListItems(c echo.Context) error {
+	downloaderID := c.Param("id")
+	if downloaderID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "downloader ID required"})
+	}
+
+	ctx := c.Request().Context()
+	client, err := h.manager.GetClientByID(ctx, downloaderID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+	}
+
+	items, err := client.List(ctx)
+	if err != nil {
+		if err == downloader.ErrUnsupported {
+			return c.JSON(http.StatusNotImplemented, map[string]string{"error": "List operation not supported by this downloader"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, items)
+}
+
+// GetItem gets a specific item by hash
+func (h *DevDownloaderTest) GetItem(c echo.Context) error {
+	downloaderID := c.Param("id")
+	hash := c.Param("hash")
+	if downloaderID == "" || hash == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "downloader ID and hash required"})
+	}
+
+	ctx := c.Request().Context()
+	client, err := h.manager.GetClientByID(ctx, downloaderID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+	}
+
+	item, err := client.Get(ctx, hash)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, item)
+}
+
+// GetItemFiles lists files for an item
+func (h *DevDownloaderTest) GetItemFiles(c echo.Context) error {
+	downloaderID := c.Param("id")
+	hash := c.Param("hash")
+	if downloaderID == "" || hash == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "downloader ID and hash required"})
+	}
+
+	ctx := c.Request().Context()
+	client, err := h.manager.GetClientByID(ctx, downloaderID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+	}
+
+	files, err := client.ListFiles(ctx, hash)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, files)
+}
+

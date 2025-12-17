@@ -136,6 +136,48 @@ func (c *qBittorrentClient) Get(ctx context.Context, externalID string) (downloa
 	return item, fmt.Errorf("failed to get torrent after %d attempts: %w", maxRetries+1, err)
 }
 
+// List lists all items (torrents) in the client
+func (c *qBittorrentClient) List(ctx context.Context) ([]downloader.Item, error) {
+	var err error
+	var items []downloader.Item
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			time.Sleep(retryDelay)
+		}
+
+		if err = c.ensureLoggedIn(ctx); err != nil {
+			continue
+		}
+
+		torrents, err := c.getTorrents(ctx, "")
+		if err != nil {
+			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") {
+				c.client.sid = ""
+				continue
+			}
+			continue
+		}
+
+		items = make([]downloader.Item, len(torrents))
+		for i, t := range torrents {
+			items[i] = downloader.Item{
+				ExternalID:  t.Hash,
+				Name:         t.Name,
+				Status:       mapStateToStatus(t.State),
+				Progress:     t.Progress,
+				SavePath:     t.SavePath,
+				ContentPath:   t.ContentPath,
+				AddedAt:      t.AddedOn,
+			}
+		}
+
+		return items, nil
+	}
+
+	return nil, fmt.Errorf("failed to list torrents after %d attempts: %w", maxRetries+1, err)
+}
+
 // ListFiles lists files for a torrent
 func (c *qBittorrentClient) ListFiles(ctx context.Context, externalID string) ([]downloader.File, error) {
 	var err error

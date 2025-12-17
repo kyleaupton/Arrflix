@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kyleaupton/snaggle/backend/internal/config"
+	"github.com/kyleaupton/snaggle/backend/internal/downloader"
 	"github.com/kyleaupton/snaggle/backend/internal/http/handlers"
 	"github.com/kyleaupton/snaggle/backend/internal/http/middlewares"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
@@ -17,7 +18,7 @@ import (
 // @title		Snaggle API
 // @version		0.0.1
 // @BasePath	/api
-func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, services *service.Services, repo *repo.Repository) *echo.Echo {
+func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, services *service.Services, repo *repo.Repository, downloaderManager *downloader.Manager) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
@@ -54,6 +55,12 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	policies.RegisterProtected(protected)
 	rails.RegisterProtected(protected)
 	settings.RegisterProtected(protected)
+
+	// Dev-only routes
+	if cfg.Env == "dev" {
+		devDownloaderTest := handlers.NewDevDownloaderTest(downloaderManager, repo)
+		devDownloaderTest.RegisterDev(e)
+	}
 
 	return e
 }

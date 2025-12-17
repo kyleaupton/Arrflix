@@ -82,6 +82,9 @@ type Client interface {
 	// Fetch a single item by external id (infohash, etc)
 	Get(ctx context.Context, externalID string) (Item, error)
 
+	// List all items (optional - can return ErrUnsupported)
+	List(ctx context.Context) ([]Item, error)
+
 	// Optional but very useful for import selection
 	ListFiles(ctx context.Context, externalID string) ([]File, error)
 
