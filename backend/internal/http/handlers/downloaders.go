@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -31,6 +32,7 @@ func (h *Downloaders) RegisterProtected(v1 *echo.Group) {
 	v1.PUT("/downloaders/:id", h.Update)
 	v1.DELETE("/downloaders/:id", h.Delete)
 	v1.POST("/downloaders/:id/test", h.Test)
+	v1.POST("/downloaders/test", h.TestConfig)
 }
 
 // DownloaderCreateRequest payload
@@ -57,6 +59,15 @@ type DownloaderUpdateRequest struct {
 	ConfigJSON map[string]interface{} `json:"config_json"`
 	Enabled    bool                   `json:"enabled"`
 	Default    bool                   `json:"default"`
+}
+
+// DownloaderTestRequest payload for testing downloader configuration
+type DownloaderTestRequest struct {
+	Type       string                 `json:"type"`
+	URL        string                 `json:"url"`
+	Username   *string                `json:"username"`
+	Password   *string                `json:"password"`
+	ConfigJSON map[string]interface{} `json:"config_json"`
 }
 
 // List downloaders
@@ -256,6 +267,73 @@ func (h *Downloaders) Test(c echo.Context) error {
 
 	// Build a fresh client instance for testing (not cached)
 	client, err := h.downloaderManager.BuildTestClient(ctx, downloader.ID.String())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to build test client: " + err.Error()})
+	}
+
+	// Call the client's Test method
+	result, err := client.Test(testCtx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+// TestConfig tests downloader connection using form configuration (not from database)
+// @Summary Test downloader connection with form configuration
+// @Tags    downloaders
+// @Accept  json
+// @Produce json
+// @Param   payload body handlers.DownloaderTestRequest true "Test downloader configuration"
+// @Success 200 {object} downloader.TestResult
+// @Failure 400 {object} map[string]string
+// @Router  /v1/downloaders/test [post]
+func (h *Downloaders) TestConfig(c echo.Context) error {
+	var req DownloaderTestRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
+	}
+
+	// Validate required fields
+	if req.Type == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "type is required"})
+	}
+	if req.URL == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "url is required"})
+	}
+
+	ctx := c.Request().Context()
+
+	// Convert config_json to []byte
+	var configJSON []byte
+	if req.ConfigJSON != nil {
+		var err error
+		configJSON, err = json.Marshal(req.ConfigJSON)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid config_json: " + err.Error()})
+		}
+	}
+
+	// Create a temporary InstanceID for testing
+	instanceID := downloader.InstanceID("test-" + time.Now().Format("20060102150405"))
+
+	// Convert request to ConfigRecord
+	rec := downloader.ConfigRecord{
+		ID:       instanceID,
+		Type:     downloader.Type(req.Type),
+		URL:      req.URL,
+		Username: req.Username,
+		Password: req.Password,
+		Config:   configJSON,
+	}
+
+	// Create a context with timeout for testing (10 seconds)
+	testCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	// Build client from config
+	client, err := h.downloaderManager.BuildClientFromConfig(ctx, rec)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to build test client: " + err.Error()})
 	}

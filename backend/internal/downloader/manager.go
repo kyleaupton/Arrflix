@@ -176,6 +176,12 @@ func (m *Manager) BuildTestClient(ctx context.Context, id string) (Client, error
 	return m.registry.Build(rec)
 }
 
+// BuildClientFromConfig builds a client instance from a ConfigRecord directly (no DB lookup)
+// This is useful for testing configurations before they are saved to the database
+func (m *Manager) BuildClientFromConfig(ctx context.Context, rec ConfigRecord) (Client, error) {
+	return m.registry.Build(rec)
+}
+
 // InitializeDownloader initializes a single downloader by ID
 // If the downloader is disabled, it will be removed from active clients
 // If enabled, it will be tested and added to active clients if the test succeeds

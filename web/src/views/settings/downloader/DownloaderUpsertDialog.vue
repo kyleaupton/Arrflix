@@ -10,8 +10,8 @@ import { PrimeIcons } from '@/icons'
 import {
   postV1DownloadersMutation,
   putV1DownloadersByIdMutation,
-  postV1DownloadersByIdTestMutation,
 } from '@/client/@tanstack/vue-query.gen'
+import { client } from '@/client/client.gen'
 import { useModal } from '@/composables/useModal'
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -23,7 +23,6 @@ const data = computed(() => dialogRef.value?.data || {})
 // Mutations
 const createDownloaderMutation = useMutation(postV1DownloadersMutation())
 const updateDownloaderMutation = useMutation(putV1DownloadersByIdMutation())
-const testDownloaderMutation = useMutation(postV1DownloadersByIdTestMutation())
 
 // Form state
 const downloaderForm = ref({
@@ -39,7 +38,7 @@ const downloaderForm = ref({
 })
 
 const downloaderError = ref<string | null>(null)
-const testingId = ref<string | null>(null)
+const isTestingConfig = ref(false)
 
 // Handlers
 const handleSaveDownloader = async () => {
@@ -87,17 +86,31 @@ const handleSaveDownloader = async () => {
 }
 
 const handleTestDownloader = async () => {
-  if (!data.value.downloader?.id) {
-    downloaderError.value = 'Please save the downloader first before testing'
+  // Validate required fields
+  if (!downloaderForm.value.url) {
+    downloaderError.value = 'URL is required to test connection'
     return
   }
 
-  testingId.value = data.value.downloader.id
+  // Always test using form values (not saved config)
+  isTestingConfig.value = true
   downloaderError.value = null
   try {
-    const result = await testDownloaderMutation.mutateAsync({
-      path: { id: data.value.downloader.id },
+    const response = await client.post({
+      url: '/v1/downloaders/test',
+      body: {
+        type: downloaderForm.value.type,
+        url: downloaderForm.value.url,
+        username: downloaderForm.value.username || undefined,
+        password: downloaderForm.value.password || undefined,
+        config_json: downloaderForm.value.config_json,
+      },
     })
+
+    const result = (
+      response as { data: { success: boolean; message?: string; version?: string; error?: string } }
+    ).data
+
     if (result.success) {
       downloaderError.value = null
       await modal.alert({
@@ -110,10 +123,10 @@ const handleTestDownloader = async () => {
       downloaderError.value = result.error || 'Connection test failed'
     }
   } catch (err: unknown) {
-    const error = err as { message?: string }
-    downloaderError.value = error.message || 'Connection test failed'
+    const error = err as { message?: string; data?: { error?: string } }
+    downloaderError.value = error.data?.error || error.message || 'Connection test failed'
   } finally {
-    testingId.value = null
+    isTestingConfig.value = false
   }
 }
 
@@ -185,12 +198,11 @@ const handleCancel = () => {
 
     <div class="flex items-center justify-between w-full pt-2">
       <Button
-        v-if="data.downloader?.id"
         label="Test Connection"
         :icon="PrimeIcons.CHECK"
         severity="secondary"
-        :loading="testingId === data.downloader?.id"
-        :disabled="!data.downloader?.id || testDownloaderMutation.isPending.value"
+        :loading="isTestingConfig"
+        :disabled="!downloaderForm.url || isTestingConfig"
         @click="handleTestDownloader"
       />
       <div class="flex gap-2 ml-auto">
