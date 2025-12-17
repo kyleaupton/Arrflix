@@ -1,0 +1,139 @@
+package downloader
+
+import (
+	"context"
+	"fmt"
+	"sync"
+
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/kyleaupton/snaggle/backend/internal/logger"
+	"github.com/kyleaupton/snaggle/backend/internal/repo"
+)
+
+// Manager manages downloader client instances
+type Manager struct {
+	registry *Registry
+	clients  map[InstanceID]Client
+	mu       sync.RWMutex
+	repo     *repo.Repository
+	logger   *logger.Logger
+}
+
+// NewManager creates a new downloader manager
+func NewManager(registry *Registry, repo *repo.Repository, logg *logger.Logger) *Manager {
+	return &Manager{
+		registry: registry,
+		clients:  make(map[InstanceID]Client),
+		repo:     repo,
+		logger:   logg,
+	}
+}
+
+// Initialize loads all enabled downloaders from the database and initializes them
+func (m *Manager) Initialize(ctx context.Context) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	downloaders, err := m.repo.ListDownloaders(ctx)
+	if err != nil {
+		return fmt.Errorf("list downloaders: %w", err)
+	}
+
+	for _, dl := range downloaders {
+		// Only initialize enabled downloaders
+		if !dl.Enabled {
+			continue
+		}
+
+		instanceID := InstanceID(dl.ID.String())
+
+		// Convert DB model to ConfigRecord
+		rec := ConfigRecord{
+			ID:       instanceID,
+			Type:     Type(dl.Type),
+			URL:      dl.Url,
+			Username: dl.Username,
+			Password: dl.Password,
+			Config:   dl.ConfigJson,
+		}
+
+		// Build client
+		client, err := m.registry.Build(rec)
+		if err != nil {
+			// Log error but continue with other downloaders
+			m.logger.Error().
+				Err(err).
+				Str("downloader_id", dl.ID.String()).
+				Str("downloader_name", dl.Name).
+				Str("downloader_type", dl.Type).
+				Msg("failed to initialize downloader")
+			continue
+		}
+
+		m.logger.Info().
+			Str("downloader_id", dl.ID.String()).
+			Str("downloader_name", dl.Name).
+			Str("downloader_type", dl.Type).
+			Msg("initialized downloader")
+
+		m.clients[instanceID] = client
+	}
+
+	return nil
+}
+
+// GetClient gets a client by instance ID
+func (m *Manager) GetClient(ctx context.Context, instanceID InstanceID) (Client, error) {
+	m.mu.RLock()
+	client, ok := m.clients[instanceID]
+	m.mu.RUnlock()
+
+	if !ok {
+		return nil, fmt.Errorf("downloader not found: %s", instanceID)
+	}
+
+	return client, nil
+}
+
+// GetClientByID gets a client by UUID string
+func (m *Manager) GetClientByID(ctx context.Context, id string) (Client, error) {
+	var uuid pgtype.UUID
+	if err := uuid.Scan(id); err != nil {
+		return nil, fmt.Errorf("invalid UUID: %w", err)
+	}
+
+	return m.GetClient(ctx, InstanceID(uuid.String()))
+}
+
+// GetDefaultClient gets the default client for a protocol
+func (m *Manager) GetDefaultClient(ctx context.Context, protocol string) (Client, error) {
+	dl, err := m.repo.GetDefaultDownloader(ctx, protocol)
+	if err != nil {
+		return nil, fmt.Errorf("get default downloader: %w", err)
+	}
+
+	return m.GetClientByID(ctx, dl.ID.String())
+}
+
+// ListClients returns all initialized clients
+func (m *Manager) ListClients(ctx context.Context) []Client {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	clients := make([]Client, 0, len(m.clients))
+	for _, client := range m.clients {
+		clients = append(clients, client)
+	}
+
+	return clients
+}
+
+// Close closes all clients and cleans up resources
+func (m *Manager) Close() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// TODO: If clients implement io.Closer, call Close() here
+	m.clients = make(map[InstanceID]Client)
+	return nil
+}

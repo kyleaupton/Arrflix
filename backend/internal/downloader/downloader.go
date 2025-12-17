@@ -3,7 +3,6 @@ package downloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -93,29 +92,12 @@ type Client interface {
 }
 
 type ConfigRecord struct {
-	ID     InstanceID
-	Type   Type
-	Config []byte // JSON from DB
+	ID       InstanceID
+	Type     Type
+	URL      string
+	Username *string
+	Password *string
+	Config   []byte // JSON from DB (type-specific config)
 }
 
 type Builder func(rec ConfigRecord) (Client, error)
-
-type Registry struct {
-	builders map[Type]Builder
-}
-
-func NewRegistry() *Registry {
-	return &Registry{builders: map[Type]Builder{}}
-}
-
-func (r *Registry) Register(t Type, b Builder) {
-	r.builders[t] = b
-}
-
-func (r *Registry) Build(rec ConfigRecord) (Client, error) {
-	b, ok := r.builders[rec.Type]
-	if !ok {
-		return nil, fmt.Errorf("unknown downloader type: %s", rec.Type)
-	}
-	return b(rec)
-}
