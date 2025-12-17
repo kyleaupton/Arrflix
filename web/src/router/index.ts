@@ -46,7 +46,7 @@ const router = createRouter({
         },
         {
           path: 'downloaders',
-          component: () => import('@/views/settings/DownloaderSettings.vue'),
+          component: () => import('@/views/settings/downloader/DownloaderSettings.vue'),
         },
         {
           path: 'policies',
