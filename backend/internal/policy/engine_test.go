@@ -2,6 +2,7 @@ package policy
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/kyleaupton/snaggle/backend/internal"
@@ -10,6 +11,10 @@ import (
 )
 
 func TestEngine_Evaluate(t *testing.T) {
+	if os.Getenv("SNAGGLE_INTEGRATION") != "1" {
+		t.Skip("skipping integration test (set SNAGGLE_INTEGRATION=1 to enable)")
+	}
+
 	r := internal.GetRepo()
 	logg := logger.New(true)
 	engine := NewEngine(r, logg)

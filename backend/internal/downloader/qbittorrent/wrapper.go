@@ -110,6 +110,15 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 			continue
 		}
 
+		// Snapshot existing torrents so we can identify a newly-added torrent even when
+		// we can't extract a hash (e.g. when adding a .torrent URL).
+		existing := map[string]bool{}
+		if torrents, listErr := c.client.Torrents(qbt.TorrentsOptions{}); listErr == nil {
+			for _, t := range torrents {
+				existing[t.Hash] = true
+			}
+		}
+
 		// Build download options
 		opts := qbt.DownloadOptions{}
 		if req.SavePath != "" {
@@ -134,13 +143,34 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 			continue
 		}
 
-		// Extract hash from magnet URL or get it from the torrent
+		// Extract hash from magnet URL or derive it from the client after add.
 		hash, err := extractHashFromMagnet(torrentURL)
 		if err != nil {
-			// Try to get it from the torrent list
-			hash, err = c.getHashFromName(ctx, req.MagnetURL)
-			if err != nil {
-				return result, fmt.Errorf("failed to get torrent hash: %w", err)
+			// If this isn't a magnet (e.g. .torrent URL), locate the newly-added torrent by diffing hashes.
+			torrents, listErr := c.client.Torrents(qbt.TorrentsOptions{})
+			if listErr != nil {
+				return result, fmt.Errorf("failed to list torrents after add: %w", listErr)
+			}
+			var newest *qbt.TorrentInfo
+			for i := range torrents {
+				t := &torrents[i]
+				if existing[t.Hash] {
+					continue
+				}
+				// First unseen becomes candidate; if multiple, pick newest.
+				if newest == nil || t.AddedOn > newest.AddedOn {
+					newest = t
+				}
+			}
+			if newest == nil {
+				// Fall back to name-based lookup for magnets without btih (rare) or if diffing failed.
+				hash, err = c.getHashFromName(ctx, req.MagnetURL)
+				if err != nil {
+					return result, fmt.Errorf("failed to get torrent hash: %w", err)
+				}
+			} else {
+				hash = newest.Hash
+				result.Name = newest.Name
 			}
 		}
 
@@ -154,7 +184,9 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 		}
 
 		result.ExternalID = hash
-		result.Name = extractNameFromMagnet(torrentURL)
+		if result.Name == "" {
+			result.Name = extractNameFromMagnet(torrentURL)
+		}
 
 		return result, nil
 	}

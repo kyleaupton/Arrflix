@@ -19,7 +19,6 @@ func GetRepo() *repo.Repository {
 	if err != nil {
 		logg.Fatal().Err(err).Msg("open db")
 	}
-	defer pool.Close()
 
 	return repo.New(pool)
 }

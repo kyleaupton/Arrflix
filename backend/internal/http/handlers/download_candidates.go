@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
+	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
+	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 	"github.com/labstack/echo/v4"
 )
@@ -98,7 +99,7 @@ func (h *DownloadCandidates) PreviewCandidate(c echo.Context) error {
 // @Produce json
 // @Param   id path int true "Movie ID (TMDB ID)"
 // @Param   payload body handlers.EnqueueCandidateRequest true "Download request"
-// @Success 200 {object} model.EvaluationTrace
+// @Success 200 {object} handlers.DownloadCandidateResponse
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -118,8 +119,22 @@ func (h *DownloadCandidates) DownloadCandidate(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "indexerId and guid are required"})
 	}
 
-	// todo: enqueue candidate
-	fmt.Println("enqueue candidate", movieID, req.IndexerID, req.GUID)
+	ctx := c.Request().Context()
+	trace, job, err := h.svc.DownloadCandidates.EnqueueCandidate(ctx, movieID, req.IndexerID, req.GUID)
+	if err != nil {
+		if errors.Is(err, service.ErrCandidateNotFound) || errors.Is(err, service.ErrCandidateExpired) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
 
-	return c.JSON(http.StatusOK, nil)
+	return c.JSON(http.StatusOK, DownloadCandidateResponse{
+		Trace: trace,
+		Job:   job,
+	})
+}
+
+type DownloadCandidateResponse struct {
+	Trace model.EvaluationTrace `json:"trace"`
+	Job   dbgen.DownloadJob     `json:"job"`
 }

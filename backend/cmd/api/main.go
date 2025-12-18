@@ -11,6 +11,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/db"
 	"github.com/kyleaupton/snaggle/backend/internal/downloader"
 	"github.com/kyleaupton/snaggle/backend/internal/downloader/qbittorrent"
+	"github.com/kyleaupton/snaggle/backend/internal/jobs/downloadjobs"
 	"github.com/kyleaupton/snaggle/backend/internal/http"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
@@ -63,10 +64,16 @@ func main() {
 		}
 	}()
 
+	// Download job worker
+	workerCtx, workerCancel := context.WithCancel(context.Background())
+	jobWorker := downloadjobs.New(repo, downloaderManager, services.Import, logg)
+	go jobWorker.Run(workerCtx)
+
 	// Graceful shutdown
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	<-ctx.Done()
 	stop()
+	workerCancel()
 
 	shCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

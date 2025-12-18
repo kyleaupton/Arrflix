@@ -187,6 +187,36 @@ type AuthAudit struct {
 	CreatedAt time.Time   `json:"created_at"`
 }
 
+type DownloadJob struct {
+	ID                   pgtype.UUID `json:"id"`
+	Status               string      `json:"status"`
+	Protocol             string      `json:"protocol"`
+	MediaType            string      `json:"media_type"`
+	MediaItemID          pgtype.UUID `json:"media_item_id"`
+	SeasonID             pgtype.UUID `json:"season_id"`
+	EpisodeID            pgtype.UUID `json:"episode_id"`
+	IndexerID            int64       `json:"indexer_id"`
+	Guid                 string      `json:"guid"`
+	CandidateTitle       string      `json:"candidate_title"`
+	CandidateLink        string      `json:"candidate_link"`
+	DownloaderID         pgtype.UUID `json:"downloader_id"`
+	LibraryID            pgtype.UUID `json:"library_id"`
+	NameTemplateID       pgtype.UUID `json:"name_template_id"`
+	DownloaderExternalID *string     `json:"downloader_external_id"`
+	DownloadSavePath     *string     `json:"download_save_path"`
+	DownloadContentPath  *string     `json:"download_content_path"`
+	ImportSourcePath     *string     `json:"import_source_path"`
+	ImportDestPath       *string     `json:"import_dest_path"`
+	ImportMethod         *string     `json:"import_method"`
+	DownloaderStatus     *string     `json:"downloader_status"`
+	Progress             *float64    `json:"progress"`
+	AttemptCount         int32       `json:"attempt_count"`
+	NextRunAt            time.Time   `json:"next_run_at"`
+	LastError            *string     `json:"last_error"`
+	CreatedAt            time.Time   `json:"created_at"`
+	UpdatedAt            time.Time   `json:"updated_at"`
+}
+
 type Downloader struct {
 	ID         pgtype.UUID `json:"id"`
 	Name       string      `json:"name"`

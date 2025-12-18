@@ -11,6 +11,8 @@ type Services struct {
 	Auth               *AuthService
 	Downloaders        *DownloadersService
 	DownloadCandidates *DownloadCandidatesService
+	DownloadJobs       *DownloadJobsService
+	Import             *ImportService
 	Indexer            *IndexerService
 	Libraries          *LibrariesService
 	Media              *MediaService
@@ -38,6 +40,8 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 		Auth:               NewAuthService(r, cfg),
 		Downloaders:        NewDownloadersService(r),
 		DownloadCandidates: NewDownloadCandidatesService(r, l, indexer, media, policyEngine),
+		DownloadJobs:       NewDownloadJobsService(r),
+		Import:             NewImportService(r),
 		Indexer:            indexer,
 		Libraries:          NewLibrariesService(r),
 		Media:              media,

@@ -4,11 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
 	"golift.io/starr/prowlarr"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/policy"
@@ -140,6 +144,96 @@ func (s *DownloadCandidatesService) EvaluateCandidate(ctx context.Context, movie
 	}
 
 	return trace, nil
+}
+
+// PreviewCandidate previews what will happen when a candidate is enqueued.
+func (s *DownloadCandidatesService) PreviewCandidate(ctx context.Context, movieID int64, indexerID int64, guid string) (model.EvaluationTrace, error) {
+	return s.EvaluateCandidate(ctx, movieID, indexerID, guid)
+}
+
+// EnqueueCandidate creates a durable download job for a candidate (movies-only for v1).
+func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieID int64, indexerID int64, guid string) (model.EvaluationTrace, dbgen.DownloadJob, error) {
+	// Lookup candidate from cache
+	cacheKey := s.cacheKey(indexerID, guid)
+	s.cacheMu.RLock()
+	cached, exists := s.cache[cacheKey]
+	s.cacheMu.RUnlock()
+
+	if !exists {
+		return model.EvaluationTrace{}, dbgen.DownloadJob{}, ErrCandidateNotFound
+	}
+
+	// Check if expired
+	if time.Now().After(cached.expiresAt) {
+		s.cacheMu.Lock()
+		delete(s.cache, cacheKey)
+		s.cacheMu.Unlock()
+		return model.EvaluationTrace{}, dbgen.DownloadJob{}, ErrCandidateExpired
+	}
+
+	candidate := s.searchResultToCandidate(cached.result)
+
+	trace, err := s.policyEngine.Evaluate(ctx, candidate)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("Failed to evaluate policy")
+		return model.EvaluationTrace{}, dbgen.DownloadJob{}, fmt.Errorf("failed to evaluate policy: %w", err)
+	}
+
+	var downloaderID, libraryID, nameTemplateID pgtype.UUID
+	if err := downloaderID.Scan(trace.FinalPlan.DownloaderID); err != nil {
+		return trace, dbgen.DownloadJob{}, fmt.Errorf("invalid downloader id: %w", err)
+	}
+	if err := libraryID.Scan(trace.FinalPlan.LibraryID); err != nil {
+		return trace, dbgen.DownloadJob{}, fmt.Errorf("invalid library id: %w", err)
+	}
+	if err := nameTemplateID.Scan(trace.FinalPlan.NameTemplateID); err != nil {
+		return trace, dbgen.DownloadJob{}, fmt.Errorf("invalid name template id: %w", err)
+	}
+
+	// Ensure media_item exists for this movie/library and link the job to it.
+	mi, err := s.repo.GetMediaItemByTmdbID(ctx, movieID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			movie, err := s.media.GetMovie(ctx, movieID)
+			if err != nil {
+				return trace, dbgen.DownloadJob{}, fmt.Errorf("get movie: %w", err)
+			}
+			var yearInt *int32
+			if len(movie.ReleaseDate) >= 4 {
+				if y, err := strconv.Atoi(movie.ReleaseDate[:4]); err == nil {
+					yy := int32(y)
+					yearInt = &yy
+				}
+			}
+			tmdb := movieID
+			mi, err = s.repo.CreateMediaItem(ctx, libraryID, "movie", movie.Title, yearInt, &tmdb)
+			if err != nil {
+				return trace, dbgen.DownloadJob{}, fmt.Errorf("create media item: %w", err)
+			}
+		} else {
+			return trace, dbgen.DownloadJob{}, fmt.Errorf("get media item: %w", err)
+		}
+	}
+
+	job, err := s.repo.CreateDownloadJob(ctx, dbgen.CreateDownloadJobParams{
+		Protocol:       candidate.Protocol,
+		MediaType:      "movie",
+		MediaItemID:    mi.ID,
+		SeasonID:       pgtype.UUID{},
+		EpisodeID:      pgtype.UUID{},
+		IndexerID:      indexerID,
+		Guid:           guid,
+		CandidateTitle: candidate.Title,
+		CandidateLink:  candidate.Link,
+		DownloaderID:   downloaderID,
+		LibraryID:      libraryID,
+		NameTemplateID: nameTemplateID,
+	})
+	if err != nil {
+		return trace, dbgen.DownloadJob{}, fmt.Errorf("create download job: %w", err)
+	}
+
+	return trace, job, nil
 }
 
 // searchResultToCandidate converts a prowlarr.Search result to a model.DownloadCandidate

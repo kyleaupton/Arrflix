@@ -1,13 +1,37 @@
 package template
 
+import "strings"
+
 // Package template provides functionality for rendering name templates.
-// This is a stub implementation that will be expanded when import functionality is built.
+// This is a minimal implementation intended for filesystem-safe naming.
 
 // Render renders a template string with the provided variables.
-// This is a placeholder that will be implemented when import functionality is added.
 func Render(template string, vars map[string]string) (string, error) {
-	// TODO: Implement template rendering with variable substitution
-	// For now, return the template as-is
-	return template, nil
+	out := template
+	for k, v := range vars {
+		v = sanitizeValue(v)
+		out = strings.ReplaceAll(out, "{"+k+"}", v)
+		out = strings.ReplaceAll(out, "{{"+k+"}}", v)
+	}
+	return out, nil
+}
+
+func sanitizeValue(s string) string {
+	// Avoid path traversal and illegal/annoying path chars across common filesystems.
+	// Keep this conservative; callers can add more normalization later.
+	r := strings.NewReplacer(
+		"/", "-",
+		"\\", "-",
+		":", "-",
+		"*", "",
+		"?", "",
+		"\"", "",
+		"<", "",
+		">", "",
+		"|", "",
+	)
+	s = r.Replace(s)
+	s = strings.TrimSpace(s)
+	return s
 }
 
