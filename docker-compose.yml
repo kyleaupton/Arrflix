@@ -50,4 +50,4 @@ services:
       - WEBUI_PORT=8485
     volumes:
       - ./.data/qbittorrent:/config
-      - ${SEED_DIR}:/data/torrents
+      - ${SEED_DIR}:/downloads

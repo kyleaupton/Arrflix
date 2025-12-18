@@ -58,8 +58,16 @@ const SnagglePreset = definePreset(Aura, {
       },
     },
     datatable: {
+      root: {
+        // shadow: '{shadow.1}',
+      },
       header: {
         padding: '0.5rem 1rem',
+      },
+    },
+    card: {
+      root: {
+        shadow: '{shadow.1}',
       },
     },
   },

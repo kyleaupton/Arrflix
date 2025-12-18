@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -79,7 +80,7 @@ func (h *DownloadCandidates) PreviewCandidate(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	trace, err := h.svc.DownloadCandidates.PreviewCandidate(ctx, movieID, req.IndexerID, req.GUID)
+	trace, err := h.svc.DownloadCandidates.EvaluateCandidate(ctx, movieID, req.IndexerID, req.GUID)
 	if err != nil {
 		if errors.Is(err, service.ErrCandidateNotFound) || errors.Is(err, service.ErrCandidateExpired) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
@@ -117,15 +118,8 @@ func (h *DownloadCandidates) DownloadCandidate(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "indexerId and guid are required"})
 	}
 
-	ctx := c.Request().Context()
-	trace, err := h.svc.DownloadCandidates.EnqueueCandidate(ctx, movieID, req.IndexerID, req.GUID)
-	if err != nil {
-		// Check if it's a not found error (cache expired)
-		if errors.Is(err, service.ErrCandidateNotFound) || errors.Is(err, service.ErrCandidateExpired) {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
-		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
+	// todo: enqueue candidate
+	fmt.Println("enqueue candidate", movieID, req.IndexerID, req.GUID)
 
-	return c.JSON(http.StatusOK, trace)
+	return c.JSON(http.StatusOK, nil)
 }

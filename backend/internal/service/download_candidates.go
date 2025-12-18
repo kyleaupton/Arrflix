@@ -108,8 +108,8 @@ func (s *DownloadCandidatesService) SearchDownloadCandidates(ctx context.Context
 	return candidates, nil
 }
 
-// EnqueueCandidate enqueues a download candidate through the policy engine
-func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieID int64, indexerID int64, guid string) (model.EvaluationTrace, error) {
+// EvaluateCandidate returns the evaluation trace for a candidate
+func (s *DownloadCandidatesService) EvaluateCandidate(ctx context.Context, movieID int64, indexerID int64, guid string) (model.EvaluationTrace, error) {
 	// Lookup torrent from cache
 	cacheKey := s.cacheKey(indexerID, guid)
 	s.cacheMu.RLock()
@@ -140,12 +140,6 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 	}
 
 	return trace, nil
-}
-
-// PreviewCandidate previews what will happen when a candidate is enqueued
-// This is now just an alias for EnqueueCandidate since Evaluate always returns trace
-func (s *DownloadCandidatesService) PreviewCandidate(ctx context.Context, movieID int64, indexerID int64, guid string) (model.EvaluationTrace, error) {
-	return s.EnqueueCandidate(ctx, movieID, indexerID, guid)
 }
 
 // searchResultToCandidate converts a prowlarr.Search result to a model.DownloadCandidate

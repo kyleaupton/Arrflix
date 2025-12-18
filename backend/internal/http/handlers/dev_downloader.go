@@ -211,11 +211,11 @@ func (h *DevDownloaderTest) ServeUI(c echo.Context) error {
 		</div>
 		
 		<div class="form-group">
-			<label for="magnet">Magnet URL:</label>
-			<input type="text" id="magnet" placeholder="magnet:?xt=urn:btih:...">
+			<label for="magnet">Magnet URL or Torrent File URL:</label>
+			<input type="text" id="magnet" placeholder="magnet:?xt=urn:btih:... or https://example.com/file.torrent">
 		</div>
 		
-		<button onclick="addMagnet()">Add Download</button>
+		<button onclick="addMagnet()">Add Download (Magnet or Torrent URL)</button>
 		<button class="refresh-btn" onclick="refreshItems()">Refresh</button>
 	</div>
 	
@@ -321,7 +321,7 @@ func (h *DevDownloaderTest) ServeUI(c echo.Context) error {
 		function addMagnet() {
 			const magnet = document.getElementById('magnet').value.trim();
 			if (!magnet) {
-				showError('Please enter a magnet URL');
+				showError('Please enter a magnet URL or torrent file URL');
 				return;
 			}
 			if (!downloaderId) {
@@ -452,9 +452,9 @@ func (h *DevDownloaderTest) ListDownloaders(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-// AddMagnetRequest is the request body for adding a magnet link
+// AddMagnetRequest is the request body for adding a magnet link or torrent URL
 type AddMagnetRequest struct {
-	Magnet string `json:"magnet"`
+	Magnet string `json:"magnet"` // Can be a magnet: URL or http/https URL to a .torrent file
 }
 
 // AddMagnet adds a magnet link to a downloader
@@ -470,7 +470,7 @@ func (h *DevDownloaderTest) AddMagnet(c echo.Context) error {
 	}
 
 	if req.Magnet == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "magnet URL required"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "magnet URL or torrent file URL required"})
 	}
 
 	ctx := c.Request().Context()
