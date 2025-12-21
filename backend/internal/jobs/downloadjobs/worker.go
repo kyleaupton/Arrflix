@@ -140,17 +140,12 @@ func (w *Worker) processJob(ctx context.Context, job dbgen.DownloadJob) error {
 			return fmt.Errorf("list files: %w", err)
 		}
 
-		jsonData, _ := json.MarshalIndent(files, "", "  ")
-		fmt.Println(string(jsonData))
-
 		sourcePath := ""
 		if len(files) > 0 {
 			mainFile, ok := importer.PickMainMovieFile(files)
 			if !ok {
 				return fmt.Errorf("no files available for import")
 			}
-			jsonData, _ := json.MarshalIndent(mainFile, "", "  ")
-			fmt.Println(string(jsonData))
 			// qBittorrent file paths are relative; use SavePath as root.
 			if filepath.IsAbs(mainFile.Path) {
 				sourcePath = mainFile.Path
