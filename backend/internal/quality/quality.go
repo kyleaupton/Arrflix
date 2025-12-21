@@ -39,6 +39,13 @@ type ParsedQuality struct {
 	Tier QualityTier `json:"tier"`
 }
 
+// NamingContext represents the data available to naming templates.
+type NamingContext struct {
+	Title   string
+	Year    string
+	Quality ParsedQuality
+}
+
 type AudioInfo struct {
 	Codec       AudioCodec `json:"codec"`
 	Channels    Channels   `json:"channels"`

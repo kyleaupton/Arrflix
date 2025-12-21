@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
 	"github.com/kyleaupton/snaggle/backend/internal/importer"
+	"github.com/kyleaupton/snaggle/backend/internal/quality"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 	"github.com/kyleaupton/snaggle/backend/internal/template"
 )
@@ -54,11 +55,17 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 		return ImportResult{}, fmt.Errorf("get name template: %w", err)
 	}
 
-	vars := map[string]string{
-		"Title": mediaItem.Title,
-		"Year":  year,
+	// Parse quality from the candidate title if available
+	parser := quality.NewParser()
+	q := parser.Parse(job.CandidateTitle)
+
+	context := quality.NamingContext{
+		Title:   mediaItem.Title,
+		Year:    year,
+		Quality: q,
 	}
-	rel, err := template.Render(nt.Template, vars)
+
+	rel, err := template.Render(nt.Template, context)
 	if err != nil {
 		return ImportResult{}, fmt.Errorf("render template: %w", err)
 	}
@@ -93,5 +100,3 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 		MediaFile:  mf,
 	}, nil
 }
-
-

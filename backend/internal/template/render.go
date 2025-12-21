@@ -1,24 +1,37 @@
 package template
 
-import "strings"
+import (
+	"bytes"
+	"fmt"
+	"strings"
+	"text/template"
+)
 
 // Package template provides functionality for rendering name templates.
 // This is a minimal implementation intended for filesystem-safe naming.
 
 // Render renders a template string with the provided variables.
-func Render(template string, vars map[string]string) (string, error) {
-	out := template
-	for k, v := range vars {
-		v = sanitizeValue(v)
-		out = strings.ReplaceAll(out, "{"+k+"}", v)
-		out = strings.ReplaceAll(out, "{{"+k+"}}", v)
+func Render(tmplStr string, data any) (string, error) {
+	funcMap := template.FuncMap{
+		"sanitize": sanitizeValue,
+		"clean":    cleanQualityValue,
 	}
-	return out, nil
+
+	t, err := template.New("naming").Funcs(funcMap).Parse(tmplStr)
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, data); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }
 
 func sanitizeValue(s string) string {
 	// Avoid path traversal and illegal/annoying path chars across common filesystems.
-	// Keep this conservative; callers can add more normalization later.
 	r := strings.NewReplacer(
 		"/", "-",
 		"\\", "-",
@@ -35,3 +48,11 @@ func sanitizeValue(s string) string {
 	return s
 }
 
+// cleanQualityValue returns an empty string if the value is "unknown", otherwise returns the value sanitized.
+func cleanQualityValue(v any) string {
+	s := strings.TrimSpace(strings.ToLower(fmt.Sprintf("%v", v)))
+	if s == "unknown" || s == "" {
+		return ""
+	}
+	return sanitizeValue(s)
+}
