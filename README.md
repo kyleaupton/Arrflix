@@ -1,107 +1,69 @@
 # Snaggle
 
-A self-hosted media management platform that unifies the best parts of Sonarr, Radarr, and Overseerr — but with more transparency, flexibility, and developer-first clarity.
+Snaggle is a self-hosted media management platform designed to unify the best parts of Sonarr, Radarr, and Overseerr into a single, transparent, and flexible tool. It helps you manage your movie and series collections with a focus on filesystem integrity and efficient storage usage.
 
-## Quick Start
+## Features
 
-Snaggle now uses a container orchestration approach. Simply run:
+- **Unified Management**: Manage both Movies and Series in one interface.
+- **Granular Monitoring**: Monitor at the Series, Season, or individual Episode level.
+- **Filesystem First**: Prioritizes your filesystem as the source of truth.
+- **Efficient Storage**: Uses a hardlink-first strategy for importing downloads to save space.
+- **Indexer Integration**: Bundled Prowlarr for seamless indexer management out of the box.
+- **External Downloader Support**: Integrates with popular downloaders like qBittorrent.
+- **Modular & Secure**: Bring your own downloader and VPN setup for maximum flexibility and privacy.
 
-```bash
-cd ops
-docker-compose up -d
-```
+## Getting Started
 
-This starts the `snaggle-ops` reconciler which automatically spawns and manages all required services:
+Snaggle is distributed as a Docker container that includes the API, Frontend, and Prowlarr.
 
-- PostgreSQL database
-- Prowlarr indexer management
-- Snaggle API backend
-- Nginx web server
-- Dynamic services (qBittorrent instances, etc.)
+### Prerequisites
 
-Access the web interface at http://localhost:8484
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- An external downloader (e.g., qBittorrent) and your preferred VPN solution.
 
-### Development Mode
+### Installation
 
-For development with live reload:
+1. **Clone the repository**:
 
-```bash
-cd ops
-RUNTIME_MODE=dev docker-compose up -d
-```
+   ```bash
+   git clone https://github.com/kyleaupton/snaggle.git
+   cd snaggle
+   ```
 
-This enables:
+2. **Configure environment variables**:
+   Create a `.env` file in the root directory:
 
-- Go API with Air live reload
-- Vue frontend with Vite HMR
-- Direct access to dev servers on ports 8080 and 5173
+   ```env
+   TMDB_API_KEY=your_tmdb_api_key_here
+   MEDIA_LIBRARIES=/path/to/your/media
+   ```
 
-## Architecture
+3. **Launch Snaggle**:
 
-Snaggle uses a Go-based reconciliation controller that manages Docker containers in a Kubernetes-style pattern:
+   ```bash
+   docker compose up -d snaggle
+   ```
 
-- **Single Entry Point**: Only `snaggle-ops` container in docker-compose
-- **Dynamic Services**: Add/remove services via database without restarts
-- **Better Isolation**: Each service runs in its own container
-- **Dependency Management**: Services start in correct order with health checks
+4. **Access the interface**:
+   Open your browser and navigate to `http://localhost:8484`.
 
-See [ops/README.md](ops/README.md) for detailed architecture documentation.
+## Downloader & VPN Scope
 
-## Vision
+Snaggle focuses on media management and indexer orchestration. To maintain a lightweight and flexible footprint:
 
-### Problem
+- **Downloaders**: Snaggle integrates with external downloaders via API. While sample services are provided in the `docker-compose.yml` for reference, you are encouraged to use your existing downloader setup.
+- **VPN/Privacy**: Privacy is your responsibility. We recommend running your downloaders behind a VPN (such as Gluetun or a dedicated VPN container). Snaggle does not bundle a VPN client.
 
-Existing media managers (e.g., Sonarr/Radarr) feel slow/heavy, hard to customize, and brittle to operate.
+## Configuration
 
-### Target Users
+For detailed configuration options, including adding indexers and setting up downloaders, please refer to the settings section within the web interface.
 
-- Self-hosters who want predictable, low-latency automation
-- Power users who want _composable_ pipelines and clear observability
+## Documentation
 
-### Product Principles
+- **User Guide**: Coming soon(ish).
+- **Developer Documentation**: See [docs/PROJECT_BRIEF.md](docs/PROJECT_BRIEF.md) for architecture and development setup.
 
-- **Local-first** (works offline with queued actions)
-- **Observable by default** (events, logs, metrics, traces)
-- **Composable** (plugin adapters for indexers, downloaders, metadata)
-- **Idempotent** (safe retries; no dupes)
-- **Resource-aware** (don't clobber the NAS or saturate WAN)
+## License
 
-### Non-Goals (v1)
-
-- Nothing more than solving my workflow needs
-- No rich mobile clients (basic mobile web only)
-
-## MVP Scope (v1)
-
-### Personas
-
-- Admin
-- User
-
-### Core User Stories
-
-1. As an admin, I can add a series/movie and specify quality profile.
-2. The system monitors indexers and enqueues matching releases.
-3. A download client integration fetches releases.
-4. A post-processor imports files, normalizes names, and updates the library.
-5. I can see a live pipeline view and retry/ban items.
-
-### Integrations (v1)
-
-- Indexers: PirateBay, IPTorrents
-- Downloaders: qBitorrent
-- Metadata (Built-in): TMDB
-- Notifiers (Stretch goal): Email
-
-### Quality Profiles (v1)
-
-- Simple: 1080p, 4K, "Best available"
-- Single keep policy (no upgrade ladder yet)
-
-### UI (v1)
-
-- Screen to see items in collection
-- Screen to add items to collection
-- Settings
-  - Integrations
-  - Naming format
+TODO: figure this out

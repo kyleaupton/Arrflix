@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "snaggle-mcp": {
+      "command": "npx",
+      "args": ["-y", "tsx", "${workspaceFolder}/mcp/src/index.ts"],
+      "env": {
+        "SNAGGLE_DATABASE_URL": "${env:SNAGGLE_DATABASE_URL}"
+      }
+    }
+  }
+}

@@ -1,222 +1,300 @@
 #!/usr/bin/env node
 
-/**
- * This is a template MCP server that implements a simple notes system.
- * It demonstrates core MCP concepts like resources and tools by allowing:
- * - Listing notes as resources
- * - Reading individual notes
- * - Creating new notes via a tool
- * - Summarizing all notes via a prompt
- */
-
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
-  ListResourcesRequestSchema,
   ListToolsRequestSchema,
-  ReadResourceRequestSchema,
-  ListPromptsRequestSchema,
-  GetPromptRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-/**
- * Type alias for a note object.
- */
-type Note = { title: string, content: string };
+import { z } from "zod";
+import { Client as PgClient } from "pg";
+import { spawn } from "node:child_process";
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
-/**
- * Simple in-memory storage for notes.
- * In a real implementation, this would likely be backed by a database.
- */
-const notes: { [id: string]: Note } = {
-  "1": { title: "First Note", content: "This is note 1" },
-  "2": { title: "Second Note", content: "This is note 2" }
-};
+function getGitRepoRoot(): string {
+  try {
+    const out = execFileSync("git", ["rev-parse", "--show-toplevel"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
 
-/**
- * Create an MCP server with capabilities for resources (to list/read notes),
- * tools (to create new notes), and prompts (to summarize notes).
- */
-const server = new Server(
-  {
-    name: "Snaggle MCP",
-    version: "0.1.0",
-  },
-  {
-    capabilities: {
-      resources: {},
-      tools: {},
-      prompts: {},
-    },
+    if (!out) throw new Error("Empty git toplevel");
+    const p = resolve(out);
+    if (!existsSync(p)) throw new Error(`git toplevel does not exist: ${p}`);
+    return p;
+  } catch {
+    // Fallback: run relative to wherever Cursor launched us.
+    // (Useful when not in a git worktree, or git isn't on PATH.)
+    return process.cwd();
   }
+}
+
+const Env = z
+  .object({
+    // Optional: enable DB tool if set
+    SNAGGLE_DATABASE_URL: z.string().optional(),
+  })
+  .parse(process.env);
+
+const repoRoot = getGitRepoRoot();
+
+async function runRg(
+  query: string,
+  globs?: string[],
+  maxResults = 200
+): Promise<string> {
+  const args = ["--json", "--max-count", String(maxResults), query];
+  for (const g of globs ?? []) args.push("--glob", g);
+
+  return await new Promise<string>((resolvePromise, rejectPromise) => {
+    const child = spawn("rg", args, {
+      cwd: repoRoot,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let out = "";
+    let err = "";
+    child.stdout.on("data", (d) => (out += d.toString("utf8")));
+    child.stderr.on("data", (d) => (err += d.toString("utf8")));
+
+    child.on("error", rejectPromise);
+    child.on("close", (code) => {
+      // rg returns 1 when no matches
+      if (code === 0 || code === 1) return resolvePromise(out);
+      rejectPromise(new Error(`rg failed (code ${code}): ${err}`));
+    });
+  });
+}
+
+async function dockerComposeLogs(
+  service: string,
+  lines = 200
+): Promise<string> {
+  const args = [
+    "compose",
+    "logs",
+    "--no-color",
+    "--tail",
+    String(lines),
+    service,
+  ];
+
+  return await new Promise<string>((resolvePromise, rejectPromise) => {
+    const child = spawn("docker", args, { stdio: ["ignore", "pipe", "pipe"] });
+
+    let out = "";
+    let err = "";
+    child.stdout.on("data", (d) => (out += d.toString("utf8")));
+    child.stderr.on("data", (d) => (err += d.toString("utf8")));
+
+    child.on("error", rejectPromise);
+    child.on("close", (code) => {
+      if (code === 0) return resolvePromise(out);
+      rejectPromise(
+        new Error(`docker compose logs failed (code ${code}): ${err}`)
+      );
+    });
+  });
+}
+
+function isReadOnlySql(sql: string): boolean {
+  const s = sql.trim().toLowerCase();
+  return s.startsWith("select") || s.startsWith("with");
+}
+
+async function pgQuery(sql: string, params: unknown[] = []) {
+  if (!Env.SNAGGLE_DATABASE_URL) {
+    throw new Error("SNAGGLE_DATABASE_URL is not set.");
+  }
+  if (!isReadOnlySql(sql)) {
+    throw new Error(
+      "Only read-only queries are allowed (SELECT / WITH ... SELECT)."
+    );
+  }
+
+  const client = new PgClient({ connectionString: Env.SNAGGLE_DATABASE_URL });
+  await client.connect();
+  try {
+    return await client.query(sql, params);
+  } finally {
+    await client.end();
+  }
+}
+
+const server = new Server(
+  { name: "Snaggle MCP", version: "0.1.0" },
+  { capabilities: { tools: {} } }
 );
 
-/**
- * Handler for listing available notes as resources.
- * Each note is exposed as a resource with:
- * - A note:// URI scheme
- * - Plain text MIME type
- * - Human readable name and description (now including the note title)
- */
-server.setRequestHandler(ListResourcesRequestSchema, async () => {
-  return {
-    resources: Object.entries(notes).map(([id, note]) => ({
-      uri: `note:///${id}`,
-      mimeType: "text/plain",
-      name: note.title,
-      description: `A text note: ${note.title}`
-    }))
-  };
-});
-
-/**
- * Handler for reading the contents of a specific note.
- * Takes a note:// URI and returns the note content as plain text.
- */
-server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-  const url = new URL(request.params.uri);
-  const id = url.pathname.replace(/^\//, '');
-  const note = notes[id];
-
-  if (!note) {
-    throw new Error(`Note ${id} not found`);
-  }
-
-  return {
-    contents: [{
-      uri: request.params.uri,
-      mimeType: "text/plain",
-      text: note.content
-    }]
-  };
-});
-
-/**
- * Handler that lists available tools.
- * Exposes a single "create_note" tool that lets clients create new notes.
- */
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: "create_note",
-        description: "Create a new note",
+        name: "snaggle_search_repo",
+        description: `Search the Snaggle git repo (root: ${repoRoot}) using ripgrep.`,
         inputSchema: {
           type: "object",
           properties: {
-            title: {
-              type: "string",
-              description: "Title of the note"
+            query: { type: "string", description: "ripgrep search query" },
+            globs: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                'Optional rg globs, e.g. ["*.go","*.ts"] or ["!vendor/**"]',
             },
-            content: {
-              type: "string",
-              description: "Text content of the note"
-            }
+            maxResults: {
+              type: "number",
+              description: "Maximum matches to return (1-500). Default 200.",
+            },
           },
-          required: ["title", "content"]
-        }
-      }
-    ]
-  };
-});
-
-/**
- * Handler for the create_note tool.
- * Creates a new note with the provided title and content, and returns success message.
- */
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  switch (request.params.name) {
-    case "create_note": {
-      const title = String(request.params.arguments?.title);
-      const content = String(request.params.arguments?.content);
-      if (!title || !content) {
-        throw new Error("Title and content are required");
-      }
-
-      const id = String(Object.keys(notes).length + 1);
-      notes[id] = { title, content };
-
-      return {
-        content: [{
-          type: "text",
-          text: `Created note ${id}: ${title}`
-        }]
-      };
-    }
-
-    default:
-      throw new Error("Unknown tool");
-  }
-});
-
-/**
- * Handler that lists available prompts.
- * Exposes a single "summarize_notes" prompt that summarizes all notes.
- */
-server.setRequestHandler(ListPromptsRequestSchema, async () => {
-  return {
-    prompts: [
-      {
-        name: "summarize_notes",
-        description: "Summarize all notes",
-      }
-    ]
-  };
-});
-
-/**
- * Handler for the summarize_notes prompt.
- * Returns a prompt that requests summarization of all notes, with the notes' contents embedded as resources.
- */
-server.setRequestHandler(GetPromptRequestSchema, async (request) => {
-  if (request.params.name !== "summarize_notes") {
-    throw new Error("Unknown prompt");
-  }
-
-  const embeddedNotes = Object.entries(notes).map(([id, note]) => ({
-    type: "resource" as const,
-    resource: {
-      uri: `note:///${id}`,
-      mimeType: "text/plain",
-      text: note.content
-    }
-  }));
-
-  return {
-    messages: [
-      {
-        role: "user",
-        content: {
-          type: "text",
-          text: "Please summarize the following notes:"
-        }
+          required: ["query"],
+        },
       },
-      ...embeddedNotes.map(note => ({
-        role: "user" as const,
-        content: note
-      })),
       {
-        role: "user",
-        content: {
-          type: "text",
-          text: "Provide a concise summary of all the notes above."
-        }
-      }
-    ]
+        name: "snaggle_docker_logs",
+        description:
+          "Get recent docker compose logs for a service (snaggle-api, snaggle-worker, postgres, etc).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            service: { type: "string", description: "Compose service name" },
+            lines: {
+              type: "number",
+              description: "Tail N lines (1-2000). Default 200.",
+            },
+          },
+          required: ["service"],
+        },
+      },
+      {
+        name: "snaggle_db_query",
+        description:
+          "Run a READ-ONLY Postgres query (SELECT/CTE only) against SNAGGLE_DATABASE_URL. Returns JSON rows.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            sql: { type: "string", description: "SQL query (SELECT/CTE only)" },
+            params: {
+              type: "array",
+              items: {},
+              description: "Optional parameter array for $1, $2, ...",
+            },
+            maxRows: {
+              type: "number",
+              description: "Max rows to return (1-500). Default 200.",
+            },
+          },
+          required: ["sql"],
+        },
+      },
+      {
+        name: "snaggle_project_brief",
+        description:
+          "Get a high-level overview of the Snaggle project to get up to speed.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+    ],
   };
 });
 
-/**
- * Start the server using stdio transport.
- * This allows the server to communicate via standard input/output streams.
- */
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const name = request.params.name;
+  const args = (request.params.arguments ?? {}) as Record<string, unknown>;
+
+  try {
+    switch (name) {
+      case "snaggle_search_repo": {
+        const query = z.string().min(1).parse(args.query);
+        const globs = z.array(z.string()).optional().parse(args.globs);
+        const maxResults = z
+          .number()
+          .int()
+          .min(1)
+          .max(500)
+          .optional()
+          .parse(args.maxResults);
+
+        const raw = await runRg(query, globs, maxResults ?? 200);
+        const text = raw.trim().length ? raw : `No matches found for: ${query}`;
+
+        return { content: [{ type: "text", text }] };
+      }
+
+      case "snaggle_docker_logs": {
+        const service = z.string().min(1).parse(args.service);
+        const lines = z
+          .number()
+          .int()
+          .min(1)
+          .max(2000)
+          .optional()
+          .parse(args.lines);
+
+        const out = await dockerComposeLogs(service, lines ?? 200);
+        return { content: [{ type: "text", text: out || "(no output)" }] };
+      }
+
+      case "snaggle_db_query": {
+        const sql = z.string().min(1).parse(args.sql);
+        const params = z.array(z.any()).optional().parse(args.params) ?? [];
+        const maxRows = z
+          .number()
+          .int()
+          .min(1)
+          .max(500)
+          .optional()
+          .parse(args.maxRows);
+
+        const res = await pgQuery(sql, params);
+        const rows = res.rows.slice(0, maxRows ?? 200);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ rowCount: res.rowCount, rows }, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "snaggle_project_brief": {
+        const briefPath = resolve(repoRoot, "docs/PROJECT_BRIEF.md");
+        if (!existsSync(briefPath)) {
+          return {
+            content: [{ type: "text", text: "Project brief not found." }],
+            isError: true,
+          };
+        }
+        const text = await readFile(briefPath, "utf-8");
+        return { content: [{ type: "text", text }] };
+      }
+
+      default:
+        throw new Error(`Unknown tool: ${name}`);
+    }
+  } catch (e: any) {
+    return {
+      content: [{ type: "text", text: `Error: ${e?.message ?? String(e)}` }],
+      isError: true,
+    };
+  }
+});
+
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
 
 main().catch((error) => {
+  // Keep JSON-RPC clean; errors to stderr only.
   console.error("Server error:", error);
   process.exit(1);
 });
