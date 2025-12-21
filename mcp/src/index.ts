@@ -154,6 +154,28 @@ async function runGenApiScript(): Promise<string> {
   });
 }
 
+async function runSqlcGenerate(): Promise<string> {
+  const backendPath = resolve(repoRoot, "backend");
+
+  return await new Promise<string>((resolvePromise, rejectPromise) => {
+    const child = spawn("sqlc", ["generate"], {
+      cwd: backendPath,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let out = "";
+    let err = "";
+    child.stdout.on("data", (d) => (out += d.toString("utf8")));
+    child.stderr.on("data", (d) => (err += d.toString("utf8")));
+
+    child.on("error", rejectPromise);
+    child.on("close", (code) => {
+      if (code === 0) resolvePromise(out || "Success (no output)");
+      else resolvePromise(`Error (code ${code}):\n${out}\n${err}`);
+    });
+  });
+}
+
 const server = new Server(
   { name: "Snaggle MCP", version: "0.1.0" },
   { capabilities: { tools: {}, prompts: {} } }
@@ -233,6 +255,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: "snaggle_gen_api",
         description:
           "Regenerate the backend Swagger/OpenAPI specification and the frontend TypeScript API client.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "snaggle_sqlc_generate",
+        description:
+          "Run 'sqlc generate' in the backend directory to regenerate Go database code from SQL queries.",
         inputSchema: {
           type: "object",
           properties: {},
@@ -350,6 +381,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "snaggle_gen_api": {
         const out = await runGenApiScript();
+        return { content: [{ type: "text", text: out }] };
+      }
+
+      case "snaggle_sqlc_generate": {
+        const out = await runSqlcGenerate();
         return { content: [{ type: "text", text: out }] };
       }
 
