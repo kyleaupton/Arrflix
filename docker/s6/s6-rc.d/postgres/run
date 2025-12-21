@@ -7,4 +7,4 @@ set -euo pipefail
 export PATH="$PG_BINDIR:$PATH"
 
 echo "[postgres] starting postgres with PGDATA=${PGDATA}"
-exec s6-setuidgid postgres postgres -D "$PGDATA" -c listen_addresses=127.0.0.1
+exec s6-setuidgid postgres postgres -D "$PGDATA" -c listen_addresses=*

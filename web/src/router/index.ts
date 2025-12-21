@@ -13,6 +13,10 @@ const router = createRouter({
       component: () => import('@/views/Library.vue'),
     },
     {
+      path: '/downloads',
+      component: () => import('@/views/Downloads.vue'),
+    },
+    {
       path: '/requests',
       component: () => import('@/views/Requests.vue'),
     },

@@ -13,7 +13,7 @@ services:
       - "9697:9696"
       - "5432:5432"
     volumes:
-      - ${MEDIA_LIBRARIES}:/libraries
+      - ${MEDIA_LIBRARIES}:/data
       - ./.data/postgres-data:/var/lib/postgresql/data
 
       # app code for dev
@@ -37,6 +37,7 @@ services:
       - /dev/net/tun
     volumes:
       - ./.data/vpn:/data/vpn
+
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:5.1.4
     container_name: snaggle-qbittorrent
@@ -50,4 +51,4 @@ services:
       - WEBUI_PORT=8485
     volumes:
       - ./.data/qbittorrent:/config
-      - ${SEED_DIR}:/downloads
+      - ${SEED_DIR}:/data/seed

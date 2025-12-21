@@ -25,6 +25,91 @@ definitions:
     - updated_at
     - value
     type: object
+  dbgen.DownloadJob:
+    properties:
+      attempt_count:
+        type: integer
+      candidate_link:
+        type: string
+      candidate_title:
+        type: string
+      created_at:
+        type: string
+      download_content_path:
+        type: string
+      download_save_path:
+        type: string
+      downloader_external_id:
+        type: string
+      downloader_id:
+        type: string
+      downloader_status:
+        type: string
+      episode_id:
+        type: string
+      guid:
+        type: string
+      id:
+        type: string
+      import_dest_path:
+        type: string
+      import_method:
+        type: string
+      import_source_path:
+        type: string
+      indexer_id:
+        type: integer
+      last_error:
+        type: string
+      library_id:
+        type: string
+      media_item_id:
+        type: string
+      media_type:
+        type: string
+      name_template_id:
+        type: string
+      next_run_at:
+        type: string
+      progress:
+        type: number
+      protocol:
+        type: string
+      season_id:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - attempt_count
+    - candidate_link
+    - candidate_title
+    - created_at
+    - download_content_path
+    - download_save_path
+    - downloader_external_id
+    - downloader_id
+    - downloader_status
+    - episode_id
+    - guid
+    - id
+    - import_dest_path
+    - import_method
+    - import_source_path
+    - indexer_id
+    - last_error
+    - library_id
+    - media_item_id
+    - media_type
+    - name_template_id
+    - next_run_at
+    - progress
+    - protocol
+    - season_id
+    - status
+    - updated_at
+    type: object
   dbgen.Downloader:
     properties:
       config_json:
@@ -145,6 +230,22 @@ definitions:
     - right_operand
     - updated_at
     type: object
+  downloader.TestResult:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+      version:
+        type: string
+      webApiVersion:
+        type: string
+    required:
+    - message
+    - success
+    type: object
   handlers.ActionCreateRequest:
     properties:
       order:
@@ -170,6 +271,16 @@ definitions:
     - order
     - type
     - value
+    type: object
+  handlers.DownloadCandidateResponse:
+    properties:
+      job:
+        $ref: '#/definitions/dbgen.DownloadJob'
+      trace:
+        $ref: '#/definitions/model.EvaluationTrace'
+    required:
+    - job
+    - trace
     type: object
   handlers.DownloaderCreateRequest:
     properties:
@@ -199,6 +310,26 @@ definitions:
     - name
     - password
     - protocol
+    - type
+    - url
+    - username
+    type: object
+  handlers.DownloaderTestRequest:
+    properties:
+      config_json:
+        additionalProperties: true
+        type: object
+      password:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+      username:
+        type: string
+    required:
+    - config_json
+    - password
     - type
     - url
     - username
@@ -1398,6 +1529,73 @@ paths:
       summary: Login
       tags:
       - auth
+  /v1/download-jobs:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.DownloadJob'
+            type: array
+      summary: List download jobs
+      tags:
+      - download-jobs
+  /v1/download-jobs/{id}:
+    delete:
+      parameters:
+      - description: Job ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.DownloadJob'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Cancel download job
+      tags:
+      - download-jobs
+    get:
+      parameters:
+      - description: Job ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.DownloadJob'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get download job
+      tags:
+      - download-jobs
   /v1/downloaders:
     get:
       produces:
@@ -1508,11 +1706,15 @@ paths:
         "200":
           description: OK
           schema:
+            $ref: '#/definitions/downloader.TestResult'
+        "400":
+          description: Bad Request
+          schema:
             additionalProperties:
               type: string
             type: object
-        "400":
-          description: Bad Request
+        "404":
+          description: Not Found
           schema:
             additionalProperties:
               type: string
@@ -1530,6 +1732,33 @@ paths:
           schema:
             $ref: '#/definitions/dbgen.Downloader'
       summary: Get default downloader by protocol
+      tags:
+      - downloaders
+  /v1/downloaders/test:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Test downloader configuration
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.DownloaderTestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/downloader.TestResult'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Test downloader connection with form configuration
       tags:
       - downloaders
   /v1/home:
@@ -1839,6 +2068,50 @@ paths:
       summary: Get movie
       tags:
       - media
+  /v1/movie/{id}/candidate/download:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Movie ID (TMDB ID)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Download request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.EnqueueCandidateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DownloadCandidateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Download a download candidate
+      tags:
+      - download-candidates
   /v1/movie/{id}/candidate/preview:
     post:
       consumes:
@@ -1915,50 +2188,32 @@ paths:
       summary: Get download candidates for a movie
       tags:
       - download-candidates
-  /v1/movie/{id}/enqueue-candidate:
-    post:
-      consumes:
-      - application/json
+  /v1/movie/{id}/download-jobs:
+    get:
       parameters:
       - description: Movie ID (TMDB ID)
         in: path
         name: id
         required: true
         type: integer
-      - description: Enqueue request
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.EnqueueCandidateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.EvaluationTrace'
+            items:
+              $ref: '#/definitions/dbgen.DownloadJob'
+            type: array
         "400":
           description: Bad Request
           schema:
             additionalProperties:
               type: string
             type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Enqueue a download candidate
+      summary: List movie download jobs
       tags:
-      - download-candidates
+      - download-jobs
   /v1/name-templates:
     get:
       produces:

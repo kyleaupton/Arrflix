@@ -173,6 +173,8 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 
 	candidate := s.searchResultToCandidate(cached.result)
 
+	s.logger.Info().Interface("candidate", candidate).Msg("Candidate")
+
 	trace, err := s.policyEngine.Evaluate(ctx, candidate)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("Failed to evaluate policy")
@@ -247,9 +249,10 @@ func (s *DownloadCandidatesService) searchResultToCandidate(result *prowlarr.Sea
 	}
 
 	return model.DownloadCandidate{
-		Protocol:    string(result.Protocol),
-		Filename:    result.FileName,
-		Link:        result.DownloadURL,
+		Protocol: string(result.Protocol),
+		Filename: result.FileName,
+		// Link:        result.DownloadURL,
+		Link:        result.GUID,
 		Indexer:     result.Indexer,
 		IndexerID:   result.IndexerID,
 		GUID:        result.GUID,

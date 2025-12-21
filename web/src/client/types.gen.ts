@@ -14,6 +14,36 @@ export type DbgenAction = {
     value: string;
 };
 
+export type DbgenDownloadJob = {
+    attempt_count: number;
+    candidate_link: string;
+    candidate_title: string;
+    created_at: string;
+    download_content_path: string;
+    download_save_path: string;
+    downloader_external_id: string;
+    downloader_id: string;
+    downloader_status: string;
+    episode_id: string;
+    guid: string;
+    id: string;
+    import_dest_path: string;
+    import_method: string;
+    import_source_path: string;
+    indexer_id: number;
+    last_error: string;
+    library_id: string;
+    media_item_id: string;
+    media_type: string;
+    name_template_id: string;
+    next_run_at: string;
+    progress: number;
+    protocol: string;
+    season_id: string;
+    status: string;
+    updated_at: string;
+};
+
 export type DbgenDownloader = {
     config_json: Array<number>;
     created_at: string;
@@ -60,6 +90,14 @@ export type DbgenRule = {
     updated_at: string;
 };
 
+export type DownloaderTestResult = {
+    error?: string;
+    message: string;
+    success: boolean;
+    version?: string;
+    webApiVersion?: string;
+};
+
 export type HandlersActionCreateRequest = {
     order: number;
     type: string;
@@ -72,6 +110,11 @@ export type HandlersActionUpdateRequest = {
     value: string;
 };
 
+export type HandlersDownloadCandidateResponse = {
+    job: DbgenDownloadJob;
+    trace: ModelEvaluationTrace;
+};
+
 export type HandlersDownloaderCreateRequest = {
     config_json: {
         [key: string]: unknown;
@@ -81,6 +124,16 @@ export type HandlersDownloaderCreateRequest = {
     name: string;
     password: string;
     protocol: string;
+    type: string;
+    url: string;
+    username: string;
+};
+
+export type HandlersDownloaderTestRequest = {
+    config_json: {
+        [key: string]: unknown;
+    };
+    password: string;
     type: string;
     url: string;
     username: string;
@@ -608,6 +661,92 @@ export type PostV1AuthLoginResponses = {
 
 export type PostV1AuthLoginResponse = PostV1AuthLoginResponses[keyof PostV1AuthLoginResponses];
 
+export type GetV1DownloadJobsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/download-jobs';
+};
+
+export type GetV1DownloadJobsResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenDownloadJob>;
+};
+
+export type GetV1DownloadJobsResponse = GetV1DownloadJobsResponses[keyof GetV1DownloadJobsResponses];
+
+export type DeleteV1DownloadJobsByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Job ID (uuid)
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/download-jobs/{id}';
+};
+
+export type DeleteV1DownloadJobsByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type DeleteV1DownloadJobsByIdError = DeleteV1DownloadJobsByIdErrors[keyof DeleteV1DownloadJobsByIdErrors];
+
+export type DeleteV1DownloadJobsByIdResponses = {
+    /**
+     * OK
+     */
+    200: DbgenDownloadJob;
+};
+
+export type DeleteV1DownloadJobsByIdResponse = DeleteV1DownloadJobsByIdResponses[keyof DeleteV1DownloadJobsByIdResponses];
+
+export type GetV1DownloadJobsByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Job ID (uuid)
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/download-jobs/{id}';
+};
+
+export type GetV1DownloadJobsByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1DownloadJobsByIdError = GetV1DownloadJobsByIdErrors[keyof GetV1DownloadJobsByIdErrors];
+
+export type GetV1DownloadJobsByIdResponses = {
+    /**
+     * OK
+     */
+    200: DbgenDownloadJob;
+};
+
+export type GetV1DownloadJobsByIdResponse = GetV1DownloadJobsByIdResponses[keyof GetV1DownloadJobsByIdResponses];
+
 export type GetV1DownloadersData = {
     body?: never;
     path?: never;
@@ -669,6 +808,36 @@ export type GetV1DownloadersDefaultByProtocolResponses = {
 };
 
 export type GetV1DownloadersDefaultByProtocolResponse = GetV1DownloadersDefaultByProtocolResponses[keyof GetV1DownloadersDefaultByProtocolResponses];
+
+export type PostV1DownloadersTestData = {
+    /**
+     * Test downloader configuration
+     */
+    body: HandlersDownloaderTestRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/downloaders/test';
+};
+
+export type PostV1DownloadersTestErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1DownloadersTestError = PostV1DownloadersTestErrors[keyof PostV1DownloadersTestErrors];
+
+export type PostV1DownloadersTestResponses = {
+    /**
+     * OK
+     */
+    200: DownloaderTestResult;
+};
+
+export type PostV1DownloadersTestResponse = PostV1DownloadersTestResponses[keyof PostV1DownloadersTestResponses];
 
 export type DeleteV1DownloadersByIdData = {
     body?: never;
@@ -761,6 +930,12 @@ export type PostV1DownloadersByIdTestErrors = {
     400: {
         [key: string]: string;
     };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
 };
 
 export type PostV1DownloadersByIdTestError = PostV1DownloadersByIdTestErrors[keyof PostV1DownloadersByIdTestErrors];
@@ -769,9 +944,7 @@ export type PostV1DownloadersByIdTestResponses = {
     /**
      * OK
      */
-    200: {
-        [key: string]: string;
-    };
+    200: DownloaderTestResult;
 };
 
 export type PostV1DownloadersByIdTestResponse = PostV1DownloadersByIdTestResponses[keyof PostV1DownloadersByIdTestResponses];
@@ -1142,6 +1315,53 @@ export type GetV1MovieByIdResponses = {
 
 export type GetV1MovieByIdResponse = GetV1MovieByIdResponses[keyof GetV1MovieByIdResponses];
 
+export type PostV1MovieByIdCandidateDownloadData = {
+    /**
+     * Download request
+     */
+    body: HandlersEnqueueCandidateRequest;
+    path: {
+        /**
+         * Movie ID (TMDB ID)
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1/movie/{id}/candidate/download';
+};
+
+export type PostV1MovieByIdCandidateDownloadErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1MovieByIdCandidateDownloadError = PostV1MovieByIdCandidateDownloadErrors[keyof PostV1MovieByIdCandidateDownloadErrors];
+
+export type PostV1MovieByIdCandidateDownloadResponses = {
+    /**
+     * OK
+     */
+    200: HandlersDownloadCandidateResponse;
+};
+
+export type PostV1MovieByIdCandidateDownloadResponse = PostV1MovieByIdCandidateDownloadResponses[keyof PostV1MovieByIdCandidateDownloadResponses];
+
 export type PostV1MovieByIdCandidatePreviewData = {
     /**
      * Preview request
@@ -1227,11 +1447,8 @@ export type GetV1MovieByIdCandidatesResponses = {
 
 export type GetV1MovieByIdCandidatesResponse = GetV1MovieByIdCandidatesResponses[keyof GetV1MovieByIdCandidatesResponses];
 
-export type PostV1MovieByIdEnqueueCandidateData = {
-    /**
-     * Enqueue request
-     */
-    body: HandlersEnqueueCandidateRequest;
+export type GetV1MovieByIdDownloadJobsData = {
+    body?: never;
     path: {
         /**
          * Movie ID (TMDB ID)
@@ -1239,40 +1456,28 @@ export type PostV1MovieByIdEnqueueCandidateData = {
         id: number;
     };
     query?: never;
-    url: '/v1/movie/{id}/enqueue-candidate';
+    url: '/v1/movie/{id}/download-jobs';
 };
 
-export type PostV1MovieByIdEnqueueCandidateErrors = {
+export type GetV1MovieByIdDownloadJobsErrors = {
     /**
      * Bad Request
      */
     400: {
         [key: string]: string;
     };
-    /**
-     * Not Found
-     */
-    404: {
-        [key: string]: string;
-    };
-    /**
-     * Internal Server Error
-     */
-    500: {
-        [key: string]: string;
-    };
 };
 
-export type PostV1MovieByIdEnqueueCandidateError = PostV1MovieByIdEnqueueCandidateErrors[keyof PostV1MovieByIdEnqueueCandidateErrors];
+export type GetV1MovieByIdDownloadJobsError = GetV1MovieByIdDownloadJobsErrors[keyof GetV1MovieByIdDownloadJobsErrors];
 
-export type PostV1MovieByIdEnqueueCandidateResponses = {
+export type GetV1MovieByIdDownloadJobsResponses = {
     /**
      * OK
      */
-    200: ModelEvaluationTrace;
+    200: Array<DbgenDownloadJob>;
 };
 
-export type PostV1MovieByIdEnqueueCandidateResponse = PostV1MovieByIdEnqueueCandidateResponses[keyof PostV1MovieByIdEnqueueCandidateResponses];
+export type GetV1MovieByIdDownloadJobsResponse = GetV1MovieByIdDownloadJobsResponses[keyof GetV1MovieByIdDownloadJobsResponses];
 
 export type GetV1NameTemplatesData = {
     body?: never;

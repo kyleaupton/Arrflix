@@ -115,6 +115,7 @@ const showMobileMenu = computed(() => {
 const links = ref([
   { label: 'Home', to: '/' },
   { label: 'Library', to: '/library' },
+  { label: 'Downloads', to: '/downloads' },
   { label: 'Requests', to: '/requests' },
 ])
 

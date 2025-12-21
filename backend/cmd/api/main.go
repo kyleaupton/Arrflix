@@ -16,6 +16,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
+	"github.com/kyleaupton/snaggle/backend/internal/sse"
 )
 
 func main() {
@@ -43,6 +44,9 @@ func main() {
 	// Services
 	services := service.New(repo, logg, &cfg, service.WithJWTSecret(cfg.JWTSecret))
 
+	// In-process SSE broker
+	broker := sse.NewBroker()
+
 	// Downloader Manager
 	downloaderRegistry := downloader.NewRegistry()
 	qbittorrent.Register(downloaderRegistry)
@@ -56,7 +60,7 @@ func main() {
 	}
 
 	// HTTP
-	e := http.NewServer(cfg, logg, pool, services, repo, downloaderManager)
+	e := http.NewServer(cfg, logg, pool, services, repo, downloaderManager, broker)
 	go func() {
 		logg.Info().Str("port", cfg.Port).Msg("http listen")
 		if err := e.Start(":" + cfg.Port); err != nil {
@@ -66,7 +70,7 @@ func main() {
 
 	// Download job worker
 	workerCtx, workerCancel := context.WithCancel(context.Background())
-	jobWorker := downloadjobs.New(repo, downloaderManager, services.Import, logg)
+	jobWorker := downloadjobs.New(repo, downloaderManager, services.Import, logg, broker)
 	go jobWorker.Run(workerCtx)
 
 	// Graceful shutdown

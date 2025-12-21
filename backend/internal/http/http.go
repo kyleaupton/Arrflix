@@ -9,6 +9,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
+	"github.com/kyleaupton/snaggle/backend/internal/sse"
 
 	_ "github.com/kyleaupton/snaggle/backend/internal/http/docs"
 
@@ -18,7 +19,7 @@ import (
 // @title		Snaggle API
 // @version		0.0.1
 // @BasePath	/api
-func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, services *service.Services, repo *repo.Repository, downloaderManager *downloader.Manager) *echo.Echo {
+func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, services *service.Services, repo *repo.Repository, downloaderManager *downloader.Manager, broker *sse.Broker) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
@@ -27,6 +28,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	auth := handlers.NewAuth(cfg, log, pool, services)
 	downloadCandidates := handlers.NewDownloadCandidates(services)
 	downloadJobs := handlers.NewDownloadJobs(services)
+	events := handlers.NewEvents(services, broker)
 	downloaders := handlers.NewDownloaders(services, downloaderManager)
 	health := handlers.NewHealth()
 	indexers := handlers.NewIndexers(services)
@@ -49,6 +51,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	auth.RegisterProtected(protected)
 	downloadCandidates.RegisterProtected(protected)
 	downloadJobs.RegisterProtected(protected)
+	events.RegisterProtected(protected)
 	downloaders.RegisterProtected(protected)
 	indexers.RegisterProtected(protected)
 	libraries.RegisterProtected(protected)

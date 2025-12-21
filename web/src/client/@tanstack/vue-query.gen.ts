@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { deleteV1DownloadersById, deleteV1IndexersById, deleteV1LibrariesById, deleteV1NameTemplatesById, deleteV1PoliciesById, deleteV1PoliciesByIdActionsByActionId, deleteV1PoliciesByIdRule, getHealth, getV1Downloaders, getV1DownloadersById, getV1DownloadersDefaultByProtocol, getV1Home, getV1IndexersById, getV1IndexersConfigured, getV1IndexersSchema, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1MovieByIdCandidates, getV1NameTemplates, getV1NameTemplatesById, getV1NameTemplatesDefaultByType, getV1Policies, getV1PoliciesById, getV1PoliciesByIdActions, getV1PoliciesByIdActionsByActionId, getV1PoliciesByIdRule, getV1PoliciesFields, getV1SeriesById, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Downloaders, postV1DownloadersByIdTest, postV1Indexer, postV1IndexerActionByName, postV1Libraries, postV1LibrariesByIdScan, postV1MovieByIdCandidatePreview, postV1MovieByIdEnqueueCandidate, postV1NameTemplates, postV1Policies, postV1PoliciesByIdActions, postV1PoliciesByIdRule, postV1PoliciesEvaluate, putV1DownloadersById, putV1LibrariesById, putV1NameTemplatesById, putV1PoliciesById, putV1PoliciesByIdActionsByActionId, putV1PoliciesByIdRule } from '../sdk.gen';
-import type { DeleteV1DownloadersByIdData, DeleteV1DownloadersByIdResponse, DeleteV1IndexersByIdData, DeleteV1IndexersByIdError, DeleteV1IndexersByIdResponse, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponse, DeleteV1PoliciesByIdActionsByActionIdData, DeleteV1PoliciesByIdActionsByActionIdResponse, DeleteV1PoliciesByIdData, DeleteV1PoliciesByIdResponse, DeleteV1PoliciesByIdRuleData, DeleteV1PoliciesByIdRuleResponse, GetHealthData, GetV1DownloadersByIdData, GetV1DownloadersData, GetV1DownloadersDefaultByProtocolData, GetV1HomeData, GetV1IndexersByIdData, GetV1IndexersConfiguredData, GetV1IndexersSchemaData, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1MovieByIdCandidatesData, GetV1MovieByIdData, GetV1NameTemplatesByIdData, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1PoliciesByIdActionsByActionIdData, GetV1PoliciesByIdActionsData, GetV1PoliciesByIdData, GetV1PoliciesByIdRuleData, GetV1PoliciesData, GetV1PoliciesFieldsData, GetV1SeriesByIdData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1DownloadersByIdTestData, PostV1DownloadersByIdTestError, PostV1DownloadersByIdTestResponse, PostV1DownloadersData, PostV1DownloadersError, PostV1DownloadersResponse, PostV1IndexerActionByNameData, PostV1IndexerActionByNameError, PostV1IndexerData, PostV1IndexerError, PostV1IndexerResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PostV1MovieByIdCandidatePreviewData, PostV1MovieByIdCandidatePreviewError, PostV1MovieByIdCandidatePreviewResponse, PostV1MovieByIdEnqueueCandidateData, PostV1MovieByIdEnqueueCandidateError, PostV1MovieByIdEnqueueCandidateResponse, PostV1NameTemplatesData, PostV1NameTemplatesError, PostV1NameTemplatesResponse, PostV1PoliciesByIdActionsData, PostV1PoliciesByIdActionsError, PostV1PoliciesByIdActionsResponse, PostV1PoliciesByIdRuleData, PostV1PoliciesByIdRuleError, PostV1PoliciesByIdRuleResponse, PostV1PoliciesData, PostV1PoliciesError, PostV1PoliciesEvaluateData, PostV1PoliciesEvaluateError, PostV1PoliciesEvaluateResponse, PostV1PoliciesResponse, PutV1DownloadersByIdData, PutV1DownloadersByIdError, PutV1DownloadersByIdResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdError, PutV1NameTemplatesByIdResponse, PutV1PoliciesByIdActionsByActionIdData, PutV1PoliciesByIdActionsByActionIdError, PutV1PoliciesByIdActionsByActionIdResponse, PutV1PoliciesByIdData, PutV1PoliciesByIdError, PutV1PoliciesByIdResponse, PutV1PoliciesByIdRuleData, PutV1PoliciesByIdRuleError, PutV1PoliciesByIdRuleResponse } from '../types.gen';
+import { deleteV1DownloadersById, deleteV1DownloadJobsById, deleteV1IndexersById, deleteV1LibrariesById, deleteV1NameTemplatesById, deleteV1PoliciesById, deleteV1PoliciesByIdActionsByActionId, deleteV1PoliciesByIdRule, getHealth, getV1Downloaders, getV1DownloadersById, getV1DownloadersDefaultByProtocol, getV1DownloadJobs, getV1DownloadJobsById, getV1Home, getV1IndexersById, getV1IndexersConfigured, getV1IndexersSchema, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1MovieByIdCandidates, getV1MovieByIdDownloadJobs, getV1NameTemplates, getV1NameTemplatesById, getV1NameTemplatesDefaultByType, getV1Policies, getV1PoliciesById, getV1PoliciesByIdActions, getV1PoliciesByIdActionsByActionId, getV1PoliciesByIdRule, getV1PoliciesFields, getV1SeriesById, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Downloaders, postV1DownloadersByIdTest, postV1DownloadersTest, postV1Indexer, postV1IndexerActionByName, postV1Libraries, postV1LibrariesByIdScan, postV1MovieByIdCandidateDownload, postV1MovieByIdCandidatePreview, postV1NameTemplates, postV1Policies, postV1PoliciesByIdActions, postV1PoliciesByIdRule, postV1PoliciesEvaluate, putV1DownloadersById, putV1LibrariesById, putV1NameTemplatesById, putV1PoliciesById, putV1PoliciesByIdActionsByActionId, putV1PoliciesByIdRule } from '../sdk.gen';
+import type { DeleteV1DownloadersByIdData, DeleteV1DownloadersByIdResponse, DeleteV1DownloadJobsByIdData, DeleteV1DownloadJobsByIdError, DeleteV1DownloadJobsByIdResponse, DeleteV1IndexersByIdData, DeleteV1IndexersByIdError, DeleteV1IndexersByIdResponse, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponse, DeleteV1PoliciesByIdActionsByActionIdData, DeleteV1PoliciesByIdActionsByActionIdResponse, DeleteV1PoliciesByIdData, DeleteV1PoliciesByIdResponse, DeleteV1PoliciesByIdRuleData, DeleteV1PoliciesByIdRuleResponse, GetHealthData, GetV1DownloadersByIdData, GetV1DownloadersData, GetV1DownloadersDefaultByProtocolData, GetV1DownloadJobsByIdData, GetV1DownloadJobsData, GetV1HomeData, GetV1IndexersByIdData, GetV1IndexersConfiguredData, GetV1IndexersSchemaData, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1MovieByIdCandidatesData, GetV1MovieByIdData, GetV1MovieByIdDownloadJobsData, GetV1NameTemplatesByIdData, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1PoliciesByIdActionsByActionIdData, GetV1PoliciesByIdActionsData, GetV1PoliciesByIdData, GetV1PoliciesByIdRuleData, GetV1PoliciesData, GetV1PoliciesFieldsData, GetV1SeriesByIdData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1DownloadersByIdTestData, PostV1DownloadersByIdTestError, PostV1DownloadersByIdTestResponse, PostV1DownloadersData, PostV1DownloadersError, PostV1DownloadersResponse, PostV1DownloadersTestData, PostV1DownloadersTestError, PostV1DownloadersTestResponse, PostV1IndexerActionByNameData, PostV1IndexerActionByNameError, PostV1IndexerData, PostV1IndexerError, PostV1IndexerResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PostV1MovieByIdCandidateDownloadData, PostV1MovieByIdCandidateDownloadError, PostV1MovieByIdCandidateDownloadResponse, PostV1MovieByIdCandidatePreviewData, PostV1MovieByIdCandidatePreviewError, PostV1MovieByIdCandidatePreviewResponse, PostV1NameTemplatesData, PostV1NameTemplatesError, PostV1NameTemplatesResponse, PostV1PoliciesByIdActionsData, PostV1PoliciesByIdActionsError, PostV1PoliciesByIdActionsResponse, PostV1PoliciesByIdRuleData, PostV1PoliciesByIdRuleError, PostV1PoliciesByIdRuleResponse, PostV1PoliciesData, PostV1PoliciesError, PostV1PoliciesEvaluateData, PostV1PoliciesEvaluateError, PostV1PoliciesEvaluateResponse, PostV1PoliciesResponse, PutV1DownloadersByIdData, PutV1DownloadersByIdError, PutV1DownloadersByIdResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdError, PutV1NameTemplatesByIdResponse, PutV1PoliciesByIdActionsByActionIdData, PutV1PoliciesByIdActionsByActionIdError, PutV1PoliciesByIdActionsByActionIdResponse, PutV1PoliciesByIdData, PutV1PoliciesByIdError, PutV1PoliciesByIdResponse, PutV1PoliciesByIdRuleData, PutV1PoliciesByIdRuleError, PutV1PoliciesByIdRuleResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -78,6 +78,63 @@ export const postV1AuthLoginMutation = (options?: Partial<Options<PostV1AuthLogi
     return mutationOptions;
 };
 
+export const getV1DownloadJobsQueryKey = (options?: Options<GetV1DownloadJobsData>) => createQueryKey('getV1DownloadJobs', options);
+
+/**
+ * List download jobs
+ */
+export const getV1DownloadJobsOptions = (options?: Options<GetV1DownloadJobsData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1DownloadJobs({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1DownloadJobsQueryKey(options)
+    });
+};
+
+/**
+ * Cancel download job
+ */
+export const deleteV1DownloadJobsByIdMutation = (options?: Partial<Options<DeleteV1DownloadJobsByIdData>>): UseMutationOptions<DeleteV1DownloadJobsByIdResponse, DeleteV1DownloadJobsByIdError, Options<DeleteV1DownloadJobsByIdData>> => {
+    const mutationOptions: UseMutationOptions<DeleteV1DownloadJobsByIdResponse, DeleteV1DownloadJobsByIdError, Options<DeleteV1DownloadJobsByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteV1DownloadJobsById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getV1DownloadJobsByIdQueryKey = (options: Options<GetV1DownloadJobsByIdData>) => createQueryKey('getV1DownloadJobsById', options);
+
+/**
+ * Get download job
+ */
+export const getV1DownloadJobsByIdOptions = (options: Options<GetV1DownloadJobsByIdData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1DownloadJobsById({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1DownloadJobsByIdQueryKey(options)
+    });
+};
+
 export const getV1DownloadersQueryKey = (options?: Options<GetV1DownloadersData>) => createQueryKey('getV1Downloaders', options);
 
 /**
@@ -133,6 +190,23 @@ export const getV1DownloadersDefaultByProtocolOptions = (options?: Options<GetV1
         },
         queryKey: getV1DownloadersDefaultByProtocolQueryKey(options)
     });
+};
+
+/**
+ * Test downloader connection with form configuration
+ */
+export const postV1DownloadersTestMutation = (options?: Partial<Options<PostV1DownloadersTestData>>): UseMutationOptions<PostV1DownloadersTestResponse, PostV1DownloadersTestError, Options<PostV1DownloadersTestData>> => {
+    const mutationOptions: UseMutationOptions<PostV1DownloadersTestResponse, PostV1DownloadersTestError, Options<PostV1DownloadersTestData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postV1DownloadersTest({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
 };
 
 /**
@@ -486,6 +560,23 @@ export const getV1MovieByIdOptions = (options: Options<GetV1MovieByIdData>) => {
 };
 
 /**
+ * Download a download candidate
+ */
+export const postV1MovieByIdCandidateDownloadMutation = (options?: Partial<Options<PostV1MovieByIdCandidateDownloadData>>): UseMutationOptions<PostV1MovieByIdCandidateDownloadResponse, PostV1MovieByIdCandidateDownloadError, Options<PostV1MovieByIdCandidateDownloadData>> => {
+    const mutationOptions: UseMutationOptions<PostV1MovieByIdCandidateDownloadResponse, PostV1MovieByIdCandidateDownloadError, Options<PostV1MovieByIdCandidateDownloadData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postV1MovieByIdCandidateDownload({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
  * Preview policy evaluation for a download candidate
  */
 export const postV1MovieByIdCandidatePreviewMutation = (options?: Partial<Options<PostV1MovieByIdCandidatePreviewData>>): UseMutationOptions<PostV1MovieByIdCandidatePreviewResponse, PostV1MovieByIdCandidatePreviewError, Options<PostV1MovieByIdCandidatePreviewData>> => {
@@ -522,21 +613,24 @@ export const getV1MovieByIdCandidatesOptions = (options: Options<GetV1MovieByIdC
     });
 };
 
+export const getV1MovieByIdDownloadJobsQueryKey = (options: Options<GetV1MovieByIdDownloadJobsData>) => createQueryKey('getV1MovieByIdDownloadJobs', options);
+
 /**
- * Enqueue a download candidate
+ * List movie download jobs
  */
-export const postV1MovieByIdEnqueueCandidateMutation = (options?: Partial<Options<PostV1MovieByIdEnqueueCandidateData>>): UseMutationOptions<PostV1MovieByIdEnqueueCandidateResponse, PostV1MovieByIdEnqueueCandidateError, Options<PostV1MovieByIdEnqueueCandidateData>> => {
-    const mutationOptions: UseMutationOptions<PostV1MovieByIdEnqueueCandidateResponse, PostV1MovieByIdEnqueueCandidateError, Options<PostV1MovieByIdEnqueueCandidateData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await postV1MovieByIdEnqueueCandidate({
+export const getV1MovieByIdDownloadJobsOptions = (options: Options<GetV1MovieByIdDownloadJobsData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1MovieByIdDownloadJobs({
                 ...options,
-                ...fnOptions,
+                ...queryKey[0],
+                signal,
                 throwOnError: true
             });
             return data;
-        }
-    };
-    return mutationOptions;
+        },
+        queryKey: getV1MovieByIdDownloadJobsQueryKey(options)
+    });
 };
 
 export const getV1NameTemplatesQueryKey = (options?: Options<GetV1NameTemplatesData>) => createQueryKey('getV1NameTemplates', options);

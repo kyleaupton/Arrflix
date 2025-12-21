@@ -103,7 +103,7 @@ func (h *DownloadCandidates) PreviewCandidate(c echo.Context) error {
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router  /v1/movie/{id}/enqueue-candidate [post]
+// @Router  /v1/movie/{id}/candidate/download [post]
 func (h *DownloadCandidates) DownloadCandidate(c echo.Context) error {
 	movieID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

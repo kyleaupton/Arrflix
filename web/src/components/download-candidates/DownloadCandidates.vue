@@ -21,7 +21,7 @@ import { ref, computed, inject } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
 import Button from 'primevue/button'
 import Divider from 'primevue/divider'
-import { postV1MovieByIdEnqueueCandidateMutation } from '@/client/@tanstack/vue-query.gen'
+import { postV1MovieByIdCandidateDownloadMutation } from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate } from '@/client/types.gen'
 import DownloadCandidateList from './DownloadCandidatesList.vue'
 import DownloadCandidatePreview from './DownloadCandidatePreview.vue'
@@ -52,7 +52,7 @@ const handleCancel = () => {
 
 // Enqueue mutation
 const enqueueMutation = useMutation({
-  ...postV1MovieByIdEnqueueCandidateMutation(),
+  ...postV1MovieByIdCandidateDownloadMutation(),
   onSuccess: () => {
     modal.alert({
       title: 'Download Enqueued',

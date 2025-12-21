@@ -400,17 +400,17 @@ func (c *qBittorrentClient) getHashFromName(ctx context.Context, magnetURL strin
 
 // mapStateToStatus maps qBittorrent state to JobStatus
 func mapStateToStatus(state string) downloader.JobStatus {
-	// qBittorrent states: downloading, seeding, completed, paused, queued, checking, error, missingFiles
+	// qBittorrent states mapping based on official documentation/API
 	switch state {
-	case "downloading":
+	case "downloading", "metaDL", "stalledDL", "checkingDL", "forcedDL", "allocating":
 		return downloader.StatusDownloading
-	case "seeding":
+	case "uploading", "stalledUP", "checkingUP", "forcedUP", "seeding":
 		return downloader.StatusSeeding
 	case "completed":
 		return downloader.StatusCompleted
 	case "pausedDL", "pausedUP":
 		return downloader.StatusPaused
-	case "queuedDL", "queuedUP":
+	case "queuedDL", "queuedUP", "checkingResumeData", "moving":
 		return downloader.StatusQueued
 	case "error", "missingFiles":
 		return downloader.StatusErrored

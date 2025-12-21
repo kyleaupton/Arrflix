@@ -67,6 +67,109 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/download-jobs": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-jobs"
+                ],
+                "summary": "List download jobs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.DownloadJob"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/download-jobs/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-jobs"
+                ],
+                "summary": "Get download job",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job ID (uuid)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.DownloadJob"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-jobs"
+                ],
+                "summary": "Cancel download job",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job ID (uuid)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.DownloadJob"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/downloaders": {
             "get": {
                 "produces": [
@@ -143,6 +246,48 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dbgen.Downloader"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/downloaders/test": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "downloaders"
+                ],
+                "summary": "Test downloader connection with form configuration",
+                "parameters": [
+                    {
+                        "description": "Test downloader configuration",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DownloaderTestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/downloader.TestResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -256,14 +401,20 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
+                            "$ref": "#/definitions/downloader.TestResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
                             }
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -748,6 +899,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/movie/{id}/candidate/download": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-candidates"
+                ],
+                "summary": "Download a download candidate",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID (TMDB ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Download request",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.EnqueueCandidateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DownloadCandidateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/movie/{id}/candidate/preview": {
             "post": {
                 "consumes": [
@@ -864,18 +1082,15 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/movie/{id}/enqueue-candidate": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
+        "/v1/movie/{id}/download-jobs": {
+            "get": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "download-candidates"
+                    "download-jobs"
                 ],
-                "summary": "Enqueue a download candidate",
+                "summary": "List movie download jobs",
                 "parameters": [
                     {
                         "type": "integer",
@@ -883,44 +1098,20 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Enqueue request",
-                        "name": "payload",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.EnqueueCandidateRequest"
-                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.EvaluationTrace"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.DownloadJob"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1763,6 +1954,121 @@ const docTemplate = `{
                 }
             }
         },
+        "dbgen.DownloadJob": {
+            "type": "object",
+            "required": [
+                "attempt_count",
+                "candidate_link",
+                "candidate_title",
+                "created_at",
+                "download_content_path",
+                "download_save_path",
+                "downloader_external_id",
+                "downloader_id",
+                "downloader_status",
+                "episode_id",
+                "guid",
+                "id",
+                "import_dest_path",
+                "import_method",
+                "import_source_path",
+                "indexer_id",
+                "last_error",
+                "library_id",
+                "media_item_id",
+                "media_type",
+                "name_template_id",
+                "next_run_at",
+                "progress",
+                "protocol",
+                "season_id",
+                "status",
+                "updated_at"
+            ],
+            "properties": {
+                "attempt_count": {
+                    "type": "integer"
+                },
+                "candidate_link": {
+                    "type": "string"
+                },
+                "candidate_title": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "download_content_path": {
+                    "type": "string"
+                },
+                "download_save_path": {
+                    "type": "string"
+                },
+                "downloader_external_id": {
+                    "type": "string"
+                },
+                "downloader_id": {
+                    "type": "string"
+                },
+                "downloader_status": {
+                    "type": "string"
+                },
+                "episode_id": {
+                    "type": "string"
+                },
+                "guid": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "import_dest_path": {
+                    "type": "string"
+                },
+                "import_method": {
+                    "type": "string"
+                },
+                "import_source_path": {
+                    "type": "string"
+                },
+                "indexer_id": {
+                    "type": "integer"
+                },
+                "last_error": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "string"
+                },
+                "media_item_id": {
+                    "type": "string"
+                },
+                "media_type": {
+                    "type": "string"
+                },
+                "name_template_id": {
+                    "type": "string"
+                },
+                "next_run_at": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "number"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "season_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "dbgen.Downloader": {
             "type": "object",
             "required": [
@@ -1930,6 +2236,30 @@ const docTemplate = `{
                 }
             }
         },
+        "downloader.TestResult": {
+            "type": "object",
+            "required": [
+                "message",
+                "success"
+            ],
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "webApiVersion": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.ActionCreateRequest": {
             "type": "object",
             "required": [
@@ -1968,6 +2298,21 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.DownloadCandidateResponse": {
+            "type": "object",
+            "required": [
+                "job",
+                "trace"
+            ],
+            "properties": {
+                "job": {
+                    "$ref": "#/definitions/dbgen.DownloadJob"
+                },
+                "trace": {
+                    "$ref": "#/definitions/model.EvaluationTrace"
+                }
+            }
+        },
         "handlers.DownloaderCreateRequest": {
             "type": "object",
             "required": [
@@ -1999,6 +2344,34 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "protocol": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.DownloaderTestRequest": {
+            "type": "object",
+            "required": [
+                "config_json",
+                "password",
+                "type",
+                "url",
+                "username"
+            ],
+            "properties": {
+                "config_json": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "password": {
                     "type": "string"
                 },
                 "type": {

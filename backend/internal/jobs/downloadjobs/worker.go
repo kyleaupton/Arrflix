@@ -2,6 +2,7 @@ package downloadjobs
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
+	"github.com/kyleaupton/snaggle/backend/internal/sse"
 )
 
 type Worker struct {
@@ -20,18 +22,20 @@ type Worker struct {
 	dlm      *downloader.Manager
 	importer *service.ImportService
 	log      *logger.Logger
+	broker   *sse.Broker
 
 	pollInterval time.Duration
 	claimLimit   int32
 	maxAttempts  int
 }
 
-func New(repo *repo.Repository, dlm *downloader.Manager, importer *service.ImportService, log *logger.Logger) *Worker {
+func New(repo *repo.Repository, dlm *downloader.Manager, importer *service.ImportService, log *logger.Logger, broker *sse.Broker) *Worker {
 	return &Worker{
 		repo:         repo,
 		dlm:          dlm,
 		importer:     importer,
 		log:          log,
+		broker:       broker,
 		pollInterval: 3 * time.Second,
 		claimLimit:   5,
 		maxAttempts:  20,
@@ -85,11 +89,15 @@ func (w *Worker) processJob(ctx context.Context, job dbgen.DownloadJob) error {
 		default:
 			return fmt.Errorf("unknown protocol: %s", job.Protocol)
 		}
+		w.log.Info().Str("job_id", job.ID.String()).Str("add_req", fmt.Sprintf("%+v", addReq)).Msg("adding download")
 		res, err := client.Add(ctx, addReq)
 		if err != nil {
 			return fmt.Errorf("downloader add: %w", err)
 		}
-		_, err = w.repo.SetDownloadJobEnqueued(ctx, job.ID, res.ExternalID)
+		updated, err := w.repo.SetDownloadJobEnqueued(ctx, job.ID, res.ExternalID)
+		if err == nil {
+			w.publishJobUpdated(updated)
+		}
 		return err
 	}
 
@@ -99,25 +107,29 @@ func (w *Worker) processJob(ctx context.Context, job dbgen.DownloadJob) error {
 		return fmt.Errorf("downloader get: %w", err)
 	}
 
+	w.log.Info().Interface("item", item).Msg("Item")
+
 	jobStatus := mapItemStatus(item.Status)
 	savePath := item.SavePath
 	contentPath := item.ContentPath
 
-	_, err = w.repo.SetDownloadJobDownloadSnapshot(ctx, dbgen.SetDownloadJobDownloadSnapshotParams{
-		ID:               job.ID,
-		Status:           jobStatus,
-		DownloaderStatus: ptr(string(item.Status)),
-		Progress:         ptr(item.Progress),
-		DownloadSavePath: ptr(savePath),
+	updated, err := w.repo.SetDownloadJobDownloadSnapshot(ctx, dbgen.SetDownloadJobDownloadSnapshotParams{
+		ID:                  job.ID,
+		Status:              jobStatus,
+		DownloaderStatus:    ptr(string(item.Status)),
+		Progress:            ptr(item.Progress),
+		DownloadSavePath:    ptr(savePath),
 		DownloadContentPath: ptr(contentPath),
 	})
 	if err != nil {
 		return fmt.Errorf("update snapshot: %w", err)
 	}
+	w.publishJobUpdated(updated)
 
 	// Terminal downloader error: mark job failed.
 	if jobStatus == "failed" {
-		_, _ = w.repo.MarkDownloadJobFailed(ctx, job.ID, "downloader reported errored status")
+		failed, _ := w.repo.MarkDownloadJobFailed(ctx, job.ID, "downloader reported errored status")
+		w.publishJobUpdated(failed)
 		return nil
 	}
 
@@ -128,12 +140,17 @@ func (w *Worker) processJob(ctx context.Context, job dbgen.DownloadJob) error {
 			return fmt.Errorf("list files: %w", err)
 		}
 
+		jsonData, _ := json.MarshalIndent(files, "", "  ")
+		fmt.Println(string(jsonData))
+
 		sourcePath := ""
 		if len(files) > 0 {
 			mainFile, ok := importer.PickMainMovieFile(files)
 			if !ok {
 				return fmt.Errorf("no files available for import")
 			}
+			jsonData, _ := json.MarshalIndent(mainFile, "", "  ")
+			fmt.Println(string(jsonData))
 			// qBittorrent file paths are relative; use SavePath as root.
 			if filepath.IsAbs(mainFile.Path) {
 				sourcePath = mainFile.Path
@@ -152,8 +169,10 @@ func (w *Worker) processJob(ctx context.Context, job dbgen.DownloadJob) error {
 			return fmt.Errorf("unable to determine source path for import")
 		}
 
-		if _, err := w.repo.SetDownloadJobImporting(ctx, job.ID, sourcePath); err != nil {
+		if importing, err := w.repo.SetDownloadJobImporting(ctx, job.ID, sourcePath); err != nil {
 			return fmt.Errorf("mark importing: %w", err)
+		} else {
+			w.publishJobUpdated(importing)
 		}
 
 		res, err := w.importer.ImportMovieFile(ctx, job, sourcePath)
@@ -162,8 +181,8 @@ func (w *Worker) processJob(ctx context.Context, job dbgen.DownloadJob) error {
 		}
 
 		method := res.Method
-		_, err = w.repo.SetDownloadJobImported(ctx, dbgen.SetDownloadJobImportedParams{
-			ID:             job.ID,
+		imported, err := w.repo.SetDownloadJobImported(ctx, dbgen.SetDownloadJobImportedParams{
+			ID:               job.ID,
 			ImportSourcePath: &res.SourcePath,
 			ImportDestPath:   &res.DestPath,
 			ImportMethod:     &method,
@@ -171,6 +190,7 @@ func (w *Worker) processJob(ctx context.Context, job dbgen.DownloadJob) error {
 		if err != nil {
 			return fmt.Errorf("mark imported: %w", err)
 		}
+		w.publishJobUpdated(imported)
 	}
 
 	return nil
@@ -182,7 +202,8 @@ func (w *Worker) handleJobError(ctx context.Context, job dbgen.DownloadJob, err 
 
 	attempt := int(job.AttemptCount) + 1
 	if attempt >= w.maxAttempts {
-		_, _ = w.repo.MarkDownloadJobFailed(ctx, job.ID, msg)
+		failed, _ := w.repo.MarkDownloadJobFailed(ctx, job.ID, msg)
+		w.publishJobUpdated(failed)
 		return
 	}
 
@@ -210,4 +231,17 @@ func mapItemStatus(st downloader.JobStatus) string {
 
 func ptr[T any](v T) *T { return &v }
 
-
+func (w *Worker) publishJobUpdated(job dbgen.DownloadJob) {
+	if w.broker == nil {
+		return
+	}
+	b, err := json.Marshal(job)
+	if err != nil {
+		return
+	}
+	w.broker.Publish(sse.Event{
+		Type: "download_job_updated",
+		ID:   job.ID.String(),
+		Data: b,
+	})
+}

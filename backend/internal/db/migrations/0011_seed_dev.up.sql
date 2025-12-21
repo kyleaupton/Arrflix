@@ -4,10 +4,10 @@ values ('dev@local.seed', 'Dev User', 'v1:bcrypt:$2a$12$n180ANBjuXfZrr.hWFZXjuki
 
 -- seed libraries
 insert into library (name, type, root_path, enabled, "default")
-values ('Main Movie Library', 'movie', '/libraries/movies', true, true);
+values ('Main Movie Library', 'movie', '/data/movies', true, true);
 
 insert into library (name, type, root_path, enabled, "default")
-values ('Main Series Library', 'series', '/libraries/tv', true, true);
+values ('Main Series Library', 'series', '/data/tv', true, true);
 
 -- seed name templates
 insert into name_template (name, type, template, "default")

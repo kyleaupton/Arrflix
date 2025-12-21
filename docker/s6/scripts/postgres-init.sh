@@ -19,6 +19,15 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
   echo "[postgres-init] First boot: initializing cluster + creating role/db..."
   s6-setuidgid postgres initdb -D "$PGDATA"
 
+  # echo "[postgres-init] Setting pg_hba.conf to trust local connections..."
+  # echo "local all all trust" >> "$PGDATA/pg_hba.conf"
+  # echo "host all all 127.0.0.1/32 trust" >> "$PGDATA/pg_hba.conf"
+  # echo "host all all ::1/128 trust" >> "$PGDATA/pg_hba.conf"
+
+  echo "[postgres-init] Setting pg_hba.conf to trust all connections..."
+  echo "host all all 0.0.0.0/0 trust" >> "$PGDATA/pg_hba.conf"
+  echo "host all all ::/0 trust" >> "$PGDATA/pg_hba.conf"
+
   echo "[postgres-init] Starting temporary postgres on port ${TEMP_PORT}..."
   s6-setuidgid postgres pg_ctl -D "$PGDATA" \
     -o "-c listen_addresses=127.0.0.1 -c port=${TEMP_PORT}" \
