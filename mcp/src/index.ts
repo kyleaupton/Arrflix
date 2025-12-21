@@ -297,9 +297,12 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
         content: {
           type: "text",
           text: `You are an AI assistant working on the Snaggle project. 
-To get started, please call the tool 'snaggle_project_brief'. 
-Treat the result of that tool as the authoritative source of truth for the project's architecture, philosophy, and current status.
-Ask clarifying questions only if the brief does not cover what you need.`,
+
+To get started, please:
+1. Call 'list_mcp_tools' and 'list_mcp_prompts' to see the specialized tools and prompts available for this project.
+2. Call the tool 'snaggle_project_brief' to understand the project's architecture, philosophy, and current status.
+
+Treat the results of these project-specific MCP tools as authoritative. Ask clarifying questions only if the brief and codebase do not cover what you need.`,
         },
       },
     ],
