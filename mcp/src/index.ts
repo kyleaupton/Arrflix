@@ -7,6 +7,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
 import { z } from "zod";
@@ -154,7 +156,7 @@ async function runGenApiScript(): Promise<string> {
 
 const server = new Server(
   { name: "Snaggle MCP", version: "0.1.0" },
-  { capabilities: { tools: {} } }
+  { capabilities: { tools: {}, prompts: {} } }
 );
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -234,6 +236,39 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {},
+        },
+      },
+    ],
+  };
+});
+
+server.setRequestHandler(ListPromptsRequestSchema, async () => {
+  return {
+    prompts: [
+      {
+        name: "snaggle_onboard_agent",
+        description: "Bootstrap a new agent with Snaggle project context",
+      },
+    ],
+  };
+});
+
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  if (request.params.name !== "snaggle_onboard_agent") {
+    throw new Error("Prompt not found");
+  }
+
+  return {
+    description: "Bootstrap a new agent with Snaggle project context",
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `You are an AI assistant working on the Snaggle project. 
+To get started, please call the tool 'snaggle_project_brief'. 
+Treat the result of that tool as the authoritative source of truth for the project's architecture, philosophy, and current status.
+Ask clarifying questions only if the brief does not cover what you need.`,
         },
       },
     ],
