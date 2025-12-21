@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import dotenv from "dotenv";
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -14,6 +16,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { configDotenv } from "dotenv";
 
 function getGitRepoRoot(): string {
   try {
@@ -33,14 +36,16 @@ function getGitRepoRoot(): string {
   }
 }
 
+const repoRoot = getGitRepoRoot();
+
+dotenv.config({ path: resolve(repoRoot, "mcp", ".env") });
+
 const Env = z
   .object({
     // Optional: enable DB tool if set
     SNAGGLE_DATABASE_URL: z.string().optional(),
   })
   .parse(process.env);
-
-const repoRoot = getGitRepoRoot();
 
 async function runRg(
   query: string,
@@ -289,6 +294,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
+  console.log("Starting Snaggle MCP server...");
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
