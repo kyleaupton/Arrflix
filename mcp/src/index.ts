@@ -130,6 +130,28 @@ async function pgQuery(sql: string, params: unknown[] = []) {
   }
 }
 
+async function runGenApiScript(): Promise<string> {
+  const scriptPath = resolve(repoRoot, "scripts/gen-api-spec-and-client.sh");
+
+  return await new Promise<string>((resolvePromise, rejectPromise) => {
+    const child = spawn("bash", [scriptPath], {
+      cwd: repoRoot,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let out = "";
+    let err = "";
+    child.stdout.on("data", (d) => (out += d.toString("utf8")));
+    child.stderr.on("data", (d) => (err += d.toString("utf8")));
+
+    child.on("error", rejectPromise);
+    child.on("close", (code) => {
+      if (code === 0) resolvePromise(out || "Success (no output)");
+      else resolvePromise(`Error (code ${code}):\n${out}\n${err}`);
+    });
+  });
+}
+
 const server = new Server(
   { name: "Snaggle MCP", version: "0.1.0" },
   { capabilities: { tools: {} } }
@@ -200,6 +222,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: "snaggle_project_brief",
         description:
           "Get a high-level overview of the Snaggle project to get up to speed.",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "snaggle_gen_api",
+        description:
+          "Regenerate the backend Swagger/OpenAPI specification and the frontend TypeScript API client.",
         inputSchema: {
           type: "object",
           properties: {},
@@ -280,6 +311,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const text = await readFile(briefPath, "utf-8");
         return { content: [{ type: "text", text }] };
+      }
+
+      case "snaggle_gen_api": {
+        const out = await runGenApiScript();
+        return { content: [{ type: "text", text: out }] };
       }
 
       default:
