@@ -7,6 +7,7 @@ package dbgen
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -167,6 +168,89 @@ func (q *Queries) GetMediaItemByTmdbID(ctx context.Context, tmdbID *int64) (Medi
 	return i, err
 }
 
+const getMediaItemByTmdbIDAndType = `-- name: GetMediaItemByTmdbIDAndType :one
+select id, type, title, year, tmdb_id, created_at, updated_at from media_item
+where tmdb_id = $1 and type = $2
+`
+
+type GetMediaItemByTmdbIDAndTypeParams struct {
+	TmdbID *int64 `json:"tmdb_id"`
+	Type   string `json:"type"`
+}
+
+func (q *Queries) GetMediaItemByTmdbIDAndType(ctx context.Context, arg GetMediaItemByTmdbIDAndTypeParams) (MediaItem, error) {
+	row := q.db.QueryRow(ctx, getMediaItemByTmdbIDAndType, arg.TmdbID, arg.Type)
+	var i MediaItem
+	err := row.Scan(
+		&i.ID,
+		&i.Type,
+		&i.Title,
+		&i.Year,
+		&i.TmdbID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const listEpisodeAvailabilityForSeries = `-- name: ListEpisodeAvailabilityForSeries :many
+select
+  ms.season_number,
+  me.episode_number,
+  me.id as episode_id,
+  me.title,
+  me.air_date,
+  mf.id as file_id,
+  mf.library_id,
+  mf.status
+from media_episode me
+join media_season ms on me.season_id = ms.id
+join media_item mi on ms.media_item_id = mi.id
+left join media_file mf on mf.episode_id = me.id
+where mi.id = $1
+order by ms.season_number, me.episode_number
+`
+
+type ListEpisodeAvailabilityForSeriesRow struct {
+	SeasonNumber  int32       `json:"season_number"`
+	EpisodeNumber int32       `json:"episode_number"`
+	EpisodeID     pgtype.UUID `json:"episode_id"`
+	Title         *string     `json:"title"`
+	AirDate       pgtype.Date `json:"air_date"`
+	FileID        pgtype.UUID `json:"file_id"`
+	LibraryID     pgtype.UUID `json:"library_id"`
+	Status        *string     `json:"status"`
+}
+
+func (q *Queries) ListEpisodeAvailabilityForSeries(ctx context.Context, id pgtype.UUID) ([]ListEpisodeAvailabilityForSeriesRow, error) {
+	rows, err := q.db.Query(ctx, listEpisodeAvailabilityForSeries, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListEpisodeAvailabilityForSeriesRow
+	for rows.Next() {
+		var i ListEpisodeAvailabilityForSeriesRow
+		if err := rows.Scan(
+			&i.SeasonNumber,
+			&i.EpisodeNumber,
+			&i.EpisodeID,
+			&i.Title,
+			&i.AirDate,
+			&i.FileID,
+			&i.LibraryID,
+			&i.Status,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEpisodesForSeason = `-- name: ListEpisodesForSeason :many
 
 select id, season_id, episode_number, title, air_date, tmdb_id, tvdb_id, created_at from media_episode
@@ -193,6 +277,69 @@ func (q *Queries) ListEpisodesForSeason(ctx context.Context, seasonID pgtype.UUI
 			&i.TmdbID,
 			&i.TvdbID,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMediaFilesForItem = `-- name: ListMediaFilesForItem :many
+select
+  mf.id,
+  mf.library_id,
+  mf.media_item_id,
+  mf.season_id,
+  mf.episode_id,
+  mf.path,
+  mf.status,
+  mf.added_at,
+  ms.season_number,
+  me.episode_number
+from media_file mf
+left join media_season ms on mf.season_id = ms.id
+left join media_episode me on mf.episode_id = me.id
+where mf.media_item_id = $1
+order by mf.added_at desc
+`
+
+type ListMediaFilesForItemRow struct {
+	ID            pgtype.UUID `json:"id"`
+	LibraryID     pgtype.UUID `json:"library_id"`
+	MediaItemID   pgtype.UUID `json:"media_item_id"`
+	SeasonID      pgtype.UUID `json:"season_id"`
+	EpisodeID     pgtype.UUID `json:"episode_id"`
+	Path          string      `json:"path"`
+	Status        string      `json:"status"`
+	AddedAt       time.Time   `json:"added_at"`
+	SeasonNumber  *int32      `json:"season_number"`
+	EpisodeNumber *int32      `json:"episode_number"`
+}
+
+func (q *Queries) ListMediaFilesForItem(ctx context.Context, mediaItemID pgtype.UUID) ([]ListMediaFilesForItemRow, error) {
+	rows, err := q.db.Query(ctx, listMediaFilesForItem, mediaItemID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListMediaFilesForItemRow
+	for rows.Next() {
+		var i ListMediaFilesForItemRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.LibraryID,
+			&i.MediaItemID,
+			&i.SeasonID,
+			&i.EpisodeID,
+			&i.Path,
+			&i.Status,
+			&i.AddedAt,
+			&i.SeasonNumber,
+			&i.EpisodeNumber,
 		); err != nil {
 			return nil, err
 		}

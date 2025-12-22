@@ -8,6 +8,10 @@ order by created_at desc;
 select * from media_item
 where id = $1;
 
+-- name: GetMediaItemByTmdbIDAndType :one
+select * from media_item
+where tmdb_id = $1 and type = $2;
+
 -- name: GetMediaItemByTmdbID :one
 select * from media_item
 where tmdb_id = $1;
@@ -72,6 +76,41 @@ returning *;
 
 -- name: DeleteMediaFile :exec
 delete from media_file where id = $1;
+
+-- name: ListMediaFilesForItem :many
+select
+  mf.id,
+  mf.library_id,
+  mf.media_item_id,
+  mf.season_id,
+  mf.episode_id,
+  mf.path,
+  mf.status,
+  mf.added_at,
+  ms.season_number,
+  me.episode_number
+from media_file mf
+left join media_season ms on mf.season_id = ms.id
+left join media_episode me on mf.episode_id = me.id
+where mf.media_item_id = $1
+order by mf.added_at desc;
+
+-- name: ListEpisodeAvailabilityForSeries :many
+select
+  ms.season_number,
+  me.episode_number,
+  me.id as episode_id,
+  me.title,
+  me.air_date,
+  mf.id as file_id,
+  mf.library_id,
+  mf.status
+from media_episode me
+join media_season ms on me.season_id = ms.id
+join media_item mi on ms.media_item_id = mi.id
+left join media_file mf on mf.episode_id = me.id
+where mi.id = $1
+order by ms.season_number, me.episode_number;
 
 
 

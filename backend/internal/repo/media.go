@@ -12,6 +12,7 @@ type MediaRepo interface {
 	ListMediaItems(ctx context.Context) ([]dbgen.MediaItem, error)
 	GetMediaItem(ctx context.Context, id pgtype.UUID) (dbgen.MediaItem, error)
 	GetMediaItemByTmdbID(ctx context.Context, tmdbID int64) (dbgen.MediaItem, error)
+	GetMediaItemByTmdbIDAndType(ctx context.Context, tmdbID int64, typ string) (dbgen.MediaItem, error)
 	CreateMediaItem(ctx context.Context, typ, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error)
 	UpdateMediaItem(ctx context.Context, id pgtype.UUID, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error)
 	DeleteMediaItem(ctx context.Context, id pgtype.UUID) error
@@ -27,6 +28,8 @@ type MediaRepo interface {
 	// Files
 	GetMediaFileByLibraryAndPath(ctx context.Context, libraryID pgtype.UUID, path string) (dbgen.MediaFile, error)
 	CreateMediaFile(ctx context.Context, libraryID, mediaItemID pgtype.UUID, seasonID, episodeID *pgtype.UUID, path string, status *string) (dbgen.MediaFile, error)
+	ListMediaFilesForItem(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.ListMediaFilesForItemRow, error)
+	ListEpisodeAvailabilityForSeries(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.ListEpisodeAvailabilityForSeriesRow, error)
 	DeleteMediaFile(ctx context.Context, id pgtype.UUID) error
 }
 
@@ -42,12 +45,19 @@ func (r *Repository) GetMediaItemByTmdbID(ctx context.Context, tmdbID int64) (db
 	return r.Q.GetMediaItemByTmdbID(ctx, &tmdbID)
 }
 
+func (r *Repository) GetMediaItemByTmdbIDAndType(ctx context.Context, tmdbID int64, typ string) (dbgen.MediaItem, error) {
+	return r.Q.GetMediaItemByTmdbIDAndType(ctx, dbgen.GetMediaItemByTmdbIDAndTypeParams{
+		TmdbID: &tmdbID,
+		Type:   typ,
+	})
+}
+
 func (r *Repository) CreateMediaItem(ctx context.Context, typ, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error) {
 	return r.Q.CreateMediaItem(ctx, dbgen.CreateMediaItemParams{
-		Type:      typ,
-		Title:     title,
-		Year:      year,
-		TmdbID:    tmdbID,
+		Type:   typ,
+		Title:  title,
+		Year:   year,
+		TmdbID: tmdbID,
 	})
 }
 
@@ -118,6 +128,14 @@ func (r *Repository) CreateMediaFile(ctx context.Context, libraryID, mediaItemID
 		Path:        path,
 		Status:      st,
 	})
+}
+
+func (r *Repository) ListMediaFilesForItem(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.ListMediaFilesForItemRow, error) {
+	return r.Q.ListMediaFilesForItem(ctx, mediaItemID)
+}
+
+func (r *Repository) ListEpisodeAvailabilityForSeries(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.ListEpisodeAvailabilityForSeriesRow, error) {
+	return r.Q.ListEpisodeAvailabilityForSeries(ctx, mediaItemID)
 }
 
 func (r *Repository) DeleteMediaFile(ctx context.Context, id pgtype.UUID) error {

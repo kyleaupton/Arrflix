@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strconv"
 
 	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
@@ -61,6 +62,48 @@ func (s *MediaService) GetMovie(ctx context.Context, id int64) (model.Movie, err
 		ProductionCountries: productionCountries,
 		PosterPath:          tmdbDetails.PosterPath,
 		BackdropPath:        tmdbDetails.BackdropPath,
+	}, nil
+}
+
+func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.MovieDetail, error) {
+	tmdbDetails, err := s.tmdb.GetMovieDetails(ctx, tmdbID)
+	if err != nil {
+		return model.MovieDetail{}, err
+	}
+
+	var mediaItem dbgen.MediaItem
+	local := true
+	mediaItem, err = s.repo.GetMediaItemByTmdbIDAndType(ctx, tmdbID, string(model.MediaTypeMovie))
+	if err != nil {
+		local = false
+	}
+
+	var files []dbgen.ListMediaFilesForItemRow
+	if local {
+		files, _ = s.repo.ListMediaFilesForItem(ctx, mediaItem.ID)
+	}
+
+	fileInfos, availability := buildFileInfoAndAvailability(files)
+	genres := make([]model.Genre, 0, len(tmdbDetails.Genres))
+	for _, g := range tmdbDetails.Genres {
+		genres = append(genres, model.Genre{TmdbID: g.ID, Name: g.Name})
+	}
+	year := parseYear(tmdbDetails.ReleaseDate)
+
+	return model.MovieDetail{
+		TmdbID:       tmdbDetails.ID,
+		Title:        tmdbDetails.Title,
+		Year:         year,
+		Overview:     tmdbDetails.Overview,
+		Tagline:      tmdbDetails.Tagline,
+		Status:       tmdbDetails.Status,
+		ReleaseDate:  tmdbDetails.ReleaseDate,
+		Runtime:      tmdbDetails.Runtime,
+		Genres:       genres,
+		PosterPath:   tmdbDetails.PosterPath,
+		BackdropPath: tmdbDetails.BackdropPath,
+		Availability: availability,
+		Files:        fileInfos,
 	}, nil
 }
 
@@ -124,4 +167,170 @@ func (s *MediaService) GetSeries(ctx context.Context, id int64) (model.Series, e
 		Networks:     networks,
 		Genres:       genres,
 	}, nil
+}
+
+func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model.SeriesDetail, error) {
+	tmdbDetails, err := s.tmdb.GetSeriesDetails(ctx, tmdbID)
+	if err != nil {
+		return model.SeriesDetail{}, err
+	}
+
+	var mediaItem dbgen.MediaItem
+	local := true
+	mediaItem, err = s.repo.GetMediaItemByTmdbIDAndType(ctx, tmdbID, string(model.MediaTypeSeries))
+	if err != nil {
+		local = false
+	}
+
+	var files []dbgen.ListMediaFilesForItemRow
+	var episodes []dbgen.ListEpisodeAvailabilityForSeriesRow
+	if local {
+		files, _ = s.repo.ListMediaFilesForItem(ctx, mediaItem.ID)
+		episodes, _ = s.repo.ListEpisodeAvailabilityForSeries(ctx, mediaItem.ID)
+	}
+
+	fileInfos, availability := buildFileInfoAndAvailability(files)
+	genres := make([]model.Genre, 0, len(tmdbDetails.Genres))
+	for _, g := range tmdbDetails.Genres {
+		genres = append(genres, model.Genre{TmdbID: g.ID, Name: g.Name})
+	}
+	seasons := buildSeasonDetails(episodes)
+	year := parseYear(tmdbDetails.FirstAirDate)
+
+	return model.SeriesDetail{
+		TmdbID:       tmdbDetails.ID,
+		Title:        tmdbDetails.Name,
+		Year:         year,
+		Overview:     tmdbDetails.Overview,
+		Tagline:      tmdbDetails.Tagline,
+		Status:       tmdbDetails.Status,
+		FirstAirDate: tmdbDetails.FirstAirDate,
+		LastAirDate:  tmdbDetails.LastAirDate,
+		InProduction: tmdbDetails.InProduction,
+		Genres:       genres,
+		PosterPath:   tmdbDetails.PosterPath,
+		BackdropPath: tmdbDetails.BackdropPath,
+		Availability: availability,
+		Files:        fileInfos,
+		Seasons:      seasons,
+	}, nil
+}
+
+func buildFileInfoAndAvailability(files []dbgen.ListMediaFilesForItemRow) ([]model.FileInfo, model.Availability) {
+	fileInfos := make([]model.FileInfo, 0, len(files))
+	libAgg := map[string]struct {
+		count   int
+		status  []string
+	}{}
+
+	for _, f := range files {
+		libID := f.LibraryID.String()
+		var seasonNum *int32
+		if f.SeasonNumber != nil {
+			seasonNum = f.SeasonNumber
+		}
+		var episodeNum *int32
+		if f.EpisodeNumber != nil {
+			episodeNum = f.EpisodeNumber
+		}
+		fileInfos = append(fileInfos, model.FileInfo{
+			ID:            f.ID.String(),
+			LibraryID:     libID,
+			Path:          f.Path,
+			Status:        f.Status,
+			SeasonNumber:  seasonNum,
+			EpisodeNumber: episodeNum,
+		})
+		entry := libAgg[libID]
+		entry.count++
+		entry.status = append(entry.status, f.Status)
+		libAgg[libID] = entry
+	}
+
+	libraries := make([]model.LibraryAvailability, 0, len(libAgg))
+	for libID, agg := range libAgg {
+		libraries = append(libraries, model.LibraryAvailability{
+			LibraryID:    libID,
+			FileCount:    agg.count,
+			StatusRollup: bestStatus(agg.status),
+		})
+	}
+
+	return fileInfos, model.Availability{
+		IsInLibrary: len(files) > 0,
+		Libraries:   libraries,
+	}
+}
+
+func buildSeasonDetails(rows []dbgen.ListEpisodeAvailabilityForSeriesRow) []model.SeasonDetail {
+	if len(rows) == 0 {
+		return nil
+	}
+	seasonsMap := map[int32][]model.EpisodeAvailability{}
+	for _, r := range rows {
+		seasonNum := r.SeasonNumber
+		ep := model.EpisodeAvailability{
+			SeasonNumber:  seasonNum,
+			EpisodeNumber: r.EpisodeNumber,
+			Title:         r.Title,
+		}
+		if r.AirDate.Valid {
+			val := r.AirDate.Time.Format("2006-01-02")
+			ep.AirDate = &val
+		}
+		if r.FileID.Valid {
+			id := r.FileID.String()
+			ep.FileID = &id
+			ep.Available = true
+		} else {
+			ep.Available = false
+		}
+		seasonsMap[seasonNum] = append(seasonsMap[seasonNum], ep)
+	}
+
+	seasons := make([]model.SeasonDetail, 0, len(seasonsMap))
+	for seasonNum, eps := range seasonsMap {
+		seasons = append(seasons, model.SeasonDetail{
+			SeasonNumber: seasonNum,
+			Episodes:     eps,
+		})
+	}
+	return seasons
+}
+
+func bestStatus(statuses []string) string {
+	if len(statuses) == 0 {
+		return "missing"
+	}
+	priority := map[string]int{
+		"available":   5,
+		"downloading": 4,
+		"importing":   3,
+		"missing":     2,
+		"failed":      1,
+		"deleted":     0,
+	}
+	best := "missing"
+	bestScore := -1
+	for _, s := range statuses {
+		if score, ok := priority[s]; ok {
+			if score > bestScore {
+				best = s
+				bestScore = score
+			}
+		}
+	}
+	return best
+}
+
+func parseYear(dateStr string) *int32 {
+	if len(dateStr) < 4 {
+		return nil
+	}
+	y, err := strconv.Atoi(dateStr[:4])
+	if err != nil {
+		return nil
+	}
+	val := int32(y)
+	return &val
 }

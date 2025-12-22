@@ -37,11 +37,11 @@ func (h *Media) List(c echo.Context) error {
 }
 
 // GetMovie
-// @Summary Get movie
+// @Summary Get movie (by TMDB id)
 // @Tags    media
 // @Produce json
 // @Param   id path int true "Movie ID"
-// @Success 200 {object} model.Movie
+// @Success 200 {object} model.MovieDetail
 // @Router  /v1/movie/{id} [get]
 func (h *Media) GetMovie(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -49,7 +49,7 @@ func (h *Media) GetMovie(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
 	}
-	item, err := h.svc.Media.GetMovie(ctx, id)
+	item, err := h.svc.Media.GetMovieDetail(ctx, id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to get movie"})
 	}
@@ -57,11 +57,11 @@ func (h *Media) GetMovie(c echo.Context) error {
 }
 
 // GetSeries
-// @Summary Get series
+// @Summary Get series (by TMDB id)
 // @Tags    media
 // @Produce json
 // @Param   id path int true "Series ID"
-// @Success 200 {object} model.Series
+// @Success 200 {object} model.SeriesDetail
 // @Router  /v1/series/{id} [get]
 func (h *Media) GetSeries(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -69,7 +69,7 @@ func (h *Media) GetSeries(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
 	}
-	item, err := h.svc.Media.GetSeries(ctx, id)
+	item, err := h.svc.Media.GetSeriesDetail(ctx, id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to get series"})
 	}
