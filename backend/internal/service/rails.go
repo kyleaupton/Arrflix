@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strconv"
 
 	tmdb "github.com/cyruzin/golang-tmdb"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
@@ -20,16 +21,23 @@ func NewRailsService(r *repo.Repository, tmdb *TmdbService) *RailsService {
 func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 	rails := []model.Rail{}
 
+	svc := s
+
 	// Helper function to convert trending movies to MovieRail
 	convertTrendingMovies := func(moviesRes tmdb.Trending) []model.MovieRail {
 		movies := []model.MovieRail{}
-		for _, movie := range moviesRes.Results {
+		for _, item := range moviesRes.Results {
+			year := parseYearFromDate(item.ReleaseDate)
 			movies = append(movies, model.MovieRail{
-				TmdbID:      movie.ID,
-				Title:       movie.Title,
-				Overview:    movie.Overview,
-				PosterPath:  movie.PosterPath,
-				ReleaseDate: movie.ReleaseDate,
+				TmdbID:      item.ID,
+				Title:       item.Title,
+				Overview:    item.Overview,
+				PosterPath:  item.PosterPath,
+				ReleaseDate: item.ReleaseDate,
+				Year:        year,
+				Genres:      toInt64FromInt(item.GenreIDs),
+				Tagline:     "",
+				IsInLibrary: svc.isInLibrary(ctx, item.ID, model.MediaTypeMovie),
 			})
 		}
 		return movies
@@ -38,13 +46,18 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 	// Helper function to convert trending series to SeriesRail
 	convertTrendingSeries := func(seriesRes tmdb.Trending) []model.SeriesRail {
 		series := []model.SeriesRail{}
-		for _, s := range seriesRes.Results {
+		for _, item := range seriesRes.Results {
+			year := parseYearFromDate(item.ReleaseDate)
 			series = append(series, model.SeriesRail{
-				TmdbID:      s.ID,
-				Title:       s.Title,
-				Overview:    s.Overview,
-				PosterPath:  s.PosterPath,
-				ReleaseDate: s.ReleaseDate,
+				TmdbID:      item.ID,
+				Title:       item.Title,
+				Overview:    item.Overview,
+				PosterPath:  item.PosterPath,
+				ReleaseDate: item.ReleaseDate,
+				Year:        year,
+				Genres:      toInt64FromInt(item.GenreIDs),
+				Tagline:     "",
+				IsInLibrary: svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
 			})
 		}
 		return series
@@ -54,12 +67,17 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 	convertPopularMovies := func(moviesRes tmdb.MoviePopular) []model.MovieRail {
 		movies := []model.MovieRail{}
 		for _, movie := range moviesRes.Results {
+			year := parseYearFromDate(movie.ReleaseDate)
 			movies = append(movies, model.MovieRail{
 				TmdbID:      movie.ID,
 				Title:       movie.Title,
 				Overview:    movie.Overview,
 				PosterPath:  movie.PosterPath,
 				ReleaseDate: movie.ReleaseDate,
+				Year:        year,
+				Genres:      genreIDsFromGenres(movie.Genres),
+				Tagline:     "",
+				IsInLibrary: svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
 			})
 		}
 		return movies
@@ -69,12 +87,17 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 	convertTopRatedMovies := func(moviesRes tmdb.MovieTopRated) []model.MovieRail {
 		movies := []model.MovieRail{}
 		for _, movie := range moviesRes.Results {
+			year := parseYearFromDate(movie.ReleaseDate)
 			movies = append(movies, model.MovieRail{
 				TmdbID:      movie.ID,
 				Title:       movie.Title,
 				Overview:    movie.Overview,
 				PosterPath:  movie.PosterPath,
 				ReleaseDate: movie.ReleaseDate,
+				Year:        year,
+				Genres:      genreIDsFromGenres(movie.Genres),
+				Tagline:     "",
+				IsInLibrary: svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
 			})
 		}
 		return movies
@@ -84,12 +107,17 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 	convertNowPlayingMovies := func(moviesRes tmdb.MovieNowPlaying) []model.MovieRail {
 		movies := []model.MovieRail{}
 		for _, movie := range moviesRes.Results {
+			year := parseYearFromDate(movie.ReleaseDate)
 			movies = append(movies, model.MovieRail{
 				TmdbID:      movie.ID,
 				Title:       movie.Title,
 				Overview:    movie.Overview,
 				PosterPath:  movie.PosterPath,
 				ReleaseDate: movie.ReleaseDate,
+				Year:        year,
+				Genres:      genreIDsFromGenres(movie.Genres),
+				Tagline:     "",
+				IsInLibrary: svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
 			})
 		}
 		return movies
@@ -99,12 +127,17 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 	convertUpcomingMovies := func(moviesRes tmdb.MovieUpcoming) []model.MovieRail {
 		movies := []model.MovieRail{}
 		for _, movie := range moviesRes.Results {
+			year := parseYearFromDate(movie.ReleaseDate)
 			movies = append(movies, model.MovieRail{
 				TmdbID:      movie.ID,
 				Title:       movie.Title,
 				Overview:    movie.Overview,
 				PosterPath:  movie.PosterPath,
 				ReleaseDate: movie.ReleaseDate,
+				Year:        year,
+				Genres:      genreIDsFromGenres(movie.Genres),
+				Tagline:     "",
+				IsInLibrary: svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
 			})
 		}
 		return movies
@@ -113,13 +146,18 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 	// Helper function to convert popular series to SeriesRail
 	convertPopularSeries := func(seriesRes tmdb.TVPopular) []model.SeriesRail {
 		series := []model.SeriesRail{}
-		for _, s := range seriesRes.Results {
+		for _, item := range seriesRes.Results {
+			year := parseYearFromDate(item.FirstAirDate)
 			series = append(series, model.SeriesRail{
-				TmdbID:      s.ID,
-				Title:       s.Name,
-				Overview:    s.Overview,
-				PosterPath:  s.PosterPath,
-				ReleaseDate: s.FirstAirDate,
+				TmdbID:      item.ID,
+				Title:       item.Name,
+				Overview:    item.Overview,
+				PosterPath:  item.PosterPath,
+				ReleaseDate: item.FirstAirDate,
+				Year:        year,
+				Genres:      toInt64FromInt(item.GenreIDs),
+				Tagline:     "",
+				IsInLibrary: svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
 			})
 		}
 		return series
@@ -128,13 +166,18 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 	// Helper function to convert top rated series to SeriesRail
 	convertTopRatedSeries := func(seriesRes tmdb.TVTopRated) []model.SeriesRail {
 		series := []model.SeriesRail{}
-		for _, s := range seriesRes.Results {
+		for _, item := range seriesRes.Results {
+			year := parseYearFromDate(item.FirstAirDate)
 			series = append(series, model.SeriesRail{
-				TmdbID:      s.ID,
-				Title:       s.Name,
-				Overview:    s.Overview,
-				PosterPath:  s.PosterPath,
-				ReleaseDate: s.FirstAirDate,
+				TmdbID:      item.ID,
+				Title:       item.Name,
+				Overview:    item.Overview,
+				PosterPath:  item.PosterPath,
+				ReleaseDate: item.FirstAirDate,
+				Year:        year,
+				Genres:      toInt64FromInt(item.GenreIDs),
+				Tagline:     "",
+				IsInLibrary: svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
 			})
 		}
 		return series
@@ -143,13 +186,18 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 	// Helper function to convert on the air series to SeriesRail
 	convertOnTheAirSeries := func(seriesRes tmdb.TVOnTheAir) []model.SeriesRail {
 		series := []model.SeriesRail{}
-		for _, s := range seriesRes.Results {
+		for _, item := range seriesRes.Results {
+			year := parseYearFromDate(item.FirstAirDate)
 			series = append(series, model.SeriesRail{
-				TmdbID:      s.ID,
-				Title:       s.Name,
-				Overview:    s.Overview,
-				PosterPath:  s.PosterPath,
-				ReleaseDate: s.FirstAirDate,
+				TmdbID:      item.ID,
+				Title:       item.Name,
+				Overview:    item.Overview,
+				PosterPath:  item.PosterPath,
+				ReleaseDate: item.FirstAirDate,
+				Year:        year,
+				Genres:      toInt64FromInt(item.GenreIDs),
+				Tagline:     "",
+				IsInLibrary: svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
 			})
 		}
 		return series
@@ -237,4 +285,61 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 	}
 
 	return rails, nil
+}
+
+func (s *RailsService) isInLibrary(ctx context.Context, tmdbID int64, typ model.MediaType) bool {
+	_, err := s.repo.GetMediaItemByTmdbIDAndType(ctx, tmdbID, string(typ))
+	return err == nil
+}
+
+func toInt64Slice(ints []int64) []int64 {
+	if len(ints) == 0 {
+		return nil
+	}
+	out := make([]int64, len(ints))
+	copy(out, ints)
+	return out
+}
+
+func toInt64FromInt(ints []int64) []int64 {
+	if len(ints) == 0 {
+		return nil
+	}
+	out := make([]int64, len(ints))
+	copy(out, ints)
+	return out
+}
+
+func toInt64FromInt32(ints []int) []int64 {
+	if len(ints) == 0 {
+		return nil
+	}
+	out := make([]int64, len(ints))
+	for i, v := range ints {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+func genreIDsFromGenres(genres []tmdb.Genre) []int64 {
+	if len(genres) == 0 {
+		return nil
+	}
+	out := make([]int64, len(genres))
+	for i, g := range genres {
+		out[i] = int64(g.ID)
+	}
+	return out
+}
+
+func parseYearFromDate(dateStr string) *int32 {
+	if len(dateStr) < 4 {
+		return nil
+	}
+	y, err := strconv.Atoi(dateStr[:4])
+	if err != nil {
+		return nil
+	}
+	yy := int32(y)
+	return &yy
 }

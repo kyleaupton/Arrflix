@@ -37,6 +37,7 @@ export type DbgenDownloadJob = {
     media_type: string;
     name_template_id: string;
     next_run_at: string;
+    primary_media_file_id: string;
     progress: number;
     protocol: string;
     season_id: string;
@@ -62,7 +63,6 @@ export type DbgenDownloader = {
 export type DbgenMediaItem = {
     created_at: string;
     id: string;
-    library_id: string;
     title: string;
     tmdb_id: number;
     type: string;
@@ -259,6 +259,11 @@ export type ModelActionInfo = {
     value: string;
 };
 
+export type ModelAvailability = {
+    isInLibrary: boolean;
+    libraries: Array<ModelLibraryAvailability>;
+};
+
 export type ModelCapabilities = {
     bookSearchParams: Array<string>;
     categories: Array<ModelCategories>;
@@ -310,6 +315,15 @@ export type ModelDownloadCandidate = {
 export type ModelEnumValue = {
     label: string;
     value: string;
+};
+
+export type ModelEpisodeAvailability = {
+    airDate?: string;
+    available: boolean;
+    episodeNumber: number;
+    fileId?: string;
+    seasonNumber: number;
+    title?: string;
 };
 
 export type ModelEvaluationTrace = {
@@ -369,6 +383,18 @@ export type ModelFieldOutput = {
 };
 
 export type ModelFieldType = 'text' | 'number' | 'enum' | 'dynamic' | 'boolean';
+
+export type ModelFileInfo = {
+    episodeNumber?: number;
+    id: string;
+    libraryId: string;
+    /**
+     * relative to library root
+     */
+    path: string;
+    seasonNumber?: number;
+    status: string;
+};
 
 export type ModelGenre = {
     name: string;
@@ -492,43 +518,38 @@ export type ModelIndexerSelectOption = {
     value: unknown;
 };
 
-export type ModelMovie = {
-    backdropPath: string;
-    originCountry: Array<string>;
-    originalLanguage: string;
+export type ModelLibraryAvailability = {
+    fileCount: number;
+    libraryId: string;
+    statusRollup: string;
+};
+
+export type ModelMovieDetail = {
+    availability: ModelAvailability;
+    backdropPath?: string;
+    files: Array<ModelFileInfo>;
+    genres?: Array<ModelGenre>;
     overview: string;
-    posterPath: string;
-    productionCompanies: Array<ModelProductionCompany>;
-    productionCountries: Array<ModelProductionCountry>;
-    releaseDate: string;
-    runtime: number;
-    /**
-     * Stats
-     */
+    posterPath?: string;
+    releaseDate?: string;
+    runtime?: number;
     status: string;
-    tagline: string;
+    tagline?: string;
     title: string;
     tmdbId: number;
+    year?: number;
 };
 
 export type ModelMovieRail = {
+    genres?: Array<number>;
+    isInLibrary: boolean;
     overview: string;
     posterPath: string;
     releaseDate: string;
+    tagline?: string;
     title: string;
     tmdbId: number;
-};
-
-export type ModelNetwork = {
-    logoPath: string;
-    name: string;
-    tmdbId: number;
-};
-
-export type ModelPerson = {
-    name: string;
-    profilePath: string;
-    tmdbId: number;
+    year?: number;
 };
 
 export type ModelPlan = {
@@ -556,18 +577,6 @@ export type ModelPolicyEvaluation = {
     stoppedProcessing: boolean;
 };
 
-export type ModelProductionCompany = {
-    logoPath: string;
-    name: string;
-    originCountry: string;
-    tmdbId: number;
-};
-
-export type ModelProductionCountry = {
-    iso3166_1: string;
-    name: string;
-};
-
 export type ModelProtocol = 'unknown' | 'usenet' | 'torrent';
 
 export type ModelRail = {
@@ -584,13 +593,9 @@ export type ModelRuleInfo = {
     rightOperand: string;
 };
 
-export type ModelSeason = {
-    airDate: string;
-    overview: string;
-    posterPath: string;
+export type ModelSeasonDetail = {
+    episodes: Array<ModelEpisodeAvailability>;
     seasonNumber: number;
-    title: string;
-    tmdbId: number;
 };
 
 export type ModelSelectOption = {
@@ -601,29 +606,34 @@ export type ModelSelectOption = {
     value: number;
 };
 
-export type ModelSeries = {
-    backdropPath: string;
-    createdBy: Array<ModelPerson>;
-    firstAirDate: string;
-    genres: Array<ModelGenre>;
+export type ModelSeriesDetail = {
+    availability: ModelAvailability;
+    backdropPath?: string;
+    files: Array<ModelFileInfo>;
+    firstAirDate?: string;
+    genres?: Array<ModelGenre>;
     inProduction: boolean;
-    lastAirDate: string;
-    networks: Array<ModelNetwork>;
+    lastAirDate?: string;
     overview: string;
-    posterPath: string;
-    seasons: Array<ModelSeason>;
+    posterPath?: string;
+    seasons: Array<ModelSeasonDetail>;
     status: string;
-    tagline: string;
+    tagline?: string;
     title: string;
     tmdbId: number;
+    year?: number;
 };
 
 export type ModelSeriesRail = {
+    genres?: Array<number>;
+    isInLibrary: boolean;
     overview: string;
     posterPath: string;
     releaseDate: string;
+    tagline?: string;
     title: string;
     tmdbId: number;
+    year?: number;
 };
 
 export type GetHealthData = {
@@ -1310,7 +1320,7 @@ export type GetV1MovieByIdResponses = {
     /**
      * OK
      */
-    200: ModelMovie;
+    200: ModelMovieDetail;
 };
 
 export type GetV1MovieByIdResponse = GetV1MovieByIdResponses[keyof GetV1MovieByIdResponses];
@@ -2047,7 +2057,7 @@ export type GetV1SeriesByIdResponses = {
     /**
      * OK
      */
-    200: ModelSeries;
+    200: ModelSeriesDetail;
 };
 
 export type GetV1SeriesByIdResponse = GetV1SeriesByIdResponses[keyof GetV1SeriesByIdResponses];

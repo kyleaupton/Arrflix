@@ -11,6 +11,10 @@
       @error="onError"
     />
     <Skeleton v-if="isLoading" class="poster-skeleton" />
+    <div v-if="showLibraryBadge" class="library-badge">
+      <i class="pi pi-check-circle" aria-hidden="true"></i>
+      <span>In library</span>
+    </div>
   </component>
 </template>
 
@@ -18,28 +22,40 @@
 import { computed, ref } from 'vue'
 import Skeleton from 'primevue/skeleton'
 import {
-  type ModelMovie,
+  type ModelMovieDetail,
   type ModelMovieRail,
-  type ModelSeries,
+  type ModelSeriesDetail,
   type ModelSeriesRail,
 } from '@/client/types.gen'
+
+/**
+ * "poster_sizes": [
+      "w92",
+      "w154",
+      "w185",
+      "w342",
+      "w500",
+      "w780",
+      "original"
+    ],
+ */
 
 // Poster size configuration
 const POSTER_SIZES = {
   small: {
     width: '8rem', // ~128px
     class: 'poster--sm',
-    tmdbSize: 'w154',
+    tmdbSize: 'w185',
   },
   medium: {
     width: '11rem', // ~176px
     class: 'poster--md',
-    tmdbSize: 'w185',
+    tmdbSize: 'w500',
   },
   large: {
     width: '16rem', // ~256px
     class: 'poster--lg',
-    tmdbSize: 'w342',
+    tmdbSize: 'w500',
   },
 } as const
 
@@ -47,14 +63,28 @@ type PosterSize = keyof typeof POSTER_SIZES
 
 const props = withDefaults(
   defineProps<{
-    item: ModelMovie | ModelSeries | ModelMovieRail | ModelSeriesRail
+    item: ModelMovieDetail | ModelSeriesDetail | ModelMovieRail | ModelSeriesRail
     size?: PosterSize
     to?: { path: string } | string
+    showLibraryStatus?: boolean
   }>(),
   {
     size: 'medium',
+    showLibraryStatus: true,
   },
 )
+
+const isInLibrary = computed(() => {
+  if ('availability' in props.item && props.item.availability) {
+    return Boolean(props.item.availability.isInLibrary)
+  }
+  if ('isInLibrary' in props.item) {
+    return Boolean((props.item as ModelMovieRail | ModelSeriesRail).isInLibrary)
+  }
+  return false
+})
+
+const showLibraryBadge = computed(() => props.showLibraryStatus && isInLibrary.value)
 
 const posterPath = computed(() => {
   const sizeConfig = POSTER_SIZES[props.size]
@@ -101,6 +131,28 @@ const onError = () => {
 
 .poster.is-loaded {
   opacity: 1;
+}
+
+.library-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #e5e7eb;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.01em;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.library-badge .pi {
+  font-size: 0.85rem;
+  color: #22c55e; /* emerald-500 */
 }
 
 .poster-skeleton {

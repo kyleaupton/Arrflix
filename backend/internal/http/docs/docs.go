@@ -879,7 +879,7 @@ const docTemplate = `{
                 "tags": [
                     "media"
                 ],
-                "summary": "Get movie",
+                "summary": "Get movie (by TMDB id)",
                 "parameters": [
                     {
                         "type": "integer",
@@ -893,7 +893,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Movie"
+                            "$ref": "#/definitions/model.MovieDetail"
                         }
                     }
                 }
@@ -1841,7 +1841,7 @@ const docTemplate = `{
                 "tags": [
                     "media"
                 ],
-                "summary": "Get series",
+                "summary": "Get series (by TMDB id)",
                 "parameters": [
                     {
                         "type": "integer",
@@ -1855,7 +1855,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Series"
+                            "$ref": "#/definitions/model.SeriesDetail"
                         }
                     }
                 }
@@ -1979,6 +1979,7 @@ const docTemplate = `{
                 "media_type",
                 "name_template_id",
                 "next_run_at",
+                "primary_media_file_id",
                 "progress",
                 "protocol",
                 "season_id",
@@ -2050,6 +2051,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "next_run_at": {
+                    "type": "string"
+                },
+                "primary_media_file_id": {
                     "type": "string"
                 },
                 "progress": {
@@ -2132,7 +2136,6 @@ const docTemplate = `{
             "required": [
                 "created_at",
                 "id",
-                "library_id",
                 "title",
                 "tmdb_id",
                 "type",
@@ -2144,9 +2147,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                },
-                "library_id": {
                     "type": "string"
                 },
                 "title": {
@@ -2764,6 +2764,24 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Availability": {
+            "type": "object",
+            "required": [
+                "isInLibrary",
+                "libraries"
+            ],
+            "properties": {
+                "isInLibrary": {
+                    "type": "boolean"
+                },
+                "libraries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.LibraryAvailability"
+                    }
+                }
+            }
+        },
         "model.Capabilities": {
             "type": "object",
             "required": [
@@ -2936,6 +2954,34 @@ const docTemplate = `{
                 }
             }
         },
+        "model.EpisodeAvailability": {
+            "type": "object",
+            "required": [
+                "available",
+                "episodeNumber",
+                "seasonNumber"
+            ],
+            "properties": {
+                "airDate": {
+                    "type": "string"
+                },
+                "available": {
+                    "type": "boolean"
+                },
+                "episodeNumber": {
+                    "type": "integer"
+                },
+                "fileId": {
+                    "type": "string"
+                },
+                "seasonNumber": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "model.EvaluationTrace": {
             "type": "object",
             "required": [
@@ -3078,6 +3124,36 @@ const docTemplate = `{
                 "FieldTypeDynamic",
                 "FieldTypeBoolean"
             ]
+        },
+        "model.FileInfo": {
+            "type": "object",
+            "required": [
+                "id",
+                "libraryId",
+                "path",
+                "status"
+            ],
+            "properties": {
+                "episodeNumber": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "libraryId": {
+                    "type": "string"
+                },
+                "path": {
+                    "description": "relative to library root",
+                    "type": "string"
+                },
+                "seasonNumber": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
         },
         "model.Genre": {
             "type": "object",
@@ -3564,53 +3640,59 @@ const docTemplate = `{
                 "value": {}
             }
         },
-        "model.Movie": {
+        "model.LibraryAvailability": {
             "type": "object",
             "required": [
-                "backdropPath",
-                "originCountry",
-                "originalLanguage",
+                "fileCount",
+                "libraryId",
+                "statusRollup"
+            ],
+            "properties": {
+                "fileCount": {
+                    "type": "integer"
+                },
+                "libraryId": {
+                    "type": "string"
+                },
+                "statusRollup": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.MovieDetail": {
+            "type": "object",
+            "required": [
+                "availability",
+                "files",
                 "overview",
-                "posterPath",
-                "productionCompanies",
-                "productionCountries",
-                "releaseDate",
-                "runtime",
                 "status",
-                "tagline",
                 "title",
                 "tmdbId"
             ],
             "properties": {
+                "availability": {
+                    "$ref": "#/definitions/model.Availability"
+                },
                 "backdropPath": {
                     "type": "string"
                 },
-                "originCountry": {
+                "files": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/model.FileInfo"
                     }
                 },
-                "originalLanguage": {
-                    "type": "string"
+                "genres": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Genre"
+                    }
                 },
                 "overview": {
                     "type": "string"
                 },
                 "posterPath": {
                     "type": "string"
-                },
-                "productionCompanies": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ProductionCompany"
-                    }
-                },
-                "productionCountries": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ProductionCountry"
-                    }
                 },
                 "releaseDate": {
                     "type": "string"
@@ -3619,7 +3701,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "status": {
-                    "description": "Stats",
                     "type": "string"
                 },
                 "tagline": {
@@ -3630,12 +3711,16 @@ const docTemplate = `{
                 },
                 "tmdbId": {
                     "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },
         "model.MovieRail": {
             "type": "object",
             "required": [
+                "isInLibrary",
                 "overview",
                 "posterPath",
                 "releaseDate",
@@ -3643,6 +3728,15 @@ const docTemplate = `{
                 "tmdbId"
             ],
             "properties": {
+                "genres": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "isInLibrary": {
+                    "type": "boolean"
+                },
                 "overview": {
                     "type": "string"
                 },
@@ -3652,48 +3746,16 @@ const docTemplate = `{
                 "releaseDate": {
                     "type": "string"
                 },
+                "tagline": {
+                    "type": "string"
+                },
                 "title": {
                     "type": "string"
                 },
                 "tmdbId": {
                     "type": "integer"
-                }
-            }
-        },
-        "model.Network": {
-            "type": "object",
-            "required": [
-                "logoPath",
-                "name",
-                "tmdbId"
-            ],
-            "properties": {
-                "logoPath": {
-                    "type": "string"
                 },
-                "name": {
-                    "type": "string"
-                },
-                "tmdbId": {
-                    "type": "integer"
-                }
-            }
-        },
-        "model.Person": {
-            "type": "object",
-            "required": [
-                "name",
-                "profilePath",
-                "tmdbId"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "profilePath": {
-                    "type": "string"
-                },
-                "tmdbId": {
+                "year": {
                     "type": "integer"
                 }
             }
@@ -3754,44 +3816,6 @@ const docTemplate = `{
                 },
                 "stoppedProcessing": {
                     "type": "boolean"
-                }
-            }
-        },
-        "model.ProductionCompany": {
-            "type": "object",
-            "required": [
-                "logoPath",
-                "name",
-                "originCountry",
-                "tmdbId"
-            ],
-            "properties": {
-                "logoPath": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "originCountry": {
-                    "type": "string"
-                },
-                "tmdbId": {
-                    "type": "integer"
-                }
-            }
-        },
-        "model.ProductionCountry": {
-            "type": "object",
-            "required": [
-                "iso3166_1",
-                "name"
-            ],
-            "properties": {
-                "iso3166_1": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
                 }
             }
         },
@@ -3860,33 +3884,20 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Season": {
+        "model.SeasonDetail": {
             "type": "object",
             "required": [
-                "airDate",
-                "overview",
-                "posterPath",
-                "seasonNumber",
-                "title",
-                "tmdbId"
+                "episodes",
+                "seasonNumber"
             ],
             "properties": {
-                "airDate": {
-                    "type": "string"
-                },
-                "overview": {
-                    "type": "string"
-                },
-                "posterPath": {
-                    "type": "string"
+                "episodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.EpisodeAvailability"
+                    }
                 },
                 "seasonNumber": {
-                    "type": "integer"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "tmdbId": {
                     "type": "integer"
                 }
             }
@@ -3917,32 +3928,29 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Series": {
+        "model.SeriesDetail": {
             "type": "object",
             "required": [
-                "backdropPath",
-                "createdBy",
-                "firstAirDate",
-                "genres",
+                "availability",
+                "files",
                 "inProduction",
-                "lastAirDate",
-                "networks",
                 "overview",
-                "posterPath",
                 "seasons",
                 "status",
-                "tagline",
                 "title",
                 "tmdbId"
             ],
             "properties": {
+                "availability": {
+                    "$ref": "#/definitions/model.Availability"
+                },
                 "backdropPath": {
                     "type": "string"
                 },
-                "createdBy": {
+                "files": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Person"
+                        "$ref": "#/definitions/model.FileInfo"
                     }
                 },
                 "firstAirDate": {
@@ -3960,12 +3968,6 @@ const docTemplate = `{
                 "lastAirDate": {
                     "type": "string"
                 },
-                "networks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Network"
-                    }
-                },
                 "overview": {
                     "type": "string"
                 },
@@ -3975,7 +3977,7 @@ const docTemplate = `{
                 "seasons": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Season"
+                        "$ref": "#/definitions/model.SeasonDetail"
                     }
                 },
                 "status": {
@@ -3989,12 +3991,16 @@ const docTemplate = `{
                 },
                 "tmdbId": {
                     "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },
         "model.SeriesRail": {
             "type": "object",
             "required": [
+                "isInLibrary",
                 "overview",
                 "posterPath",
                 "releaseDate",
@@ -4002,6 +4008,15 @@ const docTemplate = `{
                 "tmdbId"
             ],
             "properties": {
+                "genres": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "isInLibrary": {
+                    "type": "boolean"
+                },
                 "overview": {
                     "type": "string"
                 },
@@ -4011,10 +4026,16 @@ const docTemplate = `{
                 "releaseDate": {
                     "type": "string"
                 },
+                "tagline": {
+                    "type": "string"
+                },
                 "title": {
                     "type": "string"
                 },
                 "tmdbId": {
+                    "type": "integer"
+                },
+                "year": {
                     "type": "integer"
                 }
             }

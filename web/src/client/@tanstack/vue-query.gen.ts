@@ -542,7 +542,7 @@ export const getV1LibraryOptions = (options?: Options<GetV1LibraryData>) => {
 export const getV1MovieByIdQueryKey = (options: Options<GetV1MovieByIdData>) => createQueryKey('getV1MovieById', options);
 
 /**
- * Get movie
+ * Get movie (by TMDB id)
  */
 export const getV1MovieByIdOptions = (options: Options<GetV1MovieByIdData>) => {
     return queryOptions({
@@ -1037,7 +1037,7 @@ export const putV1PoliciesByIdRuleMutation = (options?: Partial<Options<PutV1Pol
 export const getV1SeriesByIdQueryKey = (options: Options<GetV1SeriesByIdData>) => createQueryKey('getV1SeriesById', options);
 
 /**
- * Get series
+ * Get series (by TMDB id)
  */
 export const getV1SeriesByIdOptions = (options: Options<GetV1SeriesByIdData>) => {
     return queryOptions({

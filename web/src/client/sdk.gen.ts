@@ -317,7 +317,7 @@ export const getV1Library = <ThrowOnError extends boolean = false>(options?: Opt
 };
 
 /**
- * Get movie
+ * Get movie (by TMDB id)
  */
 export const getV1MovieById = <ThrowOnError extends boolean = false>(options: Options<GetV1MovieByIdData, ThrowOnError>) => {
     return (options.client ?? client).get<GetV1MovieByIdResponses, unknown, ThrowOnError>({
@@ -631,7 +631,7 @@ export const putV1PoliciesByIdRule = <ThrowOnError extends boolean = false>(opti
 };
 
 /**
- * Get series
+ * Get series (by TMDB id)
  */
 export const getV1SeriesById = <ThrowOnError extends boolean = false>(options: Options<GetV1SeriesByIdData, ThrowOnError>) => {
     return (options.client ?? client).get<GetV1SeriesByIdResponses, unknown, ThrowOnError>({

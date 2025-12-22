@@ -71,6 +71,8 @@ definitions:
         type: string
       next_run_at:
         type: string
+      primary_media_file_id:
+        type: string
       progress:
         type: number
       protocol:
@@ -104,6 +106,7 @@ definitions:
     - media_type
     - name_template_id
     - next_run_at
+    - primary_media_file_id
     - progress
     - protocol
     - season_id
@@ -158,8 +161,6 @@ definitions:
         type: string
       id:
         type: string
-      library_id:
-        type: string
       title:
         type: string
       tmdb_id:
@@ -173,7 +174,6 @@ definitions:
     required:
     - created_at
     - id
-    - library_id
     - title
     - tmdb_id
     - type
@@ -599,6 +599,18 @@ definitions:
     - type
     - value
     type: object
+  model.Availability:
+    properties:
+      isInLibrary:
+        type: boolean
+      libraries:
+        items:
+          $ref: '#/definitions/model.LibraryAvailability'
+        type: array
+    required:
+    - isInLibrary
+    - libraries
+    type: object
   model.Capabilities:
     properties:
       bookSearchParams:
@@ -722,6 +734,25 @@ definitions:
     - label
     - value
     type: object
+  model.EpisodeAvailability:
+    properties:
+      airDate:
+        type: string
+      available:
+        type: boolean
+      episodeNumber:
+        type: integer
+      fileId:
+        type: string
+      seasonNumber:
+        type: integer
+      title:
+        type: string
+    required:
+    - available
+    - episodeNumber
+    - seasonNumber
+    type: object
   model.EvaluationTrace:
     properties:
       finalPlan:
@@ -822,6 +853,27 @@ definitions:
     - FieldTypeEnum
     - FieldTypeDynamic
     - FieldTypeBoolean
+  model.FileInfo:
+    properties:
+      episodeNumber:
+        type: integer
+      id:
+        type: string
+      libraryId:
+        type: string
+      path:
+        description: relative to library root
+        type: string
+      seasonNumber:
+        type: integer
+      status:
+        type: string
+    required:
+    - id
+    - libraryId
+    - path
+    - status
+    type: object
   model.Genre:
     properties:
       name:
@@ -1169,34 +1221,42 @@ definitions:
     - order
     - value
     type: object
-  model.Movie:
+  model.LibraryAvailability:
     properties:
+      fileCount:
+        type: integer
+      libraryId:
+        type: string
+      statusRollup:
+        type: string
+    required:
+    - fileCount
+    - libraryId
+    - statusRollup
+    type: object
+  model.MovieDetail:
+    properties:
+      availability:
+        $ref: '#/definitions/model.Availability'
       backdropPath:
         type: string
-      originCountry:
+      files:
         items:
-          type: string
+          $ref: '#/definitions/model.FileInfo'
         type: array
-      originalLanguage:
-        type: string
+      genres:
+        items:
+          $ref: '#/definitions/model.Genre'
+        type: array
       overview:
         type: string
       posterPath:
         type: string
-      productionCompanies:
-        items:
-          $ref: '#/definitions/model.ProductionCompany'
-        type: array
-      productionCountries:
-        items:
-          $ref: '#/definitions/model.ProductionCountry'
-        type: array
       releaseDate:
         type: string
       runtime:
         type: integer
       status:
-        description: Stats
         type: string
       tagline:
         type: string
@@ -1204,64 +1264,44 @@ definitions:
         type: string
       tmdbId:
         type: integer
+      year:
+        type: integer
     required:
-    - backdropPath
-    - originCountry
-    - originalLanguage
+    - availability
+    - files
     - overview
-    - posterPath
-    - productionCompanies
-    - productionCountries
-    - releaseDate
-    - runtime
     - status
-    - tagline
     - title
     - tmdbId
     type: object
   model.MovieRail:
     properties:
+      genres:
+        items:
+          type: integer
+        type: array
+      isInLibrary:
+        type: boolean
       overview:
         type: string
       posterPath:
         type: string
       releaseDate:
         type: string
+      tagline:
+        type: string
       title:
         type: string
       tmdbId:
         type: integer
+      year:
+        type: integer
     required:
+    - isInLibrary
     - overview
     - posterPath
     - releaseDate
     - title
-    - tmdbId
-    type: object
-  model.Network:
-    properties:
-      logoPath:
-        type: string
-      name:
-        type: string
-      tmdbId:
-        type: integer
-    required:
-    - logoPath
-    - name
-    - tmdbId
-    type: object
-  model.Person:
-    properties:
-      name:
-        type: string
-      profilePath:
-        type: string
-      tmdbId:
-        type: integer
-    required:
-    - name
-    - profilePath
     - tmdbId
     type: object
   model.Plan:
@@ -1305,32 +1345,6 @@ definitions:
     - policyName
     - priority
     - stoppedProcessing
-    type: object
-  model.ProductionCompany:
-    properties:
-      logoPath:
-        type: string
-      name:
-        type: string
-      originCountry:
-        type: string
-      tmdbId:
-        type: integer
-    required:
-    - logoPath
-    - name
-    - originCountry
-    - tmdbId
-    type: object
-  model.ProductionCountry:
-    properties:
-      iso3166_1:
-        type: string
-      name:
-        type: string
-    required:
-    - iso3166_1
-    - name
     type: object
   model.Protocol:
     enum:
@@ -1378,27 +1392,17 @@ definitions:
     - operator
     - rightOperand
     type: object
-  model.Season:
+  model.SeasonDetail:
     properties:
-      airDate:
-        type: string
-      overview:
-        type: string
-      posterPath:
-        type: string
+      episodes:
+        items:
+          $ref: '#/definitions/model.EpisodeAvailability'
+        type: array
       seasonNumber:
         type: integer
-      title:
-        type: string
-      tmdbId:
-        type: integer
     required:
-    - airDate
-    - overview
-    - posterPath
+    - episodes
     - seasonNumber
-    - title
-    - tmdbId
     type: object
   model.SelectOption:
     properties:
@@ -1418,13 +1422,15 @@ definitions:
     - order
     - value
     type: object
-  model.Series:
+  model.SeriesDetail:
     properties:
+      availability:
+        $ref: '#/definitions/model.Availability'
       backdropPath:
         type: string
-      createdBy:
+      files:
         items:
-          $ref: '#/definitions/model.Person'
+          $ref: '#/definitions/model.FileInfo'
         type: array
       firstAirDate:
         type: string
@@ -1436,17 +1442,13 @@ definitions:
         type: boolean
       lastAirDate:
         type: string
-      networks:
-        items:
-          $ref: '#/definitions/model.Network'
-        type: array
       overview:
         type: string
       posterPath:
         type: string
       seasons:
         items:
-          $ref: '#/definitions/model.Season'
+          $ref: '#/definitions/model.SeasonDetail'
         type: array
       status:
         type: string
@@ -1456,35 +1458,42 @@ definitions:
         type: string
       tmdbId:
         type: integer
+      year:
+        type: integer
     required:
-    - backdropPath
-    - createdBy
-    - firstAirDate
-    - genres
+    - availability
+    - files
     - inProduction
-    - lastAirDate
-    - networks
     - overview
-    - posterPath
     - seasons
     - status
-    - tagline
     - title
     - tmdbId
     type: object
   model.SeriesRail:
     properties:
+      genres:
+        items:
+          type: integer
+        type: array
+      isInLibrary:
+        type: boolean
       overview:
         type: string
       posterPath:
         type: string
       releaseDate:
         type: string
+      tagline:
+        type: string
       title:
         type: string
       tmdbId:
         type: integer
+      year:
+        type: integer
     required:
+    - isInLibrary
     - overview
     - posterPath
     - releaseDate
@@ -2064,8 +2073,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Movie'
-      summary: Get movie
+            $ref: '#/definitions/model.MovieDetail'
+      summary: Get movie (by TMDB id)
       tags:
       - media
   /v1/movie/{id}/candidate/download:
@@ -2691,8 +2700,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Series'
-      summary: Get series
+            $ref: '#/definitions/model.SeriesDetail'
+      summary: Get series (by TMDB id)
       tags:
       - media
   /v1/settings:
