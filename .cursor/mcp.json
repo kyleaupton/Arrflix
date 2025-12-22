@@ -3,6 +3,10 @@
     "snaggle-mcp": {
       "command": "npx",
       "args": ["-y", "tsx", "${workspaceFolder}/mcp/src/index.ts"]
+    },
+    "primevue": {
+      "command": "npx",
+      "args": ["-y", "@primevue/mcp"]
     }
   }
 }
