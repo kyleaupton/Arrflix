@@ -208,7 +208,7 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 				}
 			}
 			tmdb := movieID
-			mi, err = s.repo.CreateMediaItem(ctx, libraryID, "movie", movie.Title, yearInt, &tmdb)
+			mi, err = s.repo.CreateMediaItem(ctx, "movie", movie.Title, yearInt, &tmdb)
 			if err != nil {
 				return trace, dbgen.DownloadJob{}, fmt.Errorf("create media item: %w", err)
 			}

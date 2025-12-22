@@ -12,7 +12,7 @@ type MediaRepo interface {
 	ListMediaItems(ctx context.Context) ([]dbgen.MediaItem, error)
 	GetMediaItem(ctx context.Context, id pgtype.UUID) (dbgen.MediaItem, error)
 	GetMediaItemByTmdbID(ctx context.Context, tmdbID int64) (dbgen.MediaItem, error)
-	CreateMediaItem(ctx context.Context, libraryID pgtype.UUID, typ, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error)
+	CreateMediaItem(ctx context.Context, typ, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error)
 	UpdateMediaItem(ctx context.Context, id pgtype.UUID, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error)
 	DeleteMediaItem(ctx context.Context, id pgtype.UUID) error
 
@@ -25,8 +25,8 @@ type MediaRepo interface {
 	UpsertEpisode(ctx context.Context, seasonID pgtype.UUID, episodeNumber int32, title *string, airDate pgtype.Date, tmdbID *int64, tvdbID *int64) (dbgen.MediaEpisode, error)
 
 	// Files
-	GetMediaFileByPath(ctx context.Context, path string) (dbgen.MediaFile, error)
-	CreateMediaFile(ctx context.Context, mediaItemID pgtype.UUID, seasonID, episodeID *pgtype.UUID, path string) (dbgen.MediaFile, error)
+	GetMediaFileByLibraryAndPath(ctx context.Context, libraryID pgtype.UUID, path string) (dbgen.MediaFile, error)
+	CreateMediaFile(ctx context.Context, libraryID, mediaItemID pgtype.UUID, seasonID, episodeID *pgtype.UUID, path string, status *string) (dbgen.MediaFile, error)
 	DeleteMediaFile(ctx context.Context, id pgtype.UUID) error
 }
 
@@ -42,9 +42,8 @@ func (r *Repository) GetMediaItemByTmdbID(ctx context.Context, tmdbID int64) (db
 	return r.Q.GetMediaItemByTmdbID(ctx, &tmdbID)
 }
 
-func (r *Repository) CreateMediaItem(ctx context.Context, libraryID pgtype.UUID, typ, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error) {
+func (r *Repository) CreateMediaItem(ctx context.Context, typ, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error) {
 	return r.Q.CreateMediaItem(ctx, dbgen.CreateMediaItemParams{
-		LibraryID: libraryID,
 		Type:      typ,
 		Title:     title,
 		Year:      year,
@@ -92,11 +91,14 @@ func (r *Repository) UpsertEpisode(ctx context.Context, seasonID pgtype.UUID, ep
 	})
 }
 
-func (r *Repository) GetMediaFileByPath(ctx context.Context, path string) (dbgen.MediaFile, error) {
-	return r.Q.GetMediaFileByPath(ctx, path)
+func (r *Repository) GetMediaFileByLibraryAndPath(ctx context.Context, libraryID pgtype.UUID, path string) (dbgen.MediaFile, error) {
+	return r.Q.GetMediaFileByLibraryAndPath(ctx, dbgen.GetMediaFileByLibraryAndPathParams{
+		LibraryID: libraryID,
+		Path:      path,
+	})
 }
 
-func (r *Repository) CreateMediaFile(ctx context.Context, mediaItemID pgtype.UUID, seasonID, episodeID *pgtype.UUID, path string) (dbgen.MediaFile, error) {
+func (r *Repository) CreateMediaFile(ctx context.Context, libraryID, mediaItemID pgtype.UUID, seasonID, episodeID *pgtype.UUID, path string, status *string) (dbgen.MediaFile, error) {
 	var season, episode pgtype.UUID
 	if seasonID != nil {
 		season = *seasonID
@@ -104,11 +106,17 @@ func (r *Repository) CreateMediaFile(ctx context.Context, mediaItemID pgtype.UUI
 	if episodeID != nil {
 		episode = *episodeID
 	}
+	var st *string
+	if status != nil {
+		st = status
+	}
 	return r.Q.CreateMediaFile(ctx, dbgen.CreateMediaFileParams{
+		LibraryID:   libraryID,
 		MediaItemID: mediaItemID,
 		SeasonID:    season,
 		EpisodeID:   episode,
 		Path:        path,
+		Status:      st,
 	})
 }
 

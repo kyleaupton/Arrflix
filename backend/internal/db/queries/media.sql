@@ -13,8 +13,8 @@ select * from media_item
 where tmdb_id = $1;
 
 -- name: CreateMediaItem :one
-insert into media_item (library_id, type, title, year, tmdb_id)
-values (sqlc.arg(library_id), sqlc.arg(type), sqlc.arg(title), sqlc.arg(year), sqlc.arg(tmdb_id))
+insert into media_item (type, title, year, tmdb_id)
+values (sqlc.arg(type), sqlc.arg(title), sqlc.arg(year), sqlc.arg(tmdb_id))
 returning *;
 
 -- name: UpdateMediaItem :one
@@ -62,12 +62,12 @@ returning *;
 
 -- Files
 
--- name: GetMediaFileByPath :one
-select * from media_file where path = $1;
+-- name: GetMediaFileByLibraryAndPath :one
+select * from media_file where library_id = $1 and path = $2;
 
 -- name: CreateMediaFile :one
-insert into media_file (media_item_id, season_id, episode_id, path)
-values (sqlc.arg(media_item_id), sqlc.arg(season_id), sqlc.arg(episode_id), sqlc.arg(path))
+insert into media_file (library_id, media_item_id, season_id, episode_id, path, status)
+values (sqlc.arg(library_id), sqlc.arg(media_item_id), sqlc.arg(season_id), sqlc.arg(episode_id), sqlc.arg(path), coalesce(sqlc.arg(status), 'available'))
 returning *;
 
 -- name: DeleteMediaFile :exec

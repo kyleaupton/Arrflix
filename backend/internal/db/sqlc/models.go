@@ -208,6 +208,7 @@ type DownloadJob struct {
 	ImportSourcePath     *string     `json:"import_source_path"`
 	ImportDestPath       *string     `json:"import_dest_path"`
 	ImportMethod         *string     `json:"import_method"`
+	PrimaryMediaFileID   pgtype.UUID `json:"primary_media_file_id"`
 	DownloaderStatus     *string     `json:"downloader_status"`
 	Progress             *float64    `json:"progress"`
 	AttemptCount         int32       `json:"attempt_count"`
@@ -215,6 +216,12 @@ type DownloadJob struct {
 	LastError            *string     `json:"last_error"`
 	CreatedAt            time.Time   `json:"created_at"`
 	UpdatedAt            time.Time   `json:"updated_at"`
+}
+
+type DownloadJobMediaFile struct {
+	DownloadJobID pgtype.UUID `json:"download_job_id"`
+	MediaFileID   pgtype.UUID `json:"media_file_id"`
+	CreatedAt     time.Time   `json:"created_at"`
 }
 
 type Downloader struct {
@@ -256,16 +263,17 @@ type MediaEpisode struct {
 
 type MediaFile struct {
 	ID          pgtype.UUID `json:"id"`
+	LibraryID   pgtype.UUID `json:"library_id"`
 	MediaItemID pgtype.UUID `json:"media_item_id"`
 	SeasonID    pgtype.UUID `json:"season_id"`
 	EpisodeID   pgtype.UUID `json:"episode_id"`
 	Path        string      `json:"path"`
+	Status      string      `json:"status"`
 	AddedAt     time.Time   `json:"added_at"`
 }
 
 type MediaItem struct {
 	ID        pgtype.UUID `json:"id"`
-	LibraryID pgtype.UUID `json:"library_id"`
 	Type      string      `json:"type"`
 	Title     string      `json:"title"`
 	Year      *int32      `json:"year"`

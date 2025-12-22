@@ -57,9 +57,15 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 
 		stats.FilesSeen++
 
+		relPath, err := filepath.Rel(library.RootPath, path)
+		if err != nil || strings.HasPrefix(relPath, "..") {
+			s.logger.Error().Str("path", path).Err(err).Msg("Path outside library root")
+			return nil
+		}
+
 		// see if path exists in media_file
 		// if it does, skip
-		_, err = s.repo.GetMediaFileByPath(ctx, path)
+		_, err = s.repo.GetMediaFileByLibraryAndPath(ctx, library.ID, relPath)
 		if err != nil && err != pgx.ErrNoRows {
 			return err
 		}
@@ -191,7 +197,6 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 			// create media_item if it doesn't exist
 			createdMediaItem, err := s.repo.CreateMediaItem(
 				ctx,
-				library.ID,
 				library.Type,
 				title,
 				&year,
@@ -235,7 +240,7 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 		}
 
 		// create media_file
-		s.repo.CreateMediaFile(ctx, mediaItemId, seasonId, episodeId, path)
+		s.repo.CreateMediaFile(ctx, library.ID, mediaItemId, seasonId, episodeId, relPath, nil)
 
 		return nil
 	})

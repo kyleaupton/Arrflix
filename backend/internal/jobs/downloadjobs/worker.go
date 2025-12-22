@@ -177,13 +177,17 @@ func (w *Worker) processJob(ctx context.Context, job dbgen.DownloadJob) error {
 
 		method := res.Method
 		imported, err := w.repo.SetDownloadJobImported(ctx, dbgen.SetDownloadJobImportedParams{
-			ID:               job.ID,
-			ImportSourcePath: &res.SourcePath,
-			ImportDestPath:   &res.DestPath,
-			ImportMethod:     &method,
+			ID:                 job.ID,
+			ImportSourcePath:   &res.SourcePath,
+			ImportDestPath:     &res.DestRelPath,
+			ImportMethod:       &method,
+			PrimaryMediaFileID: res.MediaFile.ID,
 		})
 		if err != nil {
 			return fmt.Errorf("mark imported: %w", err)
+		}
+		if linkErr := w.repo.LinkDownloadJobMediaFile(ctx, job.ID, res.MediaFile.ID); linkErr != nil {
+			w.log.Warn().Err(linkErr).Msg("failed to link download job to media file")
 		}
 		w.publishJobUpdated(imported)
 	}

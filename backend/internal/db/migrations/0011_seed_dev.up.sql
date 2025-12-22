@@ -11,12 +11,12 @@ values ('Main Series Library', 'series', '/data/tv', true, true);
 
 -- seed name templates
 insert into name_template (name, type, template, "default")
-values ('Main Movie Template', 'movie', '{Title} ({Year}) {Quality} {Resolution} {Extension}', true);
+values ('Main Movie Template', 'movie', '{{.Title}} ({{.Year}}) [{{clean .Quality.Resolution}} {{clean .Quality.Codec}}]', true);
 
 insert into name_template (name, type, template, "default")
-values ('Main Series Template', 'series', '{Title} - S{Season:00}E{Episode:00} - {EpisodeTitle} ({Year}) {Quality} {Resolution} {Extension}', true);
+values ('Main Series Template', 'series', '{{.Title}} - S{{.Season:00}}E{{.Episode:00}} - {{.EpisodeTitle}} ({{.Year}}) [{{clean .Quality.Resolution}} {{clean .Quality.Codec}}]', true);
 
 -- seed downloaders
 insert into downloader (name, type, protocol, url, username, password, enabled, "default")
-values ('Main Downloader', 'qbittorrent', 'torrent', 'http://localhost:8080', 'admin', 'admin', true, true);
+values ('Main Downloader', 'qbittorrent', 'torrent', 'http://172.16.10.22:8485', 'admin', 'admin', true, true);
 

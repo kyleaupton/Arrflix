@@ -22,6 +22,7 @@ type DownloadJobsRepo interface {
 	SetDownloadJobDownloadSnapshot(ctx context.Context, arg dbgen.SetDownloadJobDownloadSnapshotParams) (dbgen.DownloadJob, error)
 	SetDownloadJobImporting(ctx context.Context, id pgtype.UUID, importSourcePath string) (dbgen.DownloadJob, error)
 	SetDownloadJobImported(ctx context.Context, arg dbgen.SetDownloadJobImportedParams) (dbgen.DownloadJob, error)
+	LinkDownloadJobMediaFile(ctx context.Context, downloadJobID, mediaFileID pgtype.UUID) error
 
 	BumpDownloadJobRetry(ctx context.Context, arg dbgen.BumpDownloadJobRetryParams) (dbgen.DownloadJob, error)
 	MarkDownloadJobFailed(ctx context.Context, id pgtype.UUID, lastError string) (dbgen.DownloadJob, error)
@@ -75,13 +76,20 @@ func (r *Repository) SetDownloadJobDownloadSnapshot(ctx context.Context, arg dbg
 
 func (r *Repository) SetDownloadJobImporting(ctx context.Context, id pgtype.UUID, importSourcePath string) (dbgen.DownloadJob, error) {
 	return r.Q.SetDownloadJobImporting(ctx, dbgen.SetDownloadJobImportingParams{
-		ID:              id,
+		ID:               id,
 		ImportSourcePath: &importSourcePath,
 	})
 }
 
 func (r *Repository) SetDownloadJobImported(ctx context.Context, arg dbgen.SetDownloadJobImportedParams) (dbgen.DownloadJob, error) {
 	return r.Q.SetDownloadJobImported(ctx, arg)
+}
+
+func (r *Repository) LinkDownloadJobMediaFile(ctx context.Context, downloadJobID, mediaFileID pgtype.UUID) error {
+	return r.Q.LinkDownloadJobMediaFile(ctx, dbgen.LinkDownloadJobMediaFileParams{
+		DownloadJobID: downloadJobID,
+		MediaFileID:   mediaFileID,
+	})
 }
 
 func (r *Repository) BumpDownloadJobRetry(ctx context.Context, arg dbgen.BumpDownloadJobRetryParams) (dbgen.DownloadJob, error) {

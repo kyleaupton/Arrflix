@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -26,6 +27,7 @@ func NewImportService(r *repo.Repository) *ImportService {
 type ImportResult struct {
 	SourcePath string
 	DestPath   string
+	DestRelPath string
 	Method     string // hardlink|copy
 	MediaItem  dbgen.MediaItem
 	MediaFile  dbgen.MediaFile
@@ -74,16 +76,21 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 	dest := filepath.Join(lib.RootPath, rel)
 	dest = importer.EnsureExt(dest, ext)
 
+	destRel, err := filepath.Rel(lib.RootPath, dest)
+	if err != nil || strings.HasPrefix(destRel, "..") {
+		return ImportResult{}, fmt.Errorf("compute relative dest: %w", err)
+	}
+
 	method, err := importer.HardlinkOrCopy(sourcePath, dest)
 	if err != nil {
 		return ImportResult{}, err
 	}
 
 	// Upsert-ish media_file by path
-	mf, err := s.repo.GetMediaFileByPath(ctx, dest)
+	mf, err := s.repo.GetMediaFileByLibraryAndPath(ctx, lib.ID, destRel)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			mf, err = s.repo.CreateMediaFile(ctx, mediaItem.ID, (*pgtype.UUID)(nil), (*pgtype.UUID)(nil), dest)
+			mf, err = s.repo.CreateMediaFile(ctx, lib.ID, mediaItem.ID, (*pgtype.UUID)(nil), (*pgtype.UUID)(nil), destRel, nil)
 			if err != nil {
 				return ImportResult{}, fmt.Errorf("create media file: %w", err)
 			}
@@ -95,6 +102,7 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 	return ImportResult{
 		SourcePath: sourcePath,
 		DestPath:   dest,
+		DestRelPath: destRel,
 		Method:     method,
 		MediaItem:  mediaItem,
 		MediaFile:  mf,

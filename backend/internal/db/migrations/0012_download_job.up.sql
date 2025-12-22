@@ -43,6 +43,7 @@ create table if not exists download_job (
   import_source_path text,
   import_dest_path text,
   import_method text check (import_method in ('hardlink','copy')),
+  primary_media_file_id uuid references media_file(id) on delete set null,
 
   -- Progress snapshots (optional)
   downloader_status text,
@@ -64,5 +65,14 @@ create index if not exists idx_download_job_media_item on download_job (media_it
 create index if not exists idx_download_job_episode on download_job (episode_id);
 create unique index if not exists uq_download_job_candidate
   on download_job (indexer_id, guid);
+
+create table if not exists download_job_media_file (
+  download_job_id uuid not null references download_job(id) on delete cascade,
+  media_file_id uuid not null references media_file(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (download_job_id, media_file_id)
+);
+
+create index if not exists idx_djmf_media_file on download_job_media_file (media_file_id);
 
 

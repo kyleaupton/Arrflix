@@ -99,6 +99,7 @@ set status = 'imported',
     import_source_path = sqlc.arg(import_source_path),
     import_dest_path = sqlc.arg(import_dest_path),
     import_method = sqlc.arg(import_method),
+    primary_media_file_id = sqlc.arg(primary_media_file_id),
     updated_at = now()
 where id = sqlc.arg(id)
 returning *;
@@ -135,5 +136,10 @@ set updated_at = now()
 from cte
 where j.id = cte.id
 returning j.*;
+
+-- name: LinkDownloadJobMediaFile :exec
+insert into download_job_media_file (download_job_id, media_file_id)
+values (sqlc.arg(download_job_id), sqlc.arg(media_file_id))
+on conflict (download_job_id, media_file_id) do nothing;
 
 

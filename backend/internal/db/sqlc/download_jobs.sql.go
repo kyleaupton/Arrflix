@@ -19,7 +19,7 @@ set attempt_count = attempt_count + 1,
     next_run_at = $2,
     updated_at = now()
 where id = $3
-returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
+returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
 `
 
 type BumpDownloadJobRetryParams struct {
@@ -52,6 +52,7 @@ func (q *Queries) BumpDownloadJobRetry(ctx context.Context, arg BumpDownloadJobR
 		&i.ImportSourcePath,
 		&i.ImportDestPath,
 		&i.ImportMethod,
+		&i.PrimaryMediaFileID,
 		&i.DownloaderStatus,
 		&i.Progress,
 		&i.AttemptCount,
@@ -68,7 +69,7 @@ update download_job
 set status = 'cancelled',
     updated_at = now()
 where id = $1
-returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
+returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
 `
 
 func (q *Queries) CancelDownloadJob(ctx context.Context, id pgtype.UUID) (DownloadJob, error) {
@@ -95,6 +96,7 @@ func (q *Queries) CancelDownloadJob(ctx context.Context, id pgtype.UUID) (Downlo
 		&i.ImportSourcePath,
 		&i.ImportDestPath,
 		&i.ImportMethod,
+		&i.PrimaryMediaFileID,
 		&i.DownloaderStatus,
 		&i.Progress,
 		&i.AttemptCount,
@@ -120,7 +122,7 @@ update download_job j
 set updated_at = now()
 from cte
 where j.id = cte.id
-returning j.id, j.status, j.protocol, j.media_type, j.media_item_id, j.season_id, j.episode_id, j.indexer_id, j.guid, j.candidate_title, j.candidate_link, j.downloader_id, j.library_id, j.name_template_id, j.downloader_external_id, j.download_save_path, j.download_content_path, j.import_source_path, j.import_dest_path, j.import_method, j.downloader_status, j.progress, j.attempt_count, j.next_run_at, j.last_error, j.created_at, j.updated_at
+returning j.id, j.status, j.protocol, j.media_type, j.media_item_id, j.season_id, j.episode_id, j.indexer_id, j.guid, j.candidate_title, j.candidate_link, j.downloader_id, j.library_id, j.name_template_id, j.downloader_external_id, j.download_save_path, j.download_content_path, j.import_source_path, j.import_dest_path, j.import_method, j.primary_media_file_id, j.downloader_status, j.progress, j.attempt_count, j.next_run_at, j.last_error, j.created_at, j.updated_at
 `
 
 func (q *Queries) ClaimRunnableDownloadJobs(ctx context.Context, limit int32) ([]DownloadJob, error) {
@@ -153,6 +155,7 @@ func (q *Queries) ClaimRunnableDownloadJobs(ctx context.Context, limit int32) ([
 			&i.ImportSourcePath,
 			&i.ImportDestPath,
 			&i.ImportMethod,
+			&i.PrimaryMediaFileID,
 			&i.DownloaderStatus,
 			&i.Progress,
 			&i.AttemptCount,
@@ -205,7 +208,7 @@ values (
 )
 on conflict (indexer_id, guid) do update
 set updated_at = now()
-returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
+returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
 `
 
 type CreateDownloadJobParams struct {
@@ -261,6 +264,7 @@ func (q *Queries) CreateDownloadJob(ctx context.Context, arg CreateDownloadJobPa
 		&i.ImportSourcePath,
 		&i.ImportDestPath,
 		&i.ImportMethod,
+		&i.PrimaryMediaFileID,
 		&i.DownloaderStatus,
 		&i.Progress,
 		&i.AttemptCount,
@@ -273,7 +277,7 @@ func (q *Queries) CreateDownloadJob(ctx context.Context, arg CreateDownloadJobPa
 }
 
 const getDownloadJob = `-- name: GetDownloadJob :one
-select id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at from download_job
+select id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at from download_job
 where id = $1
 `
 
@@ -301,6 +305,7 @@ func (q *Queries) GetDownloadJob(ctx context.Context, id pgtype.UUID) (DownloadJ
 		&i.ImportSourcePath,
 		&i.ImportDestPath,
 		&i.ImportMethod,
+		&i.PrimaryMediaFileID,
 		&i.DownloaderStatus,
 		&i.Progress,
 		&i.AttemptCount,
@@ -313,7 +318,7 @@ func (q *Queries) GetDownloadJob(ctx context.Context, id pgtype.UUID) (DownloadJ
 }
 
 const getDownloadJobByCandidate = `-- name: GetDownloadJobByCandidate :one
-select id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at from download_job
+select id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at from download_job
 where indexer_id = $1 and guid = $2
 `
 
@@ -346,6 +351,7 @@ func (q *Queries) GetDownloadJobByCandidate(ctx context.Context, arg GetDownload
 		&i.ImportSourcePath,
 		&i.ImportDestPath,
 		&i.ImportMethod,
+		&i.PrimaryMediaFileID,
 		&i.DownloaderStatus,
 		&i.Progress,
 		&i.AttemptCount,
@@ -357,8 +363,24 @@ func (q *Queries) GetDownloadJobByCandidate(ctx context.Context, arg GetDownload
 	return i, err
 }
 
+const linkDownloadJobMediaFile = `-- name: LinkDownloadJobMediaFile :exec
+insert into download_job_media_file (download_job_id, media_file_id)
+values ($1, $2)
+on conflict (download_job_id, media_file_id) do nothing
+`
+
+type LinkDownloadJobMediaFileParams struct {
+	DownloadJobID pgtype.UUID `json:"download_job_id"`
+	MediaFileID   pgtype.UUID `json:"media_file_id"`
+}
+
+func (q *Queries) LinkDownloadJobMediaFile(ctx context.Context, arg LinkDownloadJobMediaFileParams) error {
+	_, err := q.db.Exec(ctx, linkDownloadJobMediaFile, arg.DownloadJobID, arg.MediaFileID)
+	return err
+}
+
 const listDownloadJobs = `-- name: ListDownloadJobs :many
-select id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at from download_job
+select id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at from download_job
 order by created_at desc
 `
 
@@ -392,6 +414,7 @@ func (q *Queries) ListDownloadJobs(ctx context.Context) ([]DownloadJob, error) {
 			&i.ImportSourcePath,
 			&i.ImportDestPath,
 			&i.ImportMethod,
+			&i.PrimaryMediaFileID,
 			&i.DownloaderStatus,
 			&i.Progress,
 			&i.AttemptCount,
@@ -411,7 +434,7 @@ func (q *Queries) ListDownloadJobs(ctx context.Context) ([]DownloadJob, error) {
 }
 
 const listDownloadJobsByMediaItem = `-- name: ListDownloadJobsByMediaItem :many
-select id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at from download_job
+select id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at from download_job
 where media_item_id = $1
 order by created_at desc
 `
@@ -446,6 +469,7 @@ func (q *Queries) ListDownloadJobsByMediaItem(ctx context.Context, mediaItemID p
 			&i.ImportSourcePath,
 			&i.ImportDestPath,
 			&i.ImportMethod,
+			&i.PrimaryMediaFileID,
 			&i.DownloaderStatus,
 			&i.Progress,
 			&i.AttemptCount,
@@ -465,7 +489,7 @@ func (q *Queries) ListDownloadJobsByMediaItem(ctx context.Context, mediaItemID p
 }
 
 const listDownloadJobsByTmdbMovieID = `-- name: ListDownloadJobsByTmdbMovieID :many
-select j.id, j.status, j.protocol, j.media_type, j.media_item_id, j.season_id, j.episode_id, j.indexer_id, j.guid, j.candidate_title, j.candidate_link, j.downloader_id, j.library_id, j.name_template_id, j.downloader_external_id, j.download_save_path, j.download_content_path, j.import_source_path, j.import_dest_path, j.import_method, j.downloader_status, j.progress, j.attempt_count, j.next_run_at, j.last_error, j.created_at, j.updated_at
+select j.id, j.status, j.protocol, j.media_type, j.media_item_id, j.season_id, j.episode_id, j.indexer_id, j.guid, j.candidate_title, j.candidate_link, j.downloader_id, j.library_id, j.name_template_id, j.downloader_external_id, j.download_save_path, j.download_content_path, j.import_source_path, j.import_dest_path, j.import_method, j.primary_media_file_id, j.downloader_status, j.progress, j.attempt_count, j.next_run_at, j.last_error, j.created_at, j.updated_at
 from download_job j
 join media_item mi on mi.id = j.media_item_id
 where mi.type = 'movie' and mi.tmdb_id = $1
@@ -502,6 +526,7 @@ func (q *Queries) ListDownloadJobsByTmdbMovieID(ctx context.Context, tmdbID *int
 			&i.ImportSourcePath,
 			&i.ImportDestPath,
 			&i.ImportMethod,
+			&i.PrimaryMediaFileID,
 			&i.DownloaderStatus,
 			&i.Progress,
 			&i.AttemptCount,
@@ -526,7 +551,7 @@ set status = 'failed',
     last_error = $1,
     updated_at = now()
 where id = $2
-returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
+returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
 `
 
 type MarkDownloadJobFailedParams struct {
@@ -558,6 +583,7 @@ func (q *Queries) MarkDownloadJobFailed(ctx context.Context, arg MarkDownloadJob
 		&i.ImportSourcePath,
 		&i.ImportDestPath,
 		&i.ImportMethod,
+		&i.PrimaryMediaFileID,
 		&i.DownloaderStatus,
 		&i.Progress,
 		&i.AttemptCount,
@@ -578,7 +604,7 @@ set status = $1,
     download_content_path = $5,
     updated_at = now()
 where id = $6
-returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
+returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
 `
 
 type SetDownloadJobDownloadSnapshotParams struct {
@@ -621,6 +647,7 @@ func (q *Queries) SetDownloadJobDownloadSnapshot(ctx context.Context, arg SetDow
 		&i.ImportSourcePath,
 		&i.ImportDestPath,
 		&i.ImportMethod,
+		&i.PrimaryMediaFileID,
 		&i.DownloaderStatus,
 		&i.Progress,
 		&i.AttemptCount,
@@ -638,7 +665,7 @@ set status = 'enqueued',
     downloader_external_id = $1,
     updated_at = now()
 where id = $2
-returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
+returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
 `
 
 type SetDownloadJobEnqueuedParams struct {
@@ -670,6 +697,7 @@ func (q *Queries) SetDownloadJobEnqueued(ctx context.Context, arg SetDownloadJob
 		&i.ImportSourcePath,
 		&i.ImportDestPath,
 		&i.ImportMethod,
+		&i.PrimaryMediaFileID,
 		&i.DownloaderStatus,
 		&i.Progress,
 		&i.AttemptCount,
@@ -687,16 +715,18 @@ set status = 'imported',
     import_source_path = $1,
     import_dest_path = $2,
     import_method = $3,
+    primary_media_file_id = $4,
     updated_at = now()
-where id = $4
-returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
+where id = $5
+returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
 `
 
 type SetDownloadJobImportedParams struct {
-	ImportSourcePath *string     `json:"import_source_path"`
-	ImportDestPath   *string     `json:"import_dest_path"`
-	ImportMethod     *string     `json:"import_method"`
-	ID               pgtype.UUID `json:"id"`
+	ImportSourcePath   *string     `json:"import_source_path"`
+	ImportDestPath     *string     `json:"import_dest_path"`
+	ImportMethod       *string     `json:"import_method"`
+	PrimaryMediaFileID pgtype.UUID `json:"primary_media_file_id"`
+	ID                 pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) SetDownloadJobImported(ctx context.Context, arg SetDownloadJobImportedParams) (DownloadJob, error) {
@@ -704,6 +734,7 @@ func (q *Queries) SetDownloadJobImported(ctx context.Context, arg SetDownloadJob
 		arg.ImportSourcePath,
 		arg.ImportDestPath,
 		arg.ImportMethod,
+		arg.PrimaryMediaFileID,
 		arg.ID,
 	)
 	var i DownloadJob
@@ -728,6 +759,7 @@ func (q *Queries) SetDownloadJobImported(ctx context.Context, arg SetDownloadJob
 		&i.ImportSourcePath,
 		&i.ImportDestPath,
 		&i.ImportMethod,
+		&i.PrimaryMediaFileID,
 		&i.DownloaderStatus,
 		&i.Progress,
 		&i.AttemptCount,
@@ -745,7 +777,7 @@ set status = 'importing',
     import_source_path = $1,
     updated_at = now()
 where id = $2
-returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
+returning id, status, protocol, media_type, media_item_id, season_id, episode_id, indexer_id, guid, candidate_title, candidate_link, downloader_id, library_id, name_template_id, downloader_external_id, download_save_path, download_content_path, import_source_path, import_dest_path, import_method, primary_media_file_id, downloader_status, progress, attempt_count, next_run_at, last_error, created_at, updated_at
 `
 
 type SetDownloadJobImportingParams struct {
@@ -777,6 +809,7 @@ func (q *Queries) SetDownloadJobImporting(ctx context.Context, arg SetDownloadJo
 		&i.ImportSourcePath,
 		&i.ImportDestPath,
 		&i.ImportMethod,
+		&i.PrimaryMediaFileID,
 		&i.DownloaderStatus,
 		&i.Progress,
 		&i.AttemptCount,
