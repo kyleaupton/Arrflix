@@ -11,20 +11,6 @@
 }
 
 :root {
-  --bg-dark: oklch(0.15 0 264);
-  --bg: oklch(0.225 0 264);
-  --bg-light: oklch(0.32 0 264);
-
-  --shadow-sm: var(--p-shadow-1);
-  --shadow-md: var(--p-shadow-2);
-  --shadow-lg: var(--p-shadow-3);
-
-  /* Layout tokens - can be customized via preset.ts */
-  --sidebar-width: 280px;
-  --header-height: 64px;
-  --layout-gap: 1rem;
-  --layout-padding: 1rem;
-  --layout-padding-mobile: 0.75rem;
 }
 
 html,
@@ -34,9 +20,9 @@ body,
 }
 
 body {
-  margin: 0;
-  background: var(--bg-dark);
-  color: var(--p-content-color);
+  /* margin: 0; */
+  @apply m-0 bg-black text-white;
+
   font-family:
     -apple-system,
     BlinkMacSystemFont,

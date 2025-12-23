@@ -84,4 +84,3 @@ export const navigationItems: NavigationItem[] = [
     ],
   },
 ]
-
