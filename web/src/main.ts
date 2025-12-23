@@ -1,28 +1,17 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import PrimeVue from 'primevue/config'
-import DialogService from 'primevue/dialogservice'
+import { VueQueryPlugin } from '@tanstack/vue-query'
+
 import App from '@/App.vue'
 import router from '@/router'
-import SnagglePreset from '@/theme/preset'
-import { VueQueryPlugin } from '@tanstack/vue-query'
-import 'primeicons/primeicons.css'
 import { useAuthStore } from '@/stores/auth'
 import { client } from '@/client/client.gen'
+import '@/main.css'
 
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
-app.use(PrimeVue, {
-  theme: {
-    preset: SnagglePreset,
-    options: {
-      darkModeSelector: '.dark',
-    },
-  },
-})
-app.use(DialogService)
 app.use(VueQueryPlugin, {
   enableDevtoolsV6Plugin: import.meta.env.DEV,
 })
