@@ -57,6 +57,12 @@ const SnagglePreset = definePreset(Aura, {
         borderColor: 'transparent',
       },
     },
+    panelmenu: {
+      root: {
+        background: 'transparent',
+        borderColor: 'transparent',
+      },
+    },
     datatable: {
       root: {
         // shadow: '{shadow.1}',
@@ -72,5 +78,15 @@ const SnagglePreset = definePreset(Aura, {
     },
   },
 })
+
+// Export CSS custom properties for layout dimensions
+// These can be used throughout the app for consistent spacing
+export const layoutTokens = {
+  sidebarWidth: '280px',
+  headerHeight: '64px',
+  layoutGap: '1rem',
+  layoutPadding: '1rem',
+  layoutPaddingMobile: '0.75rem',
+} as const
 
 export default SnagglePreset

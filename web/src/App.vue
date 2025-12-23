@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLayoutStore } from '@/stores/layout'
-import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/sidebar/AppSidebar.vue'
 import DynamicDialog from 'primevue/dynamicdialog'
 import '@/main.css'
@@ -24,14 +23,15 @@ onMounted(async () => {
   <!-- <Toast /> -->
 
   <div class="app-shell" :class="{ auth: route.meta.layout === 'auth' }">
-    <AppHeader
-      v-if="route.meta.layout !== 'auth'"
-      v-model:mobileSidebarVisible="mobileSidebarVisible"
-    />
+    <div v-if="route.meta.layout !== 'auth'" class="app-body">
+      <AppSidebar v-model:mobileVisible="mobileSidebarVisible" />
 
-    <AppSidebar v-if="route.meta.layout !== 'auth'" v-model:mobileVisible="mobileSidebarVisible" />
+      <main class="app-main">
+        <RouterView />
+      </main>
+    </div>
 
-    <main class="app-main">
+    <main v-else class="app-main auth">
       <RouterView />
     </main>
   </div>
@@ -47,25 +47,35 @@ onMounted(async () => {
   overflow: hidden;
 }
 
+.app-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  gap: var(--layout-gap, 1rem);
+  padding: var(--layout-padding, 1rem);
+}
+
 .app-main {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  padding: 0.75rem;
+  min-width: 0;
 }
 
-@media (min-width: 1024px) {
-  .app-main {
-    padding: 1rem 1.25rem 1.25rem 1rem;
-  }
+.app-main.auth {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .brand {
   font-weight: 600;
 }
 
-.auth .app-main {
-  max-width: 100%;
-  margin: 0 auto;
+@media (max-width: 1023px) {
+  .app-body {
+    padding: var(--layout-padding-mobile, 0.75rem);
+    padding-top: 0;
+  }
 }
 </style>

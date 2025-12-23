@@ -18,6 +18,13 @@
   --shadow-sm: var(--p-shadow-1);
   --shadow-md: var(--p-shadow-2);
   --shadow-lg: var(--p-shadow-3);
+
+  /* Layout tokens - can be customized via preset.ts */
+  --sidebar-width: 280px;
+  --header-height: 64px;
+  --layout-gap: 1rem;
+  --layout-padding: 1rem;
+  --layout-padding-mobile: 0.75rem;
 }
 
 html,

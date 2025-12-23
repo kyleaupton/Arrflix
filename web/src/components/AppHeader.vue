@@ -21,18 +21,6 @@
           @keyup.enter="emit('search', query)"
         />
       </IconField>
-
-      <nav v-if="!showMobileMenu" class="flex items-center gap-5">
-        <RouterLink
-          v-for="item in links"
-          :key="item.to"
-          :to="item.to"
-          class="text-decoration-none text-inherit px-2 py-1 rounded"
-          :class="{ 'bg-emphasis': route.path === item.to }"
-        >
-          {{ item.label }}
-        </RouterLink>
-      </nav>
     </div>
 
     <div class="flex items-center gap-2">
@@ -82,7 +70,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute, RouterLink, useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import IconField from 'primevue/iconfield'
 import InputText from 'primevue/inputtext'
@@ -112,12 +100,6 @@ const showMobileMenu = computed(() => {
   return windowWidth.value < 768 // Adjust breakpoint as needed
 })
 
-const links = ref([
-  { label: 'Home', to: '/' },
-  { label: 'Library', to: '/library' },
-  { label: 'Downloads', to: '/downloads' },
-  { label: 'Requests', to: '/requests' },
-])
 
 const items = ref([
   {
