@@ -22,6 +22,7 @@ import {
   createLibraryActions,
 } from '@/components/tables/configs/libraryTableConfig'
 import { useModal } from '@/composables/useModal'
+import Page from '@/components/Page.vue'
 
 // Data queries
 const { data: libraries, isLoading, refetch } = useQuery(getV1LibrariesOptions())
@@ -142,14 +143,10 @@ const libraryActions = createLibraryActions(
 </script>
 
 <template>
-  <div class="libraries-settings">
+  <Page title="Library Settings">
     <div class="card">
       <div class="p-6">
         <div class="flex items-center justify-between mb-6">
-          <div>
-            <h3 class="text-xl font-semibold mb-2">Libraries</h3>
-            <p class="text-muted-color">Configure media libraries for organizing your content.</p>
-          </div>
           <Button
             label="Add Library"
             :icon="PrimeIcons.PLUS"
@@ -223,11 +220,7 @@ const libraryActions = createLibraryActions(
         />
       </template>
     </Dialog>
-  </div>
+  </Page>
 </template>
 
-<style scoped>
-.libraries-settings {
-  max-width: 100%;
-}
-</style>
+<style scoped></style>

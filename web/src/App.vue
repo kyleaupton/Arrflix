@@ -41,15 +41,16 @@ onMounted(async () => {
 
 <style scoped>
 .app-shell {
-  min-height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden; /* prevent stray horizontal scroll from flex gaps or sticky elements */
+  overflow: hidden;
 }
 
 .app-main {
-  flex: 1 1 auto;
-  min-width: 0; /* allow children to shrink without forcing horizontal scroll */
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
   padding: 0.75rem;
 }
 

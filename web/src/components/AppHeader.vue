@@ -167,8 +167,6 @@ onUnmounted(() => {
 
 <style scoped>
 .app-header {
-  position: sticky;
-  top: 0;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -179,6 +177,7 @@ onUnmounted(() => {
   border-radius: 32px;
   margin: 1rem;
   margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 .menu-btn {

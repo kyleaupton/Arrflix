@@ -17,7 +17,9 @@ const currentTab = computed(() => {
   return 'general'
 })
 
-const navigateToTab = (tab: 'general' | 'libraries' | 'indexers' | 'name-templates' | 'downloaders' | 'policies') => {
+const navigateToTab = (
+  tab: 'general' | 'libraries' | 'indexers' | 'name-templates' | 'downloaders' | 'policies',
+) => {
   router.push(`/settings/${tab}`)
 }
 </script>
@@ -29,7 +31,7 @@ const navigateToTab = (tab: 'general' | 'libraries' | 'indexers' | 'name-templat
 
     <!-- Main Content Area -->
     <div class="settings-content">
-      <div class="settings-header">
+      <div v-if="false" class="settings-header">
         <h2 class="text-2xl font-semibold">Settings</h2>
 
         <!-- Mobile Navigation Tabs -->
@@ -84,7 +86,9 @@ const navigateToTab = (tab: 'general' | 'libraries' | 'indexers' | 'name-templat
 <style scoped>
 .settings-layout {
   display: flex;
-  min-height: calc(100vh - 2rem);
+  flex: 1;
+  /* min-height: 0; */
+  height: 100%;
   gap: 1rem;
 }
 
@@ -93,6 +97,7 @@ const navigateToTab = (tab: 'general' | 'libraries' | 'indexers' | 'name-templat
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-width: 0;
 }
 
 .settings-header {
