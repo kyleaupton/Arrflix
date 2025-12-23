@@ -44,43 +44,44 @@ export const navigationItems: NavigationItem[] = [
     key: 'settings',
     label: 'Settings',
     icon: PrimeIcons.COG,
-    items: [
-      {
-        key: 'settings-general',
-        label: 'General',
-        icon: PrimeIcons.COG,
-        route: '/settings/general',
-      },
-      {
-        key: 'settings-policies',
-        label: 'Policies',
-        icon: PrimeIcons.SLIDERS_H,
-        route: '/settings/policies',
-      },
-      {
-        key: 'settings-libraries',
-        label: 'Libraries',
-        icon: PrimeIcons.FOLDER,
-        route: '/settings/libraries',
-      },
-      {
-        key: 'settings-indexers',
-        label: 'Indexers',
-        icon: PrimeIcons.SEARCH,
-        route: '/settings/indexers',
-      },
-      {
-        key: 'settings-downloaders',
-        label: 'Downloaders',
-        icon: PrimeIcons.DOWNLOAD,
-        route: '/settings/downloaders',
-      },
-      {
-        key: 'settings-name-templates',
-        label: 'Name Templates',
-        icon: PrimeIcons.FILE_EDIT,
-        route: '/settings/name-templates',
-      },
-    ],
+    route: '/settings',
+    // items: [
+    //   {
+    //     key: 'settings-general',
+    //     label: 'General',
+    //     icon: PrimeIcons.COG,
+    //     route: '/settings/general',
+    //   },
+    //   {
+    //     key: 'settings-policies',
+    //     label: 'Policies',
+    //     icon: PrimeIcons.SLIDERS_H,
+    //     route: '/settings/policies',
+    //   },
+    //   {
+    //     key: 'settings-libraries',
+    //     label: 'Libraries',
+    //     icon: PrimeIcons.FOLDER,
+    //     route: '/settings/libraries',
+    //   },
+    //   {
+    //     key: 'settings-indexers',
+    //     label: 'Indexers',
+    //     icon: PrimeIcons.SEARCH,
+    //     route: '/settings/indexers',
+    //   },
+    //   {
+    //     key: 'settings-downloaders',
+    //     label: 'Downloaders',
+    //     icon: PrimeIcons.DOWNLOAD,
+    //     route: '/settings/downloaders',
+    //   },
+    //   {
+    //     key: 'settings-name-templates',
+    //     label: 'Name Templates',
+    //     icon: PrimeIcons.FILE_EDIT,
+    //     route: '/settings/name-templates',
+    //   },
+    // ],
   },
 ]
