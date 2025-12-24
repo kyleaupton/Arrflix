@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { inject } from 'vue'
-import Button from 'primevue/button'
+import { computed, inject } from 'vue'
+import { Button } from '@/components/ui/button'
+import BaseDialog from './BaseDialog.vue'
 
 interface Props {
+  title?: string
   message: string
   confirmLabel?: string
   cancelLabel?: string
   severity?: 'danger' | 'warning' | 'info' | 'success' | 'secondary'
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
+  title: 'Confirm',
   confirmLabel: 'Confirm',
   cancelLabel: 'Cancel',
   severity: 'danger',
@@ -24,14 +27,36 @@ const handleConfirm = () => {
 const handleCancel = () => {
   dialogRef.value.close({ confirmed: false })
 }
+
+// Map severity to button variant
+const confirmButtonVariant = computed(() => {
+  switch (props.severity) {
+    case 'danger':
+      return 'destructive'
+    case 'warning':
+      return 'default'
+    case 'success':
+      return 'default'
+    case 'info':
+      return 'default'
+    case 'secondary':
+      return 'secondary'
+    default:
+      return 'destructive'
+  }
+})
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <BaseDialog :title="title">
     <p class="text-base">{{ message }}</p>
-    <div class="flex justify-end gap-2 pt-2">
-      <Button :label="cancelLabel" severity="secondary" variant="outlined" @click="handleCancel" />
-      <Button :label="confirmLabel" :severity="severity" @click="handleConfirm" />
-    </div>
-  </div>
+    <template #footer>
+      <Button variant="outline" @click="handleCancel">
+        {{ cancelLabel }}
+      </Button>
+      <Button :variant="confirmButtonVariant" @click="handleConfirm">
+        {{ confirmLabel }}
+      </Button>
+    </template>
+  </BaseDialog>
 </template>

@@ -1,5 +1,6 @@
 import { ref } from 'vue'
-import { useDialog } from 'primevue/usedialog'
+import type { Component } from 'vue'
+import { useDialogStore } from '@/stores/dialog'
 import ConfirmDialog from '@/components/modals/ConfirmDialog.vue'
 import AlertDialog from '@/components/modals/AlertDialog.vue'
 
@@ -27,12 +28,17 @@ export interface PromptOptions {
   cancelLabel?: string
 }
 
+export interface DialogInstance {
+  close: (data?: unknown) => void
+  id: string
+}
+
 /**
- * Composable for managing modals using PrimeVue DynamicDialog
+ * Composable for managing modals using shadcn-vue Dialog
  */
 export function useModal() {
-  const dialog = useDialog()
-  const currentDialogInstance = ref<ReturnType<typeof dialog.open> | null>(null)
+  const dialogStore = useDialogStore()
+  const currentDialogInstance = ref<DialogInstance | null>(null)
 
   /**
    * Show a confirmation dialog
@@ -40,19 +46,24 @@ export function useModal() {
    */
   const confirm = (options: ConfirmOptions): Promise<boolean> => {
     return new Promise((resolve) => {
-      const instance = dialog.open(ConfirmDialog, {
+      const instance = dialogStore.openDialog(ConfirmDialog, {
         props: {
-          header: options.title || 'Confirm',
-          modal: true,
+          title: options.title || 'Confirm',
+          message: options.message,
+          confirmLabel: options.confirmLabel,
+          cancelLabel: options.cancelLabel,
+          severity: options.severity,
           style: { width: '450px' },
-          ...options,
         },
         onClose: (result) => {
           currentDialogInstance.value = null
           resolve((result?.data as { confirmed?: boolean })?.confirmed === true)
         },
       })
-      currentDialogInstance.value = instance
+      currentDialogInstance.value = {
+        close: (data?: unknown) => dialogStore.closeDialog(instance.id, data),
+        id: instance.id,
+      }
     })
   }
 
@@ -62,19 +73,23 @@ export function useModal() {
    */
   const alert = (options: AlertOptions): Promise<void> => {
     return new Promise((resolve) => {
-      const instance = dialog.open(AlertDialog, {
+      const instance = dialogStore.openDialog(AlertDialog, {
         props: {
-          header: options.title || 'Alert',
-          modal: true,
+          title: options.title || 'Alert',
+          message: options.message,
+          severity: options.severity,
+          okLabel: options.okLabel,
           style: { width: '450px' },
-          ...options,
         },
         onClose: () => {
           currentDialogInstance.value = null
           resolve()
         },
       })
-      currentDialogInstance.value = instance
+      currentDialogInstance.value = {
+        close: (data?: unknown) => dialogStore.closeDialog(instance.id, data),
+        id: instance.id,
+      }
     })
   }
 
@@ -94,20 +109,19 @@ export function useModal() {
 
   /**
    * Open a custom component as a modal
-   * @returns DynamicDialogInstance with a close method
+   * @returns DialogInstance with a close method
    */
   const open = <T = unknown>(
-    component: unknown,
+    component: Component,
     options?: {
       data?: unknown
       props?: Record<string, unknown>
       onClose?: (result?: { data?: T }) => void
     },
-  ) => {
-    const instance = dialog.open(component, {
+  ): DialogInstance => {
+    const instance = dialogStore.openDialog(component, {
       data: options?.data,
       props: {
-        modal: true,
         ...options?.props,
       },
       onClose: (result?: { data?: T }) => {
@@ -115,8 +129,12 @@ export function useModal() {
         options?.onClose?.(result)
       },
     })
-    currentDialogInstance.value = instance
-    return instance
+    const dialogInstance: DialogInstance = {
+      close: (data?: unknown) => dialogStore.closeDialog(instance.id, data),
+      id: instance.id,
+    }
+    currentDialogInstance.value = dialogInstance
+    return dialogInstance
   }
 
   /**

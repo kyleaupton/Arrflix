@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppLayoutHeader from '@/components/AppLayoutHeader.vue'
 import Login from '@/views/Login.vue'
+import DialogContainer from '@/components/DialogContainer.vue'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
 const authStore = useAuthStore()
@@ -18,6 +19,7 @@ onMounted(async () => {
 </script>
 
 <template>
+  <DialogContainer />
   <div v-if="isCheckingAuth" class="flex min-h-svh items-center justify-center">
     <div class="text-muted-foreground">Loading...</div>
   </div>

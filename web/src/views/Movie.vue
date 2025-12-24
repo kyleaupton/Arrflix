@@ -38,8 +38,11 @@ import { getV1MovieByIdOptions } from '@/client/@tanstack/vue-query.gen'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import MediaHero from '@/components/media/MediaHero.vue'
+import { useModal } from '@/composables/useModal'
+import DownloadCandidatesDialog from '@/components/download-candidates/DownloadCandidatesDialog.vue'
 
 const route = useRoute()
+const modal = useModal()
 
 const id = computed(() => {
   const castAttept = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)
@@ -77,19 +80,12 @@ const movieChips = computed(() => {
 })
 
 const searchForDownloadCandidates = () => {
-  // TODO: don't worry about modals for now
-  // modal.open(DownloadCandidatesModal, {
-  //   props: {
-  //     header: 'Download Candidates',
-  //     modal: true,
-  //     closable: true,
-  //     dismissableMask: true,
-  //     style: { width: '90vw', maxWidth: '1200px' },
-  //   },
-  //   data: {
-  //     movieId: id.value,
-  //   },
-  // })
+  modal.open(DownloadCandidatesDialog, {
+    props: {
+      class: 'max-w-[90vw] sm:max-w-[1200px]',
+      movieId: id.value,
+    },
+  })
 }
 </script>
 

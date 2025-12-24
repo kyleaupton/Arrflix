@@ -6,21 +6,23 @@
     </div>
 
     <div v-if="selectedCandidate" class="flex flex-col">
-      <Divider />
+      <Separator />
 
       <div class="flex justify-end gap-2">
-        <Button label="Cancel" severity="secondary" @click="handleCancel" />
-        <Button label="Enqueue" :loading="enqueueMutation.isPending.value" @click="handleEnqueue" />
+        <Button variant="secondary" @click="handleCancel"> Cancel </Button>
+        <Button :disabled="enqueueMutation.isPending.value" @click="handleEnqueue">
+          {{ enqueueMutation.isPending.value ? 'Enqueuing...' : 'Enqueue' }}
+        </Button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue'
+import { ref } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import Button from 'primevue/button'
-import Divider from 'primevue/divider'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import { postV1MovieByIdCandidateDownloadMutation } from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate } from '@/client/types.gen'
 import DownloadCandidateList from './DownloadCandidatesList.vue'
@@ -29,16 +31,13 @@ import { useModal } from '@/composables/useModal'
 
 const modal = useModal()
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const dialogRef = inject('dialogRef') as any
+const props = defineProps<{
+  movieId: number
+}>()
 
-const movieId = computed(() => {
-  const id = dialogRef.value?.data?.movieId
-  if (!id) {
-    throw new Error('Movie ID is required')
-  }
-  return id
-})
+const emit = defineEmits<{
+  (e: 'download-enqueued'): void
+}>()
 
 const selectedCandidate = ref<ModelDownloadCandidate | null>(null)
 
@@ -59,7 +58,7 @@ const enqueueMutation = useMutation({
       message: 'The download has been successfully enqueued.',
       severity: 'success',
     })
-    dialogRef.value?.close()
+    emit('download-enqueued')
   },
   onError: (error) => {
     modal.alert({
@@ -74,7 +73,7 @@ const handleEnqueue = () => {
   if (!selectedCandidate.value) return
 
   enqueueMutation.mutate({
-    path: { id: movieId.value },
+    path: { id: props.movieId },
     body: {
       indexerId: selectedCandidate.value.indexerId,
       guid: selectedCandidate.value.guid,
