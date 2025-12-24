@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed } from 'vue'
 import { getV1MovieByIdCandidatesOptions } from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate } from '@/client/types.gen'
 import DataTable from '@/components/tables/DataTable.vue'
@@ -33,21 +33,14 @@ const emit = defineEmits<{
   (e: 'enqueue', candidate: ModelDownloadCandidate): void
 }>()
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const dialogRef = inject('dialogRef') as any
-
-const movieId = computed(() => {
-  const id = dialogRef.value?.data?.movieId
-  if (!id) {
-    throw new Error('Movie ID is required')
-  }
-  return id
-})
+const props = defineProps<{
+  movieId: number
+}>()
 
 // Query options for fetching download candidates
 const queryOptions = computed(() =>
   getV1MovieByIdCandidatesOptions({
-    path: { id: movieId.value },
+    path: { id: props.movieId },
   }),
 )
 

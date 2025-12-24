@@ -1,4 +1,4 @@
-import { type TableColumn, type TableAction } from '../DataTable.vue'
+import { type TableColumn, type TableAction } from '../types'
 import { type HandlersLibrarySwagger } from '@/client/types.gen'
 import { PrimeIcons } from '@/icons'
 

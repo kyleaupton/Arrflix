@@ -20,10 +20,3 @@ const handleDownloadEnqueued = () => {
   emit('close')
 }
 </script>
-
-<style scoped>
-.download-candidates-modal {
-  min-height: 500px;
-  max-height: 80vh;
-}
-</style>

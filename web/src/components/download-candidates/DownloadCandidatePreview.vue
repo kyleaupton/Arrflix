@@ -1,25 +1,25 @@
 <template>
-  <div class="preview-container">
+  <div class="w-full max-h-[70vh] overflow-y-auto">
     <div v-if="isLoading" class="flex items-center justify-center p-8">
-      <i class="pi pi-spin pi-spinner text-2xl"></i>
-      <span class="ml-2">Loading preview...</span>
+      <Loader2 class="size-6 animate-spin text-muted-foreground" />
+      <span class="ml-2 text-muted-foreground">Loading preview...</span>
     </div>
 
-    <div v-else-if="error" class="p-4 bg-surface border border-red-500/30 rounded">
-      <div class="text-red-400 font-semibold mb-1">Error loading preview</div>
-      <div class="text-red-300 text-sm">{{ error }}</div>
+    <div v-else-if="error" class="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+      <div class="text-destructive font-semibold mb-1">Error loading preview</div>
+      <div class="text-destructive/80 text-sm">{{ error }}</div>
     </div>
 
-    <div v-else-if="trace" class="preview-content">
+    <div v-else-if="trace" class="space-y-4 p-2">
       <!-- Candidate Info -->
-      <Card class="mb-4">
-        <template #title>
-          <div class="flex items-center gap-2">
-            <i class="pi pi-file"></i>
+      <Card>
+        <CardHeader>
+          <CardTitle class="flex items-center gap-2">
+            <File class="size-4" />
             <span>{{ candidate.title }}</span>
-          </div>
-        </template>
-        <template #content>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div class="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span class="font-semibold">Size:</span>
@@ -38,68 +38,68 @@
               <span class="ml-2">{{ candidate.categories.join(', ') || 'None' }}</span>
             </div>
           </div>
-        </template>
+        </CardContent>
       </Card>
 
       <!-- Final Plan -->
-      <Card class="final-plan-card mb-4">
-        <template #title>
-          <div class="flex items-center gap-2">
-            <i class="pi pi-check-circle text-primary"></i>
+      <Card class="border-primary/30 bg-primary/5">
+        <CardHeader>
+          <CardTitle class="flex items-center gap-2">
+            <CheckCircle2 class="size-4 text-primary" />
             <span>Final Download Plan</span>
-          </div>
-        </template>
-        <template #content>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div class="space-y-3">
             <div class="flex items-center gap-3">
-              <i class="pi pi-download text-primary"></i>
+              <Download class="size-4 text-primary shrink-0" />
               <div>
-                <div class="text-sm text-muted-color">Downloader</div>
+                <div class="text-sm text-muted-foreground">Downloader</div>
                 <div class="font-semibold">
                   <DownloaderReference
                     v-if="trace.finalPlan.downloaderId"
                     :downloader-id="trace.finalPlan.downloaderId"
                   />
-                  <span v-else class="text-muted-color">Not set</span>
+                  <span v-else class="text-muted-foreground">Not set</span>
                 </div>
               </div>
             </div>
             <div class="flex items-center gap-3">
-              <i class="pi pi-folder text-primary"></i>
+              <Folder class="size-4 text-primary shrink-0" />
               <div>
-                <div class="text-sm text-muted-color">Library</div>
+                <div class="text-sm text-muted-foreground">Library</div>
                 <div class="font-semibold">
                   <LibraryReference
                     v-if="trace.finalPlan.libraryId"
                     :library-id="trace.finalPlan.libraryId"
                   />
-                  <span v-else class="text-muted-color">Not set</span>
+                  <span v-else class="text-muted-foreground">Not set</span>
                 </div>
               </div>
             </div>
             <div class="flex items-center gap-3">
-              <i class="pi pi-file-edit text-primary"></i>
+              <FilePenLine class="size-4 text-primary shrink-0" />
               <div>
-                <div class="text-sm text-muted-color">Name Template</div>
+                <div class="text-sm text-muted-foreground">Name Template</div>
                 <div class="font-semibold">
                   <NameTemplateReference
                     v-if="trace.finalPlan.nameTemplateId"
                     :name-template-id="trace.finalPlan.nameTemplateId"
                   />
-                  <span v-else class="text-muted-color">Not set</span>
+                  <span v-else class="text-muted-foreground">Not set</span>
                 </div>
               </div>
             </div>
           </div>
-        </template>
+        </CardContent>
       </Card>
 
-      <Divider />
+      <Separator />
 
       <!-- Policy Evaluation -->
       <div>
         <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
-          <i class="pi pi-list-check"></i>
+          <ListChecks class="size-5" />
           Policy Evaluation
         </h3>
 
@@ -108,34 +108,26 @@
             v-for="policy in trace.policies"
             :key="policy.policyId"
             :class="{
-              'policy-matched': policy.matched,
-              'policy-unmatched': !policy.matched,
+              'bg-green-500/10 border-green-500/30': policy.matched,
+              'bg-muted/50 border-border opacity-60': !policy.matched,
             }"
           >
-            <template #content>
+            <CardContent class="pt-6">
               <div class="flex items-start justify-between gap-4">
                 <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-2">
-                    <i
-                      :class="
-                        policy.matched
-                          ? 'pi pi-check-circle text-green-400'
-                          : 'pi pi-times-circle text-muted-color'
-                      "
-                      class="text-lg"
-                    />
+                  <div class="flex items-center gap-2 mb-2 flex-wrap">
+                    <CheckCircle2 v-if="policy.matched" class="size-5 text-green-500 shrink-0" />
+                    <XCircle v-else class="size-5 text-muted-foreground shrink-0" />
                     <span class="font-semibold">{{ policy.policyName }}</span>
-                    <Badge
-                      :value="`Priority: ${policy.priority}`"
-                      severity="secondary"
-                      size="small"
-                    />
-                    <Badge v-if="policy.matched" value="Matched" severity="success" size="small" />
+                    <Badge variant="secondary" class="text-xs">
+                      Priority: {{ policy.priority }}
+                    </Badge>
+                    <Badge v-if="policy.matched" variant="default" class="text-xs"> Matched </Badge>
                   </div>
 
-                  <div v-if="policy.ruleEvaluated" class="text-sm text-muted-color mb-2">
+                  <div v-if="policy.ruleEvaluated" class="text-sm text-muted-foreground mb-2">
                     <span class="font-medium">Rule:</span>
-                    <code class="ml-2 px-2 py-1 bg-surface rounded">
+                    <code class="ml-2 px-2 py-1 bg-muted rounded text-xs font-mono">
                       {{ policy.ruleEvaluated.leftOperand }}
                       {{ policy.ruleEvaluated.operator }}
                       {{ policy.ruleEvaluated.rightOperand }}
@@ -144,7 +136,7 @@
 
                   <div v-if="policy.matched && policy.actionsApplied.length > 0" class="mt-3">
                     <div class="text-sm font-medium mb-2">Actions Applied:</div>
-                    <ul class="list-disc list-inside space-y-1 text-sm text-content-color">
+                    <ul class="list-disc list-inside space-y-1 text-sm text-foreground">
                       <li v-for="action in policy.actionsApplied" :key="action.order">
                         <span class="font-medium">{{ formatActionType(action.type) }}:</span>
                         <span class="ml-1">{{ action.value }}</span>
@@ -153,14 +145,14 @@
                   </div>
 
                   <div v-if="policy.stoppedProcessing" class="mt-2">
-                    <Badge value="Processing Stopped" severity="warning" />
+                    <Badge variant="outline" class="text-xs">Processing Stopped</Badge>
                   </div>
                 </div>
               </div>
-            </template>
+            </CardContent>
           </Card>
 
-          <div v-if="trace.policies.length === 0" class="text-center py-8 text-muted-color">
+          <div v-if="trace.policies.length === 0" class="text-center py-8 text-muted-foreground">
             No policies evaluated
           </div>
         </div>
@@ -170,31 +162,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, watch, ref } from 'vue'
+import { computed, watch, ref } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import Card from 'primevue/card'
-import Badge from 'primevue/badge'
-import Divider from 'primevue/divider'
+import {
+  CheckCircle2,
+  Download,
+  File,
+  FilePenLine,
+  Folder,
+  ListChecks,
+  Loader2,
+  XCircle,
+} from 'lucide-vue-next'
 import { postV1MovieByIdCandidatePreviewMutation } from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate, type ModelEvaluationTrace } from '@/client/types.gen'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 import LibraryReference from '@/components/references/LibraryReference.vue'
 import DownloaderReference from '@/components/references/DownloaderReference.vue'
 import NameTemplateReference from '@/components/references/NameTemplateReference.vue'
 
 const props = defineProps<{
+  movieId: number
   candidate: ModelDownloadCandidate
 }>()
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const dialogRef = inject('dialogRef') as any
-
-const movieId = computed(() => {
-  const id = dialogRef.value?.data?.movieId
-  if (!id) {
-    throw new Error('Movie ID is required')
-  }
-  return id
-})
 
 // Local state for trace
 const trace = ref<ModelEvaluationTrace | undefined>(undefined)
@@ -223,7 +215,7 @@ watch(
       trace.value = undefined
       error.value = undefined
       previewMutation.mutate({
-        path: { id: movieId.value },
+        path: { id: props.movieId },
         body: {
           indexerId: props.candidate.indexerId,
           guid: props.candidate.guid,
@@ -256,45 +248,3 @@ const formatActionType = (type: string): string => {
   return actionMap[type] || type
 }
 </script>
-
-<style scoped>
-.preview-container {
-  width: 100%;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-.preview-content {
-  padding: 0.5rem;
-}
-
-.policy-matched {
-  background-color: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.policy-unmatched {
-  background-color: var(--p-surface-ground);
-  border: 1px solid var(--p-surface-border);
-  opacity: 0.6;
-}
-
-.final-plan-card {
-  border: 1px solid color-mix(in srgb, var(--p-primary-color) 30%, transparent);
-}
-
-code {
-  font-family: 'Courier New', monospace;
-  font-size: 0.875rem;
-}
-</style>
-
-<style>
-.final-plan-card .p-card-body {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--p-primary-color) 15%, var(--p-surface-ground)),
-    color-mix(in srgb, var(--p-primary-color) 8%, var(--p-surface-ground))
-  );
-}
-</style>

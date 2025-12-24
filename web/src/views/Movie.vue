@@ -82,7 +82,7 @@ const movieChips = computed(() => {
 const searchForDownloadCandidates = () => {
   modal.open(DownloadCandidatesDialog, {
     props: {
-      class: 'max-w-[90vw] sm:max-w-[1200px]',
+      class: 'max-w-[90vw] sm:max-w-4xl lg:max-w-6xl',
       movieId: id.value,
     },
   })

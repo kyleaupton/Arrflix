@@ -1,12 +1,16 @@
 <template>
   <div class="download-candidates-container flex flex-col h-full">
     <div class="flex-1 overflow-auto">
-      <DownloadCandidateList v-if="!selectedCandidate" @enqueue="handlePreview" />
-      <DownloadCandidatePreview v-else :candidate="selectedCandidate" />
+      <DownloadCandidateList
+        v-if="!selectedCandidate"
+        :movie-id="movieId"
+        @enqueue="handlePreview"
+      />
+      <DownloadCandidatePreview v-else :movie-id="movieId" :candidate="selectedCandidate" />
     </div>
 
     <div v-if="selectedCandidate" class="flex flex-col">
-      <Separator />
+      <Separator class="my-4" />
 
       <div class="flex justify-end gap-2">
         <Button variant="secondary" @click="handleCancel"> Cancel </Button>

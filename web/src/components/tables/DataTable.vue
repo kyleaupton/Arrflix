@@ -1,37 +1,84 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
-
 <script setup lang="ts" generic="T extends Record<string, any>">
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch, h, defineComponent, type PropType } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Menu, { type MenuMethods } from 'primevue/menu'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import InputText from 'primevue/inputtext'
-import { PrimeIcons } from '@/icons'
+import {
+  useVueTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type ColumnDef,
+  type SortingState,
+  type ColumnFiltersState,
+} from '@tanstack/vue-table'
+import { valueUpdater } from '@/components/ui/table/utils'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableEmpty,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import { MoreVertical, Search, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { cn } from '@/lib/utils'
+import type { TableColumn, TableAction } from './types'
 
-export interface TableColumn<T = any> {
-  key: keyof T | string
-  label: string
-  sortable?: boolean
-  filterable?: boolean
-  width?: string
-  align?: 'left' | 'center' | 'right'
-  render?: (value: any, row: T) => any
-}
+// Re-export types for convenience
+export type { TableColumn, TableAction }
 
-export interface TableAction<T = any> {
-  key: string
-  label: string
-  icon?: string
-  severity?: 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'danger'
-  variant?: 'text' | 'outlined' | 'filled'
-  disabled?: (row: T) => boolean
-  visible?: (row: T) => boolean
-  command: (row: T) => void
-}
+// Component to render table cells
+const RenderCell = defineComponent({
+  props: {
+    cell: {
+      type: Object as PropType<any>,
+      required: true,
+    },
+    row: {
+      type: Object as PropType<any>,
+      required: true,
+    },
+    table: {
+      type: Object as PropType<any>,
+      required: true,
+    },
+  },
+  setup(props) {
+    return () => {
+      const cellDef = props.cell.column.columnDef
+      if (typeof cellDef.cell === 'function') {
+        const result = (cellDef.cell as any)({
+          cell: props.cell,
+          column: props.cell.column,
+          row: props.row,
+          table: props.table,
+        })
+        // If it's a VNode, return it directly
+        if (result && typeof result === 'object' && 'type' in result) {
+          return result
+        }
+        // If it's HTML string, render it
+        if (typeof result === 'string' && result.includes('<')) {
+          return h('div', { innerHTML: result })
+        }
+        return result
+      }
+      return props.cell.getValue()
+    }
+  },
+})
 
 interface Props {
   data?: T[]
@@ -85,11 +132,10 @@ const emit = defineEmits<{
   'query-error': [error: Error]
 }>()
 
-const selectedRows = ref<T | T[] | null>(null)
+const selectedRows = ref<T[]>([])
 const globalFilter = ref('')
-
-// Menu refs for each row - using a Map to track menu instances by row ID
-const menuRefs = ref<Map<string | number, MenuMethods | null>>(new Map())
+const sorting = ref<SortingState>([])
+const columnFilters = ref<ColumnFiltersState>([])
 
 // Async loading state (legacy)
 const legacyAsyncData = ref<T[]>([])
@@ -103,7 +149,7 @@ const queryResult = props.queryOptions ? useQuery(props.queryOptions) : null
 // Priority: TanStack Query > asyncData > static data
 const tableData = computed(() => {
   if (props.queryOptions && queryResult?.data?.value) {
-    return queryResult.data.value
+    return Array.isArray(queryResult.data.value) ? queryResult.data.value : []
   }
   return props.asyncData ? legacyAsyncData.value : props.data || []
 })
@@ -122,87 +168,195 @@ const queryError = computed(() => {
   return asyncError.value
 })
 
-const filteredData = computed(() => {
-  const data = tableData.value
-
-  if (!props.searchable || !globalFilter.value) {
-    return data
-  }
-
-  const filter = globalFilter.value.toLowerCase()
-  return data.filter((row) => {
-    return props.columns.some((column) => {
-      const value = getNestedValue(row, column.key as string)
-      return String(value).toLowerCase().includes(filter)
-    })
-  })
-})
-
 const getNestedValue = (obj: any, path: string) => {
   return path.split('.').reduce((current, key) => current?.[key], obj)
 }
 
-const handleSelectionChange = (selection: T | T[] | null) => {
-  selectedRows.value = selection
-  emit('selectionChange', selection)
+const getRowId = (row: T): string => {
+  return (row as any).id?.toString() || JSON.stringify(row)
 }
 
-const renderCell = (column: TableColumn<T>, row: T) => {
-  const value = getNestedValue(row, column.key as string)
+// Convert TableColumn to TanStack Table ColumnDef
+const columnDefs = computed<ColumnDef<T>[]>(() => {
+  const cols: ColumnDef<T>[] = []
 
-  if (column.render) {
-    return column.render(value, row)
+  // Selection column
+  if (props.selectable && props.selectionMode === 'multiple') {
+    cols.push({
+      id: 'select',
+      header: ({ table }) =>
+        h(Checkbox, {
+          checked: table.getIsAllPageRowsSelected(),
+          onCheckedChange: (value: boolean) => table.toggleAllPageRowsSelected(!!value),
+          'aria-label': 'Select all',
+        }),
+      cell: ({ row }) =>
+        h(Checkbox, {
+          checked: row.getIsSelected(),
+          onCheckedChange: (value: boolean) => row.toggleSelected(!!value),
+          'aria-label': 'Select row',
+        }),
+      enableSorting: false,
+      enableHiding: false,
+    })
   }
 
-  return value
-}
-
-const isActionDisabled = (action: TableAction<T>, row: T) => {
-  return action.disabled ? action.disabled(row) : false
-}
-
-const isActionVisible = (action: TableAction<T>, row: T) => {
-  return action.visible ? action.visible(row) : true
-}
-
-// Get row ID for tracking
-const getRowId = (row: T): string | number => {
-  return (row as any).id || JSON.stringify(row)
-}
-
-// Convert TableAction to Menu item format
-const getMenuItems = (row: T) => {
-  if (!props.actions) return []
-
-  return props.actions
-    .filter((action) => isActionVisible(action, row))
-    .map((action) => ({
-      label: action.label,
-      icon: action.icon,
-      command: () => {
-        if (!isActionDisabled(action, row)) {
-          action.command(row)
+  // Data columns
+  props.columns.forEach((col) => {
+    cols.push({
+      id: col.key as string,
+      accessorKey: col.key as string,
+      header: col.label,
+      cell: ({ row }) => {
+        const value = getNestedValue(row.original, col.key as string)
+        if (col.render) {
+          const rendered = col.render(value, row.original)
+          // If render returns HTML string, render it as HTML
+          if (typeof rendered === 'string' && rendered.includes('<')) {
+            return h('div', { innerHTML: rendered })
+          }
+          return rendered
         }
+        return value
       },
-      disabled: isActionDisabled(action, row),
-      class: action.severity === 'danger' ? 'text-red-500' : '',
-    }))
-}
+      enableSorting: col.sortable ?? false,
+      enableColumnFilter: col.filterable ?? false,
+      size: col.width ? parseInt(col.width) : undefined,
+      meta: {
+        align: (col.align || 'left') as 'left' | 'center' | 'right',
+      },
+    })
+  })
 
-// Handle menu toggle
-const toggleMenu = (event: MouseEvent, row: T) => {
-  const rowId = getRowId(row)
-  const menu = menuRefs.value.get(rowId)
-  menu?.toggle(event)
-}
+  // Actions column
+  if (props.actions && props.actions.length > 0) {
+    cols.push({
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => {
+        const visibleActions = props.actions!.filter((action) =>
+          action.visible ? action.visible(row.original) : true,
+        )
+        if (visibleActions.length === 0) return null
 
-// Set menu ref for a row
-const setMenuRef = (row: T, el: MenuMethods | null) => {
-  const rowId = getRowId(row)
-  if (el) {
-    menuRefs.value.set(rowId, el)
+        return h(DropdownMenu, () => [
+          h(
+            DropdownMenuTrigger,
+            { asChild: true },
+            {
+              default: () =>
+                h(
+                  Button,
+                  { variant: 'ghost', class: 'h-8 w-8 p-0' },
+                  {
+                    default: () => [
+                      h('span', { class: 'sr-only' }, 'Open menu'),
+                      h(MoreVertical, { class: 'h-4 w-4' }),
+                    ],
+                  },
+                ),
+            },
+          ),
+          h(
+            DropdownMenuContent,
+            { align: 'end' },
+            {
+              default: () =>
+                visibleActions.map((action, idx) => {
+                  const disabled = action.disabled ? action.disabled(row.original) : false
+                  const isDestructive = action.severity === 'danger'
+                  return [
+                    idx > 0 ? h(DropdownMenuSeparator) : null,
+                    h(
+                      DropdownMenuItem,
+                      {
+                        disabled,
+                        variant: isDestructive ? 'destructive' : 'default',
+                        onClick: () => !disabled && action.command(row.original),
+                      },
+                      { default: () => action.label },
+                    ),
+                  ]
+                }),
+            },
+          ),
+        ])
+      },
+      enableSorting: false,
+      enableHiding: false,
+      size: 50,
+    })
   }
-}
+
+  return cols
+})
+
+// Initialize sorting from props
+watch(
+  () => [props.sortField, props.sortOrder],
+  () => {
+    if (props.sortField) {
+      sorting.value = [
+        {
+          id: props.sortField,
+          desc: props.sortOrder === -1,
+        },
+      ]
+    }
+  },
+  { immediate: true },
+)
+
+const table = useVueTable({
+  get data() {
+    return tableData.value
+  },
+  get columns() {
+    return columnDefs.value
+  },
+  getCoreRowModel: getCoreRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getPaginationRowModel: props.paginator ? getPaginationRowModel() : undefined,
+  onSortingChange: (updater) => valueUpdater(updater, sorting),
+  onColumnFiltersChange: (updater) => valueUpdater(updater, columnFilters),
+  onGlobalFilterChange: (updater) => valueUpdater(updater, globalFilter),
+  getRowId: (row) => getRowId(row),
+  enableRowSelection: props.selectable,
+  state: {
+    get sorting() {
+      return sorting.value
+    },
+    get columnFilters() {
+      return columnFilters.value
+    },
+    get globalFilter() {
+      return globalFilter.value
+    },
+  },
+  initialState: {
+    pagination: {
+      pageSize: props.rows,
+    },
+  },
+  manualPagination: false,
+  manualSorting: false,
+  manualFiltering: false,
+})
+
+// Handle selection changes
+watch(
+  () => table.getSelectedRowModel().rows,
+  (selectedRows) => {
+    const selection = selectedRows.map((row) => row.original)
+    if (props.selectionMode === 'single') {
+      emit('selectionChange', selection.length > 0 ? selection[0] : null)
+    } else {
+      emit('selectionChange', selection.length > 0 ? selection : null)
+    }
+  },
+  { deep: true },
+)
 
 // Async loading functions
 const loadAsyncData = async () => {
@@ -251,7 +405,7 @@ watch(
   () => queryResult?.data?.value,
   (newData) => {
     if (newData && props.queryOptions) {
-      emit('query-success', newData)
+      emit('query-success', Array.isArray(newData) ? newData : [])
     }
   },
 )
@@ -275,142 +429,162 @@ defineExpose({
   refetch: queryResult?.refetch,
   queryResult: queryResult,
   queryError: queryError.value,
+  table,
 })
 </script>
 
 <template>
-  <div class="data-table-container">
+  <div class="data-table-container space-y-4">
     <!-- Search Bar -->
-    <div v-if="searchable" class="mb-4">
-      <!-- <div class="p-input-icon-left w-full max-w-md">
-        <i :class="PrimeIcons.SEARCH" class="text-muted-color" />
-        <input
-          v-model="globalFilter"
-          type="text"
-          :placeholder="searchPlaceholder"
-          class="w-full p-inputtext p-component"
-        />
-      </div> -->
+    <div v-if="searchable" class="relative max-w-sm">
+      <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <Input v-model="globalFilter" :placeholder="searchPlaceholder" class="pl-8" />
+    </div>
 
-      <IconField class="search-field">
-        <InputIcon :class="PrimeIcons.SEARCH" />
-        <InputText
-          v-model="globalFilter"
-          class="w-full"
-          :placeholder="searchPlaceholder"
-          variant="filled"
-          size="small"
-        />
-      </IconField>
+    <!-- Loading State -->
+    <div v-if="isLoading" class="flex items-center justify-center py-8">
+      <div class="text-muted-foreground">Loading...</div>
     </div>
 
     <!-- Data Table -->
-    <DataTable
-      :value="filteredData"
-      :loading="isLoading"
-      :selection-mode="selectable ? selectionMode : undefined"
-      :selection="selectedRows"
-      :paginator="paginator"
-      :rows="rows"
-      :scrollable="scrollable"
-      :scroll-height="scrollHeight"
-      :virtual-scroller-options="virtualScrollerOptions"
-      :sort-field="sortField"
-      :sort-order="sortOrder"
-      :global-filter-fields="searchable ? columns.map((col) => col.key as string) : undefined"
-      data-key="id"
-      @selection-change="handleSelectionChange"
-      @row-select="emit('rowSelect', $event.data)"
-      @row-unselect="emit('rowUnselect', $event.data)"
+    <div v-else class="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
+            <TableHead
+              v-for="header in headerGroup.headers"
+              :key="header.id"
+              :class="
+                cn(
+                  (header.column.columnDef.meta as any)?.align === 'center' && 'text-center',
+                  (header.column.columnDef.meta as any)?.align === 'right' && 'text-right',
+                  header.column.id === 'actions' && 'w-[50px]',
+                )
+              "
+              :style="{
+                width: header.getSize() !== 150 ? `${header.getSize()}px` : undefined,
+              }"
+            >
+              <div
+                v-if="!header.isPlaceholder"
+                :class="
+                  cn(
+                    'flex items-center gap-2',
+                    header.column.getCanSort() && 'cursor-pointer select-none',
+                  )
+                "
+                @click="header.column.getToggleSortingHandler()?.($event)"
+              >
+                <span>
+                  {{
+                    typeof header.column.columnDef.header === 'function'
+                      ? (header.column.columnDef.header as any)({
+                          column: header.column,
+                          header,
+                          table,
+                        })
+                      : header.column.columnDef.header
+                  }}
+                </span>
+                <span v-if="header.column.getCanSort()" class="inline-flex items-center">
+                  {{
+                    {
+                      asc: '↑',
+                      desc: '↓',
+                    }[header.column.getIsSorted() as string] ?? '⇅'
+                  }}
+                </span>
+              </div>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-if="table.getRowModel().rows.length === 0" class="hover:bg-transparent">
+            <TableEmpty :colspan="table.getAllColumns().length">
+              <div class="text-center text-muted-foreground">
+                {{ queryError ? `Error: ${queryError}` : emptyMessage }}
+              </div>
+            </TableEmpty>
+          </TableRow>
+          <TableRow
+            v-for="row in table.getRowModel().rows"
+            :key="row.id"
+            :data-state="row.getIsSelected() && 'selected'"
+            :class="cn(selectable && 'cursor-pointer')"
+            @click="selectable && selectionMode === 'single' && row.toggleSelected()"
+          >
+            <TableCell
+              v-for="cell in row.getVisibleCells()"
+              :key="cell.id"
+              :class="
+                cn(
+                  (cell.column.columnDef.meta as any)?.align === 'center' && 'text-center',
+                  (cell.column.columnDef.meta as any)?.align === 'right' && 'text-right',
+                )
+              "
+            >
+              <RenderCell :cell="cell" :row="row" :table="table" />
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+
+    <!-- Pagination -->
+    <div
+      v-if="paginator && table.getPageCount() > 1"
+      class="flex items-center justify-between px-2"
     >
-      <!-- class="p-datatable-sm" -->
-      <!-- Selection Column -->
-      <Column v-if="selectable" selection-mode="multiple" header-style="width: 3rem" />
-
-      <!-- Data Columns -->
-      <Column
-        v-for="column in columns"
-        :key="column.key as string"
-        :field="column.key as string"
-        :header="column.label"
-        :sortable="column.sortable"
-        :style="{ width: column.width, textAlign: column.align || 'left' }"
-      >
-        <template #body="{ data }">
-          <span v-if="!column.render">{{ renderCell(column, data) }}</span>
-          <div v-else v-html="renderCell(column, data)"></div>
-        </template>
-      </Column>
-
-      <!-- Actions Column -->
-      <Column
-        v-if="actions && actions.length > 0"
-        header=""
-        header-style="width: 4rem"
-        body-style="text-align: center"
-      >
-        <template #body="{ data }">
-          <div class="flex justify-center">
-            <div class="relative">
-              <Button
-                icon="pi pi-ellipsis-v"
-                variant="text"
-                severity="secondary"
-                size="small"
-                rounded
-                @click="toggleMenu($event, data)"
-              />
-              <Menu
-                :ref="(el: any) => setMenuRef(data, el as MenuMethods)"
-                :model="getMenuItems(data)"
-                :popup="true"
-              />
-            </div>
-          </div>
-        </template>
-      </Column>
-
-      <!-- Empty State -->
-      <template #empty>
-        <div class="text-center py-8 text-muted-color">
-          {{ emptyMessage }}
+      <div class="flex-1 text-sm text-muted-foreground">
+        {{ table.getFilteredSelectedRowModel().rows.length }} of{' '}
+        {{ table.getFilteredRowModel().rows.length }} row(s) selected.
+      </div>
+      <div class="flex items-center space-x-6 lg:space-x-8">
+        <div class="flex items-center space-x-2">
+          <p class="text-sm font-medium">Rows per page</p>
+          <select
+            :value="table.getState().pagination.pageSize"
+            @change="table.setPageSize(Number(($event.target as HTMLSelectElement).value))"
+            class="h-8 w-[70px] rounded-md border border-input bg-background px-2 text-sm"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="30">30</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
         </div>
-      </template>
-    </DataTable>
+        <div class="flex w-[100px] items-center justify-center text-sm font-medium">
+          Page {{ table.getState().pagination.pageIndex + 1 }} of
+          {{ table.getPageCount() }}
+        </div>
+        <div class="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            class="h-8 w-8 p-0"
+            :disabled="!table.getCanPreviousPage()"
+            @click="table.previousPage()"
+          >
+            <span class="sr-only">Go to previous page</span>
+            <ChevronLeft class="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            class="h-8 w-8 p-0"
+            :disabled="!table.getCanNextPage()"
+            @click="table.nextPage()"
+          >
+            <span class="sr-only">Go to next page</span>
+            <ChevronRight class="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .data-table-container {
   width: 100%;
-}
-
-:deep(.p-datatable) {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-:deep(.p-datatable-header) {
-  background: var(--p-card-background);
-  border-bottom: 1px solid var(--p-border-color);
-}
-
-:deep(.p-datatable-tbody > tr) {
-  transition: background-color 0.2s ease;
-}
-
-:deep(.p-datatable-tbody > tr:hover) {
-  background: var(--p-emphasis-background);
-}
-
-:deep(.p-datatable-tbody > tr.p-highlight) {
-  background: var(--p-primary-color);
-  color: var(--p-primary-contrast-color);
-}
-</style>
-
-<style>
-.data-table-container .p-paginator {
-  border-radius: 0;
 }
 </style>
