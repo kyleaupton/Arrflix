@@ -1,7 +1,12 @@
 <template>
-  <Page>
-    <div v-if="isLoading">Loading...</div>
-    <div v-else-if="isError">Error</div>
+  <div>
+    <div v-if="isLoading" class="space-y-4">
+      <Skeleton class="h-96 w-full" />
+    </div>
+    <div v-else-if="isError" class="flex flex-col items-center justify-center py-12 text-center">
+      <p class="text-destructive">Failed to load series</p>
+      <p class="text-sm text-muted-foreground mt-2">Please try again later</p>
+    </div>
     <div v-else-if="data">
       <MediaHero
         :title="data.title"
@@ -14,7 +19,7 @@
 
       <!-- TODO: seasons list, cast, recommendations, similar -->
     </div>
-  </Page>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -22,7 +27,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { getV1SeriesByIdOptions } from '@/client/@tanstack/vue-query.gen'
-import Page from '@/components/Page.vue'
+import { Skeleton } from '@/components/ui/skeleton'
 import MediaHero from '@/components/media/MediaHero.vue'
 
 const route = useRoute()

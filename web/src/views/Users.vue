@@ -1,11 +1,11 @@
 <template>
-  <Page title="Users" subtitle="Manage application users">
-    <div class="rounded border border-surface bg-emphasis p-4">Users content</div>
-  </Page>
+  <div class="flex flex-col gap-6">
+    <div>
+      <h1 class="text-2xl font-semibold">Users</h1>
+      <p class="text-sm text-muted-foreground">Manage application users</p>
+    </div>
+    <div class="rounded-lg border bg-card p-4">Users content</div>
+  </div>
 </template>
-
-<script setup lang="ts">
-import Page from '@/components/Page.vue'
-</script>
 
 <style scoped></style>

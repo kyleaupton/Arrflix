@@ -7,7 +7,6 @@ import ToggleSwitch from 'primevue/toggleswitch'
 import Message from 'primevue/message'
 import Skeleton from 'primevue/skeleton'
 import { getV1Settings, patchV1Settings } from '@/client/sdk.gen'
-import Page from '@/components/Page.vue'
 
 type SettingsMap = Record<string, unknown>
 
@@ -59,7 +58,10 @@ const maxPerUser = computed({
 </script>
 
 <template>
-  <Page title="General Settings">
+  <div class="flex flex-col gap-6">
+    <div>
+      <h1 class="text-2xl font-semibold">General Settings</h1>
+    </div>
     <Message v-if="error" severity="error">{{ error }}</Message>
     <div v-if="isLoading" class="space-y-3">
       <Skeleton height="3rem" />
@@ -110,5 +112,5 @@ const maxPerUser = computed({
         </template>
       </Card>
     </div>
-  </Page>
+  </div>
 </template>

@@ -1,48 +1,43 @@
 <template>
-  <div class="rail">
-    <div class="rail-header flex items-center justify-between mb-2">
-      <h1 class="text-xl font-semibold">{{ rail.title }}</h1>
+  <div class="rail space-y-2">
+    <div class="rail-header flex items-center justify-between">
+      <h2 class="text-xl font-semibold">{{ rail.title }}</h2>
       <div class="flex items-center gap-2">
         <Button
-          :icon="PrimeIcons.CHEVRON_LEFT"
+          variant="outline"
+          size="icon-sm"
           :disabled="!canScrollPrev"
-          severity="secondary"
-          variant="outlined"
-          size="small"
-          rounded
           aria-label="Scroll left"
           @click="scrollByPage(-1)"
-        />
+        >
+          <ChevronLeft class="size-4" />
+        </Button>
         <Button
-          :icon="PrimeIcons.CHEVRON_RIGHT"
+          variant="outline"
+          size="icon-sm"
           :disabled="!canScrollNext"
-          severity="secondary"
-          variant="outlined"
-          size="small"
-          rounded
           aria-label="Scroll right"
           @click="scrollByPage(1)"
-        />
+        >
+          <ChevronRight class="size-4" />
+        </Button>
       </div>
     </div>
 
     <div class="rail-body relative">
       <div
         ref="scroller"
-        class="scroller flex gap-3 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth"
-        tabindex="0"
-        @wheel="onWheel"
-        @keydown="onKeydown"
+        class="scroller flex gap-3 overflow-x-auto overflow-y-hidden pb-4"
         @scroll="onScroll"
       >
         <template v-if="rail.type === 'movie'">
-          <div v-for="movie in rail.movies" :key="movie.tmdbId" class="snap-start flex-shrink-0">
+          <div v-for="movie in rail.movies" :key="movie.tmdbId" class="flex-shrink-0">
             <Poster :item="movie" :to="{ path: `/movie/${movie.tmdbId}` }" />
           </div>
         </template>
 
         <template v-else-if="rail.type === 'series'">
-          <div v-for="series in rail.series" :key="series.tmdbId" class="snap-start flex-shrink-0">
+          <div v-for="series in rail.series" :key="series.tmdbId" class="flex-shrink-0">
             <Poster :item="series" :to="{ path: `/series/${series.tmdbId}` }" />
           </div>
         </template>
@@ -52,9 +47,9 @@
 </template>
 
 <script setup lang="ts">
-import Button from 'primevue/button'
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { type ModelRail } from '@/client/types.gen'
-import { PrimeIcons } from '@/icons'
+import { Button } from '@/components/ui/button'
 import Poster from '@/components/poster/Poster.vue'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
@@ -79,30 +74,6 @@ const updateScrollState = () => {
 const onScroll = () => {
   if (rafId != null) cancelAnimationFrame(rafId)
   rafId = requestAnimationFrame(updateScrollState)
-}
-
-const onWheel = (e: WheelEvent) => {
-  // Only handle horizontal scroll if user is explicitly scrolling horizontally
-  // Don't interfere with vertical page scrolling
-  const el = scroller.value
-  if (!el) return
-
-  // Only prevent default and scroll horizontally if the user is actually scrolling horizontally
-  if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-    e.preventDefault()
-    el.scrollLeft += e.deltaX
-  }
-  // Let vertical scrolling pass through normally
-}
-
-const onKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'ArrowLeft') {
-    e.preventDefault()
-    scrollByPage(-1)
-  } else if (e.key === 'ArrowRight') {
-    e.preventDefault()
-    scrollByPage(1)
-  }
 }
 
 const scrollByPage = (direction: number) => {
@@ -130,10 +101,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.rail-body {
-  position: relative;
-}
-
 .scroller {
   scrollbar-width: none; /* Firefox */
 }

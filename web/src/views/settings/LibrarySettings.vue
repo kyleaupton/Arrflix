@@ -22,7 +22,6 @@ import {
   createLibraryActions,
 } from '@/components/tables/configs/libraryTableConfig'
 import { useModal } from '@/composables/useModal'
-import Page from '@/components/Page.vue'
 
 // Data queries
 const { data: libraries, isLoading, refetch } = useQuery(getV1LibrariesOptions())
@@ -143,7 +142,10 @@ const libraryActions = createLibraryActions(
 </script>
 
 <template>
-  <Page title="Library Settings">
+  <div class="flex flex-col gap-6">
+    <div>
+      <h1 class="text-2xl font-semibold">Library Settings</h1>
+    </div>
     <div class="card">
       <div class="p-6">
         <div class="flex items-center justify-between mb-6">
@@ -220,7 +222,7 @@ const libraryActions = createLibraryActions(
         />
       </template>
     </Dialog>
-  </Page>
+  </div>
 </template>
 
 <style scoped></style>

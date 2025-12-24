@@ -1,11 +1,14 @@
 <template>
-  <Page title="Downloads">
-    <div class="p-4 space-y-4">
+  <div class="flex flex-col gap-6">
+    <div>
+      <h1 class="text-2xl font-semibold">Downloads</h1>
+    </div>
+    <div class="space-y-4">
       <div class="flex items-center justify-between">
-        <div class="text-sm text-muted-color">
+        <div class="text-sm text-muted-foreground">
           <span class="font-semibold">Live:</span>
           <span class="ml-2">{{ events.status }}</span>
-          <span v-if="events.lastError" class="ml-3 text-red-400">{{ events.lastError }}</span>
+          <span v-if="events.lastError" class="ml-3 text-destructive">{{ events.lastError }}</span>
         </div>
         <div class="flex items-center gap-2">
           <Button label="Refresh" severity="secondary" @click="jobs.refresh()" />
@@ -16,7 +19,7 @@
         <Column header="Title">
           <template #body="{ data }">
             <div class="font-medium">{{ data.candidate_title }}</div>
-            <div class="text-xs text-muted-color">{{ data.protocol }} • {{ data.id }}</div>
+            <div class="text-xs text-muted-foreground">{{ data.protocol }} • {{ data.id }}</div>
           </template>
         </Column>
 
@@ -43,7 +46,7 @@
 
         <Column header="Error">
           <template #body="{ data }">
-            <span class="text-xs text-red-300">{{ data.last_error || '' }}</span>
+            <span class="text-xs text-destructive">{{ data.last_error || '' }}</span>
           </template>
         </Column>
 
@@ -64,11 +67,10 @@
         </Column>
       </DataTable>
     </div>
-  </Page>
+  </div>
 </template>
 
 <script setup lang="ts">
-import Page from '@/components/Page.vue'
 import { onMounted } from 'vue'
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'

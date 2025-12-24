@@ -1,7 +1,12 @@
 <template>
-  <Page>
-    <div v-if="isLoading">Loading...</div>
-    <div v-else-if="isError">Error</div>
+  <div>
+    <div v-if="isLoading" class="space-y-4">
+      <Skeleton class="h-96 w-full" />
+    </div>
+    <div v-else-if="isError" class="flex flex-col items-center justify-center py-12 text-center">
+      <p class="text-destructive">Failed to load movie</p>
+      <p class="text-sm text-muted-foreground mt-2">Please try again later</p>
+    </div>
     <div v-else-if="data">
       <MediaHero
         :title="data.title"
@@ -18,7 +23,7 @@
 
       <!-- TODO: sections like cast, recommendations, similar, etc. -->
     </div>
-  </Page>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -29,7 +34,7 @@ import Button from 'primevue/button'
 import { PrimeIcons } from '@/icons'
 import { getV1MovieByIdOptions } from '@/client/@tanstack/vue-query.gen'
 import { useModal } from '@/composables/useModal'
-import Page from '@/components/Page.vue'
+import { Skeleton } from '@/components/ui/skeleton'
 import MediaHero from '@/components/media/MediaHero.vue'
 import DownloadCandidatesModal from '@/components/download-candidates/DownloadCandidatesModal.vue'
 

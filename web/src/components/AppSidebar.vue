@@ -44,7 +44,7 @@ const data = {
   user: {
     name: user.value?.name ?? 'Unknown User',
     email: user.value?.email ?? 'Unknown Email',
-    avatar: '/avatars/shadcn.jpg',
+    initials: user.value?.name?.[0] ?? 'U',
   },
   teams: [
     {
@@ -159,10 +159,10 @@ const data = {
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem v-for="subItem in item.items" :key="subItem.title">
-                      <SidebarMenuSubButton as-child>
-                        <a :href="subItem.url">
+                      <SidebarMenuSubButton>
+                        <RouterLink :to="subItem.url">
                           <span>{{ subItem.title }}</span>
-                        </a>
+                        </RouterLink>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
