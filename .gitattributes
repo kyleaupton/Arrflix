@@ -1,5 +1,5 @@
 # Ignore machine generated files in language stats
 web/src/client/** linguist-generated
+web/src/components/ui/** linguist-generated
 backend/internal/http/docs/** linguist-generated
 backend/internal/db/sqlc/** linguist-generated
-backend/internal/prowlarr/** linguist-generated

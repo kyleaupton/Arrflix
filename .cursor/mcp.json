@@ -4,9 +4,9 @@
       "command": "npx",
       "args": ["-y", "tsx", "${workspaceFolder}/mcp/src/index.ts"]
     },
-    "primevue": {
+    "shadcn": {
       "command": "npx",
-      "args": ["-y", "@primevue/mcp"]
+      "args": ["shadcn-vue@latest", "mcp"]
     }
   }
 }

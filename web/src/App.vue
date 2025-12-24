@@ -1,30 +1,66 @@
 <script lang="ts">
+export const description = 'A sidebar that collapses to icons.'
 export const iframeHeight = '800px'
-export const description = 'A dashboard with sidebar, data table, and analytics cards.'
+export const containerClass = 'w-full h-full'
 </script>
 
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import AppSidebar from '@/components/AppSidebar.vue'
-import SiteHeader from '@/components/SiteHeader.vue'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import Login from '@/views/Login.vue'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+import { Separator } from '@/components/ui/separator'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+
+const authStore = useAuthStore()
+const isCheckingAuth = ref(true)
+
+onMounted(async () => {
+  // Rehydrate auth state if not already done
+  if (!authStore.token) {
+    await authStore.rehydrate()
+  }
+  isCheckingAuth.value = false
+})
 </script>
 
 <template>
-  <SidebarProvider
-    :style="{
-      '--sidebar-width': 'calc(var(--spacing) * 72)',
-      '--header-height': 'calc(var(--spacing) * 12)',
-    }"
-  >
-    <AppSidebar variant="inset" />
+  <div v-if="isCheckingAuth" class="flex min-h-svh items-center justify-center">
+    <div class="text-muted-foreground">Loading...</div>
+  </div>
+  <Login v-else-if="!authStore.isAuthenticated" />
+  <SidebarProvider v-else>
+    <AppSidebar />
     <SidebarInset>
-      <SiteHeader />
-      <div class="flex flex-1 flex-col">
-        <div class="@container/main flex flex-1 flex-col gap-2">
-          <div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <router-view />
-          </div>
+      <header
+        class="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+      >
+        <div class="flex items-center gap-2 px-4">
+          <SidebarTrigger class="-ml-1" />
+          <Separator orientation="vertical" class="mr-2 data-[orientation=vertical]:h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem class="hidden md:block">
+                <BreadcrumbLink href="#"> Building Your Application </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator class="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
+      </header>
+      <div class="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <router-view />
       </div>
     </SidebarInset>
   </SidebarProvider>

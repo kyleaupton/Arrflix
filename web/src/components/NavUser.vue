@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import {
-  IconCreditCard,
-  IconDotsVertical,
-  IconLogout,
-  IconNotification,
-  IconUserCircle,
-} from "@tabler/icons-vue"
+  BadgeCheck,
+  Bell,
+  ChevronsUpDown,
+  CreditCard,
+  LogOut,
+  Sparkles,
+} from "lucide-vue-next"
 
 import {
   Avatar,
@@ -28,14 +29,12 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
-interface User {
-  name: string
-  email: string
-  avatar: string
-}
-
-defineProps<{
-  user: User
+const props = defineProps<{
+  user: {
+    name: string
+    email: string
+    avatar: string
+  }
 }>()
 
 const { isMobile } = useSidebar()
@@ -50,7 +49,7 @@ const { isMobile } = useSidebar()
             size="lg"
             class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
           >
-            <Avatar class="h-8 w-8 rounded-lg grayscale">
+            <Avatar class="h-8 w-8 rounded-lg">
               <AvatarImage :src="user.avatar" :alt="user.name" />
               <AvatarFallback class="rounded-lg">
                 CN
@@ -58,18 +57,16 @@ const { isMobile } = useSidebar()
             </Avatar>
             <div class="grid flex-1 text-left text-sm leading-tight">
               <span class="truncate font-medium">{{ user.name }}</span>
-              <span class="text-muted-foreground truncate text-xs">
-                {{ user.email }}
-              </span>
+              <span class="truncate text-xs">{{ user.email }}</span>
             </div>
-            <IconDotsVertical class="ml-auto size-4" />
+            <ChevronsUpDown class="ml-auto size-4" />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent
-          class="w-(--reka-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+          class="w-[--reka-dropdown-menu-trigger-width] min-w-56 rounded-lg"
           :side="isMobile ? 'bottom' : 'right'"
-          :side-offset="4"
           align="end"
+          :side-offset="4"
         >
           <DropdownMenuLabel class="p-0 font-normal">
             <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
@@ -80,31 +77,36 @@ const { isMobile } = useSidebar()
                 </AvatarFallback>
               </Avatar>
               <div class="grid flex-1 text-left text-sm leading-tight">
-                <span class="truncate font-medium">{{ user.name }}</span>
-                <span class="text-muted-foreground truncate text-xs">
-                  {{ user.email }}
-                </span>
+                <span class="truncate font-semibold">{{ user.name }}</span>
+                <span class="truncate text-xs">{{ user.email }}</span>
               </div>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem>
-              <IconUserCircle />
+              <Sparkles />
+              Upgrade to Pro
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem>
+              <BadgeCheck />
               Account
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <IconCreditCard />
+              <CreditCard />
               Billing
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <IconNotification />
+              <Bell />
               Notifications
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
-            <IconLogout />
+            <LogOut />
             Log out
           </DropdownMenuItem>
         </DropdownMenuContent>

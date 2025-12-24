@@ -1,177 +1,189 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import type { SidebarProps } from '@/components/ui/sidebar'
+import { useAuthStore } from '@/stores/auth'
 import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-} from "@tabler/icons-vue"
-
-import NavDocuments from '@/components/NavDocuments.vue'
-import NavMain from '@/components/NavMain.vue'
-import NavSecondary from '@/components/NavSecondary.vue'
+  AudioWaveform,
+  Clock,
+  Bot,
+  Command,
+  GalleryVerticalEnd,
+  Settings2,
+  Home,
+  Download,
+  ChevronRight,
+} from 'lucide-vue-next'
 import NavUser from '@/components/NavUser.vue'
+
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarRail,
+  SidebarGroup,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar'
+
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+
+const props = withDefaults(defineProps<SidebarProps>(), {
+  collapsible: 'icon',
+})
+
+const authStore = useAuthStore()
+const { user } = storeToRefs(authStore)
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: user.value?.name ?? 'Unknown User',
+    email: user.value?.email ?? 'Unknown Email',
+    avatar: '/avatars/shadcn.jpg',
   },
+  teams: [
+    {
+      name: 'Acme Inc',
+      logo: GalleryVerticalEnd,
+      plan: 'Enterprise',
+    },
+    {
+      name: 'Acme Corp.',
+      logo: AudioWaveform,
+      plan: 'Startup',
+    },
+    {
+      name: 'Evil Corp.',
+      logo: Command,
+      plan: 'Free',
+    },
+  ],
   navMain: [
     {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
+      title: 'Home',
+      url: '/',
+      icon: Home,
       isActive: true,
-      url: "#",
+    },
+    {
+      title: 'Library',
+      url: '/library',
+      icon: Bot,
+    },
+    {
+      title: 'Downloads',
+      url: '/downloads',
+      icon: Download,
+    },
+    {
+      title: 'Requests',
+      url: '/requests',
+      icon: Clock,
+    },
+    {
+      title: 'Settings',
+      icon: Settings2,
+      url: '/settings',
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: 'General',
+          url: '/settings/general',
         },
         {
-          title: "Archived",
-          url: "#",
+          title: 'Team',
+          url: '/settings/team',
+        },
+        {
+          title: 'Billing',
+          url: '/settings/billing',
+        },
+        {
+          title: 'Limits',
+          url: '/settings/limits',
         },
       ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileDescription,
     },
   ],
 }
 </script>
 
 <template>
-  <Sidebar collapsible="offcanvas">
+  <Sidebar v-bind="props">
     <SidebarHeader>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton
-            as-child
-            class="data-[slot=sidebar-menu-button]:!p-1.5"
-          >
+          <SidebarMenuButton size="lg" as-child>
             <a href="#">
-              <IconInnerShadowTop class="!size-5" />
-              <span class="text-base font-semibold">Acme Inc.</span>
+              <div
+                class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
+              >
+                <Command class="size-4" />
+              </div>
+              <div class="grid flex-1 text-left text-sm leading-tight">
+                <span class="truncate font-medium">Snaggle</span>
+              </div>
             </a>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarHeader>
     <SidebarContent>
-      <NavMain :items="data.navMain" />
-      <NavDocuments :items="data.documents" />
-      <NavSecondary :items="data.navSecondary" class="mt-auto" />
+      <SidebarGroup>
+        <!-- <SidebarGroupLabel></SidebarGroupLabel> -->
+        <SidebarMenu>
+          <template v-for="item in data.navMain" :key="item.title">
+            <Collapsible
+              v-if="item.items"
+              :key="item.title"
+              as-child
+              :default-open="item.isActive"
+              class="group/collapsible"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger as-child>
+                  <SidebarMenuButton :tooltip="item.title" as-child>
+                    <RouterLink :to="item.url">
+                      <component :is="item.icon" v-if="item.icon" />
+                      <span>{{ item.title }}</span>
+                      <ChevronRight
+                        class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                      />
+                    </RouterLink>
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem v-for="subItem in item.items" :key="subItem.title">
+                      <SidebarMenuSubButton as-child>
+                        <a :href="subItem.url">
+                          <span>{{ subItem.title }}</span>
+                        </a>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+            <SidebarMenuItem v-else>
+              <SidebarMenuButton as-child>
+                <RouterLink :to="item.url">
+                  <component :is="item.icon" v-if="item.icon" />
+                  <span>{{ item.title }}</span>
+                </RouterLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </template>
+        </SidebarMenu>
+      </SidebarGroup>
     </SidebarContent>
     <SidebarFooter>
       <NavUser :user="data.user" />
     </SidebarFooter>
+    <SidebarRail />
   </Sidebar>
 </template>
