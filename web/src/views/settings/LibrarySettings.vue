@@ -1,17 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useQuery, useMutation } from '@tanstack/vue-query'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import ToggleSwitch from 'primevue/toggleswitch'
-import Select from 'primevue/select'
-import Message from 'primevue/message'
-import { PrimeIcons } from '@/icons'
+import { Plus } from 'lucide-vue-next'
 import {
   getV1LibrariesOptions,
-  postV1LibrariesMutation,
-  putV1LibrariesByIdMutation,
   deleteV1LibrariesByIdMutation,
   postV1LibrariesByIdScanMutation,
 } from '@/client/@tanstack/vue-query.gen'
@@ -22,87 +14,44 @@ import {
   createLibraryActions,
 } from '@/components/tables/configs/libraryTableConfig'
 import { useModal } from '@/composables/useModal'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import LibraryDialog from '@/components/modals/LibraryDialog.vue'
 
 // Data queries
 const { data: libraries, isLoading, refetch } = useQuery(getV1LibrariesOptions())
 const modal = useModal()
 
 // Mutations
-const createLibraryMutation = useMutation(postV1LibrariesMutation())
-const updateLibraryMutation = useMutation(putV1LibrariesByIdMutation())
 const deleteLibraryMutation = useMutation(deleteV1LibrariesByIdMutation())
 const scanLibraryMutation = useMutation(postV1LibrariesByIdScanMutation())
 
-// Modal state
-const showLibraryModal = ref(false)
-const editingLibrary = ref<HandlersLibrarySwagger | null>(null)
+// State
 const libraryError = ref<string | null>(null)
 const scanningId = ref<string | null>(null)
 
-// Library form
-const libraryForm = ref({
-  name: '',
-  type: 'movie' as 'movie' | 'series',
-  root_path: '',
-  enabled: true,
-  default: false,
-})
-
 // Handlers
 const handleAddLibrary = () => {
-  editingLibrary.value = null
-  libraryForm.value = { name: '', type: 'movie', root_path: '', enabled: true, default: false }
-  libraryError.value = null
-  showLibraryModal.value = true
+  modal.open(LibraryDialog, {
+    props: {
+      library: null,
+    },
+    onClose: () => {
+      refetch()
+    },
+  })
 }
 
 const handleEditLibrary = (library: HandlersLibrarySwagger) => {
-  editingLibrary.value = library
-  libraryForm.value = {
-    name: library.name || '',
-    type: (library.type as 'movie' | 'series') || 'movie',
-    root_path: library.root_path || '',
-    enabled: library.enabled ?? true,
-    default: library.default || false,
-  }
-  libraryError.value = null
-  showLibraryModal.value = true
-}
-
-const handleSaveLibrary = async () => {
-  if (!libraryForm.value.name || !libraryForm.value.root_path) {
-    libraryError.value = 'Name and root path are required'
-    return
-  }
-
-  try {
-    if (editingLibrary.value?.id) {
-      await updateLibraryMutation.mutateAsync({
-        path: { id: editingLibrary.value.id },
-        body: {
-          name: libraryForm.value.name,
-          type: libraryForm.value.type,
-          root_path: libraryForm.value.root_path,
-          enabled: libraryForm.value.enabled,
-          default: libraryForm.value.default,
-        },
-      })
-    } else {
-      await createLibraryMutation.mutateAsync({
-        body: {
-          name: libraryForm.value.name,
-          type: libraryForm.value.type,
-          root_path: libraryForm.value.root_path,
-          enabled: libraryForm.value.enabled,
-          default: libraryForm.value.default,
-        },
-      })
-    }
-    showLibraryModal.value = false
-    refetch()
-  } catch (err: any) {
-    libraryError.value = err.message || 'Failed to save library'
-  }
+  modal.open(LibraryDialog, {
+    props: {
+      library,
+    },
+    onClose: () => {
+      refetch()
+    },
+  })
 }
 
 const handleDeleteLibrary = async (library: HandlersLibrarySwagger) => {
@@ -116,8 +65,8 @@ const handleDeleteLibrary = async (library: HandlersLibrarySwagger) => {
   try {
     await deleteLibraryMutation.mutateAsync({ path: { id: library.id } })
     refetch()
-  } catch (err: any) {
-    libraryError.value = err.message || 'Failed to delete library'
+  } catch (err) {
+    libraryError.value = err instanceof Error ? err.message : 'Failed to delete library'
   }
 }
 
@@ -127,8 +76,8 @@ const handleScanLibrary = async (library: HandlersLibrarySwagger) => {
   try {
     await scanLibraryMutation.mutateAsync({ path: { id: library.id } })
     libraryError.value = null
-  } catch (err: any) {
-    libraryError.value = err.message || 'Failed to scan library'
+  } catch (err) {
+    libraryError.value = err instanceof Error ? err.message : 'Failed to scan library'
   } finally {
     scanningId.value = null
   }
@@ -143,26 +92,35 @@ const libraryActions = createLibraryActions(
 
 <template>
   <div class="flex flex-col gap-6">
-    <div>
-      <h1 class="text-2xl font-semibold">Library Settings</h1>
-    </div>
-    <div class="card">
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-6">
-          <Button
-            label="Add Library"
-            :icon="PrimeIcons.PLUS"
-            severity="primary"
-            raised
-            @click="handleAddLibrary"
-          />
+    <Card>
+      <CardHeader>
+        <div class="flex items-center justify-between">
+          <div>
+            <CardTitle class="text-xl font-semibold mb-2">Library Settings</CardTitle>
+            <p class="text-sm text-muted-foreground">
+              Configure libraries to organize your media content.
+            </p>
+          </div>
+          <Button @click="handleAddLibrary">
+            <Plus class="mr-2 size-4" />
+            Add Library
+          </Button>
         </div>
-
-        <Message v-if="libraryError" severity="error" @close="libraryError = null">{{
-          libraryError
-        }}</Message>
-
+      </CardHeader>
+      <CardContent>
+        <div
+          v-if="libraryError"
+          class="p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive mb-4"
+        >
+          {{ libraryError }}
+        </div>
+        <div v-if="isLoading" class="space-y-3">
+          <Skeleton class="h-12 w-full" />
+          <Skeleton class="h-12 w-full" />
+          <Skeleton class="h-12 w-full" />
+        </div>
         <DataTable
+          v-else
           :data="libraries || []"
           :columns="libraryColumns"
           :actions="libraryActions"
@@ -173,56 +131,7 @@ const libraryActions = createLibraryActions(
           paginator
           :rows="10"
         />
-      </div>
-    </div>
-
-    <!-- Library Modal -->
-    <Dialog
-      v-model:visible="showLibraryModal"
-      :header="editingLibrary ? 'Edit Library' : 'Add Library'"
-      :modal="true"
-      :style="{ width: '600px' }"
-    >
-      <div class="flex flex-col gap-4">
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Name</label>
-          <InputText v-model="libraryForm.name" />
-        </div>
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Type</label>
-          <Select
-            v-model="libraryForm.type"
-            :options="[
-              { label: 'Movies', value: 'movie' },
-              { label: 'Series', value: 'series' },
-            ]"
-            optionLabel="label"
-            optionValue="value"
-          />
-        </div>
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium">Root Path</label>
-          <InputText v-model="libraryForm.root_path" placeholder="/mnt/media/Movies" />
-        </div>
-        <div class="flex items-center justify-between">
-          <label class="text-sm font-medium">Enabled</label>
-          <ToggleSwitch v-model="libraryForm.enabled" />
-        </div>
-        <div class="flex items-center justify-between">
-          <label class="text-sm font-medium">Default</label>
-          <ToggleSwitch v-model="libraryForm.default" />
-        </div>
-      </div>
-      <template #footer>
-        <Button label="Cancel" severity="secondary" @click="showLibraryModal = false" />
-        <Button
-          label="Save"
-          :loading="createLibraryMutation.isPending.value || updateLibraryMutation.isPending.value"
-          @click="handleSaveLibrary"
-        />
-      </template>
-    </Dialog>
+      </CardContent>
+    </Card>
   </div>
 </template>
-
-<style scoped></style>

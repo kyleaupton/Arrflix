@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useQuery, useMutation } from '@tanstack/vue-query'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
-import { PrimeIcons } from '@/icons'
+import { Plus } from 'lucide-vue-next'
 import {
   getV1DownloadersOptions,
   deleteV1DownloadersByIdMutation,
@@ -16,6 +14,9 @@ import {
   createDownloaderActions,
 } from '@/components/tables/configs/downloaderTableConfig'
 import { useModal } from '@/composables/useModal'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import DownloaderUpsertDialog from './DownloaderUpsertDialog.vue'
 
 // Data queries
@@ -34,9 +35,8 @@ const testingId = ref<string | null>(null)
 const handleAddDownloader = () => {
   modal.open(DownloaderUpsertDialog, {
     props: {
-      header: 'Add Downloader',
-      modal: true,
-      style: { width: '600px' },
+      class: 'max-w-[90vw] sm:max-w-lg lg:max-w-2xl',
+      downloader: null,
     },
     onClose: (result) => {
       const data = result?.data as { saved?: boolean } | undefined
@@ -50,11 +50,7 @@ const handleAddDownloader = () => {
 const handleEditDownloader = (downloader: DbgenDownloader) => {
   modal.open(DownloaderUpsertDialog, {
     props: {
-      header: 'Edit Downloader',
-      modal: true,
-      style: { width: '600px' },
-    },
-    data: {
+      class: 'max-w-[90vw] sm:max-w-lg lg:max-w-2xl',
       downloader,
     },
     onClose: (result) => {
@@ -77,7 +73,7 @@ const handleDeleteDownloader = async (downloader: DbgenDownloader) => {
   try {
     await deleteDownloaderMutation.mutateAsync({ path: { id: downloader.id } })
     refetch()
-  } catch (err: unknown) {
+  } catch (err) {
     const error = err as { message?: string }
     downloaderError.value = error.message || 'Failed to delete downloader'
   }
@@ -99,7 +95,7 @@ const handleTestDownloader = async (downloader: DbgenDownloader) => {
     } else {
       downloaderError.value = result.error || 'Connection test failed'
     }
-  } catch (err: unknown) {
+  } catch (err) {
     const error = err as { message?: string }
     downloaderError.value = error.message || 'Connection test failed'
   } finally {
@@ -115,29 +111,36 @@ const downloaderActions = createDownloaderActions(
 </script>
 
 <template>
-  <div class="downloaders-settings">
-    <div class="card">
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-6">
+  <div class="flex flex-col gap-6">
+    <Card>
+      <CardHeader>
+        <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-xl font-semibold mb-2">Downloaders</h3>
-            <p class="text-muted-color">
+            <CardTitle class="text-xl font-semibold mb-2">Downloaders</CardTitle>
+            <p class="text-sm text-muted-foreground">
               Configure download clients for managing torrents and usenet downloads.
             </p>
           </div>
-          <Button
-            label="Add Downloader"
-            :icon="PrimeIcons.PLUS"
-            severity="primary"
-            @click="handleAddDownloader"
-          />
+          <Button @click="handleAddDownloader">
+            <Plus class="mr-2 size-4" />
+            Add Downloader
+          </Button>
         </div>
-
-        <Message v-if="downloaderError" severity="error" @close="downloaderError = null">{{
-          downloaderError
-        }}</Message>
-
+      </CardHeader>
+      <CardContent>
+        <div
+          v-if="downloaderError"
+          class="p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive mb-4"
+        >
+          {{ downloaderError }}
+        </div>
+        <div v-if="isLoading" class="space-y-3">
+          <Skeleton class="h-12 w-full" />
+          <Skeleton class="h-12 w-full" />
+          <Skeleton class="h-12 w-full" />
+        </div>
         <DataTable
+          v-else
           :data="downloaders || []"
           :columns="downloaderColumns"
           :actions="downloaderActions"
@@ -148,13 +151,7 @@ const downloaderActions = createDownloaderActions(
           paginator
           :rows="10"
         />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   </div>
 </template>
-
-<style scoped>
-.downloaders-settings {
-  max-width: 100%;
-}
-</style>

@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import Button from 'primevue/button'
+import { Plus } from 'lucide-vue-next'
 import { getV1IndexersConfiguredOptions } from '@/client/@tanstack/vue-query.gen'
 import { type ModelIndexerDefinition } from '@/client/types.gen'
-import { PrimeIcons } from '@/icons'
 import {
   indexerColumns,
   createIndexerActions,
@@ -11,6 +10,9 @@ import {
 import DataTable from '@/components/tables/DataTable.vue'
 import AddIndexerModal from '@/components/modals/AddIndexerModal.vue'
 import { useModal } from '@/composables/useModal'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const { data: indexers, isLoading, error, refetch } = useQuery(getV1IndexersConfiguredOptions())
 const modal = useModal()
@@ -33,14 +35,10 @@ const handleDelete = (indexer: ModelIndexerDefinition) => {
 const handleAddIndexer = () => {
   modal.open(AddIndexerModal, {
     props: {
-      header: 'Add New Indexer test',
-      modal: true,
-      closable: true,
-      dismissableMask: true,
-      style: { width: '90vw', maxWidth: '1024px' },
+      class: 'max-w-[90vw] sm:max-w-4xl lg:max-w-6xl',
     },
     onClose: (result) => {
-      if (result?.data?.indexerAdded) {
+      if ((result?.data as { indexerAdded?: boolean })?.indexerAdded) {
         refetch()
       }
     },
@@ -51,24 +49,31 @@ const indexerActions = createIndexerActions(handleEdit, handleToggle, handleDele
 </script>
 
 <template>
-  <div class="indexers-settings">
-    <div class="card">
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-6">
+  <div class="flex flex-col gap-6">
+    <Card>
+      <CardHeader>
+        <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-xl font-semibold mb-2">Indexers</h3>
-            <p class="text-muted-color">Configure your media indexers and search providers.</p>
+            <CardTitle class="text-xl font-semibold mb-2">Indexers</CardTitle>
+            <p class="text-sm text-muted-foreground">
+              Configure your media indexers and search providers.
+            </p>
           </div>
-          <Button
-            label="Add Indexer"
-            :icon="PrimeIcons.PLUS"
-            severity="primary"
-            @click="handleAddIndexer"
-          />
+          <Button @click="handleAddIndexer">
+            <Plus class="mr-2 size-4" />
+            Add Indexer
+          </Button>
         </div>
-
+      </CardHeader>
+      <CardContent>
+        <div v-if="isLoading" class="space-y-3">
+          <Skeleton class="h-12 w-full" />
+          <Skeleton class="h-12 w-full" />
+          <Skeleton class="h-12 w-full" />
+        </div>
         <DataTable
-          :data="indexers || []"
+          v-else
+          :data="(indexers || []) as unknown as ModelIndexerDefinition[]"
           :columns="indexerColumns"
           :actions="indexerActions"
           :loading="isLoading"
@@ -78,13 +83,7 @@ const indexerActions = createIndexerActions(handleEdit, handleToggle, handleDele
           paginator
           :rows="10"
         />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   </div>
 </template>
-
-<style scoped>
-.indexers-settings {
-  max-width: 100%;
-}
-</style>

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, inject } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import Button from 'primevue/button'
-import Steps from 'primevue/steps'
-import { PrimeIcons } from '@/icons'
+import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-vue-next'
 import { type ModelIndexerDefinition } from '@/client/types.gen'
 import { postV1IndexerMutation } from '@/client/@tanstack/vue-query.gen'
+import BaseDialog from './BaseDialog.vue'
+import { Button } from '@/components/ui/button'
 import SelectIndexerTypeStep from './steps/SelectIndexerTypeStep.vue'
 import ConfigurationStep from './steps/ConfigurationStep.vue'
 import ReviewStep from './steps/ReviewStep.vue'
@@ -81,10 +81,44 @@ const closeModal = () => {
 </script>
 
 <template>
-  <div class="add-indexer-modal overflow-hidden h-full">
+  <BaseDialog title="Add New Indexer">
     <!-- Progress Steps -->
     <div class="mb-6">
-      <Steps :model="steps" :active-index="currentStep" />
+      <div class="flex items-center justify-between">
+        <div v-for="(step, index) in steps" :key="index" class="flex items-center flex-1">
+          <div class="flex items-center flex-1">
+            <!-- Step Circle -->
+            <div
+              class="flex items-center justify-center size-8 rounded-full border-2 transition-colors"
+              :class="
+                index < currentStep
+                  ? 'bg-primary border-primary text-primary-foreground'
+                  : index === currentStep
+                    ? 'bg-primary border-primary text-primary-foreground'
+                    : 'bg-background border-muted-foreground text-muted-foreground'
+              "
+            >
+              <span v-if="index < currentStep" class="text-sm font-semibold">✓</span>
+              <span v-else class="text-sm font-semibold">{{ index + 1 }}</span>
+            </div>
+            <!-- Step Label -->
+            <div class="ml-3 flex-1">
+              <div
+                class="text-sm font-medium"
+                :class="index <= currentStep ? 'text-foreground' : 'text-muted-foreground'"
+              >
+                {{ step.label }}
+              </div>
+            </div>
+          </div>
+          <!-- Connector Line -->
+          <div
+            v-if="index < steps.length - 1"
+            class="flex-1 h-0.5 mx-4 transition-colors"
+            :class="index < currentStep ? 'bg-primary' : 'bg-muted'"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- Step Content -->
@@ -103,42 +137,35 @@ const closeModal = () => {
         <ConfigurationStep v-model="saveData" :selected-indexer="selectedIndexerType" />
       </div>
 
-      <!-- Step 4: Review -->
-      <div v-if="currentStep === 3" class="step-4">
+      <!-- Step 3: Review -->
+      <div v-if="currentStep === 2" class="step-3">
         <ReviewStep :selected-indexer="selectedIndexerType" :save-data="saveData" />
       </div>
     </div>
 
-    <!-- Footer Actions -->
-    <div class="flex justify-between items-center pt-6">
-      <Button
-        :label="isFirstStep ? 'Cancel' : 'Previous'"
-        :icon="isFirstStep ? PrimeIcons.TIMES : PrimeIcons.ANGLE_LEFT"
-        severity="secondary"
-        variant="outlined"
-        @click="isFirstStep ? closeModal() : prevStep()"
-      />
+    <template #footer>
+      <div class="flex justify-between items-center w-full">
+        <Button variant="outline" @click="isFirstStep ? closeModal() : prevStep()">
+          <X v-if="isFirstStep" class="mr-2 size-4" />
+          <ChevronLeft v-else class="mr-2 size-4" />
+          {{ isFirstStep ? 'Cancel' : 'Previous' }}
+        </Button>
 
-      <div class="flex gap-2">
-        <Button
-          v-if="!isLastStep"
-          label="Next"
-          :icon="PrimeIcons.ANGLE_RIGHT"
-          icon-pos="right"
-          :disabled="!canProceed"
-          @click="nextStep"
-        />
-        <Button
-          v-else
-          label="Create Indexer"
-          :icon="PrimeIcons.PLUS"
-          :loading="createIndexerMutation.isPending.value"
-          :disabled="!canProceed"
-          @click="createIndexer"
-        />
+        <div class="flex gap-2">
+          <Button v-if="!isLastStep" :disabled="!canProceed" @click="nextStep">
+            Next
+            <ChevronRight class="ml-2 size-4" />
+          </Button>
+          <Button
+            v-else
+            :disabled="!canProceed || createIndexerMutation.isPending.value"
+            @click="createIndexer"
+          >
+            <Plus class="mr-2 size-4" />
+            Create Indexer
+          </Button>
+        </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </BaseDialog>
 </template>
-
-<style scoped></style>

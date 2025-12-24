@@ -1,24 +1,35 @@
 <script setup lang="ts">
-import { ref, inject, computed } from 'vue'
+import { ref, inject, computed, watch } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import ToggleSwitch from 'primevue/toggleswitch'
-import Select from 'primevue/select'
-import Password from 'primevue/password'
-import { PrimeIcons } from '@/icons'
+import { Check, Eye, EyeOff } from 'lucide-vue-next'
 import {
   postV1DownloadersMutation,
   putV1DownloadersByIdMutation,
 } from '@/client/@tanstack/vue-query.gen'
 import { client } from '@/client/client.gen'
+import { type DbgenDownloader } from '@/client/types.gen'
+import BaseDialog from '@/components/modals/BaseDialog.vue'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useModal } from '@/composables/useModal'
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-const dialogRef = inject('dialogRef') as any
-const modal = useModal()
+interface Props {
+  downloader?: DbgenDownloader | null
+}
 
-const data = computed(() => dialogRef.value?.data || {})
+const props = defineProps<Props>()
+
+const dialogRef = inject('dialogRef') as { value: { close: (data?: unknown) => void } }
+const modal = useModal()
 
 // Mutations
 const createDownloaderMutation = useMutation(postV1DownloadersMutation())
@@ -26,21 +37,57 @@ const updateDownloaderMutation = useMutation(putV1DownloadersByIdMutation())
 
 // Form state
 const downloaderForm = ref({
-  name: data.value.downloader?.name || '',
-  type: data.value.downloader?.type || 'qbittorrent',
-  protocol: (data.value.downloader?.protocol as 'torrent' | 'usenet') || 'torrent',
-  url: data.value.downloader?.url || '',
-  username: data.value.downloader?.username || '',
-  password: data.value.downloader?.password || '',
+  name: '',
+  type: 'qbittorrent',
+  protocol: 'torrent' as 'torrent' | 'usenet',
+  url: '',
+  username: '',
+  password: '',
   config_json: {} as Record<string, unknown>,
-  enabled: data.value.downloader?.enabled ?? true,
-  default: data.value.downloader?.default || false,
+  enabled: true,
+  default: false,
 })
 
 const downloaderError = ref<string | null>(null)
 const isTestingConfig = ref(false)
+const showPassword = ref(false)
 
-// Handlers
+// Initialize form when downloader changes
+watch(
+  () => props.downloader,
+  (downloader) => {
+    if (downloader) {
+      downloaderForm.value = {
+        name: downloader.name || '',
+        type: downloader.type || 'qbittorrent',
+        protocol: (downloader.protocol as 'torrent' | 'usenet') || 'torrent',
+        url: downloader.url || '',
+        username: downloader.username || '',
+        password: '', // Don't populate password for security
+        config_json:
+          (downloader.config_json as unknown as Record<string, unknown>) ||
+          ({} as Record<string, unknown>),
+        enabled: downloader.enabled ?? true,
+        default: downloader.default || false,
+      }
+    } else {
+      downloaderForm.value = {
+        name: '',
+        type: 'qbittorrent',
+        protocol: 'torrent',
+        url: '',
+        username: '',
+        password: '',
+        config_json: {} as Record<string, unknown>,
+        enabled: true,
+        default: false,
+      }
+    }
+    downloaderError.value = null
+  },
+  { immediate: true },
+)
+
 const handleSaveDownloader = async () => {
   if (!downloaderForm.value.name || !downloaderForm.value.url) {
     downloaderError.value = 'Name and URL are required'
@@ -48,9 +95,9 @@ const handleSaveDownloader = async () => {
   }
 
   try {
-    if (data.value.downloader?.id) {
+    if (props.downloader?.id) {
       await updateDownloaderMutation.mutateAsync({
-        path: { id: data.value.downloader.id },
+        path: { id: props.downloader.id },
         body: {
           name: downloaderForm.value.name,
           type: downloaderForm.value.type,
@@ -78,8 +125,9 @@ const handleSaveDownloader = async () => {
         },
       })
     }
+    downloaderError.value = null
     dialogRef.value.close({ saved: true })
-  } catch (err: unknown) {
+  } catch (err) {
     const error = err as { message?: string }
     downloaderError.value = error.message || 'Failed to save downloader'
   }
@@ -122,7 +170,7 @@ const handleTestDownloader = async () => {
     } else {
       downloaderError.value = result.error || 'Connection test failed'
     }
-  } catch (err: unknown) {
+  } catch (err) {
     const error = err as { message?: string; data?: { error?: string } }
     downloaderError.value = error.data?.error || error.message || 'Connection test failed'
   } finally {
@@ -133,90 +181,120 @@ const handleTestDownloader = async () => {
 const handleCancel = () => {
   dialogRef.value.close()
 }
+
+const isLoading = computed(
+  () => createDownloaderMutation.isPending.value || updateDownloaderMutation.isPending.value,
+)
+
+const typeOptions = [{ label: 'qBittorrent', value: 'qbittorrent' }]
+
+const protocolOptions = [
+  { label: 'Torrent', value: 'torrent' },
+  { label: 'Usenet', value: 'usenet' },
+]
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
-    <div
-      v-if="downloaderError"
-      class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-300 text-sm"
-    >
-      {{ downloaderError }}
-    </div>
+  <BaseDialog :title="downloader ? 'Edit Downloader' : 'Add Downloader'">
+    <div class="flex flex-col gap-4">
+      <div
+        v-if="downloaderError"
+        class="p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm"
+      >
+        {{ downloaderError }}
+      </div>
 
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium">Name</label>
-      <InputText v-model="downloaderForm.name" placeholder="My qBittorrent" />
-    </div>
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium">Type</label>
-      <Select
-        v-model="downloaderForm.type"
-        :options="[{ label: 'qBittorrent', value: 'qbittorrent' }]"
-        optionLabel="label"
-        optionValue="value"
-        disabled
-      />
-    </div>
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium">Protocol</label>
-      <Select
-        v-model="downloaderForm.protocol"
-        :options="[
-          { label: 'Torrent', value: 'torrent' },
-          { label: 'Usenet', value: 'usenet' },
-        ]"
-        optionLabel="label"
-        optionValue="value"
-      />
-    </div>
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium">URL</label>
-      <InputText v-model="downloaderForm.url" placeholder="http://localhost:8080" />
-    </div>
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium">Username (optional)</label>
-      <InputText v-model="downloaderForm.username" />
-    </div>
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium">Password (optional)</label>
-      <Password
-        v-model="downloaderForm.password"
-        :feedback="false"
-        toggleMask
-        :placeholder="data.downloader ? 'Leave blank to keep current' : ''"
-      />
-    </div>
-    <div class="flex items-center justify-between">
-      <label class="text-sm font-medium">Enabled</label>
-      <ToggleSwitch v-model="downloaderForm.enabled" />
-    </div>
-    <div class="flex items-center justify-between">
-      <label class="text-sm font-medium">Default</label>
-      <ToggleSwitch v-model="downloaderForm.default" />
-    </div>
+      <div class="flex flex-col gap-2">
+        <Label for="downloader-name">Name</Label>
+        <Input id="downloader-name" v-model="downloaderForm.name" placeholder="My qBittorrent" />
+      </div>
 
-    <div class="flex items-center justify-between w-full pt-2">
-      <Button
-        label="Test Connection"
-        :icon="PrimeIcons.CHECK"
-        severity="secondary"
-        :loading="isTestingConfig"
-        :disabled="!downloaderForm.url || isTestingConfig"
-        @click="handleTestDownloader"
-      />
-      <div class="flex gap-2 ml-auto">
-        <Button label="Cancel" severity="secondary" @click="handleCancel" />
-        <Button
-          label="Save"
-          :loading="
-            createDownloaderMutation.isPending.value || updateDownloaderMutation.isPending.value
-          "
-          @click="handleSaveDownloader"
+      <div class="flex flex-col gap-2">
+        <Label for="downloader-type">Type</Label>
+        <Select v-model="downloaderForm.type" disabled>
+          <SelectTrigger id="downloader-type" class="w-full">
+            <SelectValue placeholder="Select type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="option in typeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <Label for="downloader-protocol">Protocol</Label>
+        <Select v-model="downloaderForm.protocol">
+          <SelectTrigger id="downloader-protocol" class="w-full">
+            <SelectValue placeholder="Select protocol" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="option in protocolOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <Label for="downloader-url">URL</Label>
+        <Input
+          id="downloader-url"
+          v-model="downloaderForm.url"
+          placeholder="http://localhost:8080"
         />
       </div>
-    </div>
-  </div>
-</template>
 
-<style scoped></style>
+      <div class="flex flex-col gap-2">
+        <Label for="downloader-username">Username (optional)</Label>
+        <Input id="downloader-username" v-model="downloaderForm.username" />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <Label for="downloader-password">Password (optional)</Label>
+        <div class="relative">
+          <Input
+            id="downloader-password"
+            v-model="downloaderForm.password"
+            :type="showPassword ? 'text' : 'password'"
+            :placeholder="downloader ? 'Leave blank to keep current' : ''"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            class="absolute right-1 top-1/2 -translate-y-1/2"
+            @click="showPassword = !showPassword"
+          >
+            <Eye v-if="!showPassword" class="size-4" />
+            <EyeOff v-else class="size-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <Label for="downloader-enabled">Enabled</Label>
+        <Switch id="downloader-enabled" v-model:checked="downloaderForm.enabled" />
+      </div>
+
+      <div class="flex items-center justify-between">
+        <Label for="downloader-default">Default</Label>
+        <Switch id="downloader-default" v-model:checked="downloaderForm.default" />
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="flex items-center justify-between w-full">
+        <Button variant="outline" :disabled="isTestingConfig" @click="handleTestDownloader">
+          <Check class="mr-2 size-4" />
+          Test Connection
+        </Button>
+        <div class="flex gap-2">
+          <Button variant="outline" @click="handleCancel">Cancel</Button>
+          <Button :disabled="isLoading" @click="handleSaveDownloader">Save</Button>
+        </div>
+      </div>
+    </template>
+  </BaseDialog>
+</template>
