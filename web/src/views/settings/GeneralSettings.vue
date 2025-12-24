@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import Card from 'primevue/card'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import ToggleSwitch from 'primevue/toggleswitch'
-import Message from 'primevue/message'
-import Skeleton from 'primevue/skeleton'
 import { getV1Settings, patchV1Settings } from '@/client/sdk.gen'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type SettingsMap = Record<string, unknown>
 
@@ -62,54 +61,72 @@ const maxPerUser = computed({
     <div>
       <h1 class="text-2xl font-semibold">General Settings</h1>
     </div>
-    <Message v-if="error" severity="error">{{ error }}</Message>
+    <div
+      v-if="error"
+      class="p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive"
+    >
+      {{ error }}
+    </div>
     <div v-if="isLoading" class="space-y-3">
-      <Skeleton height="3rem" />
-      <Skeleton height="3rem" />
-      <Skeleton height="3rem" />
+      <Skeleton class="h-24 w-full" />
+      <Skeleton class="h-24 w-full" />
+      <Skeleton class="h-24 w-full" />
     </div>
     <div v-else class="grid gap-4 md:grid-cols-2">
       <Card>
-        <template #title>Site</template>
-        <template #content>
+        <CardHeader>
+          <CardTitle>Site</CardTitle>
+        </CardHeader>
+        <CardContent>
           <div class="flex flex-col gap-2">
-            <label class="text-sm text-muted-color">Site title</label>
-            <InputText :value="siteTitle" @update:value="siteTitle = $event" :disabled="isSaving" />
-          </div>
-        </template>
-      </Card>
-
-      <Card>
-        <template #title>Authentication</template>
-        <template #content>
-          <div class="flex items-center justify-between">
-            <div>
-              <div class="font-medium">Allow signups</div>
-              <div class="text-sm text-muted-color">Permit new user self-registration</div>
-            </div>
-            <ToggleSwitch
-              :model-value="allowSignups"
-              @update:model-value="allowSignups = $event"
+            <Label for="site-title" class="text-sm text-muted-foreground">Site title</Label>
+            <Input
+              id="site-title"
+              :model-value="siteTitle"
+              @update:model-value="siteTitle = String($event)"
               :disabled="isSaving"
             />
           </div>
-        </template>
+        </CardContent>
       </Card>
 
       <Card>
-        <template #title>Requests</template>
-        <template #content>
+        <CardHeader>
+          <CardTitle>Authentication</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div class="flex items-center justify-between">
+            <div class="space-y-0.5">
+              <div class="font-medium">Allow signups</div>
+              <div class="text-sm text-muted-foreground">Permit new user self-registration</div>
+            </div>
+            <Checkbox
+              :checked="allowSignups"
+              @update:checked="allowSignups = $event"
+              :disabled="isSaving"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Requests</CardTitle>
+        </CardHeader>
+        <CardContent>
           <div class="flex flex-col gap-2">
-            <label class="text-sm text-muted-color">Max per user</label>
-            <InputNumber
-              :value="maxPerUser"
-              @update:value="maxPerUser = Number($event)"
+            <Label for="max-per-user" class="text-sm text-muted-foreground">Max per user</Label>
+            <Input
+              id="max-per-user"
+              type="number"
+              :model-value="maxPerUser"
+              @update:model-value="maxPerUser = Number($event)"
               :min="0"
               :step="1"
               :disabled="isSaving"
             />
           </div>
-        </template>
+        </CardContent>
       </Card>
     </div>
   </div>

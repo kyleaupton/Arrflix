@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { computed, reactive, watch } from 'vue'
+import { useRouter, RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import type { SidebarProps } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
@@ -37,8 +38,11 @@ const props = withDefaults(defineProps<SidebarProps>(), {
   collapsible: 'icon',
 })
 
+const router = useRouter()
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
+
+const currentPath = computed(() => router.currentRoute.value.path)
 
 const data = {
   user: {
@@ -68,7 +72,6 @@ const data = {
       title: 'Home',
       url: '/',
       icon: Home,
-      isActive: true,
     },
     {
       title: 'Library',
@@ -95,21 +98,87 @@ const data = {
           url: '/settings/general',
         },
         {
-          title: 'Team',
-          url: '/settings/team',
+          title: 'Policies',
+          url: '/settings/policies',
         },
         {
-          title: 'Billing',
-          url: '/settings/billing',
+          title: 'Libraries',
+          url: '/settings/libraries',
         },
         {
-          title: 'Limits',
-          url: '/settings/limits',
+          title: 'Indexers',
+          url: '/settings/indexers',
+        },
+        {
+          title: 'Downloaders',
+          url: '/settings/downloaders',
+        },
+        {
+          title: 'Name Templates',
+          url: '/settings/name-templates',
         },
       ],
     },
   ],
 }
+
+const isItemActive = (url: string, items?: Array<{ url: string }>) => {
+  // If item has children (like Settings), check if current path matches parent or any child
+  if (items && items.length > 0) {
+    // Parent is active if current path matches parent URL or any child URL
+    return (
+      currentPath.value === url ||
+      items.some(
+        (item) => currentPath.value === item.url || currentPath.value.startsWith(item.url + '/'),
+      )
+    )
+  }
+  // For items without children, exact match only
+  // Special handling for root path to avoid matching everything
+  if (url === '/') {
+    return currentPath.value === '/'
+  }
+  return currentPath.value === url
+}
+
+const isSubItemActive = (url: string) => {
+  // Sub-items match exactly or if path starts with sub-item URL (for nested routes)
+  return currentPath.value === url || currentPath.value.startsWith(url + '/')
+}
+
+// Reactive object to store open state for each collapsible item
+const collapsibleOpenStates = reactive<Record<string, boolean>>({})
+
+// Function to get open state for a collapsible
+const getCollapsibleOpen = (title: string) => {
+  const item = data.navMain.find((i) => i.title === title)
+  if (!item?.items) return false
+
+  // Check if any child is active
+  const isActive = isItemActive(item.url, item.items)
+
+  // Initialize if not set
+  if (!(title in collapsibleOpenStates)) {
+    collapsibleOpenStates[title] = isActive
+  }
+
+  return collapsibleOpenStates[title]
+}
+
+// Watch current path and update collapsible states reactively
+watch(
+  currentPath,
+  () => {
+    data.navMain.forEach((item) => {
+      if (item.items) {
+        const isActive = isItemActive(item.url, item.items)
+        // Update the reactive state
+        collapsibleOpenStates[item.title] = isActive
+      }
+    })
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -134,19 +203,23 @@ const data = {
     </SidebarHeader>
     <SidebarContent>
       <SidebarGroup>
-        <!-- <SidebarGroupLabel></SidebarGroupLabel> -->
         <SidebarMenu>
           <template v-for="item in data.navMain" :key="item.title">
             <Collapsible
               v-if="item.items"
               :key="item.title"
               as-child
-              :default-open="item.isActive"
+              :open="getCollapsibleOpen(item.title)"
+              @update:open="collapsibleOpenStates[item.title] = $event"
               class="group/collapsible"
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger as-child>
-                  <SidebarMenuButton :tooltip="item.title" as-child>
+                  <SidebarMenuButton
+                    :is-active="isItemActive(item.url, item.items)"
+                    :tooltip="item.title"
+                    as-child
+                  >
                     <RouterLink :to="item.url">
                       <component :is="item.icon" v-if="item.icon" />
                       <span>{{ item.title }}</span>
@@ -159,8 +232,8 @@ const data = {
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem v-for="subItem in item.items" :key="subItem.title">
-                      <SidebarMenuSubButton>
-                        <RouterLink :to="subItem.url">
+                      <SidebarMenuSubButton :is-active="isSubItemActive(subItem.url)">
+                        <RouterLink class="w-full" :to="subItem.url">
                           <span>{{ subItem.title }}</span>
                         </RouterLink>
                       </SidebarMenuSubButton>
@@ -170,7 +243,7 @@ const data = {
               </SidebarMenuItem>
             </Collapsible>
             <SidebarMenuItem v-else>
-              <SidebarMenuButton as-child>
+              <SidebarMenuButton :is-active="isItemActive(item.url)" as-child>
                 <RouterLink :to="item.url">
                   <component :is="item.icon" v-if="item.icon" />
                   <span>{{ item.title }}</span>
