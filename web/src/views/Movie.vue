@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="isLoading" class="space-y-4">
-      <Skeleton class="h-96 w-full" />
+      <Skeleton class="h-96 w-full rounded-lg" />
     </div>
     <div v-else-if="isError" class="flex flex-col items-center justify-center py-12 text-center">
       <p class="text-destructive">Failed to load movie</p>
@@ -17,7 +17,10 @@
         :chips="movieChips"
       >
         <template #actions>
-          <Button label="Snag" :icon="PrimeIcons.DOWNLOAD" @click="searchForDownloadCandidates" />
+          <Button @click="searchForDownloadCandidates">
+            <Download class="mr-2 size-4" />
+            Snag
+          </Button>
         </template>
       </MediaHero>
 
@@ -30,16 +33,13 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
-import Button from 'primevue/button'
-import { PrimeIcons } from '@/icons'
+import { Download } from 'lucide-vue-next'
 import { getV1MovieByIdOptions } from '@/client/@tanstack/vue-query.gen'
-import { useModal } from '@/composables/useModal'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import MediaHero from '@/components/media/MediaHero.vue'
-import DownloadCandidatesModal from '@/components/download-candidates/DownloadCandidatesModal.vue'
 
 const route = useRoute()
-const modal = useModal()
 
 const id = computed(() => {
   const castAttept = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)
@@ -77,18 +77,19 @@ const movieChips = computed(() => {
 })
 
 const searchForDownloadCandidates = () => {
-  modal.open(DownloadCandidatesModal, {
-    props: {
-      header: 'Download Candidates',
-      modal: true,
-      closable: true,
-      dismissableMask: true,
-      style: { width: '90vw', maxWidth: '1200px' },
-    },
-    data: {
-      movieId: id.value,
-    },
-  })
+  // TODO: don't worry about modals for now
+  // modal.open(DownloadCandidatesModal, {
+  //   props: {
+  //     header: 'Download Candidates',
+  //     modal: true,
+  //     closable: true,
+  //     dismissableMask: true,
+  //     style: { width: '90vw', maxWidth: '1200px' },
+  //   },
+  //   data: {
+  //     movieId: id.value,
+  //   },
+  // })
 }
 </script>
 
