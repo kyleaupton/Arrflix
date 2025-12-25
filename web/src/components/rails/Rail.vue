@@ -1,7 +1,7 @@
 <template>
   <div class="rail space-y-2">
     <div class="rail-header flex items-center justify-between">
-      <h2 class="text-xl font-semibold">{{ rail.title }}</h2>
+      <h2 class="text-xl font-semibold">{{ title }}</h2>
       <div class="flex items-center gap-2">
         <Button
           variant="outline"
@@ -30,17 +30,7 @@
         class="scroller flex gap-3 overflow-x-auto overflow-y-hidden pb-4"
         @scroll="onScroll"
       >
-        <template v-if="rail.type === 'movie'">
-          <div v-for="movie in rail.movies" :key="movie.tmdbId" class="flex-shrink-0">
-            <Poster :item="movie" :to="{ path: `/movie/${movie.tmdbId}` }" />
-          </div>
-        </template>
-
-        <template v-else-if="rail.type === 'series'">
-          <div v-for="series in rail.series" :key="series.tmdbId" class="flex-shrink-0">
-            <Poster :item="series" :to="{ path: `/series/${series.tmdbId}` }" />
-          </div>
-        </template>
+        <slot />
       </div>
     </div>
   </div>
@@ -48,13 +38,11 @@
 
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
-import { type ModelRail } from '@/client/types.gen'
 import { Button } from '@/components/ui/button'
-import Poster from '@/components/poster/Poster.vue'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 defineProps<{
-  rail: ModelRail
+  title: string
 }>()
 
 const scroller = ref<HTMLDivElement | null>(null)

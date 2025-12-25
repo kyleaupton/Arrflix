@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="flex flex-col gap-6">
     <div v-if="isLoading" class="space-y-4">
       <Skeleton class="h-96 w-full rounded-lg" />
     </div>
@@ -7,8 +7,9 @@
       <p class="text-destructive">Failed to load movie</p>
       <p class="text-sm text-muted-foreground mt-2">Please try again later</p>
     </div>
-    <div v-else-if="data">
+    <template v-else-if="data">
       <MediaHero
+        class="mb-1"
         :title="data.title"
         :subtitle="releaseYear"
         :overview="data.overview"
@@ -27,8 +28,8 @@
         </template>
       </MediaHero>
 
-      <!-- TODO: sections like cast, recommendations, similar, etc. -->
-    </div>
+      <RailCast v-if="data.credits?.cast?.length" title="Cast" :cast="data.credits.cast" />
+    </template>
   </div>
 </template>
 
@@ -42,6 +43,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import MediaHero from '@/components/media/MediaHero.vue'
 import Poster from '@/components/poster/Poster.vue'
+import RailCast from '@/components/rails/RailCast.vue'
 import { useModal } from '@/composables/useModal'
 import DownloadCandidatesDialog from '@/components/download-candidates/DownloadCandidatesDialog.vue'
 

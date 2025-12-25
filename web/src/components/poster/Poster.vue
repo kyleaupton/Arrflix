@@ -12,7 +12,7 @@
     />
     <Skeleton v-if="isLoading" class="poster-skeleton" />
     <div v-if="showLibraryBadge" class="library-badge">
-      <i class="pi pi-check-circle" aria-hidden="true"></i>
+      <CheckCircle2 class="size-4" aria-hidden="true" />
       <span>In library</span>
     </div>
   </component>
@@ -20,7 +20,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import Skeleton from 'primevue/skeleton'
+import { CheckCircle2 } from 'lucide-vue-next'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   type ModelMovieDetail,
   type ModelMovieRail,
@@ -151,9 +152,9 @@ const onError = () => {
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.library-badge .pi {
-  font-size: 0.85rem;
+.library-badge svg {
   color: #22c55e; /* emerald-500 */
+  flex-shrink: 0;
 }
 
 .poster-skeleton {

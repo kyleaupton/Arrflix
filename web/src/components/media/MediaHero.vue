@@ -24,7 +24,7 @@
           <p v-if="subtitle" class="subtitle text-sm opacity-80 mt-1">{{ subtitle }}</p>
 
           <div v-if="chips && chips.length" class="chips mt-3 flex flex-wrap gap-2">
-            <span v-for="(chip, i) in chips" :key="i" class="chip">{{ chip }}</span>
+            <Badge v-for="(chip, i) in chips" :key="i">{{ chip }}</Badge>
           </div>
 
           <div v-if="trailerUrl" class="trailer mt-4">
@@ -51,6 +51,7 @@
 <script setup lang="ts">
 import { ExternalLink } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 const props = defineProps<{
   title: string

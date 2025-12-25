@@ -23,7 +23,10 @@
     </div>
 
     <div v-else class="flex flex-col gap-6">
-      <Rail v-for="rail in data" :key="rail.id" :rail="rail" />
+      <template v-for="rail in data" :key="rail.id">
+        <RailMovie v-if="rail.type === 'movie'" :rail="rail as ModelRail & { type: 'movie' }" />
+        <RailSeries v-else-if="rail.type === 'series'" :rail="rail as ModelRail & { type: 'series' }" />
+      </template>
     </div>
   </div>
 </template>
@@ -31,8 +34,10 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
 import { getV1HomeOptions } from '@/client/@tanstack/vue-query.gen'
+import { type ModelRail } from '@/client/types.gen'
 import { Skeleton } from '@/components/ui/skeleton'
-import Rail from '@/components/rails/Rail.vue'
+import RailMovie from '@/components/rails/RailMovie.vue'
+import RailSeries from '@/components/rails/RailSeries.vue'
 
 const { isLoading, isError, data } = useQuery(getV1HomeOptions())
 </script>
