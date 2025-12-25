@@ -93,9 +93,9 @@ const id = computed(() => {
   return attempt
 })
 
-const { isLoading, isError, data } = useQuery({
-  ...getV1PersonByIdOptions({ path: { id: id.value } }),
-})
+const { isLoading, isError, data } = useQuery(
+  computed(() => getV1PersonByIdOptions({ path: { id: id.value } })),
+)
 
 const profileImageUrl = computed(() => {
   if (!data.value?.profilePath) return undefined

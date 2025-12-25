@@ -42,43 +42,30 @@
         />
       </div>
 
-      <!-- <Card>
-        <CardHeader>
-          <CardTitle>Local Files</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            :data="data.files"
-            :columns="movieFilesColumns"
-            :loading="false"
-            empty-message="No files found"
-            searchable
-            search-placeholder="Search files..."
-            paginator
-            :rows="10"
-          />
-        </CardContent>
-      </Card> -->
-
       <RailCast v-if="data.credits?.cast?.length" title="Cast" :cast="data.credits.cast" />
       <RailVideos v-if="data.videos?.length" title="Videos" :videos="data.videos" />
       <RailMovie
         v-if="data.recommendations?.length"
-        :rail="{ title: 'Related Movies', type: 'movie', movies: data.recommendations }"
+        :rail="{
+          id: 'related-movies',
+          title: 'Related Movies',
+          type: 'movie',
+          movies: data.recommendations,
+          series: [],
+        }"
       />
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { Download } from 'lucide-vue-next'
 import { getV1MovieByIdOptions } from '@/client/@tanstack/vue-query.gen'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import MediaHero from '@/components/media/MediaHero.vue'
 import Poster from '@/components/poster/Poster.vue'
 import RailCast from '@/components/rails/RailCast.vue'
@@ -119,9 +106,9 @@ const trailerUrl = computed(() => {
   }
 })
 
-const { isLoading, isError, data } = useQuery({
-  ...getV1MovieByIdOptions({ path: { id: id.value } }),
-})
+const { isLoading, isError, data } = useQuery(
+  computed(() => getV1MovieByIdOptions({ path: { id: id.value } })),
+)
 
 const releaseYear = computed(() =>
   data.value?.releaseDate ? new Date(data.value.releaseDate).getFullYear().toString() : '',
@@ -144,7 +131,7 @@ const movieChips = computed(() => {
 // Merge API files with real-time download job updates
 const filesWithProgress = computed(() => {
   if (!data.value?.files) return []
-  
+
   return data.value.files.map((file): ModelFileInfo => {
     // If file has downloadJobId, get latest progress from store
     if (file.downloadJobId) {
@@ -164,7 +151,7 @@ const filesWithProgress = computed(() => {
 // Check if movie has any active downloads
 const isDownloading = computed(() => {
   if (!data.value?.files) return false
-  
+
   return data.value.files.some((file) => {
     if (!file.downloadJobId) return false
     const job = downloadJobs.getJobById(file.downloadJobId)

@@ -41,9 +41,9 @@ const id = computed(() => {
   return castAttept
 })
 
-const { isLoading, isError, data } = useQuery({
-  ...getV1SeriesByIdOptions({ path: { id: id.value } }),
-})
+const { isLoading, isError, data } = useQuery(
+  computed(() => getV1SeriesByIdOptions({ path: { id: id.value } })),
+)
 
 const firstAirYear = computed(() =>
   data.value?.firstAirDate ? new Date(data.value.firstAirDate).getFullYear().toString() : '',

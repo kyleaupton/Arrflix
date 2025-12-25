@@ -72,29 +72,27 @@ const props = withDefaults(
     item: ModelMovieDetail | ModelSeriesDetail | ModelMovieRail | ModelSeriesRail
     size?: PosterSize
     to?: { path: string } | string
-    showLibraryStatus?: boolean
     clickable?: boolean
     isDownloading?: boolean
   }>(),
   {
     size: 'medium',
-    showLibraryStatus: true,
     clickable: true,
     isDownloading: false,
   },
 )
 
 const isInLibrary = computed(() => {
-  if ('availability' in props.item && props.item.availability) {
-    return Boolean(props.item.availability.isInLibrary)
+  if ('files' in props.item && props.item.files) {
+    return props.item.files.some((file) => file.status === 'available')
+  } else if ('isInLibrary' in props.item) {
+    return props.item.isInLibrary
   }
-  if ('isInLibrary' in props.item) {
-    return Boolean((props.item as ModelMovieRail | ModelSeriesRail).isInLibrary)
-  }
+
   return false
 })
 
-const showLibraryBadge = computed(() => props.showLibraryStatus && isInLibrary.value)
+const showLibraryBadge = computed(() => !props.isDownloading && isInLibrary.value)
 
 const posterPath = computed(() => {
   const sizeConfig = POSTER_SIZES[props.size]
