@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	tmdb "github.com/cyruzin/golang-tmdb"
+	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
@@ -29,15 +30,16 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		for _, item := range moviesRes.Results {
 			year := parseYearFromDate(item.ReleaseDate)
 			movies = append(movies, model.MovieRail{
-				TmdbID:      item.ID,
-				Title:       item.Title,
-				Overview:    item.Overview,
-				PosterPath:  item.PosterPath,
-				ReleaseDate: item.ReleaseDate,
-				Year:        year,
-				Genres:      toInt64FromInt(item.GenreIDs),
-				Tagline:     "",
-				IsInLibrary: svc.isInLibrary(ctx, item.ID, model.MediaTypeMovie),
+				TmdbID:        item.ID,
+				Title:         item.Title,
+				Overview:      item.Overview,
+				PosterPath:    item.PosterPath,
+				ReleaseDate:   item.ReleaseDate,
+				Year:          year,
+				Genres:        toInt64FromInt(item.GenreIDs),
+				Tagline:       "",
+				IsInLibrary:   svc.isInLibrary(ctx, item.ID, model.MediaTypeMovie),
+				IsDownloading: svc.hasActiveDownloads(ctx, item.ID, model.MediaTypeMovie),
 			})
 		}
 		return movies
@@ -49,15 +51,16 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		for _, item := range seriesRes.Results {
 			year := parseYearFromDate(item.ReleaseDate)
 			series = append(series, model.SeriesRail{
-				TmdbID:      item.ID,
-				Title:       item.Title,
-				Overview:    item.Overview,
-				PosterPath:  item.PosterPath,
-				ReleaseDate: item.ReleaseDate,
-				Year:        year,
-				Genres:      toInt64FromInt(item.GenreIDs),
-				Tagline:     "",
-				IsInLibrary: svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
+				TmdbID:        item.ID,
+				Title:         item.Title,
+				Overview:      item.Overview,
+				PosterPath:    item.PosterPath,
+				ReleaseDate:   item.ReleaseDate,
+				Year:          year,
+				Genres:        toInt64FromInt(item.GenreIDs),
+				Tagline:       "",
+				IsInLibrary:   svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
+				IsDownloading: svc.hasActiveDownloads(ctx, item.ID, model.MediaTypeSeries),
 			})
 		}
 		return series
@@ -69,15 +72,16 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		for _, movie := range moviesRes.Results {
 			year := parseYearFromDate(movie.ReleaseDate)
 			movies = append(movies, model.MovieRail{
-				TmdbID:      movie.ID,
-				Title:       movie.Title,
-				Overview:    movie.Overview,
-				PosterPath:  movie.PosterPath,
-				ReleaseDate: movie.ReleaseDate,
-				Year:        year,
-				Genres:      genreIDsFromGenres(movie.Genres),
-				Tagline:     "",
-				IsInLibrary: svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
+				TmdbID:        movie.ID,
+				Title:         movie.Title,
+				Overview:      movie.Overview,
+				PosterPath:    movie.PosterPath,
+				ReleaseDate:   movie.ReleaseDate,
+				Year:          year,
+				Genres:        genreIDsFromGenres(movie.Genres),
+				Tagline:       "",
+				IsInLibrary:   svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
+				IsDownloading: svc.hasActiveDownloads(ctx, movie.ID, model.MediaTypeMovie),
 			})
 		}
 		return movies
@@ -89,15 +93,16 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		for _, movie := range moviesRes.Results {
 			year := parseYearFromDate(movie.ReleaseDate)
 			movies = append(movies, model.MovieRail{
-				TmdbID:      movie.ID,
-				Title:       movie.Title,
-				Overview:    movie.Overview,
-				PosterPath:  movie.PosterPath,
-				ReleaseDate: movie.ReleaseDate,
-				Year:        year,
-				Genres:      genreIDsFromGenres(movie.Genres),
-				Tagline:     "",
-				IsInLibrary: svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
+				TmdbID:        movie.ID,
+				Title:         movie.Title,
+				Overview:      movie.Overview,
+				PosterPath:    movie.PosterPath,
+				ReleaseDate:   movie.ReleaseDate,
+				Year:          year,
+				Genres:        genreIDsFromGenres(movie.Genres),
+				Tagline:       "",
+				IsInLibrary:   svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
+				IsDownloading: svc.hasActiveDownloads(ctx, movie.ID, model.MediaTypeMovie),
 			})
 		}
 		return movies
@@ -109,15 +114,16 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		for _, movie := range moviesRes.Results {
 			year := parseYearFromDate(movie.ReleaseDate)
 			movies = append(movies, model.MovieRail{
-				TmdbID:      movie.ID,
-				Title:       movie.Title,
-				Overview:    movie.Overview,
-				PosterPath:  movie.PosterPath,
-				ReleaseDate: movie.ReleaseDate,
-				Year:        year,
-				Genres:      genreIDsFromGenres(movie.Genres),
-				Tagline:     "",
-				IsInLibrary: svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
+				TmdbID:        movie.ID,
+				Title:         movie.Title,
+				Overview:      movie.Overview,
+				PosterPath:    movie.PosterPath,
+				ReleaseDate:   movie.ReleaseDate,
+				Year:          year,
+				Genres:        genreIDsFromGenres(movie.Genres),
+				Tagline:       "",
+				IsInLibrary:   svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
+				IsDownloading: svc.hasActiveDownloads(ctx, movie.ID, model.MediaTypeMovie),
 			})
 		}
 		return movies
@@ -129,15 +135,16 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		for _, movie := range moviesRes.Results {
 			year := parseYearFromDate(movie.ReleaseDate)
 			movies = append(movies, model.MovieRail{
-				TmdbID:      movie.ID,
-				Title:       movie.Title,
-				Overview:    movie.Overview,
-				PosterPath:  movie.PosterPath,
-				ReleaseDate: movie.ReleaseDate,
-				Year:        year,
-				Genres:      genreIDsFromGenres(movie.Genres),
-				Tagline:     "",
-				IsInLibrary: svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
+				TmdbID:        movie.ID,
+				Title:         movie.Title,
+				Overview:      movie.Overview,
+				PosterPath:    movie.PosterPath,
+				ReleaseDate:   movie.ReleaseDate,
+				Year:          year,
+				Genres:        genreIDsFromGenres(movie.Genres),
+				Tagline:       "",
+				IsInLibrary:   svc.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
+				IsDownloading: svc.hasActiveDownloads(ctx, movie.ID, model.MediaTypeMovie),
 			})
 		}
 		return movies
@@ -149,15 +156,16 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		for _, item := range seriesRes.Results {
 			year := parseYearFromDate(item.FirstAirDate)
 			series = append(series, model.SeriesRail{
-				TmdbID:      item.ID,
-				Title:       item.Name,
-				Overview:    item.Overview,
-				PosterPath:  item.PosterPath,
-				ReleaseDate: item.FirstAirDate,
-				Year:        year,
-				Genres:      toInt64FromInt(item.GenreIDs),
-				Tagline:     "",
-				IsInLibrary: svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
+				TmdbID:        item.ID,
+				Title:         item.Name,
+				Overview:      item.Overview,
+				PosterPath:    item.PosterPath,
+				ReleaseDate:   item.FirstAirDate,
+				Year:          year,
+				Genres:        toInt64FromInt(item.GenreIDs),
+				Tagline:       "",
+				IsInLibrary:   svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
+				IsDownloading: svc.hasActiveDownloads(ctx, item.ID, model.MediaTypeSeries),
 			})
 		}
 		return series
@@ -169,15 +177,16 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		for _, item := range seriesRes.Results {
 			year := parseYearFromDate(item.FirstAirDate)
 			series = append(series, model.SeriesRail{
-				TmdbID:      item.ID,
-				Title:       item.Name,
-				Overview:    item.Overview,
-				PosterPath:  item.PosterPath,
-				ReleaseDate: item.FirstAirDate,
-				Year:        year,
-				Genres:      toInt64FromInt(item.GenreIDs),
-				Tagline:     "",
-				IsInLibrary: svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
+				TmdbID:        item.ID,
+				Title:         item.Name,
+				Overview:      item.Overview,
+				PosterPath:    item.PosterPath,
+				ReleaseDate:   item.FirstAirDate,
+				Year:          year,
+				Genres:        toInt64FromInt(item.GenreIDs),
+				Tagline:       "",
+				IsInLibrary:   svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
+				IsDownloading: svc.hasActiveDownloads(ctx, item.ID, model.MediaTypeSeries),
 			})
 		}
 		return series
@@ -189,15 +198,16 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 		for _, item := range seriesRes.Results {
 			year := parseYearFromDate(item.FirstAirDate)
 			series = append(series, model.SeriesRail{
-				TmdbID:      item.ID,
-				Title:       item.Name,
-				Overview:    item.Overview,
-				PosterPath:  item.PosterPath,
-				ReleaseDate: item.FirstAirDate,
-				Year:        year,
-				Genres:      toInt64FromInt(item.GenreIDs),
-				Tagline:     "",
-				IsInLibrary: svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
+				TmdbID:        item.ID,
+				Title:         item.Name,
+				Overview:      item.Overview,
+				PosterPath:    item.PosterPath,
+				ReleaseDate:   item.FirstAirDate,
+				Year:          year,
+				Genres:        toInt64FromInt(item.GenreIDs),
+				Tagline:       "",
+				IsInLibrary:   svc.isInLibrary(ctx, item.ID, model.MediaTypeSeries),
+				IsDownloading: svc.hasActiveDownloads(ctx, item.ID, model.MediaTypeSeries),
 			})
 		}
 		return series
@@ -290,6 +300,38 @@ func (s *RailsService) GetRails(ctx context.Context) ([]model.Rail, error) {
 func (s *RailsService) isInLibrary(ctx context.Context, tmdbID int64, typ model.MediaType) bool {
 	_, err := s.repo.GetMediaItemByTmdbIDAndType(ctx, tmdbID, string(typ))
 	return err == nil
+}
+
+func (s *RailsService) hasActiveDownloads(ctx context.Context, tmdbID int64, mediaType model.MediaType) bool {
+	var jobs []dbgen.DownloadJob
+	var err error
+
+	if mediaType == model.MediaTypeMovie {
+		jobs, err = s.repo.ListDownloadJobsByTmdbMovieID(ctx, tmdbID)
+	} else if mediaType == model.MediaTypeSeries {
+		jobs, err = s.repo.ListDownloadJobsByTmdbSeriesID(ctx, tmdbID)
+	} else {
+		return false
+	}
+
+	if err != nil {
+		return false
+	}
+
+	activeStatuses := map[string]bool{
+		"created":    true,
+		"enqueued":   true,
+		"downloading": true,
+		"importing":  true,
+	}
+
+	for _, job := range jobs {
+		if activeStatuses[job.Status] {
+			return true
+		}
+	}
+
+	return false
 }
 
 func toInt64Slice(ints []int64) []int64 {

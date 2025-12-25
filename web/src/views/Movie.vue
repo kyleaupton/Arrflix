@@ -18,7 +18,7 @@
         :trailer-url="trailerUrl"
       >
         <template #poster>
-          <Poster :item="data" size="large" :clickable="false" />
+          <Poster :item="data" size="large" :clickable="false" :is-downloading="isDownloading" />
         </template>
         <template #actions>
           <Button @click="searchForDownloadCandidates">
@@ -31,7 +31,7 @@
       <div v-if="data.files?.length" class="space-y-4">
         <h2 class="text-xl font-semibold">Local Files</h2>
         <DataTable
-          :data="data.files"
+          :data="filesWithProgress"
           :columns="movieFilesColumns"
           :loading="false"
           empty-message="No files found"
@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { Download } from 'lucide-vue-next'
@@ -87,10 +87,13 @@ import RailMovie from '@/components/rails/RailMovie.vue'
 import DataTable from '@/components/tables/DataTable.vue'
 import { movieFilesColumns } from '@/components/tables/configs/movieFilesTableConfig'
 import { useModal } from '@/composables/useModal'
+import { useDownloadJobsStore } from '@/stores/downloadJobs'
 import DownloadCandidatesDialog from '@/components/download-candidates/DownloadCandidatesDialog.vue'
+import type { ModelFileInfo } from '@/client/types.gen'
 
 const route = useRoute()
 const modal = useModal()
+const downloadJobs = useDownloadJobsStore()
 
 const id = computed(() => {
   const castAttept = Number(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id)
@@ -136,6 +139,56 @@ const movieChips = computed(() => {
     chips.push(...data.value.genres.slice(0, 4).map((g) => g.name))
   }
   return chips
+})
+
+// Merge API files with real-time download job updates
+const filesWithProgress = computed(() => {
+  if (!data.value?.files) return []
+  
+  return data.value.files.map((file): ModelFileInfo => {
+    // If file has downloadJobId, get latest progress from store
+    if (file.downloadJobId) {
+      const job = downloadJobs.getJobById(file.downloadJobId)
+      if (job) {
+        return {
+          ...file,
+          progress: job.progress ?? file.progress,
+          status: mapJobStatusToFileStatus(job.status),
+        }
+      }
+    }
+    return file
+  })
+})
+
+// Check if movie has any active downloads
+const isDownloading = computed(() => {
+  if (!data.value?.files) return false
+  
+  return data.value.files.some((file) => {
+    if (!file.downloadJobId) return false
+    const job = downloadJobs.getJobById(file.downloadJobId)
+    return job ? downloadJobs.isJobActive(job) : false
+  })
+})
+
+// Map download job status to file status
+function mapJobStatusToFileStatus(jobStatus: string): string {
+  switch (jobStatus) {
+    case 'created':
+    case 'enqueued':
+    case 'downloading':
+      return 'downloading'
+    case 'importing':
+      return 'importing'
+    default:
+      return 'downloading' // fallback
+  }
+}
+
+// Connect to live updates on mount
+onMounted(() => {
+  downloadJobs.connectLive()
 })
 
 const searchForDownloadCandidates = () => {

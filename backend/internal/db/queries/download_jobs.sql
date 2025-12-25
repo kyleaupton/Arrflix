@@ -14,7 +14,8 @@ insert into download_job (
   candidate_link,
   downloader_id,
   library_id,
-  name_template_id
+  name_template_id,
+  predicted_dest_path
 )
 values (
   'created',
@@ -29,7 +30,8 @@ values (
   sqlc.arg(candidate_link),
   sqlc.arg(downloader_id),
   sqlc.arg(library_id),
-  sqlc.arg(name_template_id)
+  sqlc.arg(name_template_id),
+  sqlc.arg(predicted_dest_path)
 )
 on conflict (indexer_id, guid) do update
 set updated_at = now()
@@ -57,6 +59,13 @@ select j.*
 from download_job j
 join media_item mi on mi.id = j.media_item_id
 where mi.type = 'movie' and mi.tmdb_id = $1
+order by j.created_at desc;
+
+-- name: ListDownloadJobsByTmdbSeriesID :many
+select j.*
+from download_job j
+join media_item mi on mi.id = j.media_item_id
+where mi.type = 'series' and mi.tmdb_id = $1
 order by j.created_at desc;
 
 -- name: CancelDownloadJob :one

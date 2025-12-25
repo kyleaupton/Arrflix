@@ -43,13 +43,15 @@ const handleValueChange = (fieldName: string, value: unknown) => {
 
 <template>
   <div class="configuration-step h-full overflow-y-auto">
-    <h3 class="text-lg font-semibold mb-4">Configuration</h3>
-    <p class="text-muted-color mb-6">
-      Configure the specific settings for {{ selectedIndexer?.name }}.
-    </p>
+    <div class="space-y-1 mb-6">
+      <h3 class="text-lg font-semibold">Configuration</h3>
+      <p class="text-sm text-muted-foreground">
+        Configure the specific settings for {{ selectedIndexer?.name }}.
+      </p>
+    </div>
 
     <!-- Configuration Fields -->
-    <div class="space-y-4">
+    <div class="space-y-6">
       <ConfigurationStepField
         v-for="field in selectedIndexer.fields"
         :key="field.name"

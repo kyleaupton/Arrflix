@@ -2007,6 +2007,7 @@ const docTemplate = `{
                 "media_type",
                 "name_template_id",
                 "next_run_at",
+                "predicted_dest_path",
                 "primary_media_file_id",
                 "progress",
                 "protocol",
@@ -2079,6 +2080,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "next_run_at": {
+                    "type": "string"
+                },
+                "predicted_dest_path": {
                     "type": "string"
                 },
                 "primary_media_file_id": {
@@ -3239,6 +3243,10 @@ const docTemplate = `{
                 "status"
             ],
             "properties": {
+                "downloadJobId": {
+                    "description": "For matching with download jobs store",
+                    "type": "string"
+                },
                 "episodeNumber": {
                     "type": "integer"
                 },
@@ -3251,6 +3259,10 @@ const docTemplate = `{
                 "path": {
                     "description": "relative to library root",
                     "type": "string"
+                },
+                "progress": {
+                    "description": "Progress 0-1 for downloading files",
+                    "type": "number"
                 },
                 "seasonNumber": {
                     "type": "integer"
@@ -3836,6 +3848,7 @@ const docTemplate = `{
         "model.MovieRail": {
             "type": "object",
             "required": [
+                "isDownloading",
                 "isInLibrary",
                 "overview",
                 "posterPath",
@@ -3849,6 +3862,9 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "isDownloading": {
+                    "type": "boolean"
                 },
                 "isInLibrary": {
                     "type": "boolean"
@@ -4176,6 +4192,7 @@ const docTemplate = `{
         "model.SeriesRail": {
             "type": "object",
             "required": [
+                "isDownloading",
                 "isInLibrary",
                 "overview",
                 "posterPath",
@@ -4189,6 +4206,9 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "isDownloading": {
+                    "type": "boolean"
                 },
                 "isInLibrary": {
                     "type": "boolean"

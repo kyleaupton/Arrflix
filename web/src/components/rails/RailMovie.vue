@@ -1,7 +1,7 @@
 <template>
   <Rail :title="rail.title">
     <div v-for="movie in rail.movies" :key="movie.tmdbId" class="flex-shrink-0">
-      <Poster :item="movie" :to="{ path: `/movie/${movie.tmdbId}` }" />
+      <Poster :item="movie" :to="{ path: `/movie/${movie.tmdbId}` }" :is-downloading="movie.isDownloading" />
     </div>
   </Rail>
 </template>

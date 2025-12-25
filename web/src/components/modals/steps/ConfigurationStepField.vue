@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Select from 'primevue/select'
-import MultiSelect from 'primevue/multiselect'
-import Password from 'primevue/password'
-import Message from 'primevue/message'
-import Checkbox from 'primevue/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Eye, EyeOff } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
 import { type ModelIndexerDefinition, type ModelIndexerField } from '@/client/types.gen'
 import { postV1IndexerActionByNameMutation } from '@/client/@tanstack/vue-query.gen'
+import { cn } from '@/lib/utils'
 
 const model = computed({
   get: () => props.field.value,
@@ -56,10 +62,6 @@ const hasHelpText = computed(() => {
   return props.field.helpText || props.field.helpTextWarning
 })
 
-const helpSeverity = computed(() => {
-  return props.field.helpTextWarning ? 'warning' : 'secondary'
-})
-
 const fieldId = computed(() => `field-${props.field.name}`)
 
 const isAsyncAction = computed(() => {
@@ -88,6 +90,8 @@ const performAction = () => {
   }
 }
 
+const showPassword = ref(false)
+
 onMounted(() => {
   performAction()
 })
@@ -95,95 +99,149 @@ onMounted(() => {
 
 <template>
   <div
-    class="field-container"
+    class="field-container space-y-2"
     :class="{ hidden: field.hidden === 'hidden', 'advanced-field': field.advanced }"
   >
     <!-- Text Input Fields -->
     <template v-if="field.type === 'textbox'">
-      <label :for="fieldId" class="block text-sm font-medium mb-2">
+      <Label :for="fieldId" class="flex items-center gap-1">
         {{ field.label }}
-        <span v-if="field.advanced" class="text-xs text-gray-500 ml-1">(Advanced)</span>
-      </label>
-      <InputText
+        <span v-if="field.advanced" class="text-xs text-muted-foreground">(Advanced)</span>
+      </Label>
+      <Input
         :id="fieldId"
         v-model="model as string"
         :placeholder="`Enter ${field.label}`"
-        variant="filled"
-        class="w-full"
-        :class="{ 'p-invalid': field.helpTextWarning }"
+        :class="cn('w-full', field.helpTextWarning && 'border-destructive')"
+        :aria-invalid="field.helpTextWarning ? 'true' : undefined"
       />
     </template>
 
     <!-- Password Input Fields -->
     <template v-else-if="field.type === 'password'">
-      <label :for="fieldId" class="block text-sm font-medium mb-2">
+      <Label :for="fieldId" class="flex items-center gap-1">
         {{ field.label }}
-        <span v-if="field.advanced" class="text-xs text-gray-500 ml-1">(Advanced)</span>
-      </label>
-      <Password
-        :id="fieldId"
-        v-model="model as string"
-        :placeholder="`Enter ${field.label}`"
-        variant="filled"
-        class="w-full"
-        :class="{ 'p-invalid': field.helpTextWarning }"
-        :feedback="false"
-        toggleMask
-      />
+        <span v-if="field.advanced" class="text-xs text-muted-foreground">(Advanced)</span>
+      </Label>
+      <div class="relative">
+        <Input
+          :id="fieldId"
+          v-model="model as string"
+          :type="showPassword ? 'text' : 'password'"
+          :placeholder="`Enter ${field.label}`"
+          :class="cn('w-full pr-10', field.helpTextWarning && 'border-destructive')"
+          :aria-invalid="field.helpTextWarning ? 'true' : undefined"
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          class="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+          @click="showPassword = !showPassword"
+        >
+          <Eye v-if="!showPassword" class="size-4 text-muted-foreground" />
+          <EyeOff v-else class="size-4 text-muted-foreground" />
+          <span class="sr-only">{{ showPassword ? 'Hide' : 'Show' }} password</span>
+        </Button>
+      </div>
     </template>
 
     <!-- Number Input Fields -->
     <template v-else-if="field.type === 'number'">
-      <label :for="fieldId" class="block text-sm font-medium mb-2">
+      <Label :for="fieldId" class="flex items-center gap-1">
         {{ field.label }}
-        <span v-if="field.unit" class="text-xs text-gray-500 ml-1">({{ field.unit }})</span>
-        <span v-if="field.advanced" class="text-xs text-gray-500 ml-1">(Advanced)</span>
-      </label>
-      <InputNumber
+        <span v-if="field.unit" class="text-xs text-muted-foreground">({{ field.unit }})</span>
+        <span v-if="field.advanced" class="text-xs text-muted-foreground">(Advanced)</span>
+      </Label>
+      <Input
         :id="fieldId"
-        v-model="model as number"
+        v-model="model as string"
+        type="number"
         :placeholder="`Enter ${field.label}`"
-        variant="filled"
-        class="w-full"
-        :class="{ 'p-invalid': field.helpTextWarning }"
-        :minFractionDigits="field.isFloat ? 2 : 0"
-        :maxFractionDigits="field.isFloat ? 2 : 0"
-        :useGrouping="false"
+        :step="field.isFloat ? 0.01 : 1"
+        :class="cn('w-full', field.helpTextWarning && 'border-destructive')"
+        :aria-invalid="field.helpTextWarning ? 'true' : undefined"
+        @update:model-value="
+          (val) => {
+            if (val === '' || val === null) {
+              model = undefined
+            } else {
+              const num = field.isFloat ? parseFloat(String(val)) : parseInt(String(val), 10)
+              model = isNaN(num) ? undefined : num
+            }
+          }
+        "
       />
     </template>
 
     <!-- Select Fields -->
     <template v-else-if="field.type === 'select'">
-      <label :for="fieldId" class="block text-sm font-medium mb-2">
+      <Label :for="fieldId" class="flex items-center gap-1">
         {{ field.label }}
-        <span v-if="field.advanced" class="text-xs text-gray-500 ml-1">(Advanced)</span>
-      </label>
-      <MultiSelect
-        v-if="isMultiSelect"
-        :id="fieldId"
-        v-model="model"
-        :options="options"
-        :optionLabel="selectOptionLabel"
-        optionValue="value"
-        :placeholder="`Select ${field.label}`"
-        variant="filled"
-        class="w-full"
-        :class="{ 'p-invalid': field.helpTextWarning }"
-        :maxSelectedLabels="3"
-        selectedItemsLabel="{0} items selected"
-      />
+        <span v-if="field.advanced" class="text-xs text-muted-foreground">(Advanced)</span>
+      </Label>
+      <!-- MultiSelect: Simple implementation using comma-separated display -->
+      <div v-if="isMultiSelect" class="space-y-2">
+        <div class="flex flex-wrap gap-2">
+          <div v-for="option in options" :key="option.value" class="flex items-center gap-2">
+            <Checkbox
+              :id="`${fieldId}-${option.value}`"
+              :checked="Array.isArray(model) && model.includes(option.value)"
+              @update:checked="
+                (checked: boolean) => {
+                  const current = Array.isArray(model) ? [...model] : []
+                  if (checked) {
+                    if (!current.includes(option.value)) {
+                      model = [...current, option.value]
+                    }
+                  } else {
+                    model = current.filter((v) => v !== option.value)
+                  }
+                }
+              "
+            />
+            <Label :for="`${fieldId}-${option.value}`" class="cursor-pointer text-sm font-normal">
+              {{ option[selectOptionLabel] }}
+            </Label>
+          </div>
+        </div>
+        <p v-if="Array.isArray(model) && model.length > 0" class="text-xs text-muted-foreground">
+          {{ model.length }} item{{ model.length !== 1 ? 's' : '' }} selected
+        </p>
+      </div>
+      <!-- Single Select -->
       <Select
         v-else
-        :id="fieldId"
-        v-model="model"
-        :options="options"
-        :optionLabel="selectOptionLabel"
-        optionValue="value"
-        :placeholder="`Select ${field.label}`"
-        variant="filled"
-        class="w-full"
-        :class="{ 'p-invalid': field.helpTextWarning }"
-      />
+        :model-value="model !== null && model !== undefined ? String(model) : undefined"
+        @update:model-value="
+          (val: unknown) => {
+            if (val === undefined || val === null || val === '') {
+              model = undefined
+            } else {
+              // Try to preserve original type if possible
+              const matchingOption = options.find(
+                (opt: { value: unknown; label?: string; name?: string }) =>
+                  String(opt.value) === String(val),
+              )
+              model = matchingOption ? matchingOption.value : val
+            }
+          }
+        "
+        :disabled="options.length === 0"
+      >
+        <SelectTrigger
+          :id="fieldId"
+          :class="cn('w-full', field.helpTextWarning && 'border-destructive')"
+          :aria-invalid="field.helpTextWarning ? 'true' : undefined"
+        >
+          <SelectValue :placeholder="`Select ${field.label}`" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem v-for="option in options" :key="option.value" :value="String(option.value)">
+            {{ option[selectOptionLabel] }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
     </template>
 
     <!-- Checkbox Fields -->
@@ -191,35 +249,49 @@ onMounted(() => {
       <div class="flex items-center gap-2">
         <Checkbox
           :id="fieldId"
-          v-model="model"
-          :binary="true"
-          :class="{ 'p-invalid': field.helpTextWarning }"
+          :checked="model as boolean"
+          @update:checked="(checked: boolean) => (model = checked)"
         />
-        <label :for="fieldId" class="text-sm font-medium cursor-pointer">
+        <Label :for="fieldId" class="cursor-pointer flex items-center gap-1">
           {{ field.label }}
-          <span v-if="field.advanced" class="text-xs text-gray-500 ml-1">(Advanced)</span>
-        </label>
+          <span v-if="field.advanced" class="text-xs text-muted-foreground">(Advanced)</span>
+        </Label>
       </div>
     </template>
 
     <!-- Fallback for unknown field types -->
     <template v-else>
-      <div class="p-4 border border-yellow-200 bg-yellow-50 rounded">
-        <p class="text-sm text-yellow-800"><strong>Unknown field type:</strong> {{ field.type }}</p>
-        <p class="text-sm text-yellow-700 mt-1">Field: {{ field.name }} ({{ field.label }})</p>
+      <div
+        class="rounded-md border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950"
+      >
+        <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+          <strong>Unknown field type:</strong> {{ field.type }}
+        </p>
+        <p class="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+          Field: {{ field.name }} ({{ field.label }})
+        </p>
       </div>
     </template>
 
-    <Message v-if="hasHelpText" class="mt-1" size="small" :severity="helpSeverity" variant="simple"
-      >{{ field.helpText || field.helpTextWarning }}
+    <!-- Help Text -->
+    <div
+      v-if="hasHelpText"
+      :class="
+        cn(
+          'text-sm',
+          field.helpTextWarning ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground',
+        )
+      "
+    >
+      {{ field.helpText || field.helpTextWarning }}
       <a
         v-if="field.helpLink"
         :href="field.helpLink"
         target="_blank"
-        class="ml-1 text-blue-600 hover:underline"
+        class="ml-1 text-primary hover:underline"
       >
         Learn more
       </a>
-    </Message>
+    </div>
   </div>
 </template>

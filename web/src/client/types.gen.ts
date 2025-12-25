@@ -37,6 +37,7 @@ export type DbgenDownloadJob = {
     media_type: string;
     name_template_id: string;
     next_run_at: string;
+    predicted_dest_path: string;
     primary_media_file_id: string;
     progress: number;
     protocol: string;
@@ -418,6 +419,10 @@ export type ModelFieldOutput = {
 export type ModelFieldType = 'text' | 'number' | 'enum' | 'dynamic' | 'boolean';
 
 export type ModelFileInfo = {
+    /**
+     * For matching with download jobs store
+     */
+    downloadJobId?: string;
     episodeNumber?: number;
     id: string;
     libraryId: string;
@@ -425,6 +430,10 @@ export type ModelFileInfo = {
      * relative to library root
      */
     path: string;
+    /**
+     * Progress 0-1 for downloading files
+     */
+    progress?: number;
     seasonNumber?: number;
     status: string;
 };
@@ -577,6 +586,7 @@ export type ModelMovieDetail = {
 
 export type ModelMovieRail = {
     genres?: Array<number>;
+    isDownloading: boolean;
     isInLibrary: boolean;
     overview: string;
     posterPath: string;
@@ -678,6 +688,7 @@ export type ModelSeriesDetail = {
 
 export type ModelSeriesRail = {
     genres?: Array<number>;
+    isDownloading: boolean;
     isInLibrary: boolean;
     overview: string;
     posterPath: string;

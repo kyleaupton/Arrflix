@@ -216,6 +216,7 @@ type DownloadJob struct {
 	LastError            *string     `json:"last_error"`
 	CreatedAt            time.Time   `json:"created_at"`
 	UpdatedAt            time.Time   `json:"updated_at"`
+	PredictedDestPath    *string     `json:"predicted_dest_path"`
 }
 
 type DownloadJobMediaFile struct {

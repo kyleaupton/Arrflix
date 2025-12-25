@@ -67,14 +67,22 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 		Quality: q,
 	}
 
-	rel, err := template.Render(nt.Template, context)
-	if err != nil {
-		return ImportResult{}, fmt.Errorf("render template: %w", err)
+	var rel string
+	ext := filepath.Ext(sourcePath)
+
+	// Use predicted_dest_path if available and replace .{ext} with actual extension
+	if job.PredictedDestPath != nil && *job.PredictedDestPath != "" && strings.Contains(*job.PredictedDestPath, ".{ext}") {
+		rel = strings.Replace(*job.PredictedDestPath, ".{ext}", ext, 1)
+	} else {
+		// Fallback to calculating from template (existing logic)
+		rel, err = template.Render(nt.Template, context)
+		if err != nil {
+			return ImportResult{}, fmt.Errorf("render template: %w", err)
+		}
+		rel = importer.EnsureExt(rel, ext)
 	}
 
-	ext := filepath.Ext(sourcePath)
 	dest := filepath.Join(lib.RootPath, rel)
-	dest = importer.EnsureExt(dest, ext)
 
 	destRel, err := filepath.Rel(lib.RootPath, dest)
 	if err != nil || strings.HasPrefix(destRel, "..") {

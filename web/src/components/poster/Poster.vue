@@ -11,7 +11,12 @@
       @error="onError"
     />
     <Skeleton v-if="isLoading" class="poster-skeleton" />
-    <div v-if="showLibraryBadge" class="library-badge">
+    <!-- Show download status badge when downloading, otherwise show library badge -->
+    <div v-if="isDownloading" class="status-badge download-badge">
+      <Loader2 class="size-4 animate-spin" aria-hidden="true" />
+      <span>Downloading</span>
+    </div>
+    <div v-else-if="showLibraryBadge" class="status-badge library-badge">
       <CheckCircle2 class="size-4" aria-hidden="true" />
       <span>In library</span>
     </div>
@@ -20,7 +25,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { CheckCircle2 } from 'lucide-vue-next'
+import { CheckCircle2, Loader2 } from 'lucide-vue-next'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   type ModelMovieDetail,
@@ -69,11 +74,13 @@ const props = withDefaults(
     to?: { path: string } | string
     showLibraryStatus?: boolean
     clickable?: boolean
+    isDownloading?: boolean
   }>(),
   {
     size: 'medium',
     showLibraryStatus: true,
     clickable: true,
+    isDownloading: false,
   },
 )
 
@@ -135,7 +142,7 @@ const onError = () => {
   opacity: 1;
 }
 
-.library-badge {
+.status-badge {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
@@ -150,11 +157,19 @@ const onError = () => {
   font-size: 0.75rem;
   letter-spacing: 0.01em;
   border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 5;
+}
+
+.status-badge svg {
+  flex-shrink: 0;
 }
 
 .library-badge svg {
   color: #22c55e; /* emerald-500 */
-  flex-shrink: 0;
+}
+
+.download-badge svg {
+  color: #3b82f6; /* blue-500 */
 }
 
 .poster-skeleton {

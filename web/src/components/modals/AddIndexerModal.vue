@@ -2,20 +2,20 @@
 import { ref, computed, inject } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
 import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-vue-next'
-import { type ModelIndexerDefinition } from '@/client/types.gen'
+import { type ModelIndexerDefinition, type ModelIndexerInput } from '@/client/types.gen'
 import { postV1IndexerMutation } from '@/client/@tanstack/vue-query.gen'
-import BaseDialog from './BaseDialog.vue'
 import { Button } from '@/components/ui/button'
 import SelectIndexerTypeStep from './steps/SelectIndexerTypeStep.vue'
 import ConfigurationStep from './steps/ConfigurationStep.vue'
 import ReviewStep from './steps/ReviewStep.vue'
+import BaseDialog from './BaseDialog.vue'
 
 const dialogRef = inject('dialogRef') as { value: { close: (data?: unknown) => void } }
 
 // Form state
 const currentStep = ref(0)
 const selectedIndexerType = ref<ModelIndexerDefinition | null>(null)
-const saveData = ref<ModelIndexerDefinition | undefined>(undefined)
+const saveData = ref<ModelIndexerInput | undefined>(undefined)
 
 const createIndexerMutation = useMutation({
   ...postV1IndexerMutation(),

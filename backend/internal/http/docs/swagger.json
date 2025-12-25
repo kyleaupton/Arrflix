@@ -1999,6 +1999,7 @@
                 "media_type",
                 "name_template_id",
                 "next_run_at",
+                "predicted_dest_path",
                 "primary_media_file_id",
                 "progress",
                 "protocol",
@@ -2071,6 +2072,9 @@
                     "type": "string"
                 },
                 "next_run_at": {
+                    "type": "string"
+                },
+                "predicted_dest_path": {
                     "type": "string"
                 },
                 "primary_media_file_id": {
@@ -3231,6 +3235,10 @@
                 "status"
             ],
             "properties": {
+                "downloadJobId": {
+                    "description": "For matching with download jobs store",
+                    "type": "string"
+                },
                 "episodeNumber": {
                     "type": "integer"
                 },
@@ -3243,6 +3251,10 @@
                 "path": {
                     "description": "relative to library root",
                     "type": "string"
+                },
+                "progress": {
+                    "description": "Progress 0-1 for downloading files",
+                    "type": "number"
                 },
                 "seasonNumber": {
                     "type": "integer"
@@ -3828,6 +3840,7 @@
         "model.MovieRail": {
             "type": "object",
             "required": [
+                "isDownloading",
                 "isInLibrary",
                 "overview",
                 "posterPath",
@@ -3841,6 +3854,9 @@
                     "items": {
                         "type": "integer"
                     }
+                },
+                "isDownloading": {
+                    "type": "boolean"
                 },
                 "isInLibrary": {
                     "type": "boolean"
@@ -4168,6 +4184,7 @@
         "model.SeriesRail": {
             "type": "object",
             "required": [
+                "isDownloading",
                 "isInLibrary",
                 "overview",
                 "posterPath",
@@ -4181,6 +4198,9 @@
                     "items": {
                         "type": "integer"
                     }
+                },
+                "isDownloading": {
+                    "type": "boolean"
                 },
                 "isInLibrary": {
                     "type": "boolean"

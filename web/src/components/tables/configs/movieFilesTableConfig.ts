@@ -1,7 +1,10 @@
 import { type TableColumn } from '../types'
 import type { ModelFileInfo } from '@/client/types.gen'
 import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 import LibraryReference from '@/components/references/LibraryReference.vue'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Loader2 } from 'lucide-vue-next'
 import { h } from 'vue'
 
 export const movieFilesColumns: TableColumn<ModelFileInfo>[] = [
@@ -10,7 +13,38 @@ export const movieFilesColumns: TableColumn<ModelFileInfo>[] = [
     label: 'Path',
     sortable: true,
     filterable: true,
-    render: (value: string) => {
+    render: (value: string, row: ModelFileInfo) => {
+      const isPredicted = value && value.includes('.{ext}')
+      
+      if (isPredicted) {
+        return h(
+          Tooltip,
+          {},
+          {
+            default: () => [
+              h(
+                TooltipTrigger,
+                { asChild: true },
+                {
+                  default: () => h(
+                    'span',
+                    { class: 'font-mono text-sm text-muted-foreground cursor-help' },
+                    value || '',
+                  ),
+                },
+              ),
+              h(
+                TooltipContent,
+                {},
+                {
+                  default: () => 'File doesn\'t exist yet. This is the predicted path.',
+                },
+              ),
+            ],
+          },
+        )
+      }
+      
       return h('span', { class: 'font-mono text-sm' }, value || '')
     },
   },
@@ -30,7 +64,7 @@ export const movieFilesColumns: TableColumn<ModelFileInfo>[] = [
     sortable: true,
     filterable: true,
     width: '140px',
-    render: (value: string) => {
+    render: (value: string, row: ModelFileInfo) => {
       const statusColors: Record<string, string> = {
         available: 'bg-green-500 text-white',
         downloading: 'bg-blue-500 text-white',
@@ -40,13 +74,37 @@ export const movieFilesColumns: TableColumn<ModelFileInfo>[] = [
         deleted: 'bg-gray-600 text-white',
       }
       const colorClass = statusColors[value] || 'bg-gray-500 text-white'
+      
+      // Show spinner for downloading/importing status
+      const showSpinner = value === 'downloading' || value === 'importing'
+      
       return h(
         Badge,
         {
-          class: `${colorClass} capitalize border-transparent`,
+          class: `${colorClass} capitalize border-transparent flex items-center gap-1.5`,
         },
-        () => value,
+        () => [
+          showSpinner ? h(Loader2, { class: 'size-3 animate-spin' }) : null,
+          value,
+        ],
       )
+    },
+  },
+  {
+    key: 'progress',
+    label: 'Progress',
+    sortable: true,
+    width: '220px',
+    render: (value: number | null | undefined, row: ModelFileInfo) => {
+      // Only show progress if downloadJobId exists and progress is available
+      if (!row.downloadJobId || value === null || value === undefined) {
+        return h('span', { class: 'text-xs text-muted-foreground' }, '-')
+      }
+      const progressValue = Math.round(value * 100)
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h(Progress, { modelValue: progressValue, class: 'flex-1' }),
+        h('span', { class: 'text-xs text-muted-foreground min-w-[3ch]' }, `${progressValue}%`),
+      ])
     },
   },
 ]

@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,7 +18,9 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/policy"
+	"github.com/kyleaupton/snaggle/backend/internal/quality"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	"github.com/kyleaupton/snaggle/backend/internal/template"
 )
 
 var (
@@ -217,19 +221,32 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 		}
 	}
 
+	// Calculate predicted destination path
+	predictedPath, err := s.calculatePredictedDestPath(ctx, mi.ID, libraryID, nameTemplateID, candidate.Title)
+	if err != nil {
+		s.logger.Debug().Err(err).Msg("Failed to calculate predicted dest path, continuing without it")
+		// Don't fail the job creation if prediction fails
+	}
+
+	var predictedPathPtr *string
+	if predictedPath != "" {
+		predictedPathPtr = &predictedPath
+	}
+
 	job, err := s.repo.CreateDownloadJob(ctx, dbgen.CreateDownloadJobParams{
-		Protocol:       candidate.Protocol,
-		MediaType:      "movie",
-		MediaItemID:    mi.ID,
-		SeasonID:       pgtype.UUID{},
-		EpisodeID:      pgtype.UUID{},
-		IndexerID:      indexerID,
-		Guid:           guid,
-		CandidateTitle: candidate.Title,
-		CandidateLink:  candidate.Link,
-		DownloaderID:   downloaderID,
-		LibraryID:      libraryID,
-		NameTemplateID: nameTemplateID,
+		Protocol:          candidate.Protocol,
+		MediaType:         "movie",
+		MediaItemID:       mi.ID,
+		SeasonID:          pgtype.UUID{},
+		EpisodeID:         pgtype.UUID{},
+		IndexerID:         indexerID,
+		Guid:              guid,
+		CandidateTitle:    candidate.Title,
+		CandidateLink:     candidate.Link,
+		DownloaderID:      downloaderID,
+		LibraryID:         libraryID,
+		NameTemplateID:    nameTemplateID,
+		PredictedDestPath: predictedPathPtr,
 	})
 	if err != nil {
 		return trace, dbgen.DownloadJob{}, fmt.Errorf("create download job: %w", err)
@@ -284,4 +301,56 @@ func (s *DownloadCandidatesService) cleanExpiredCache() {
 			delete(s.cache, key)
 		}
 	}
+}
+
+// calculatePredictedDestPath calculates the predicted destination path for a download job
+// Returns path with .{ext} placeholder that will be replaced at import time
+func (s *DownloadCandidatesService) calculatePredictedDestPath(ctx context.Context, mediaItemID pgtype.UUID, libraryID pgtype.UUID, nameTemplateID pgtype.UUID, candidateTitle string) (string, error) {
+	mediaItem, err := s.repo.GetMediaItem(ctx, mediaItemID)
+	if err != nil {
+		return "", fmt.Errorf("get media item: %w", err)
+	}
+
+	year := ""
+	if mediaItem.Year != nil {
+		year = fmt.Sprintf("%d", *mediaItem.Year)
+	}
+
+	_, err = s.repo.GetLibrary(ctx, libraryID)
+	if err != nil {
+		return "", fmt.Errorf("get library: %w", err)
+	}
+
+	nt, err := s.repo.GetNameTemplate(ctx, nameTemplateID)
+	if err != nil {
+		return "", fmt.Errorf("get name template: %w", err)
+	}
+
+	// Parse quality from the candidate title
+	parser := quality.NewParser()
+	q := parser.Parse(candidateTitle)
+
+	context := quality.NamingContext{
+		Title:   mediaItem.Title,
+		Year:    year,
+		Quality: q,
+	}
+
+	rel, err := template.Render(nt.Template, context)
+	if err != nil {
+		return "", fmt.Errorf("render template: %w", err)
+	}
+
+	// Check if path already has an extension (from template)
+	// If not, append .{ext} placeholder
+	if filepath.Ext(rel) == "" {
+		rel = rel + ".{ext}"
+	} else {
+		// If template already has extension, replace it with .{ext}
+		// This handles cases where template includes extension
+		ext := filepath.Ext(rel)
+		rel = strings.TrimSuffix(rel, ext) + ".{ext}"
+	}
+
+	return rel, nil
 }

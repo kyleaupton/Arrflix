@@ -64,6 +64,15 @@ export const useDownloadJobsStore = defineStore('downloadJobs', () => {
     upsert(res.data as unknown as DownloadJob)
   }
 
+  function getJobById(jobId: string): DownloadJob | undefined {
+    return jobsById.value[jobId]
+  }
+
+  function isJobActive(job: DownloadJob): boolean {
+    const activeStatuses = ['created', 'enqueued', 'downloading', 'importing']
+    return activeStatuses.includes(job.status)
+  }
+
   return {
     jobsById,
     jobsSorted,
@@ -71,5 +80,7 @@ export const useDownloadJobsStore = defineStore('downloadJobs', () => {
     refresh,
     connectLive,
     cancelJob,
+    getJobById,
+    isJobActive,
   }
 })

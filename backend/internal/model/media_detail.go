@@ -1,12 +1,14 @@
 package model
 
 type FileInfo struct {
-	ID            string `json:"id"`
-	LibraryID     string `json:"libraryId"`
-	Path          string `json:"path"` // relative to library root
-	Status        string `json:"status"`
-	SeasonNumber  *int32 `json:"seasonNumber,omitempty"`
-	EpisodeNumber *int32 `json:"episodeNumber,omitempty"`
+	ID            string   `json:"id"`
+	LibraryID     string   `json:"libraryId"`
+	Path          string   `json:"path"` // relative to library root
+	Status        string   `json:"status"`
+	SeasonNumber  *int32   `json:"seasonNumber,omitempty"`
+	EpisodeNumber *int32   `json:"episodeNumber,omitempty"`
+	DownloadJobID *string  `json:"downloadJobId,omitempty"` // For matching with download jobs store
+	Progress      *float64 `json:"progress,omitempty"`       // Progress 0-1 for downloading files
 }
 
 type LibraryAvailability struct {

@@ -230,6 +230,14 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 		recommendations = s.transformMovieRecommendations(ctx, tmdbRecs)
 	}
 
+	// Fetch active download jobs and add them to files
+	downloadJobFiles, err := s.buildFileInfosFromDownloadJobs(ctx, tmdbID)
+	if err != nil {
+		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch download jobs")
+	} else {
+		fileInfos = append(fileInfos, downloadJobFiles...)
+	}
+
 	return model.MovieDetail{
 		TmdbID:        tmdbDetails.ID,
 		Title:         tmdbDetails.Title,
@@ -550,4 +558,61 @@ func parseYear(dateStr string) *int32 {
 	}
 	val := int32(y)
 	return &val
+}
+
+func (s *MediaService) buildFileInfosFromDownloadJobs(ctx context.Context, tmdbID int64) ([]model.FileInfo, error) {
+	downloadJobs, err := s.repo.ListDownloadJobsByTmdbMovieID(ctx, tmdbID)
+	if err != nil {
+		return nil, err
+	}
+
+	activeStatuses := map[string]bool{
+		"created":    true,
+		"enqueued":   true,
+		"downloading": true,
+		"importing":  true,
+	}
+
+	fileInfos := make([]model.FileInfo, 0)
+	for _, job := range downloadJobs {
+		if !activeStatuses[job.Status] {
+			continue
+		}
+
+		// Map job status to file status
+		var fileStatus string
+		switch job.Status {
+		case "created", "enqueued", "downloading":
+			fileStatus = "downloading"
+		case "importing":
+			fileStatus = "importing"
+		default:
+			continue
+		}
+
+		jobID := job.ID.String()
+		libID := job.LibraryID.String()
+
+		// Use predicted_dest_path if available, otherwise fall back to import_dest_path
+		var path string
+		if job.PredictedDestPath != nil && *job.PredictedDestPath != "" {
+			path = *job.PredictedDestPath
+		} else if job.ImportDestPath != nil && *job.ImportDestPath != "" {
+			path = *job.ImportDestPath
+		} else {
+			// Skip jobs without any path information
+			continue
+		}
+
+		fileInfos = append(fileInfos, model.FileInfo{
+			ID:            "", // No media_file exists yet
+			LibraryID:     libID,
+			Path:          path,
+			Status:        fileStatus,
+			DownloadJobID: &jobID,
+			Progress:      job.Progress,
+		})
+	}
+
+	return fileInfos, nil
 }

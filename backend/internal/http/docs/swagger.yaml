@@ -71,6 +71,8 @@ definitions:
         type: string
       next_run_at:
         type: string
+      predicted_dest_path:
+        type: string
       primary_media_file_id:
         type: string
       progress:
@@ -106,6 +108,7 @@ definitions:
     - media_type
     - name_template_id
     - next_run_at
+    - predicted_dest_path
     - primary_media_file_id
     - progress
     - protocol
@@ -909,6 +912,9 @@ definitions:
     - FieldTypeBoolean
   model.FileInfo:
     properties:
+      downloadJobId:
+        description: For matching with download jobs store
+        type: string
       episodeNumber:
         type: integer
       id:
@@ -918,6 +924,9 @@ definitions:
       path:
         description: relative to library root
         type: string
+      progress:
+        description: Progress 0-1 for downloading files
+        type: number
       seasonNumber:
         type: integer
       status:
@@ -1341,6 +1350,8 @@ definitions:
         items:
           type: integer
         type: array
+      isDownloading:
+        type: boolean
       isInLibrary:
         type: boolean
       overview:
@@ -1358,6 +1369,7 @@ definitions:
       year:
         type: integer
     required:
+    - isDownloading
     - isInLibrary
     - overview
     - posterPath
@@ -1578,6 +1590,8 @@ definitions:
         items:
           type: integer
         type: array
+      isDownloading:
+        type: boolean
       isInLibrary:
         type: boolean
       overview:
@@ -1595,6 +1609,7 @@ definitions:
       year:
         type: integer
     required:
+    - isDownloading
     - isInLibrary
     - overview
     - posterPath
