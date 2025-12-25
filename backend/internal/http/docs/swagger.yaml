@@ -1306,6 +1306,10 @@ definitions:
         type: string
       posterPath:
         type: string
+      recommendations:
+        items:
+          $ref: '#/definitions/model.MovieRail'
+        type: array
       releaseDate:
         type: string
       runtime:

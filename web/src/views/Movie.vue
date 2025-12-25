@@ -61,6 +61,11 @@
       </Card> -->
 
       <RailCast v-if="data.credits?.cast?.length" title="Cast" :cast="data.credits.cast" />
+      <RailVideos v-if="data.videos?.length" title="Videos" :videos="data.videos" />
+      <RailMovie
+        v-if="data.recommendations?.length"
+        :rail="{ title: 'Related Movies', type: 'movie', movies: data.recommendations }"
+      />
     </template>
   </div>
 </template>
@@ -77,6 +82,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import MediaHero from '@/components/media/MediaHero.vue'
 import Poster from '@/components/poster/Poster.vue'
 import RailCast from '@/components/rails/RailCast.vue'
+import RailVideos from '@/components/rails/RailVideos.vue'
+import RailMovie from '@/components/rails/RailMovie.vue'
 import DataTable from '@/components/tables/DataTable.vue'
 import { movieFilesColumns } from '@/components/tables/configs/movieFilesTableConfig'
 import { useModal } from '@/composables/useModal'

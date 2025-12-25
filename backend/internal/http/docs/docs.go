@@ -3770,6 +3770,12 @@ const docTemplate = `{
                 "posterPath": {
                     "type": "string"
                 },
+                "recommendations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.MovieRail"
+                    }
+                },
                 "releaseDate": {
                     "type": "string"
                 },

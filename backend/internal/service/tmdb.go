@@ -158,6 +158,13 @@ func (s *TmdbService) GetTVVideos(ctx context.Context, id int64) (tmdb.VideoResu
 	}, STATIC_TTL)
 }
 
+func (s *TmdbService) GetMovieRecommendations(ctx context.Context, id int64) (tmdb.MovieRecommendations, error) {
+	cacheKey := fmt.Sprintf("tmdb_movie_recommendations_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MovieRecommendations, error) {
+		return s.client.GetMovieRecommendations(int(id), map[string]string{})
+	}, STATIC_TTL)
+}
+
 // getOrFetchFromCache encapsulates the pattern of:
 // 1) checking API cache
 // 2) calling the provided fetch function on cache miss

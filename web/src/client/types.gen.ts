@@ -564,6 +564,7 @@ export type ModelMovieDetail = {
     genres?: Array<ModelGenre>;
     overview: string;
     posterPath?: string;
+    recommendations?: Array<ModelMovieRail>;
     releaseDate?: string;
     runtime?: number;
     status: string;

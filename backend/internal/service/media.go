@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"sort"
 	"strconv"
 
 	tmdb "github.com/cyruzin/golang-tmdb"
@@ -100,6 +101,44 @@ func transformVideos(tmdbVideos tmdb.VideoResults) []model.Video {
 	return videos
 }
 
+func (s *MediaService) isInLibrary(ctx context.Context, tmdbID int64, typ model.MediaType) bool {
+	_, err := s.repo.GetMediaItemByTmdbIDAndType(ctx, tmdbID, string(typ))
+	return err == nil
+}
+
+func (s *MediaService) transformMovieRecommendations(ctx context.Context, tmdbRecs tmdb.MovieRecommendations) []model.MovieRail {
+	// Sort by popularity (descending) and take top 10
+	results := tmdbRecs.Results
+
+	// Sort by popularity descending
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Popularity > results[j].Popularity
+	})
+
+	// Take top 10
+	maxResults := 10
+	if len(results) > maxResults {
+		results = results[:maxResults]
+	}
+
+	recommendations := make([]model.MovieRail, 0, len(results))
+	for _, movie := range results {
+		year := parseYear(movie.ReleaseDate)
+		recommendations = append(recommendations, model.MovieRail{
+			TmdbID:      movie.ID,
+			Title:       movie.Title,
+			Overview:    movie.Overview,
+			PosterPath:  movie.PosterPath,
+			ReleaseDate: movie.ReleaseDate,
+			Year:        year,
+			Genres:      movie.GenreIDs,
+			Tagline:     "",
+			IsInLibrary: s.isInLibrary(ctx, movie.ID, model.MediaTypeMovie),
+		})
+	}
+	return recommendations
+}
+
 func (s *MediaService) GetMovie(ctx context.Context, id int64) (model.Movie, error) {
 	tmdbDetails, err := s.tmdb.GetMovieDetails(ctx, id)
 	if err != nil {
@@ -183,21 +222,30 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 		videos = transformVideos(tmdbVideos)
 	}
 
+	var recommendations []model.MovieRail
+	tmdbRecs, err := s.tmdb.GetMovieRecommendations(ctx, tmdbID)
+	if err != nil {
+		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch movie recommendations")
+	} else {
+		recommendations = s.transformMovieRecommendations(ctx, tmdbRecs)
+	}
+
 	return model.MovieDetail{
-		TmdbID:       tmdbDetails.ID,
-		Title:        tmdbDetails.Title,
-		Year:         year,
-		Overview:     tmdbDetails.Overview,
-		Tagline:      tmdbDetails.Tagline,
-		Status:       tmdbDetails.Status,
-		ReleaseDate:  tmdbDetails.ReleaseDate,
-		Runtime:      tmdbDetails.Runtime,
-		Genres:       genres,
-		PosterPath:   tmdbDetails.PosterPath,
-		BackdropPath: tmdbDetails.BackdropPath,
-		Files:        fileInfos,
-		Credits:      credits,
-		Videos:       videos,
+		TmdbID:        tmdbDetails.ID,
+		Title:         tmdbDetails.Title,
+		Year:          year,
+		Overview:      tmdbDetails.Overview,
+		Tagline:       tmdbDetails.Tagline,
+		Status:        tmdbDetails.Status,
+		ReleaseDate:   tmdbDetails.ReleaseDate,
+		Runtime:       tmdbDetails.Runtime,
+		Genres:        genres,
+		PosterPath:    tmdbDetails.PosterPath,
+		BackdropPath:  tmdbDetails.BackdropPath,
+		Files:         fileInfos,
+		Credits:       credits,
+		Videos:        videos,
+		Recommendations: recommendations,
 	}, nil
 }
 
