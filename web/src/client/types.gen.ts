@@ -276,10 +276,43 @@ export type ModelCapabilities = {
     tvSearchParams: Array<string>;
 };
 
+export type ModelCastMember = {
+    /**
+     * role name for cast
+     */
+    character: string;
+    name: string;
+    /**
+     * for cast ordering
+     */
+    order: number;
+    profilePath?: string;
+    tmdbId: number;
+};
+
 export type ModelCategories = {
     id: number;
     name: string;
     subCategories: Array<ModelCategories>;
+};
+
+export type ModelCredits = {
+    cast: Array<ModelCastMember>;
+    crew: Array<ModelCrewMember>;
+};
+
+export type ModelCrewMember = {
+    /**
+     * e.g., "Directing", "Production"
+     */
+    department: string;
+    /**
+     * e.g., "Director", "Producer"
+     */
+    job: string;
+    name: string;
+    profilePath?: string;
+    tmdbId: number;
 };
 
 export type ModelDownloadCandidate = {
@@ -527,6 +560,7 @@ export type ModelLibraryAvailability = {
 export type ModelMovieDetail = {
     availability: ModelAvailability;
     backdropPath?: string;
+    credits?: ModelCredits;
     files: Array<ModelFileInfo>;
     genres?: Array<ModelGenre>;
     overview: string;
@@ -537,6 +571,7 @@ export type ModelMovieDetail = {
     tagline?: string;
     title: string;
     tmdbId: number;
+    videos?: Array<ModelVideo>;
     year?: number;
 };
 
@@ -609,6 +644,7 @@ export type ModelSelectOption = {
 export type ModelSeriesDetail = {
     availability: ModelAvailability;
     backdropPath?: string;
+    credits?: ModelCredits;
     files: Array<ModelFileInfo>;
     firstAirDate?: string;
     genres?: Array<ModelGenre>;
@@ -621,6 +657,7 @@ export type ModelSeriesDetail = {
     tagline?: string;
     title: string;
     tmdbId: number;
+    videos?: Array<ModelVideo>;
     year?: number;
 };
 
@@ -634,6 +671,29 @@ export type ModelSeriesRail = {
     title: string;
     tmdbId: number;
     year?: number;
+};
+
+export type ModelVideo = {
+    isOfficialTrailer: boolean;
+    /**
+     * YouTube/Vimeo video ID
+     */
+    key: string;
+    name: string;
+    publishedAt?: string;
+    /**
+     * "YouTube", "Vimeo", etc.
+     */
+    site: string;
+    /**
+     * 360, 480, 720, 1080
+     */
+    size: number;
+    tmdbId: string;
+    /**
+     * "Trailer", "Teaser", "Clip", etc.
+     */
+    type: string;
 };
 
 export type GetHealthData = {

@@ -36,6 +36,8 @@ type MovieDetail struct {
 
 	Availability Availability `json:"availability"`
 	Files        []FileInfo   `json:"files"`
+	Credits      *Credits     `json:"credits,omitempty"`
+	Videos       []Video      `json:"videos,omitempty"`
 }
 
 type EpisodeAvailability struct {
@@ -70,6 +72,8 @@ type SeriesDetail struct {
 	Availability Availability  `json:"availability"`
 	Files        []FileInfo    `json:"files"`
 	Seasons      []SeasonDetail `json:"seasons"`
+	Credits      *Credits      `json:"credits,omitempty"`
+	Videos       []Video       `json:"videos,omitempty"`
 }
 
 

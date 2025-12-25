@@ -130,6 +130,34 @@ func (s *TmdbService) GetOnTheAirSeries(ctx context.Context) (tmdb.TVOnTheAir, e
 	}, DYNAMIC_TTL)
 }
 
+func (s *TmdbService) GetMovieCredits(ctx context.Context, id int64) (tmdb.MovieCredits, error) {
+	cacheKey := fmt.Sprintf("tmdb_movie_credits_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MovieCredits, error) {
+		return s.client.GetMovieCredits(int(id), map[string]string{})
+	}, STATIC_TTL)
+}
+
+func (s *TmdbService) GetMovieVideos(ctx context.Context, id int64) (tmdb.VideoResults, error) {
+	cacheKey := fmt.Sprintf("tmdb_movie_videos_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.VideoResults, error) {
+		return s.client.GetMovieVideos(int(id), map[string]string{})
+	}, STATIC_TTL)
+}
+
+func (s *TmdbService) GetTVCredits(ctx context.Context, id int64) (tmdb.TVCredits, error) {
+	cacheKey := fmt.Sprintf("tmdb_tv_credits_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVCredits, error) {
+		return s.client.GetTVCredits(int(id), map[string]string{})
+	}, STATIC_TTL)
+}
+
+func (s *TmdbService) GetTVVideos(ctx context.Context, id int64) (tmdb.VideoResults, error) {
+	cacheKey := fmt.Sprintf("tmdb_tv_videos_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.VideoResults, error) {
+		return s.client.GetTVVideos(int(id), map[string]string{})
+	}, STATIC_TTL)
+}
+
 // getOrFetchFromCache encapsulates the pattern of:
 // 1) checking API cache
 // 2) calling the provided fetch function on cache miss

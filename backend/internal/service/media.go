@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	tmdb "github.com/cyruzin/golang-tmdb"
 	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
@@ -22,6 +23,81 @@ func NewMediaService(r *repo.Repository, l *logger.Logger, tmdb *TmdbService) *M
 
 func (s *MediaService) ListLibraryItems(ctx context.Context) ([]dbgen.MediaItem, error) {
 	return s.repo.ListMediaItems(ctx)
+}
+
+func transformMovieCredits(tmdbCredits tmdb.MovieCredits) *model.Credits {
+	cast := make([]model.CastMember, 0, len(tmdbCredits.Cast))
+	for _, c := range tmdbCredits.Cast {
+		cast = append(cast, model.CastMember{
+			TmdbID:      c.ID,
+			Name:        c.Name,
+			Character:   c.Character,
+			ProfilePath: c.ProfilePath,
+			Order:       c.Order,
+		})
+	}
+
+	// crew := make([]model.CrewMember, 0, len(tmdbCredits.Crew))
+	// for _, c := range tmdbCredits.Crew {
+	// 	crew = append(crew, model.CrewMember{
+	// 		TmdbID:      c.ID,
+	// 		Name:        c.Name,
+	// 		Job:         c.Job,
+	// 		Department:  c.Department,
+	// 		ProfilePath: c.ProfilePath,
+	// 	})
+	// }
+
+	return &model.Credits{
+		Cast: cast,
+		// Crew: crew,
+	}
+}
+
+func transformTVCredits(tmdbCredits tmdb.TVCredits) *model.Credits {
+	cast := make([]model.CastMember, 0, len(tmdbCredits.Cast))
+	for _, c := range tmdbCredits.Cast {
+		cast = append(cast, model.CastMember{
+			TmdbID:      c.ID,
+			Name:        c.Name,
+			Character:   c.Character,
+			ProfilePath: c.ProfilePath,
+			Order:       c.Order,
+		})
+	}
+
+	crew := make([]model.CrewMember, 0, len(tmdbCredits.Crew))
+	for _, c := range tmdbCredits.Crew {
+		crew = append(crew, model.CrewMember{
+			TmdbID:      c.ID,
+			Name:        c.Name,
+			Job:         c.Job,
+			Department:  c.Department,
+			ProfilePath: c.ProfilePath,
+		})
+	}
+
+	return &model.Credits{
+		Cast: cast,
+		Crew: crew,
+	}
+}
+
+func transformVideos(tmdbVideos tmdb.VideoResults) []model.Video {
+	videos := make([]model.Video, 0, len(tmdbVideos.Results))
+	for _, v := range tmdbVideos.Results {
+		videos = append(videos, model.Video{
+			TmdbID:            v.ID,
+			Key:               v.Key,
+			Name:              v.Name,
+			Site:              v.Site,
+			Type:              v.Type,
+			Size:              v.Size,
+			PublishedAt:       v.PublishedAt,
+			IsOfficialTrailer: v.Type == "Trailer" && v.Official == true,
+		})
+	}
+	return videos
 }
 
 func (s *MediaService) GetMovie(ctx context.Context, id int64) (model.Movie, error) {
@@ -90,6 +166,23 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 	}
 	year := parseYear(tmdbDetails.ReleaseDate)
 
+	// Fetch credits and videos (gracefully handle errors)
+	var credits *model.Credits
+	tmdbCredits, err := s.tmdb.GetMovieCredits(ctx, tmdbID)
+	if err != nil {
+		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch movie credits")
+	} else {
+		credits = transformMovieCredits(tmdbCredits)
+	}
+
+	var videos []model.Video
+	tmdbVideos, err := s.tmdb.GetMovieVideos(ctx, tmdbID)
+	if err != nil {
+		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch movie videos")
+	} else {
+		videos = transformVideos(tmdbVideos)
+	}
+
 	return model.MovieDetail{
 		TmdbID:       tmdbDetails.ID,
 		Title:        tmdbDetails.Title,
@@ -104,6 +197,8 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 		BackdropPath: tmdbDetails.BackdropPath,
 		Availability: availability,
 		Files:        fileInfos,
+		Credits:      credits,
+		Videos:       videos,
 	}, nil
 }
 
@@ -197,6 +292,23 @@ func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model
 	seasons := buildSeasonDetails(episodes)
 	year := parseYear(tmdbDetails.FirstAirDate)
 
+	// Fetch credits and videos (gracefully handle errors)
+	var credits *model.Credits
+	tmdbCredits, err := s.tmdb.GetTVCredits(ctx, tmdbID)
+	if err != nil {
+		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch series credits")
+	} else {
+		credits = transformTVCredits(tmdbCredits)
+	}
+
+	var videos []model.Video
+	tmdbVideos, err := s.tmdb.GetTVVideos(ctx, tmdbID)
+	if err != nil {
+		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch series videos")
+	} else {
+		videos = transformVideos(tmdbVideos)
+	}
+
 	return model.SeriesDetail{
 		TmdbID:       tmdbDetails.ID,
 		Title:        tmdbDetails.Name,
@@ -213,14 +325,16 @@ func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model
 		Availability: availability,
 		Files:        fileInfos,
 		Seasons:      seasons,
+		Credits:      credits,
+		Videos:       videos,
 	}, nil
 }
 
 func buildFileInfoAndAvailability(files []dbgen.ListMediaFilesForItemRow) ([]model.FileInfo, model.Availability) {
 	fileInfos := make([]model.FileInfo, 0, len(files))
 	libAgg := map[string]struct {
-		count   int
-		status  []string
+		count  int
+		status []string
 	}{}
 
 	for _, f := range files {

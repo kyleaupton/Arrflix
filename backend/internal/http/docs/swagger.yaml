@@ -654,6 +654,26 @@ definitions:
     - supportsRawSearch
     - tvSearchParams
     type: object
+  model.CastMember:
+    properties:
+      character:
+        description: role name for cast
+        type: string
+      name:
+        type: string
+      order:
+        description: for cast ordering
+        type: integer
+      profilePath:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - character
+    - name
+    - order
+    - tmdbId
+    type: object
   model.Categories:
     properties:
       id:
@@ -668,6 +688,40 @@ definitions:
     - id
     - name
     - subCategories
+    type: object
+  model.Credits:
+    properties:
+      cast:
+        items:
+          $ref: '#/definitions/model.CastMember'
+        type: array
+      crew:
+        items:
+          $ref: '#/definitions/model.CrewMember'
+        type: array
+    required:
+    - cast
+    - crew
+    type: object
+  model.CrewMember:
+    properties:
+      department:
+        description: e.g., "Directing", "Production"
+        type: string
+      job:
+        description: e.g., "Director", "Producer"
+        type: string
+      name:
+        type: string
+      profilePath:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - department
+    - job
+    - name
+    - tmdbId
     type: object
   model.DownloadCandidate:
     properties:
@@ -1240,6 +1294,8 @@ definitions:
         $ref: '#/definitions/model.Availability'
       backdropPath:
         type: string
+      credits:
+        $ref: '#/definitions/model.Credits'
       files:
         items:
           $ref: '#/definitions/model.FileInfo'
@@ -1264,6 +1320,10 @@ definitions:
         type: string
       tmdbId:
         type: integer
+      videos:
+        items:
+          $ref: '#/definitions/model.Video'
+        type: array
       year:
         type: integer
     required:
@@ -1428,6 +1488,8 @@ definitions:
         $ref: '#/definitions/model.Availability'
       backdropPath:
         type: string
+      credits:
+        $ref: '#/definitions/model.Credits'
       files:
         items:
           $ref: '#/definitions/model.FileInfo'
@@ -1458,6 +1520,10 @@ definitions:
         type: string
       tmdbId:
         type: integer
+      videos:
+        items:
+          $ref: '#/definitions/model.Video'
+        type: array
       year:
         type: integer
     required:
@@ -1499,6 +1565,37 @@ definitions:
     - releaseDate
     - title
     - tmdbId
+    type: object
+  model.Video:
+    properties:
+      isOfficialTrailer:
+        type: boolean
+      key:
+        description: YouTube/Vimeo video ID
+        type: string
+      name:
+        type: string
+      publishedAt:
+        type: string
+      site:
+        description: '"YouTube", "Vimeo", etc.'
+        type: string
+      size:
+        description: 360, 480, 720, 1080
+        type: integer
+      tmdbId:
+        type: string
+      type:
+        description: '"Trailer", "Teaser", "Clip", etc.'
+        type: string
+    required:
+    - isOfficialTrailer
+    - key
+    - name
+    - site
+    - size
+    - tmdbId
+    - type
     type: object
 info:
   contact: {}

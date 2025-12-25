@@ -1,14 +1,16 @@
 <template>
-  <section class="media-hero relative overflow-hidden rounded-lg">
+  <section class="media-hero relative overflow-hidden -mx-4 -my-4">
     <div class="backdrop" :class="{ 'has-image': !!backdropUrl }">
       <img v-if="backdropUrl" :src="backdropUrl" alt="" aria-hidden="true" />
       <div class="backdrop-overlay" />
     </div>
 
-    <div class="content relative p-4 sm:p-6 md:p-8">
+    <div class="content relative px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-10">
       <div class="flex gap-4 md:gap-6 items-start">
-        <div v-if="posterUrl" class="poster shadow-lg">
-          <img :src="posterUrl" :alt="title" loading="eager" decoding="async" />
+        <div v-if="posterUrl || $slots.poster" class="poster shadow-lg">
+          <slot name="poster">
+            <img v-if="posterUrl" :src="posterUrl" :alt="title" loading="eager" decoding="async" />
+          </slot>
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-start justify-between gap-3">
@@ -23,6 +25,13 @@
 
           <div v-if="chips && chips.length" class="chips mt-3 flex flex-wrap gap-2">
             <span v-for="(chip, i) in chips" :key="i" class="chip">{{ chip }}</span>
+          </div>
+
+          <div v-if="trailerUrl" class="trailer mt-4">
+            <Button @click="openTrailerModal">
+              <ExternalLink class="size-4" />
+              Watch Trailer
+            </Button>
           </div>
 
           <p
@@ -40,14 +49,22 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { ExternalLink } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
+
+const props = defineProps<{
   title: string
   subtitle?: string
   overview?: string
   posterUrl?: string
   backdropUrl?: string
   chips?: string[]
+  trailerUrl?: string
 }>()
+
+const openTrailerModal = () => {
+  window.open(props.trailerUrl, '_blank')
+}
 </script>
 
 <style scoped>
@@ -84,23 +101,21 @@ defineProps<{
 
 .poster {
   flex: 0 0 auto;
-  width: 8rem; /* 128px */
-  aspect-ratio: 2 / 3;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #0f172a;
-}
-
-@media (min-width: 768px) {
-  .poster {
-    width: 10rem;
-  }
+  display: flex;
+  align-items: flex-start;
 }
 
 .poster img {
-  width: 100%;
-  height: 100%;
+  width: 8rem; /* 128px */
+  aspect-ratio: 2 / 3;
+  border-radius: 12px;
   object-fit: cover;
+}
+
+@media (min-width: 768px) {
+  .poster img {
+    width: 10rem;
+  }
 }
 
 .title {

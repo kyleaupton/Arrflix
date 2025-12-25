@@ -12,10 +12,13 @@
         :title="data.title"
         :subtitle="releaseYear"
         :overview="data.overview"
-        :poster-url="posterUrl"
         :backdrop-url="backdropUrl"
         :chips="movieChips"
+        :trailer-url="trailerUrl"
       >
+        <template #poster>
+          <Poster :item="data" size="large" :clickable="false" />
+        </template>
         <template #actions>
           <Button @click="searchForDownloadCandidates">
             <Download class="mr-2 size-4" />
@@ -38,6 +41,7 @@ import { getV1MovieByIdOptions } from '@/client/@tanstack/vue-query.gen'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import MediaHero from '@/components/media/MediaHero.vue'
+import Poster from '@/components/poster/Poster.vue'
 import { useModal } from '@/composables/useModal'
 import DownloadCandidatesDialog from '@/components/download-candidates/DownloadCandidatesDialog.vue'
 
@@ -53,6 +57,21 @@ const id = computed(() => {
   return castAttept
 })
 
+const trailerUrl = computed(() => {
+  const trailer = data.value?.videos?.find((v) => v.isOfficialTrailer)
+  if (!trailer) return undefined
+
+  switch (trailer.site) {
+    case 'YouTube':
+      return `https://www.youtube.com/watch?v=${trailer.key}`
+    case 'Vimeo':
+      return `https://www.vimeo.com/watch?v=${trailer.key}`
+    default:
+      console.warn(`Unknown trailer site: ${trailer.site}`)
+      return undefined
+  }
+})
+
 const { isLoading, isError, data } = useQuery({
   ...getV1MovieByIdOptions({ path: { id: id.value } }),
 })
@@ -61,10 +80,6 @@ const releaseYear = computed(() =>
   data.value?.releaseDate ? new Date(data.value.releaseDate).getFullYear().toString() : '',
 )
 
-// Image URLs: backend returns posterPath/backdropPath; map them to TMDB URLs
-const posterUrl = computed(() =>
-  data.value?.posterPath ? `https://image.tmdb.org/t/p/w342/${data.value.posterPath}` : undefined,
-)
 const backdropUrl = computed(() =>
   data.value?.backdropPath
     ? `https://image.tmdb.org/t/p/w1280/${data.value.backdropPath}`
@@ -73,9 +88,9 @@ const backdropUrl = computed(() =>
 
 const movieChips = computed(() => {
   const chips: string[] = []
-  // if (data.value?.runtimeMinutes) chips.push(`${data.value.runtimeMinutes}m`)
-  // if (data.value?.certification) chips.push(data.value.certification)
-  // if (data.value?.genres?.length) chips.push(...data.value.genres.slice(0, 3))
+  if (data.value?.genres?.length) {
+    chips.push(...data.value.genres.slice(0, 4).map((g) => g.name))
+  }
   return chips
 })
 

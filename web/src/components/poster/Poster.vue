@@ -2,7 +2,7 @@
   <component :is="to ? 'router-link' : 'div'" :to="to" class="poster-wrap" :class="sizeClass">
     <img
       class="poster"
-      :class="{ 'is-loaded': !isLoading }"
+      :class="{ 'is-loaded': !isLoading, 'cursor-pointer': clickable }"
       :src="posterPath"
       :alt="item.title"
       loading="lazy"
@@ -67,10 +67,12 @@ const props = withDefaults(
     size?: PosterSize
     to?: { path: string } | string
     showLibraryStatus?: boolean
+    clickable?: boolean
   }>(),
   {
     size: 'medium',
     showLibraryStatus: true,
+    clickable: true,
   },
 )
 
@@ -113,7 +115,6 @@ const onError = () => {
   border-radius: 8px !important;
   overflow: hidden;
   background-color: #111827; /* neutral placeholder while loading */
-  cursor: pointer;
   text-decoration: none;
   color: inherit;
 }

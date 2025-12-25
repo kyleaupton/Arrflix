@@ -2843,6 +2843,34 @@ const docTemplate = `{
                 }
             }
         },
+        "model.CastMember": {
+            "type": "object",
+            "required": [
+                "character",
+                "name",
+                "order",
+                "tmdbId"
+            ],
+            "properties": {
+                "character": {
+                    "description": "role name for cast",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order": {
+                    "description": "for cast ordering",
+                    "type": "integer"
+                },
+                "profilePath": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.Categories": {
             "type": "object",
             "required": [
@@ -2862,6 +2890,55 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.Categories"
                     }
+                }
+            }
+        },
+        "model.Credits": {
+            "type": "object",
+            "required": [
+                "cast",
+                "crew"
+            ],
+            "properties": {
+                "cast": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.CastMember"
+                    }
+                },
+                "crew": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.CrewMember"
+                    }
+                }
+            }
+        },
+        "model.CrewMember": {
+            "type": "object",
+            "required": [
+                "department",
+                "job",
+                "name",
+                "tmdbId"
+            ],
+            "properties": {
+                "department": {
+                    "description": "e.g., \"Directing\", \"Production\"",
+                    "type": "string"
+                },
+                "job": {
+                    "description": "e.g., \"Director\", \"Producer\"",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profilePath": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
                 }
             }
         },
@@ -3676,6 +3753,9 @@ const docTemplate = `{
                 "backdropPath": {
                     "type": "string"
                 },
+                "credits": {
+                    "$ref": "#/definitions/model.Credits"
+                },
                 "files": {
                     "type": "array",
                     "items": {
@@ -3711,6 +3791,12 @@ const docTemplate = `{
                 },
                 "tmdbId": {
                     "type": "integer"
+                },
+                "videos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Video"
+                    }
                 },
                 "year": {
                     "type": "integer"
@@ -3947,6 +4033,9 @@ const docTemplate = `{
                 "backdropPath": {
                     "type": "string"
                 },
+                "credits": {
+                    "$ref": "#/definitions/model.Credits"
+                },
                 "files": {
                     "type": "array",
                     "items": {
@@ -3991,6 +4080,12 @@ const docTemplate = `{
                 },
                 "tmdbId": {
                     "type": "integer"
+                },
+                "videos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Video"
+                    }
                 },
                 "year": {
                     "type": "integer"
@@ -4037,6 +4132,48 @@ const docTemplate = `{
                 },
                 "year": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.Video": {
+            "type": "object",
+            "required": [
+                "isOfficialTrailer",
+                "key",
+                "name",
+                "site",
+                "size",
+                "tmdbId",
+                "type"
+            ],
+            "properties": {
+                "isOfficialTrailer": {
+                    "type": "boolean"
+                },
+                "key": {
+                    "description": "YouTube/Vimeo video ID",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "publishedAt": {
+                    "type": "string"
+                },
+                "site": {
+                    "description": "\"YouTube\", \"Vimeo\", etc.",
+                    "type": "string"
+                },
+                "size": {
+                    "description": "360, 480, 720, 1080",
+                    "type": "integer"
+                },
+                "tmdbId": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"Trailer\", \"Teaser\", \"Clip\", etc.",
+                    "type": "string"
                 }
             }
         }

@@ -104,6 +104,38 @@ type ProductionCountry struct {
 	Name      string `json:"name"`
 }
 
+type CastMember struct {
+	TmdbID      int64  `json:"tmdbId"`
+	Name        string `json:"name"`
+	Character   string `json:"character"` // role name for cast
+	ProfilePath string `json:"profilePath,omitempty"`
+	Order       int    `json:"order"` // for cast ordering
+}
+
+type CrewMember struct {
+	TmdbID      int64  `json:"tmdbId"`
+	Name        string `json:"name"`
+	Job         string `json:"job"`        // e.g., "Director", "Producer"
+	Department  string `json:"department"` // e.g., "Directing", "Production"
+	ProfilePath string `json:"profilePath,omitempty"`
+}
+
+type Credits struct {
+	Cast []CastMember `json:"cast"`
+	Crew []CrewMember `json:"crew"`
+}
+
+type Video struct {
+	TmdbID            string `json:"tmdbId"`
+	Key               string `json:"key"` // YouTube/Vimeo video ID
+	Name              string `json:"name"`
+	Site              string `json:"site"` // "YouTube", "Vimeo", etc.
+	Type              string `json:"type"` // "Trailer", "Teaser", "Clip", etc.
+	Size              int    `json:"size"` // 360, 480, 720, 1080
+	PublishedAt       string `json:"publishedAt,omitempty"`
+	IsOfficialTrailer bool   `json:"isOfficialTrailer"`
+}
+
 type MediaType string
 
 const (
