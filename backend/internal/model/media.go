@@ -81,6 +81,21 @@ type Person struct {
 	ProfilePath string `json:"profilePath"`
 }
 
+type PersonDetail struct {
+	TmdbID             int64    `json:"tmdbId"`
+	Name               string   `json:"name"`
+	Biography          string   `json:"biography"`
+	Birthday           *string  `json:"birthday,omitempty"`
+	Deathday           *string  `json:"deathday,omitempty"`
+	PlaceOfBirth       *string  `json:"placeOfBirth,omitempty"`
+	KnownForDepartment string   `json:"knownForDepartment"`
+	ProfilePath        string   `json:"profilePath,omitempty"`
+	Popularity         float32  `json:"popularity"`
+	AlsoKnownAs        []string `json:"alsoKnownAs,omitempty"`
+	Homepage           *string  `json:"homepage,omitempty"`
+	IMDbID             *string  `json:"imdbId,omitempty"`
+}
+
 type Network struct {
 	TmdbID   int64  `json:"tmdbId"`
 	Name     string `json:"name"`

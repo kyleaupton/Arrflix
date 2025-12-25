@@ -587,6 +587,21 @@ export type ModelMovieRail = {
     year?: number;
 };
 
+export type ModelPersonDetail = {
+    alsoKnownAs?: Array<string>;
+    biography: string;
+    birthday?: string;
+    deathday?: string;
+    homepage?: string;
+    imdbId?: string;
+    knownForDepartment: string;
+    name: string;
+    placeOfBirth?: string;
+    popularity: number;
+    profilePath?: string;
+    tmdbId: number;
+};
+
 export type ModelPlan = {
     /**
      * how to download
@@ -1698,6 +1713,27 @@ export type PutV1NameTemplatesByIdResponses = {
 };
 
 export type PutV1NameTemplatesByIdResponse = PutV1NameTemplatesByIdResponses[keyof PutV1NameTemplatesByIdResponses];
+
+export type GetV1PersonByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Person ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1/person/{id}';
+};
+
+export type GetV1PersonByIdResponses = {
+    /**
+     * OK
+     */
+    200: ModelPersonDetail;
+};
+
+export type GetV1PersonByIdResponse = GetV1PersonByIdResponses[keyof GetV1PersonByIdResponses];
 
 export type GetV1PoliciesData = {
     body?: never;

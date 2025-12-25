@@ -377,6 +377,36 @@ func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model
 	}, nil
 }
 
+func (s *MediaService) GetPersonDetail(ctx context.Context, tmdbID int64) (model.PersonDetail, error) {
+	tmdbDetails, err := s.tmdb.GetPersonDetails(ctx, tmdbID)
+	if err != nil {
+		return model.PersonDetail{}, err
+	}
+
+	// Helper function to convert empty string to nil pointer
+	stringPtr := func(s string) *string {
+		if s == "" {
+			return nil
+		}
+		return &s
+	}
+
+	return model.PersonDetail{
+		TmdbID:             tmdbDetails.ID,
+		Name:               tmdbDetails.Name,
+		Biography:          tmdbDetails.Biography,
+		Birthday:           stringPtr(tmdbDetails.Birthday),
+		Deathday:           stringPtr(tmdbDetails.Deathday),
+		PlaceOfBirth:       stringPtr(tmdbDetails.PlaceOfBirth),
+		KnownForDepartment: tmdbDetails.KnownForDepartment,
+		ProfilePath:        tmdbDetails.ProfilePath,
+		Popularity:         tmdbDetails.Popularity,
+		AlsoKnownAs:        tmdbDetails.AlsoKnownAs,
+		Homepage:           stringPtr(tmdbDetails.Homepage),
+		IMDbID:             stringPtr(tmdbDetails.IMDbID),
+	}, nil
+}
+
 func buildFileInfos(files []dbgen.ListMediaFilesForItemRow) []model.FileInfo {
 	fileInfos := make([]model.FileInfo, 0, len(files))
 

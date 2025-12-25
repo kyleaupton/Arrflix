@@ -78,6 +78,10 @@ const router = createRouter({
       path: '/series/:id',
       component: () => import('@/views/Series.vue'),
     },
+    {
+      path: '/person/:id',
+      component: () => import('@/views/Person.vue'),
+    },
   ],
 })
 

@@ -1365,6 +1365,41 @@ definitions:
     - title
     - tmdbId
     type: object
+  model.PersonDetail:
+    properties:
+      alsoKnownAs:
+        items:
+          type: string
+        type: array
+      biography:
+        type: string
+      birthday:
+        type: string
+      deathday:
+        type: string
+      homepage:
+        type: string
+      imdbId:
+        type: string
+      knownForDepartment:
+        type: string
+      name:
+        type: string
+      placeOfBirth:
+        type: string
+      popularity:
+        type: number
+      profilePath:
+        type: string
+      tmdbId:
+        type: integer
+    required:
+    - biography
+    - knownForDepartment
+    - name
+    - popularity
+    - tmdbId
+    type: object
   model.Plan:
     properties:
       downloaderId:
@@ -2443,6 +2478,24 @@ paths:
       summary: Get default name template by type
       tags:
       - name-templates
+  /v1/person/{id}:
+    get:
+      parameters:
+      - description: Person ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.PersonDetail'
+      summary: Get person (by TMDB id)
+      tags:
+      - media
   /v1/policies:
     get:
       produces:

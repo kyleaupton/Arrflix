@@ -1310,6 +1310,34 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/person/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "media"
+                ],
+                "summary": "Get person (by TMDB id)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Person ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.PersonDetail"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/policies": {
             "get": {
                 "produces": [
@@ -3844,6 +3872,57 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.PersonDetail": {
+            "type": "object",
+            "required": [
+                "biography",
+                "knownForDepartment",
+                "name",
+                "popularity",
+                "tmdbId"
+            ],
+            "properties": {
+                "alsoKnownAs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "biography": {
+                    "type": "string"
+                },
+                "birthday": {
+                    "type": "string"
+                },
+                "deathday": {
+                    "type": "string"
+                },
+                "homepage": {
+                    "type": "string"
+                },
+                "imdbId": {
+                    "type": "string"
+                },
+                "knownForDepartment": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "placeOfBirth": {
+                    "type": "string"
+                },
+                "popularity": {
+                    "type": "number"
+                },
+                "profilePath": {
+                    "type": "string"
+                },
+                "tmdbId": {
                     "type": "integer"
                 }
             }

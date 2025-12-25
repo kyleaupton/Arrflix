@@ -3,7 +3,9 @@
     :to="{ path: `/person/${member.tmdbId}` }"
     class="cast-card flex flex-col items-center gap-2 w-32 sm:w-36"
   >
-    <div class="cast-photo-wrapper relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+    <div
+      class="cast-photo-wrapper relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-muted"
+    >
       <img
         v-if="profileImageUrl"
         :src="profileImageUrl"
@@ -36,4 +38,3 @@ const profileImageUrl = computed(() => {
   return `https://image.tmdb.org/t/p/w185/${props.member.profilePath}`
 })
 </script>
-
