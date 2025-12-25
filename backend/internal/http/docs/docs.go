@@ -3739,7 +3739,6 @@ const docTemplate = `{
         "model.MovieDetail": {
             "type": "object",
             "required": [
-                "availability",
                 "files",
                 "overview",
                 "status",
@@ -3747,9 +3746,6 @@ const docTemplate = `{
                 "tmdbId"
             ],
             "properties": {
-                "availability": {
-                    "$ref": "#/definitions/model.Availability"
-                },
                 "backdropPath": {
                     "type": "string"
                 },

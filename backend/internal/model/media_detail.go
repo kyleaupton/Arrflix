@@ -1,23 +1,23 @@
 package model
 
 type FileInfo struct {
-	ID           string  `json:"id"`
-	LibraryID    string  `json:"libraryId"`
-	Path         string  `json:"path"` // relative to library root
-	Status       string  `json:"status"`
-	SeasonNumber *int32  `json:"seasonNumber,omitempty"`
+	ID            string `json:"id"`
+	LibraryID     string `json:"libraryId"`
+	Path          string `json:"path"` // relative to library root
+	Status        string `json:"status"`
+	SeasonNumber  *int32 `json:"seasonNumber,omitempty"`
 	EpisodeNumber *int32 `json:"episodeNumber,omitempty"`
 }
 
 type LibraryAvailability struct {
-	LibraryID   string `json:"libraryId"`
-	FileCount   int    `json:"fileCount"`
+	LibraryID    string `json:"libraryId"`
+	FileCount    int    `json:"fileCount"`
 	StatusRollup string `json:"statusRollup"`
 }
 
 type Availability struct {
-	IsInLibrary bool                   `json:"isInLibrary"`
-	Libraries   []LibraryAvailability  `json:"libraries"`
+	IsInLibrary bool                  `json:"isInLibrary"`
+	Libraries   []LibraryAvailability `json:"libraries"`
 }
 
 type MovieDetail struct {
@@ -25,19 +25,18 @@ type MovieDetail struct {
 	Title  string `json:"title"`
 	Year   *int32 `json:"year,omitempty"`
 
-	Overview     string   `json:"overview"`
-	Tagline      string   `json:"tagline,omitempty"`
-	Status       string   `json:"status"`
-	ReleaseDate  string   `json:"releaseDate,omitempty"`
-	Runtime      int      `json:"runtime,omitempty"`
-	Genres       []Genre  `json:"genres,omitempty"`
-	PosterPath   string   `json:"posterPath,omitempty"`
-	BackdropPath string   `json:"backdropPath,omitempty"`
+	Overview     string  `json:"overview"`
+	Tagline      string  `json:"tagline,omitempty"`
+	Status       string  `json:"status"`
+	ReleaseDate  string  `json:"releaseDate,omitempty"`
+	Runtime      int     `json:"runtime,omitempty"`
+	Genres       []Genre `json:"genres,omitempty"`
+	PosterPath   string  `json:"posterPath,omitempty"`
+	BackdropPath string  `json:"backdropPath,omitempty"`
 
-	Availability Availability `json:"availability"`
-	Files        []FileInfo   `json:"files"`
-	Credits      *Credits     `json:"credits,omitempty"`
-	Videos       []Video      `json:"videos,omitempty"`
+	Files   []FileInfo `json:"files"`
+	Credits *Credits   `json:"credits,omitempty"`
+	Videos  []Video    `json:"videos,omitempty"`
 }
 
 type EpisodeAvailability struct {
@@ -69,11 +68,9 @@ type SeriesDetail struct {
 	PosterPath   string  `json:"posterPath,omitempty"`
 	BackdropPath string  `json:"backdropPath,omitempty"`
 
-	Availability Availability  `json:"availability"`
-	Files        []FileInfo    `json:"files"`
+	Availability Availability   `json:"availability"`
+	Files        []FileInfo     `json:"files"`
 	Seasons      []SeasonDetail `json:"seasons"`
-	Credits      *Credits      `json:"credits,omitempty"`
-	Videos       []Video       `json:"videos,omitempty"`
+	Credits      *Credits       `json:"credits,omitempty"`
+	Videos       []Video        `json:"videos,omitempty"`
 }
-
-

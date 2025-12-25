@@ -3731,7 +3731,6 @@
         "model.MovieDetail": {
             "type": "object",
             "required": [
-                "availability",
                 "files",
                 "overview",
                 "status",
@@ -3739,9 +3738,6 @@
                 "tmdbId"
             ],
             "properties": {
-                "availability": {
-                    "$ref": "#/definitions/model.Availability"
-                },
                 "backdropPath": {
                     "type": "string"
                 },

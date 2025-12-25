@@ -1,32 +1,29 @@
 <template>
   <div class="library-reference">
-    <div v-if="isLoading" class="inline-flex items-center gap-1 text-muted-color">
-      <i class="pi pi-spin pi-spinner text-sm"></i>
+    <div v-if="isLoading" class="inline-flex items-center gap-1 text-muted-foreground">
+      <Loader2 class="size-4 animate-spin" />
       <span class="text-sm">Loading...</span>
     </div>
-    <div v-else-if="error" class="inline-flex items-center gap-1 text-red-400">
-      <i class="pi pi-exclamation-triangle text-sm"></i>
+    <div v-else-if="error" class="inline-flex items-center gap-1 text-destructive">
+      <AlertTriangle class="size-4" />
       <span class="text-sm">Error</span>
     </div>
     <div v-else-if="library" class="inline-flex items-center gap-2">
       <span class="font-semibold">{{ library.name }}</span>
-      <Badge
-        :value="
-          library.type === 'movie' ? 'Movie' : library.type === 'series' ? 'Series' : library.type
-        "
-        severity="secondary"
-        size="small"
-      />
-      <Badge v-if="library.default" value="Default" severity="info" size="small" />
+      <Badge variant="secondary">
+        {{ library.type === 'movie' ? 'Movie' : library.type === 'series' ? 'Series' : library.type }}
+      </Badge>
+      <Badge v-if="library.default" variant="default">Default</Badge>
     </div>
-    <span v-else class="text-muted-color text-sm">Unknown</span>
+    <span v-else class="text-muted-foreground text-sm">Unknown</span>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import Badge from 'primevue/badge'
+import { Loader2, AlertTriangle } from 'lucide-vue-next'
+import { Badge } from '@/components/ui/badge'
 import { getV1LibrariesByIdOptions } from '@/client/@tanstack/vue-query.gen'
 
 const props = defineProps<{

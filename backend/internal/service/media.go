@@ -159,7 +159,7 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 		files, _ = s.repo.ListMediaFilesForItem(ctx, mediaItem.ID)
 	}
 
-	fileInfos, availability := buildFileInfoAndAvailability(files)
+	fileInfos := buildFileInfos(files)
 	genres := make([]model.Genre, 0, len(tmdbDetails.Genres))
 	for _, g := range tmdbDetails.Genres {
 		genres = append(genres, model.Genre{TmdbID: g.ID, Name: g.Name})
@@ -195,7 +195,6 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 		Genres:       genres,
 		PosterPath:   tmdbDetails.PosterPath,
 		BackdropPath: tmdbDetails.BackdropPath,
-		Availability: availability,
 		Files:        fileInfos,
 		Credits:      credits,
 		Videos:       videos,
@@ -328,6 +327,32 @@ func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model
 		Credits:      credits,
 		Videos:       videos,
 	}, nil
+}
+
+func buildFileInfos(files []dbgen.ListMediaFilesForItemRow) []model.FileInfo {
+	fileInfos := make([]model.FileInfo, 0, len(files))
+
+	for _, f := range files {
+		libID := f.LibraryID.String()
+		var seasonNum *int32
+		if f.SeasonNumber != nil {
+			seasonNum = f.SeasonNumber
+		}
+		var episodeNum *int32
+		if f.EpisodeNumber != nil {
+			episodeNum = f.EpisodeNumber
+		}
+		fileInfos = append(fileInfos, model.FileInfo{
+			ID:            f.ID.String(),
+			LibraryID:     libID,
+			Path:          f.Path,
+			Status:        f.Status,
+			SeasonNumber:  seasonNum,
+			EpisodeNumber: episodeNum,
+		})
+	}
+
+	return fileInfos
 }
 
 func buildFileInfoAndAvailability(files []dbgen.ListMediaFilesForItemRow) ([]model.FileInfo, model.Availability) {

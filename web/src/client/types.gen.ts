@@ -558,7 +558,6 @@ export type ModelLibraryAvailability = {
 };
 
 export type ModelMovieDetail = {
-    availability: ModelAvailability;
     backdropPath?: string;
     credits?: ModelCredits;
     files: Array<ModelFileInfo>;

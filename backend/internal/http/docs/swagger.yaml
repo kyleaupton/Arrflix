@@ -1290,8 +1290,6 @@ definitions:
     type: object
   model.MovieDetail:
     properties:
-      availability:
-        $ref: '#/definitions/model.Availability'
       backdropPath:
         type: string
       credits:
@@ -1327,7 +1325,6 @@ definitions:
       year:
         type: integer
     required:
-    - availability
     - files
     - overview
     - status

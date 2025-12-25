@@ -28,6 +28,38 @@
         </template>
       </MediaHero>
 
+      <div v-if="data.files?.length" class="space-y-4">
+        <h2 class="text-xl font-semibold">Local Files</h2>
+        <DataTable
+          :data="data.files"
+          :columns="movieFilesColumns"
+          :loading="false"
+          empty-message="No files found"
+          :searchable="false"
+          search-placeholder="Search files..."
+          paginator
+          :rows="10"
+        />
+      </div>
+
+      <!-- <Card>
+        <CardHeader>
+          <CardTitle>Local Files</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            :data="data.files"
+            :columns="movieFilesColumns"
+            :loading="false"
+            empty-message="No files found"
+            searchable
+            search-placeholder="Search files..."
+            paginator
+            :rows="10"
+          />
+        </CardContent>
+      </Card> -->
+
       <RailCast v-if="data.credits?.cast?.length" title="Cast" :cast="data.credits.cast" />
     </template>
   </div>
@@ -41,9 +73,12 @@ import { Download } from 'lucide-vue-next'
 import { getV1MovieByIdOptions } from '@/client/@tanstack/vue-query.gen'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import MediaHero from '@/components/media/MediaHero.vue'
 import Poster from '@/components/poster/Poster.vue'
 import RailCast from '@/components/rails/RailCast.vue'
+import DataTable from '@/components/tables/DataTable.vue'
+import { movieFilesColumns } from '@/components/tables/configs/movieFilesTableConfig'
 import { useModal } from '@/composables/useModal'
 import DownloadCandidatesDialog from '@/components/download-candidates/DownloadCandidatesDialog.vue'
 
