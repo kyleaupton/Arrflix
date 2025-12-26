@@ -1,6 +1,12 @@
 <template>
   <BaseDialog title="Download Candidates">
-    <DownloadCandidates :movie-id="movieId" @download-enqueued="handleDownloadEnqueued" />
+    <DownloadCandidates
+      :movie-id="movieId"
+      :series-id="seriesId"
+      :season="season"
+      :episode="episode"
+      @download-enqueued="handleDownloadEnqueued"
+    />
   </BaseDialog>
 </template>
 
@@ -9,7 +15,10 @@ import BaseDialog from '@/components/modals/BaseDialog.vue'
 import DownloadCandidates from './DownloadCandidates.vue'
 
 defineProps<{
-  movieId: number
+  movieId?: number
+  seriesId?: number
+  season?: number
+  episode?: number
 }>()
 
 const emit = defineEmits<{

@@ -1889,6 +1889,201 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/series/{id}/candidate/download": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-candidates"
+                ],
+                "summary": "Download a series download candidate",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Series ID (TMDB ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Download request",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.EnqueueCandidateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DownloadCandidateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/series/{id}/candidate/preview": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-candidates"
+                ],
+                "summary": "Preview policy evaluation for a series download candidate",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Series ID (TMDB ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Preview request",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.EnqueueCandidateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.EvaluationTrace"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/series/{id}/candidates": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-candidates"
+                ],
+                "summary": "Get download candidates for a series",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Series ID (TMDB ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Season number",
+                        "name": "season",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Episode number",
+                        "name": "episode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.DownloadCandidate"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/settings": {
             "get": {
                 "produces": [
@@ -2468,10 +2663,16 @@ const docTemplate = `{
                 "indexerId"
             ],
             "properties": {
+                "episode": {
+                    "type": "integer"
+                },
                 "guid": {
                     "type": "string"
                 },
                 "indexerId": {
+                    "type": "integer"
+                },
+                "season": {
                     "type": "integer"
                 }
             }
@@ -3080,11 +3281,17 @@ const docTemplate = `{
                 "episodeNumber": {
                     "type": "integer"
                 },
-                "fileId": {
+                "file": {
+                    "$ref": "#/definitions/model.FileInfo"
+                },
+                "overview": {
                     "type": "string"
                 },
                 "seasonNumber": {
                     "type": "integer"
+                },
+                "stillPath": {
+                    "type": "string"
                 },
                 "title": {
                     "type": "string"
@@ -4074,11 +4281,20 @@ const docTemplate = `{
                 "seasonNumber"
             ],
             "properties": {
+                "airDate": {
+                    "type": "string"
+                },
                 "episodes": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.EpisodeAvailability"
                     }
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "posterPath": {
+                    "type": "string"
                 },
                 "seasonNumber": {
                     "type": "integer"
@@ -4115,7 +4331,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "availability",
-                "files",
                 "inProduction",
                 "overview",
                 "seasons",
@@ -4132,12 +4347,6 @@ const docTemplate = `{
                 },
                 "credits": {
                     "$ref": "#/definitions/model.Credits"
-                },
-                "files": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.FileInfo"
-                    }
                 },
                 "firstAirDate": {
                     "type": "string"

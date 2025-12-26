@@ -333,10 +333,8 @@ func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model
 	}
 
 	var files []dbgen.ListMediaFilesForItemRow
-	var episodes []dbgen.ListEpisodeAvailabilityForSeriesRow
 	if local {
 		files, _ = s.repo.ListMediaFilesForItem(ctx, mediaItem.ID)
-		episodes, _ = s.repo.ListEpisodeAvailabilityForSeries(ctx, mediaItem.ID)
 	}
 
 	fileInfos, availability := buildFileInfoAndAvailability(files)
@@ -344,7 +342,77 @@ func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model
 	for _, g := range tmdbDetails.Genres {
 		genres = append(genres, model.Genre{TmdbID: g.ID, Name: g.Name})
 	}
-	seasons := buildSeasonDetails(episodes)
+
+	// Fetch download jobs for series
+	downloadJobFiles, err := s.buildFileInfosFromDownloadJobsForSeries(ctx, tmdbID)
+	if err != nil {
+		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch download jobs for series")
+	}
+
+	// Map of Season -> Episode -> FileInfo
+	fileMap := make(map[int32]map[int32]model.FileInfo)
+	for _, f := range fileInfos {
+		if f.SeasonNumber != nil && f.EpisodeNumber != nil {
+			if _, ok := fileMap[*f.SeasonNumber]; !ok {
+				fileMap[*f.SeasonNumber] = make(map[int32]model.FileInfo)
+			}
+			fileMap[*f.SeasonNumber][*f.EpisodeNumber] = f
+		}
+	}
+	for _, f := range downloadJobFiles {
+		if f.SeasonNumber != nil && f.EpisodeNumber != nil {
+			if _, ok := fileMap[*f.SeasonNumber]; !ok {
+				fileMap[*f.SeasonNumber] = make(map[int32]model.FileInfo)
+			}
+			// Only overlay if not already present or if this is more "active" (optional logic)
+			fileMap[*f.SeasonNumber][*f.EpisodeNumber] = f
+		}
+	}
+
+	// Fetch full season details from TMDB to get episode metadata
+	seasons := make([]model.SeasonDetail, 0, len(tmdbDetails.Seasons))
+	for _, sInfo := range tmdbDetails.Seasons {
+		fullSeason, err := s.tmdb.GetTVSeasonDetails(ctx, tmdbID, int(sInfo.SeasonNumber))
+		if err != nil {
+			s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Int("season", int(sInfo.SeasonNumber)).Msg("Failed to fetch full season details")
+			// Fallback to basic info if full fetch fails
+			seasons = append(seasons, model.SeasonDetail{
+				SeasonNumber: int32(sInfo.SeasonNumber),
+				Overview:     sInfo.Overview,
+				PosterPath:   sInfo.PosterPath,
+				AirDate:      sInfo.AirDate,
+			})
+			continue
+		}
+
+		eps := make([]model.EpisodeAvailability, 0, len(fullSeason.Episodes))
+		for _, eInfo := range fullSeason.Episodes {
+			ep := model.EpisodeAvailability{
+				SeasonNumber:  int32(eInfo.SeasonNumber),
+				EpisodeNumber: int32(eInfo.EpisodeNumber),
+				Title:         &eInfo.Name,
+				Overview:      eInfo.Overview,
+				StillPath:     eInfo.StillPath,
+				AirDate:       &eInfo.AirDate,
+			}
+
+			if f, ok := fileMap[ep.SeasonNumber][ep.EpisodeNumber]; ok {
+				ep.Available = true
+				ep.File = &f
+			}
+
+			eps = append(eps, ep)
+		}
+
+		seasons = append(seasons, model.SeasonDetail{
+			SeasonNumber: int32(sInfo.SeasonNumber),
+			Overview:     fullSeason.Overview,
+			PosterPath:   fullSeason.PosterPath,
+			AirDate:      fullSeason.AirDate,
+			Episodes:     eps,
+		})
+	}
+
 	year := parseYear(tmdbDetails.FirstAirDate)
 
 	// Fetch credits and videos (gracefully handle errors)
@@ -378,11 +446,69 @@ func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model
 		PosterPath:   tmdbDetails.PosterPath,
 		BackdropPath: tmdbDetails.BackdropPath,
 		Availability: availability,
-		Files:        fileInfos,
 		Seasons:      seasons,
 		Credits:      credits,
 		Videos:       videos,
 	}, nil
+}
+
+func (s *MediaService) buildFileInfosFromDownloadJobsForSeries(ctx context.Context, tmdbID int64) ([]model.FileInfo, error) {
+	downloadJobs, err := s.repo.ListDownloadJobsByTmdbSeriesID(ctx, tmdbID)
+	if err != nil {
+		return nil, err
+	}
+
+	activeStatuses := map[string]bool{
+		"created":     true,
+		"enqueued":    true,
+		"downloading": true,
+		"importing":   true,
+	}
+
+	fileInfos := make([]model.FileInfo, 0)
+	for _, job := range downloadJobs {
+		if !activeStatuses[job.Status] {
+			continue
+		}
+
+		// Map job status to file status
+		var fileStatus string
+		switch job.Status {
+		case "created", "enqueued", "downloading":
+			fileStatus = "downloading"
+		case "importing":
+			fileStatus = "importing"
+		default:
+			continue
+		}
+
+		jobID := job.ID.String()
+		libID := job.LibraryID.String()
+
+		// Use predicted_dest_path if available, otherwise fall back to import_dest_path
+		var path string
+		if job.PredictedDestPath != nil && *job.PredictedDestPath != "" {
+			path = *job.PredictedDestPath
+		} else if job.ImportDestPath != nil && *job.ImportDestPath != "" {
+			path = *job.ImportDestPath
+		} else {
+			// Skip jobs without any path information
+			continue
+		}
+
+		fileInfos = append(fileInfos, model.FileInfo{
+			ID:            "", // No media_file exists yet
+			LibraryID:     libID,
+			Path:          path,
+			Status:        fileStatus,
+			SeasonNumber:  job.SeasonNumber,
+			EpisodeNumber: job.EpisodeNumber,
+			DownloadJobID: &jobID,
+			Progress:      job.Progress,
+		})
+	}
+
+	return fileInfos, nil
 }
 
 func (s *MediaService) GetPersonDetail(ctx context.Context, tmdbID int64) (model.PersonDetail, error) {
@@ -485,42 +611,6 @@ func buildFileInfoAndAvailability(files []dbgen.ListMediaFilesForItemRow) ([]mod
 		IsInLibrary: len(files) > 0,
 		Libraries:   libraries,
 	}
-}
-
-func buildSeasonDetails(rows []dbgen.ListEpisodeAvailabilityForSeriesRow) []model.SeasonDetail {
-	if len(rows) == 0 {
-		return nil
-	}
-	seasonsMap := map[int32][]model.EpisodeAvailability{}
-	for _, r := range rows {
-		seasonNum := r.SeasonNumber
-		ep := model.EpisodeAvailability{
-			SeasonNumber:  seasonNum,
-			EpisodeNumber: r.EpisodeNumber,
-			Title:         r.Title,
-		}
-		if r.AirDate.Valid {
-			val := r.AirDate.Time.Format("2006-01-02")
-			ep.AirDate = &val
-		}
-		if r.FileID.Valid {
-			id := r.FileID.String()
-			ep.FileID = &id
-			ep.Available = true
-		} else {
-			ep.Available = false
-		}
-		seasonsMap[seasonNum] = append(seasonsMap[seasonNum], ep)
-	}
-
-	seasons := make([]model.SeasonDetail, 0, len(seasonsMap))
-	for seasonNum, eps := range seasonsMap {
-		seasons = append(seasons, model.SeasonDetail{
-			SeasonNumber: seasonNum,
-			Episodes:     eps,
-		})
-	}
-	return seasons
 }
 
 func bestStatus(statuses []string) string {

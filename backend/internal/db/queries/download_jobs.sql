@@ -62,9 +62,13 @@ where mi.type = 'movie' and mi.tmdb_id = $1
 order by j.created_at desc;
 
 -- name: ListDownloadJobsByTmdbSeriesID :many
-select j.*
+select j.*, 
+       ms.season_number, 
+       me.episode_number
 from download_job j
 join media_item mi on mi.id = j.media_item_id
+left join media_season ms on ms.id = j.season_id
+left join media_episode me on me.id = j.episode_id
 where mi.type = 'series' and mi.tmdb_id = $1
 order by j.created_at desc;
 

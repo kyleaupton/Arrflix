@@ -87,6 +87,35 @@ func (s *DownloadCandidatesService) SearchDownloadCandidates(ctx context.Context
 		Limit: 100,
 	}
 
+	return s.searchAndCache(ctx, query, searchInput)
+}
+
+// SearchSeriesDownloadCandidates searches for download candidates for a series, season, or episode
+func (s *DownloadCandidatesService) SearchSeriesDownloadCandidates(ctx context.Context, seriesID int64, season *int, episode *int) ([]model.DownloadCandidate, error) {
+	series, err := s.media.GetSeries(ctx, seriesID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get series: %w", err)
+	}
+
+	query := series.Title
+	if season != nil {
+		if episode != nil {
+			query = fmt.Sprintf("%s S%02dE%02d", series.Title, *season, *episode)
+		} else {
+			query = fmt.Sprintf("%s S%02d", series.Title, *season)
+		}
+	}
+
+	searchInput := prowlarr.SearchInput{
+		Query: query,
+		Type:  "tvsearch",
+		Limit: 100,
+	}
+
+	return s.searchAndCache(ctx, query, searchInput)
+}
+
+func (s *DownloadCandidatesService) searchAndCache(ctx context.Context, query string, searchInput prowlarr.SearchInput) ([]model.DownloadCandidate, error) {
 	results, err := s.indexer.Search(ctx, searchInput)
 	if err != nil {
 		s.logger.Error().Err(err).Str("query", query).Msg("Failed to search Prowlarr")
@@ -155,7 +184,7 @@ func (s *DownloadCandidatesService) PreviewCandidate(ctx context.Context, movieI
 	return s.EvaluateCandidate(ctx, movieID, indexerID, guid)
 }
 
-// EnqueueCandidate creates a durable download job for a candidate (movies-only for v1).
+// EnqueueCandidate creates a durable download job for a candidate (movies-only).
 func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieID int64, indexerID int64, guid string) (model.EvaluationTrace, dbgen.DownloadJob, error) {
 	// Lookup candidate from cache
 	cacheKey := s.cacheKey(indexerID, guid)
@@ -176,8 +205,6 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 	}
 
 	candidate := s.searchResultToCandidate(cached.result)
-
-	s.logger.Info().Interface("candidate", candidate).Msg("Candidate")
 
 	trace, err := s.policyEngine.Evaluate(ctx, candidate)
 	if err != nil {
@@ -222,10 +249,9 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 	}
 
 	// Calculate predicted destination path
-	predictedPath, err := s.calculatePredictedDestPath(ctx, mi.ID, libraryID, nameTemplateID, candidate.Title)
+	predictedPath, err := s.calculatePredictedDestPath(ctx, mi.ID, libraryID, nameTemplateID, candidate.Title, nil, nil)
 	if err != nil {
 		s.logger.Debug().Err(err).Msg("Failed to calculate predicted dest path, continuing without it")
-		// Don't fail the job creation if prediction fails
 	}
 
 	var predictedPathPtr *string
@@ -239,6 +265,125 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 		MediaItemID:       mi.ID,
 		SeasonID:          pgtype.UUID{},
 		EpisodeID:         pgtype.UUID{},
+		IndexerID:         indexerID,
+		Guid:              guid,
+		CandidateTitle:    candidate.Title,
+		CandidateLink:     candidate.Link,
+		DownloaderID:      downloaderID,
+		LibraryID:         libraryID,
+		NameTemplateID:    nameTemplateID,
+		PredictedDestPath: predictedPathPtr,
+	})
+	if err != nil {
+		return trace, dbgen.DownloadJob{}, fmt.Errorf("create download job: %w", err)
+	}
+
+	return trace, job, nil
+}
+
+// EnqueueSeriesCandidate creates a durable download job for a series candidate.
+func (s *DownloadCandidatesService) EnqueueSeriesCandidate(ctx context.Context, seriesID int64, indexerID int64, guid string, seasonNumber *int, episodeNumber *int) (model.EvaluationTrace, dbgen.DownloadJob, error) {
+	// Lookup candidate from cache
+	cacheKey := s.cacheKey(indexerID, guid)
+	s.cacheMu.RLock()
+	cached, exists := s.cache[cacheKey]
+	s.cacheMu.RUnlock()
+
+	if !exists {
+		return model.EvaluationTrace{}, dbgen.DownloadJob{}, ErrCandidateNotFound
+	}
+
+	// Check if expired
+	if time.Now().After(cached.expiresAt) {
+		s.cacheMu.Lock()
+		delete(s.cache, cacheKey)
+		s.cacheMu.Unlock()
+		return model.EvaluationTrace{}, dbgen.DownloadJob{}, ErrCandidateExpired
+	}
+
+	candidate := s.searchResultToCandidate(cached.result)
+
+	trace, err := s.policyEngine.Evaluate(ctx, candidate)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("Failed to evaluate policy")
+		return model.EvaluationTrace{}, dbgen.DownloadJob{}, fmt.Errorf("failed to evaluate policy: %w", err)
+	}
+
+	var downloaderID, libraryID, nameTemplateID pgtype.UUID
+	if err := downloaderID.Scan(trace.FinalPlan.DownloaderID); err != nil {
+		return trace, dbgen.DownloadJob{}, fmt.Errorf("invalid downloader id: %w", err)
+	}
+	if err := libraryID.Scan(trace.FinalPlan.LibraryID); err != nil {
+		return trace, dbgen.DownloadJob{}, fmt.Errorf("invalid library id: %w", err)
+	}
+	if err := nameTemplateID.Scan(trace.FinalPlan.NameTemplateID); err != nil {
+		return trace, dbgen.DownloadJob{}, fmt.Errorf("invalid name template id: %w", err)
+	}
+
+	// Ensure media_item exists for this series and link the job to it.
+	mi, err := s.repo.GetMediaItemByTmdbIDAndType(ctx, seriesID, string(model.MediaTypeSeries))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			series, err := s.media.GetSeries(ctx, seriesID)
+			if err != nil {
+				return trace, dbgen.DownloadJob{}, fmt.Errorf("get series: %w", err)
+			}
+			var yearInt *int32
+			if len(series.FirstAirDate) >= 4 {
+				if y, err := strconv.Atoi(series.FirstAirDate[:4]); err == nil {
+					yy := int32(y)
+					yearInt = &yy
+				}
+			}
+			tmdb := seriesID
+			mi, err = s.repo.CreateMediaItem(ctx, "series", series.Title, yearInt, &tmdb)
+			if err != nil {
+				return trace, dbgen.DownloadJob{}, fmt.Errorf("create media item: %w", err)
+			}
+		} else {
+			return trace, dbgen.DownloadJob{}, fmt.Errorf("get media item: %w", err)
+		}
+	}
+
+	var seasonID, episodeID pgtype.UUID
+	if seasonNumber != nil {
+		// Ensure season exists
+		season, err := s.repo.UpsertSeason(ctx, mi.ID, int32(*seasonNumber), pgtype.Date{Valid: false})
+		if err != nil {
+			return trace, dbgen.DownloadJob{}, fmt.Errorf("upsert season: %w", err)
+		}
+		seasonID = season.ID
+
+		if episodeNumber != nil {
+			// Ensure episode exists
+			title := ""
+			tmdbEpisode, err := s.media.tmdb.GetEpisodeDetails(ctx, seriesID, int64(*seasonNumber), int64(*episodeNumber))
+			if err == nil {
+				title = tmdbEpisode.Name
+			}
+
+			episode, err := s.repo.UpsertEpisode(ctx, seasonID, int32(*episodeNumber), &title, pgtype.Date{Valid: false}, nil, nil)
+			if err != nil {
+				return trace, dbgen.DownloadJob{}, fmt.Errorf("upsert episode: %w", err)
+			}
+			episodeID = episode.ID
+		}
+	}
+
+	// Calculate predicted destination path
+	// TODO: update calculatePredictedDestPath to handle season/episode
+	predictedPath, _ := s.calculatePredictedDestPath(ctx, mi.ID, libraryID, nameTemplateID, candidate.Title, seasonNumber, episodeNumber)
+	var predictedPathPtr *string
+	if predictedPath != "" {
+		predictedPathPtr = &predictedPath
+	}
+
+	job, err := s.repo.CreateDownloadJob(ctx, dbgen.CreateDownloadJobParams{
+		Protocol:          candidate.Protocol,
+		MediaType:         "series",
+		MediaItemID:       mi.ID,
+		SeasonID:          seasonID,
+		EpisodeID:         episodeID,
 		IndexerID:         indexerID,
 		Guid:              guid,
 		CandidateTitle:    candidate.Title,
@@ -305,7 +450,7 @@ func (s *DownloadCandidatesService) cleanExpiredCache() {
 
 // calculatePredictedDestPath calculates the predicted destination path for a download job
 // Returns path with .{ext} placeholder that will be replaced at import time
-func (s *DownloadCandidatesService) calculatePredictedDestPath(ctx context.Context, mediaItemID pgtype.UUID, libraryID pgtype.UUID, nameTemplateID pgtype.UUID, candidateTitle string) (string, error) {
+func (s *DownloadCandidatesService) calculatePredictedDestPath(ctx context.Context, mediaItemID pgtype.UUID, libraryID pgtype.UUID, nameTemplateID pgtype.UUID, candidateTitle string, seasonNumber *int, episodeNumber *int) (string, error) {
 	mediaItem, err := s.repo.GetMediaItem(ctx, mediaItemID)
 	if err != nil {
 		return "", fmt.Errorf("get media item: %w", err)
@@ -334,6 +479,13 @@ func (s *DownloadCandidatesService) calculatePredictedDestPath(ctx context.Conte
 		Title:   mediaItem.Title,
 		Year:    year,
 		Quality: q,
+	}
+
+	if seasonNumber != nil {
+		context.Season = fmt.Sprintf("%02d", *seasonNumber)
+	}
+	if episodeNumber != nil {
+		context.Episode = fmt.Sprintf("%02d", *episodeNumber)
 	}
 
 	rel, err := template.Render(nt.Template, context)

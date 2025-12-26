@@ -13,7 +13,7 @@ type DownloadJobsRepo interface {
 	GetDownloadJobByCandidate(ctx context.Context, indexerID int64, guid string) (dbgen.DownloadJob, error)
 	ListDownloadJobsByMediaItem(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.DownloadJob, error)
 	ListDownloadJobsByTmdbMovieID(ctx context.Context, tmdbMovieID int64) ([]dbgen.DownloadJob, error)
-	ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbSeriesID int64) ([]dbgen.DownloadJob, error)
+	ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbSeriesID int64) ([]dbgen.ListDownloadJobsByTmdbSeriesIDRow, error)
 	ListDownloadJobs(ctx context.Context) ([]dbgen.DownloadJob, error)
 	CancelDownloadJob(ctx context.Context, id pgtype.UUID) (dbgen.DownloadJob, error)
 
@@ -52,7 +52,7 @@ func (r *Repository) ListDownloadJobsByTmdbMovieID(ctx context.Context, tmdbMovi
 	return r.Q.ListDownloadJobsByTmdbMovieID(ctx, &tmdbMovieID)
 }
 
-func (r *Repository) ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbSeriesID int64) ([]dbgen.DownloadJob, error) {
+func (r *Repository) ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbSeriesID int64) ([]dbgen.ListDownloadJobsByTmdbSeriesIDRow, error) {
 	return r.Q.ListDownloadJobsByTmdbSeriesID(ctx, &tmdbSeriesID)
 }
 

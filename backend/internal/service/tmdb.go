@@ -60,6 +60,13 @@ func (s *TmdbService) GetSeriesDetails(ctx context.Context, id int64) (tmdb.TVDe
 	}, STATIC_TTL)
 }
 
+func (s *TmdbService) GetTVSeasonDetails(ctx context.Context, id int64, seasonNumber int) (tmdb.TVSeasonDetails, error) {
+	cacheKey := fmt.Sprintf("tmdb_tv_season_details_%d_%d", id, seasonNumber)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVSeasonDetails, error) {
+		return s.client.GetTVSeasonDetails(int(id), seasonNumber, map[string]string{})
+	}, STATIC_TTL)
+}
+
 func (s *TmdbService) GetEpisodeDetails(ctx context.Context, id int64, season int64, episode int64) (tmdb.TVEpisodeDetails, error) {
 	cacheKey := fmt.Sprintf("tmdb_episode_details_%d_%d_%d", id, season, episode)
 	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVEpisodeDetails, error) {

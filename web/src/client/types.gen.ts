@@ -155,8 +155,10 @@ export type HandlersDownloaderUpdateRequest = {
 };
 
 export type HandlersEnqueueCandidateRequest = {
+    episode?: number;
     guid: string;
     indexerId: number;
+    season?: number;
 };
 
 export type HandlersLibraryCreateRequest = {
@@ -355,8 +357,10 @@ export type ModelEpisodeAvailability = {
     airDate?: string;
     available: boolean;
     episodeNumber: number;
-    fileId?: string;
+    file?: ModelFileInfo;
+    overview?: string;
     seasonNumber: number;
+    stillPath?: string;
     title?: string;
 };
 
@@ -654,7 +658,10 @@ export type ModelRuleInfo = {
 };
 
 export type ModelSeasonDetail = {
+    airDate?: string;
     episodes: Array<ModelEpisodeAvailability>;
+    overview?: string;
+    posterPath?: string;
     seasonNumber: number;
 };
 
@@ -670,7 +677,6 @@ export type ModelSeriesDetail = {
     availability: ModelAvailability;
     backdropPath?: string;
     credits?: ModelCredits;
-    files: Array<ModelFileInfo>;
     firstAirDate?: string;
     genres?: Array<ModelGenre>;
     inProduction: boolean;
@@ -2168,6 +2174,147 @@ export type GetV1SeriesByIdResponses = {
 };
 
 export type GetV1SeriesByIdResponse = GetV1SeriesByIdResponses[keyof GetV1SeriesByIdResponses];
+
+export type PostV1SeriesByIdCandidateDownloadData = {
+    /**
+     * Download request
+     */
+    body: HandlersEnqueueCandidateRequest;
+    path: {
+        /**
+         * Series ID (TMDB ID)
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1/series/{id}/candidate/download';
+};
+
+export type PostV1SeriesByIdCandidateDownloadErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1SeriesByIdCandidateDownloadError = PostV1SeriesByIdCandidateDownloadErrors[keyof PostV1SeriesByIdCandidateDownloadErrors];
+
+export type PostV1SeriesByIdCandidateDownloadResponses = {
+    /**
+     * OK
+     */
+    200: HandlersDownloadCandidateResponse;
+};
+
+export type PostV1SeriesByIdCandidateDownloadResponse = PostV1SeriesByIdCandidateDownloadResponses[keyof PostV1SeriesByIdCandidateDownloadResponses];
+
+export type PostV1SeriesByIdCandidatePreviewData = {
+    /**
+     * Preview request
+     */
+    body: HandlersEnqueueCandidateRequest;
+    path: {
+        /**
+         * Series ID (TMDB ID)
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1/series/{id}/candidate/preview';
+};
+
+export type PostV1SeriesByIdCandidatePreviewErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1SeriesByIdCandidatePreviewError = PostV1SeriesByIdCandidatePreviewErrors[keyof PostV1SeriesByIdCandidatePreviewErrors];
+
+export type PostV1SeriesByIdCandidatePreviewResponses = {
+    /**
+     * OK
+     */
+    200: ModelEvaluationTrace;
+};
+
+export type PostV1SeriesByIdCandidatePreviewResponse = PostV1SeriesByIdCandidatePreviewResponses[keyof PostV1SeriesByIdCandidatePreviewResponses];
+
+export type GetV1SeriesByIdCandidatesData = {
+    body?: never;
+    path: {
+        /**
+         * Series ID (TMDB ID)
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * Season number
+         */
+        season?: number;
+        /**
+         * Episode number
+         */
+        episode?: number;
+    };
+    url: '/v1/series/{id}/candidates';
+};
+
+export type GetV1SeriesByIdCandidatesErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1SeriesByIdCandidatesError = GetV1SeriesByIdCandidatesErrors[keyof GetV1SeriesByIdCandidatesErrors];
+
+export type GetV1SeriesByIdCandidatesResponses = {
+    /**
+     * OK
+     */
+    200: Array<ModelDownloadCandidate>;
+};
+
+export type GetV1SeriesByIdCandidatesResponse = GetV1SeriesByIdCandidatesResponses[keyof GetV1SeriesByIdCandidatesResponses];
 
 export type GetV1SettingsData = {
     body?: never;

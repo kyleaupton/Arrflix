@@ -8,7 +8,7 @@ type FileInfo struct {
 	SeasonNumber  *int32   `json:"seasonNumber,omitempty"`
 	EpisodeNumber *int32   `json:"episodeNumber,omitempty"`
 	DownloadJobID *string  `json:"downloadJobId,omitempty"` // For matching with download jobs store
-	Progress      *float64 `json:"progress,omitempty"`       // Progress 0-1 for downloading files
+	Progress      *float64 `json:"progress,omitempty"`      // Progress 0-1 for downloading files
 }
 
 type LibraryAvailability struct {
@@ -36,23 +36,28 @@ type MovieDetail struct {
 	PosterPath   string  `json:"posterPath,omitempty"`
 	BackdropPath string  `json:"backdropPath,omitempty"`
 
-	Files          []FileInfo  `json:"files"`
-	Credits        *Credits    `json:"credits,omitempty"`
-	Videos         []Video     `json:"videos,omitempty"`
+	Files           []FileInfo  `json:"files"`
+	Credits         *Credits    `json:"credits,omitempty"`
+	Videos          []Video     `json:"videos,omitempty"`
 	Recommendations []MovieRail `json:"recommendations,omitempty"`
 }
 
 type EpisodeAvailability struct {
-	SeasonNumber  int32   `json:"seasonNumber"`
-	EpisodeNumber int32   `json:"episodeNumber"`
-	Title         *string `json:"title,omitempty"`
-	AirDate       *string `json:"airDate,omitempty"`
-	Available     bool    `json:"available"`
-	FileID        *string `json:"fileId,omitempty"`
+	SeasonNumber  int32     `json:"seasonNumber"`
+	EpisodeNumber int32     `json:"episodeNumber"`
+	Title         *string   `json:"title,omitempty"`
+	Overview      string    `json:"overview,omitempty"`
+	StillPath     string    `json:"stillPath,omitempty"`
+	AirDate       *string   `json:"airDate,omitempty"`
+	Available     bool      `json:"available"`
+	File          *FileInfo `json:"file,omitempty"`
 }
 
 type SeasonDetail struct {
 	SeasonNumber int32                 `json:"seasonNumber"`
+	Overview     string                `json:"overview,omitempty"`
+	PosterPath   string                `json:"posterPath,omitempty"`
+	AirDate      string                `json:"airDate,omitempty"`
 	Episodes     []EpisodeAvailability `json:"episodes"`
 }
 
@@ -72,7 +77,6 @@ type SeriesDetail struct {
 	BackdropPath string  `json:"backdropPath,omitempty"`
 
 	Availability Availability   `json:"availability"`
-	Files        []FileInfo     `json:"files"`
 	Seasons      []SeasonDetail `json:"seasons"`
 	Credits      *Credits       `json:"credits,omitempty"`
 	Videos       []Video        `json:"videos,omitempty"`

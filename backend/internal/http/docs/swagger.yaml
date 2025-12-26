@@ -371,9 +371,13 @@ definitions:
     type: object
   handlers.EnqueueCandidateRequest:
     properties:
+      episode:
+        type: integer
       guid:
         type: string
       indexerId:
+        type: integer
+      season:
         type: integer
     required:
     - guid
@@ -799,10 +803,14 @@ definitions:
         type: boolean
       episodeNumber:
         type: integer
-      fileId:
+      file:
+        $ref: '#/definitions/model.FileInfo'
+      overview:
         type: string
       seasonNumber:
         type: integer
+      stillPath:
+        type: string
       title:
         type: string
     required:
@@ -1502,10 +1510,16 @@ definitions:
     type: object
   model.SeasonDetail:
     properties:
+      airDate:
+        type: string
       episodes:
         items:
           $ref: '#/definitions/model.EpisodeAvailability'
         type: array
+      overview:
+        type: string
+      posterPath:
+        type: string
       seasonNumber:
         type: integer
     required:
@@ -1538,10 +1552,6 @@ definitions:
         type: string
       credits:
         $ref: '#/definitions/model.Credits'
-      files:
-        items:
-          $ref: '#/definitions/model.FileInfo'
-        type: array
       firstAirDate:
         type: string
       genres:
@@ -1576,7 +1586,6 @@ definitions:
         type: integer
     required:
     - availability
-    - files
     - inProduction
     - overview
     - seasons
@@ -2870,6 +2879,134 @@ paths:
       summary: Get series (by TMDB id)
       tags:
       - media
+  /v1/series/{id}/candidate/download:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Series ID (TMDB ID)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Download request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.EnqueueCandidateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DownloadCandidateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Download a series download candidate
+      tags:
+      - download-candidates
+  /v1/series/{id}/candidate/preview:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Series ID (TMDB ID)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Preview request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.EnqueueCandidateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.EvaluationTrace'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Preview policy evaluation for a series download candidate
+      tags:
+      - download-candidates
+  /v1/series/{id}/candidates:
+    get:
+      parameters:
+      - description: Series ID (TMDB ID)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Season number
+        in: query
+        name: season
+        type: integer
+      - description: Episode number
+        in: query
+        name: episode
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.DownloadCandidate'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get download candidates for a series
+      tags:
+      - download-candidates
   /v1/settings:
     get:
       produces:

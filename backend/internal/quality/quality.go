@@ -43,6 +43,8 @@ type ParsedQuality struct {
 type NamingContext struct {
 	Title   string
 	Year    string
+	Season  string
+	Episode string
 	Quality ParsedQuality
 }
 

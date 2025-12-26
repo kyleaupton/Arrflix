@@ -40,7 +40,7 @@ async function handleSubmit(e: Event) {
 </script>
 
 <template>
-  <div class="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+  <div class="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
     <div class="flex w-full max-w-sm flex-col gap-6">
       <a href="#" class="flex items-center gap-2 self-center font-medium">
         <div
@@ -48,7 +48,7 @@ async function handleSubmit(e: Event) {
         >
           <GalleryVerticalEnd class="size-4" />
         </div>
-        Acme Inc.
+        Snaggle
       </a>
 
       <div :class="cn('flex flex-col gap-6', props.class)">
@@ -127,10 +127,6 @@ async function handleSubmit(e: Event) {
             </form>
           </CardContent>
         </Card>
-        <FieldDescription class="px-6 text-center">
-          By clicking continue, you agree to our <a href="#">Terms of Service</a> and
-          <a href="#">Privacy Policy</a>.
-        </FieldDescription>
       </div>
     </div>
   </div>

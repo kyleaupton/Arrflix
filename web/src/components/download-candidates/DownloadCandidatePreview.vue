@@ -174,7 +174,10 @@ import {
   Loader2,
   XCircle,
 } from 'lucide-vue-next'
-import { postV1MovieByIdCandidatePreviewMutation } from '@/client/@tanstack/vue-query.gen'
+import {
+  postV1MovieByIdCandidatePreviewMutation,
+  postV1SeriesByIdCandidatePreviewMutation,
+} from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate, type ModelEvaluationTrace } from '@/client/types.gen'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -184,7 +187,10 @@ import DownloaderReference from '@/components/references/DownloaderReference.vue
 import NameTemplateReference from '@/components/references/NameTemplateReference.vue'
 
 const props = defineProps<{
-  movieId: number
+  movieId?: number
+  seriesId?: number
+  season?: number
+  episode?: number
   candidate: ModelDownloadCandidate
 }>()
 
@@ -192,8 +198,8 @@ const props = defineProps<{
 const trace = ref<ModelEvaluationTrace | undefined>(undefined)
 const error = ref<string | undefined>(undefined)
 
-// Preview mutation
-const previewMutation = useMutation({
+// Preview movie mutation
+const moviePreviewMutation = useMutation({
   ...postV1MovieByIdCandidatePreviewMutation(),
   onSuccess: (data) => {
     trace.value = data
@@ -205,7 +211,20 @@ const previewMutation = useMutation({
   },
 })
 
-const isLoading = computed(() => previewMutation.isPending.value)
+// Preview series mutation
+const seriesPreviewMutation = useMutation({
+  ...postV1SeriesByIdCandidatePreviewMutation(),
+  onSuccess: (data) => {
+    trace.value = data
+    error.value = undefined
+  },
+  onError: (err) => {
+    error.value = err?.message || 'Failed to load preview'
+    trace.value = undefined
+  },
+})
+
+const isLoading = computed(() => moviePreviewMutation.isPending.value || seriesPreviewMutation.isPending.value)
 
 // Trigger preview when candidate changes
 watch(
@@ -214,13 +233,25 @@ watch(
     if (props.candidate) {
       trace.value = undefined
       error.value = undefined
-      previewMutation.mutate({
-        path: { id: props.movieId },
-        body: {
-          indexerId: props.candidate.indexerId,
-          guid: props.candidate.guid,
-        },
-      })
+      if (props.movieId) {
+        moviePreviewMutation.mutate({
+          path: { id: props.movieId },
+          body: {
+            indexerId: props.candidate.indexerId,
+            guid: props.candidate.guid,
+          },
+        })
+      } else if (props.seriesId) {
+        seriesPreviewMutation.mutate({
+          path: { id: props.seriesId },
+          body: {
+            indexerId: props.candidate.indexerId,
+            guid: props.candidate.guid,
+            season: props.season,
+            episode: props.episode,
+          },
+        })
+      }
     }
   },
   { immediate: true },

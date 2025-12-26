@@ -21,7 +21,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { getV1MovieByIdCandidatesOptions } from '@/client/@tanstack/vue-query.gen'
+import {
+  getV1MovieByIdCandidatesOptions,
+  getV1SeriesByIdCandidatesOptions,
+} from '@/client/@tanstack/vue-query.gen'
 import { type ModelDownloadCandidate } from '@/client/types.gen'
 import DataTable from '@/components/tables/DataTable.vue'
 import {
@@ -34,15 +37,29 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-  movieId: number
+  movieId?: number
+  seriesId?: number
+  season?: number
+  episode?: number
 }>()
 
 // Query options for fetching download candidates
-const queryOptions = computed(() =>
-  getV1MovieByIdCandidatesOptions({
-    path: { id: props.movieId },
-  }),
-)
+const queryOptions = computed(() => {
+  if (props.movieId) {
+    return getV1MovieByIdCandidatesOptions({
+      path: { id: props.movieId },
+    })
+  } else if (props.seriesId) {
+    return getV1SeriesByIdCandidatesOptions({
+      path: { id: props.seriesId },
+      query: {
+        season: props.season,
+        episode: props.episode,
+      },
+    })
+  }
+  return undefined
+})
 
 // Handle enqueue action
 const handleEnqueue = (candidate: ModelDownloadCandidate) => {

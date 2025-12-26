@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	tmdb "github.com/cyruzin/golang-tmdb"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
@@ -303,31 +302,32 @@ func (s *RailsService) isInLibrary(ctx context.Context, tmdbID int64, typ model.
 }
 
 func (s *RailsService) hasActiveDownloads(ctx context.Context, tmdbID int64, mediaType model.MediaType) bool {
-	var jobs []dbgen.DownloadJob
-	var err error
+	activeStatuses := map[string]bool{
+		"created":     true,
+		"enqueued":    true,
+		"downloading": true,
+		"importing":   true,
+	}
 
 	if mediaType == model.MediaTypeMovie {
-		jobs, err = s.repo.ListDownloadJobsByTmdbMovieID(ctx, tmdbID)
+		jobs, err := s.repo.ListDownloadJobsByTmdbMovieID(ctx, tmdbID)
+		if err != nil {
+			return false
+		}
+		for _, job := range jobs {
+			if activeStatuses[job.Status] {
+				return true
+			}
+		}
 	} else if mediaType == model.MediaTypeSeries {
-		jobs, err = s.repo.ListDownloadJobsByTmdbSeriesID(ctx, tmdbID)
-	} else {
-		return false
-	}
-
-	if err != nil {
-		return false
-	}
-
-	activeStatuses := map[string]bool{
-		"created":    true,
-		"enqueued":   true,
-		"downloading": true,
-		"importing":  true,
-	}
-
-	for _, job := range jobs {
-		if activeStatuses[job.Status] {
-			return true
+		jobs, err := s.repo.ListDownloadJobsByTmdbSeriesID(ctx, tmdbID)
+		if err != nil {
+			return false
+		}
+		for _, job := range jobs {
+			if activeStatuses[job.Status] {
+				return true
+			}
 		}
 	}
 

@@ -559,22 +559,60 @@ func (q *Queries) ListDownloadJobsByTmdbMovieID(ctx context.Context, tmdbID *int
 }
 
 const listDownloadJobsByTmdbSeriesID = `-- name: ListDownloadJobsByTmdbSeriesID :many
-select j.id, j.status, j.protocol, j.media_type, j.media_item_id, j.season_id, j.episode_id, j.indexer_id, j.guid, j.candidate_title, j.candidate_link, j.downloader_id, j.library_id, j.name_template_id, j.downloader_external_id, j.download_save_path, j.download_content_path, j.import_source_path, j.import_dest_path, j.import_method, j.primary_media_file_id, j.downloader_status, j.progress, j.attempt_count, j.next_run_at, j.last_error, j.created_at, j.updated_at, j.predicted_dest_path
+select j.id, j.status, j.protocol, j.media_type, j.media_item_id, j.season_id, j.episode_id, j.indexer_id, j.guid, j.candidate_title, j.candidate_link, j.downloader_id, j.library_id, j.name_template_id, j.downloader_external_id, j.download_save_path, j.download_content_path, j.import_source_path, j.import_dest_path, j.import_method, j.primary_media_file_id, j.downloader_status, j.progress, j.attempt_count, j.next_run_at, j.last_error, j.created_at, j.updated_at, j.predicted_dest_path, 
+       ms.season_number, 
+       me.episode_number
 from download_job j
 join media_item mi on mi.id = j.media_item_id
+left join media_season ms on ms.id = j.season_id
+left join media_episode me on me.id = j.episode_id
 where mi.type = 'series' and mi.tmdb_id = $1
 order by j.created_at desc
 `
 
-func (q *Queries) ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbID *int64) ([]DownloadJob, error) {
+type ListDownloadJobsByTmdbSeriesIDRow struct {
+	ID                   pgtype.UUID `json:"id"`
+	Status               string      `json:"status"`
+	Protocol             string      `json:"protocol"`
+	MediaType            string      `json:"media_type"`
+	MediaItemID          pgtype.UUID `json:"media_item_id"`
+	SeasonID             pgtype.UUID `json:"season_id"`
+	EpisodeID            pgtype.UUID `json:"episode_id"`
+	IndexerID            int64       `json:"indexer_id"`
+	Guid                 string      `json:"guid"`
+	CandidateTitle       string      `json:"candidate_title"`
+	CandidateLink        string      `json:"candidate_link"`
+	DownloaderID         pgtype.UUID `json:"downloader_id"`
+	LibraryID            pgtype.UUID `json:"library_id"`
+	NameTemplateID       pgtype.UUID `json:"name_template_id"`
+	DownloaderExternalID *string     `json:"downloader_external_id"`
+	DownloadSavePath     *string     `json:"download_save_path"`
+	DownloadContentPath  *string     `json:"download_content_path"`
+	ImportSourcePath     *string     `json:"import_source_path"`
+	ImportDestPath       *string     `json:"import_dest_path"`
+	ImportMethod         *string     `json:"import_method"`
+	PrimaryMediaFileID   pgtype.UUID `json:"primary_media_file_id"`
+	DownloaderStatus     *string     `json:"downloader_status"`
+	Progress             *float64    `json:"progress"`
+	AttemptCount         int32       `json:"attempt_count"`
+	NextRunAt            time.Time   `json:"next_run_at"`
+	LastError            *string     `json:"last_error"`
+	CreatedAt            time.Time   `json:"created_at"`
+	UpdatedAt            time.Time   `json:"updated_at"`
+	PredictedDestPath    *string     `json:"predicted_dest_path"`
+	SeasonNumber         *int32      `json:"season_number"`
+	EpisodeNumber        *int32      `json:"episode_number"`
+}
+
+func (q *Queries) ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbID *int64) ([]ListDownloadJobsByTmdbSeriesIDRow, error) {
 	rows, err := q.db.Query(ctx, listDownloadJobsByTmdbSeriesID, tmdbID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []DownloadJob
+	var items []ListDownloadJobsByTmdbSeriesIDRow
 	for rows.Next() {
-		var i DownloadJob
+		var i ListDownloadJobsByTmdbSeriesIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Status,
@@ -605,6 +643,8 @@ func (q *Queries) ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbID *in
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.PredictedDestPath,
+			&i.SeasonNumber,
+			&i.EpisodeNumber,
 		); err != nil {
 			return nil, err
 		}
