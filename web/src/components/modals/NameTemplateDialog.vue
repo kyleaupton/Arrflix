@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, inject, watch, computed } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
+import { toast } from 'vue-sonner'
 import {
   postV1NameTemplatesMutation,
   putV1NameTemplatesByIdMutation,
@@ -108,10 +109,12 @@ const handleSave = async () => {
         path: { id: props.template.id },
         body,
       })
+      toast.success('Template updated successfully')
     } else {
       await createTemplateMutation.mutateAsync({
         body,
       })
+      toast.success('Template created successfully')
     }
     templateError.value = null
     dialogRef.value.close({ saved: true })

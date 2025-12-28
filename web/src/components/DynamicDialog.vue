@@ -65,6 +65,10 @@ const dialogClasses = computed(() => {
   const customClass = props.instance.props?.class as string | undefined
   return cn(defaultDialogClasses.value, customClass)
 })
+
+const handleClose = () => {
+  dialogRef.value.close()
+}
 </script>
 
 <template>
@@ -74,7 +78,7 @@ const dialogClasses = computed(() => {
       :style="instance.props?.style"
       :show-close-button="(instance.props?.showCloseButton as boolean) ?? true"
     >
-      <component :is="component" v-bind="props.instance.props" />
+      <component :is="component" v-bind="props.instance.props" @close="handleClose" />
     </DialogContent>
   </Dialog>
 </template>

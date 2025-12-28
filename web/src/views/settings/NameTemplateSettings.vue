@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useQuery, useMutation } from '@tanstack/vue-query'
 import { Plus } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 import {
   getV1NameTemplatesOptions,
   deleteV1NameTemplatesByIdMutation,
@@ -25,9 +25,6 @@ const { data: templates, isLoading, refetch } = useQuery(getV1NameTemplatesOptio
 
 // Mutations
 const deleteTemplateMutation = useMutation(deleteV1NameTemplatesByIdMutation())
-
-// State
-const templateError = ref<string | null>(null)
 
 // Handlers
 const handleAddTemplate = () => {
@@ -62,10 +59,11 @@ const handleDeleteTemplate = async (template: HandlersNameTemplateSwagger) => {
   if (!confirmed) return
   try {
     await deleteTemplateMutation.mutateAsync({ path: { id: template.id } })
+    toast.success('Template deleted successfully')
     refetch()
   } catch (err) {
     const error = err as { message?: string }
-    templateError.value = error.message || 'Failed to delete template'
+    toast.error(error.message || 'Failed to delete template')
   }
 }
 
@@ -90,12 +88,6 @@ const templateActions = createNameTemplateActions(handleEditTemplate, handleDele
         </div>
       </CardHeader>
       <CardContent>
-        <div
-          v-if="templateError"
-          class="p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive mb-4"
-        >
-          {{ templateError }}
-        </div>
         <div v-if="isLoading" class="space-y-3">
           <Skeleton class="h-12 w-full" />
           <Skeleton class="h-12 w-full" />

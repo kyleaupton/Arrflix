@@ -8,6 +8,9 @@ import DialogContainer from '@/components/DialogContainer.vue'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
+import 'vue-sonner/style.css'
+import { Toaster } from '@/components/ui/sonner'
+
 const authStore = useAuthStore()
 const isCheckingAuth = ref(true)
 
@@ -21,6 +24,7 @@ onMounted(async () => {
 
 <template>
   <TooltipProvider>
+    <Toaster position="top-center" />
     <DialogContainer />
     <div v-if="isCheckingAuth" class="flex min-h-svh items-center justify-center">
       <div class="text-muted-foreground">Loading...</div>

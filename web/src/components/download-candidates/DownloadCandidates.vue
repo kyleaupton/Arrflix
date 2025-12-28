@@ -41,6 +41,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { toast } from 'vue-sonner'
 import { useMutation } from '@tanstack/vue-query'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -51,9 +52,6 @@ import {
 import { type ModelDownloadCandidate } from '@/client/types.gen'
 import DownloadCandidateList from './DownloadCandidatesList.vue'
 import DownloadCandidatePreview from './DownloadCandidatePreview.vue'
-import { useModal } from '@/composables/useModal'
-
-const modal = useModal()
 
 const props = defineProps<{
   movieId?: number
@@ -80,19 +78,11 @@ const handleCancel = () => {
 const enqueueMovieMutation = useMutation({
   ...postV1MovieByIdCandidateDownloadMutation(),
   onSuccess: () => {
-    modal.alert({
-      title: 'Download Enqueued',
-      message: 'The download has been successfully enqueued.',
-      severity: 'success',
-    })
+    toast.success('Download enqueued successfully')
     emit('download-enqueued')
   },
   onError: (error) => {
-    modal.alert({
-      title: 'Enqueue Failed',
-      message: error?.message || 'Failed to enqueue download candidate',
-      severity: 'error',
-    })
+    toast.error(error?.message || 'Failed to enqueue download candidate')
   },
 })
 
@@ -100,19 +90,11 @@ const enqueueMovieMutation = useMutation({
 const enqueueSeriesMutation = useMutation({
   ...postV1SeriesByIdCandidateDownloadMutation(),
   onSuccess: () => {
-    modal.alert({
-      title: 'Download Enqueued',
-      message: 'The download has been successfully enqueued.',
-      severity: 'success',
-    })
+    toast.success('Download enqueued successfully')
     emit('download-enqueued')
   },
   onError: (error) => {
-    modal.alert({
-      title: 'Enqueue Failed',
-      message: error?.message || 'Failed to enqueue download candidate',
-      severity: 'error',
-    })
+    toast.error(error?.message || 'Failed to enqueue download candidate')
   },
 })
 
