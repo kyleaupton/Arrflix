@@ -444,6 +444,10 @@ definitions:
         type: boolean
       name:
         type: string
+      series_season_template:
+        type: string
+      series_show_template:
+        type: string
       template:
         type: string
       type:
@@ -451,6 +455,8 @@ definitions:
     required:
     - default
     - name
+    - series_season_template
+    - series_show_template
     - template
     - type
     type: object
@@ -460,6 +466,10 @@ definitions:
         type: boolean
       name:
         type: string
+      series_season_template:
+        type: string
+      series_show_template:
+        type: string
       template:
         type: string
       type:
@@ -467,6 +477,8 @@ definitions:
     required:
     - default
     - name
+    - series_season_template
+    - series_show_template
     - template
     - type
     type: object
@@ -578,6 +590,10 @@ definitions:
         type: string
       name:
         type: string
+      series_season_template:
+        type: string
+      series_show_template:
+        type: string
       template:
         type: string
       type:
@@ -589,6 +605,8 @@ definitions:
     - default
     - id
     - name
+    - series_season_template
+    - series_show_template
     - template
     - type
     - updated_at

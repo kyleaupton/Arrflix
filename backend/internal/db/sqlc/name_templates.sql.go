@@ -12,16 +12,18 @@ import (
 )
 
 const createNameTemplate = `-- name: CreateNameTemplate :one
-insert into name_template (name, type, template, "default")
-values ($1, $2, $3, $4)
-returning id, name, type, template, "default", created_at, updated_at
+insert into name_template (name, type, template, series_show_template, series_season_template, "default")
+values ($1, $2, $3, $4, $5, $6)
+returning id, name, type, template, series_show_template, series_season_template, "default", created_at, updated_at
 `
 
 type CreateNameTemplateParams struct {
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Template  string `json:"template"`
-	IsDefault bool   `json:"is_default"`
+	Name                 string  `json:"name"`
+	Type                 string  `json:"type"`
+	Template             string  `json:"template"`
+	SeriesShowTemplate   *string `json:"series_show_template"`
+	SeriesSeasonTemplate *string `json:"series_season_template"`
+	IsDefault            bool    `json:"is_default"`
 }
 
 func (q *Queries) CreateNameTemplate(ctx context.Context, arg CreateNameTemplateParams) (NameTemplate, error) {
@@ -29,6 +31,8 @@ func (q *Queries) CreateNameTemplate(ctx context.Context, arg CreateNameTemplate
 		arg.Name,
 		arg.Type,
 		arg.Template,
+		arg.SeriesShowTemplate,
+		arg.SeriesSeasonTemplate,
 		arg.IsDefault,
 	)
 	var i NameTemplate
@@ -37,6 +41,8 @@ func (q *Queries) CreateNameTemplate(ctx context.Context, arg CreateNameTemplate
 		&i.Name,
 		&i.Type,
 		&i.Template,
+		&i.SeriesShowTemplate,
+		&i.SeriesSeasonTemplate,
 		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -54,7 +60,7 @@ func (q *Queries) DeleteNameTemplate(ctx context.Context, id pgtype.UUID) error 
 }
 
 const getDefaultNameTemplate = `-- name: GetDefaultNameTemplate :one
-select id, name, type, template, "default", created_at, updated_at from name_template
+select id, name, type, template, series_show_template, series_season_template, "default", created_at, updated_at from name_template
 where type = $1 and "default" = true
 `
 
@@ -66,6 +72,8 @@ func (q *Queries) GetDefaultNameTemplate(ctx context.Context, type_ string) (Nam
 		&i.Name,
 		&i.Type,
 		&i.Template,
+		&i.SeriesShowTemplate,
+		&i.SeriesSeasonTemplate,
 		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -74,7 +82,7 @@ func (q *Queries) GetDefaultNameTemplate(ctx context.Context, type_ string) (Nam
 }
 
 const getNameTemplate = `-- name: GetNameTemplate :one
-select id, name, type, template, "default", created_at, updated_at from name_template
+select id, name, type, template, series_show_template, series_season_template, "default", created_at, updated_at from name_template
 where id = $1
 `
 
@@ -86,6 +94,8 @@ func (q *Queries) GetNameTemplate(ctx context.Context, id pgtype.UUID) (NameTemp
 		&i.Name,
 		&i.Type,
 		&i.Template,
+		&i.SeriesShowTemplate,
+		&i.SeriesSeasonTemplate,
 		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -94,7 +104,7 @@ func (q *Queries) GetNameTemplate(ctx context.Context, id pgtype.UUID) (NameTemp
 }
 
 const listNameTemplates = `-- name: ListNameTemplates :many
-select id, name, type, template, "default", created_at, updated_at from name_template
+select id, name, type, template, series_show_template, series_season_template, "default", created_at, updated_at from name_template
 order by name asc
 `
 
@@ -112,6 +122,8 @@ func (q *Queries) ListNameTemplates(ctx context.Context) ([]NameTemplate, error)
 			&i.Name,
 			&i.Type,
 			&i.Template,
+			&i.SeriesShowTemplate,
+			&i.SeriesSeasonTemplate,
 			&i.Default,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -131,18 +143,22 @@ update name_template
 set name = $1,
     type = $2,
     template = $3,
-    "default" = $4,
+    series_show_template = $4,
+    series_season_template = $5,
+    "default" = $6,
     updated_at = now()
-where id = $5
-returning id, name, type, template, "default", created_at, updated_at
+where id = $7
+returning id, name, type, template, series_show_template, series_season_template, "default", created_at, updated_at
 `
 
 type UpdateNameTemplateParams struct {
-	Name      string      `json:"name"`
-	Type      string      `json:"type"`
-	Template  string      `json:"template"`
-	IsDefault bool        `json:"is_default"`
-	ID        pgtype.UUID `json:"id"`
+	Name                 string      `json:"name"`
+	Type                 string      `json:"type"`
+	Template             string      `json:"template"`
+	SeriesShowTemplate   *string     `json:"series_show_template"`
+	SeriesSeasonTemplate *string     `json:"series_season_template"`
+	IsDefault            bool        `json:"is_default"`
+	ID                   pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateNameTemplate(ctx context.Context, arg UpdateNameTemplateParams) (NameTemplate, error) {
@@ -150,6 +166,8 @@ func (q *Queries) UpdateNameTemplate(ctx context.Context, arg UpdateNameTemplate
 		arg.Name,
 		arg.Type,
 		arg.Template,
+		arg.SeriesShowTemplate,
+		arg.SeriesSeasonTemplate,
 		arg.IsDefault,
 		arg.ID,
 	)
@@ -159,6 +177,8 @@ func (q *Queries) UpdateNameTemplate(ctx context.Context, arg UpdateNameTemplate
 		&i.Name,
 		&i.Type,
 		&i.Template,
+		&i.SeriesShowTemplate,
+		&i.SeriesSeasonTemplate,
 		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,

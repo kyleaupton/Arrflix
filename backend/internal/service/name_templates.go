@@ -29,7 +29,7 @@ func (s *NameTemplatesService) GetDefault(ctx context.Context, typ string) (dbge
 	return s.repo.GetDefaultNameTemplate(ctx, typ)
 }
 
-func (s *NameTemplatesService) Create(ctx context.Context, name, typ, template string, isDefault bool) (dbgen.NameTemplate, error) {
+func (s *NameTemplatesService) Create(ctx context.Context, name, typ, template string, showTemplate, seasonTemplate *string, isDefault bool) (dbgen.NameTemplate, error) {
 	if name == "" {
 		return dbgen.NameTemplate{}, errors.New("name required")
 	}
@@ -47,10 +47,10 @@ func (s *NameTemplatesService) Create(ctx context.Context, name, typ, template s
 		}
 	}
 
-	return s.repo.CreateNameTemplate(ctx, name, typ, template, isDefault)
+	return s.repo.CreateNameTemplate(ctx, name, typ, template, showTemplate, seasonTemplate, isDefault)
 }
 
-func (s *NameTemplatesService) Update(ctx context.Context, id pgtype.UUID, name, typ, template string, isDefault bool) (dbgen.NameTemplate, error) {
+func (s *NameTemplatesService) Update(ctx context.Context, id pgtype.UUID, name, typ, template string, showTemplate, seasonTemplate *string, isDefault bool) (dbgen.NameTemplate, error) {
 	if name == "" {
 		return dbgen.NameTemplate{}, errors.New("name required")
 	}
@@ -68,7 +68,7 @@ func (s *NameTemplatesService) Update(ctx context.Context, id pgtype.UUID, name,
 		}
 	}
 
-	return s.repo.UpdateNameTemplate(ctx, id, name, typ, template, isDefault)
+	return s.repo.UpdateNameTemplate(ctx, id, name, typ, template, showTemplate, seasonTemplate, isDefault)
 }
 
 func (s *NameTemplatesService) Delete(ctx context.Context, id pgtype.UUID) error {
@@ -84,7 +84,7 @@ func (s *NameTemplatesService) unsetOtherDefaults(ctx context.Context, typ strin
 
 	for _, t := range templates {
 		if t.Type == typ && t.Default {
-			_, err := s.repo.UpdateNameTemplate(ctx, t.ID, t.Name, t.Type, t.Template, false)
+			_, err := s.repo.UpdateNameTemplate(ctx, t.ID, t.Name, t.Type, t.Template, t.SeriesShowTemplate, t.SeriesSeasonTemplate, false)
 			if err != nil {
 				return err
 			}
@@ -103,7 +103,7 @@ func (s *NameTemplatesService) unsetOtherDefaultsExcluding(ctx context.Context, 
 
 	for _, t := range templates {
 		if t.Type == typ && t.Default && t.ID != excludeID {
-			_, err := s.repo.UpdateNameTemplate(ctx, t.ID, t.Name, t.Type, t.Template, false)
+			_, err := s.repo.UpdateNameTemplate(ctx, t.ID, t.Name, t.Type, t.Template, t.SeriesShowTemplate, t.SeriesSeasonTemplate, false)
 			if err != nil {
 				return err
 			}

@@ -35,21 +35,18 @@ const templateForm = ref({
   name: '',
   type: 'movie' as 'movie' | 'series',
   template: '',
+  series_show_template: '',
+  series_season_template: '',
   default: false,
 })
 
 const templateError = ref<string | null>(null)
 
-const movieVariables = ['{Title}', '{Year}', '{Quality}', '{Resolution}', '{Extension}']
-const seriesVariables = [
-  '{Title}',
-  '{Season}',
-  '{Episode}',
-  '{EpisodeTitle}',
-  '{Quality}',
-  '{Resolution}',
-  '{Extension}',
-]
+const commonVariables = ['{Title}', '{Year}', '{Quality}', '{Resolution}', '{Extension}']
+const seriesOnlyVariables = ['{Season}', '{Episode}', '{EpisodeTitle}']
+
+const movieVariables = [...commonVariables]
+const seriesVariables = [...commonVariables, ...seriesOnlyVariables]
 
 const availableVariables = computed(() => {
   return templateForm.value.type === 'series' ? seriesVariables : movieVariables
@@ -69,10 +66,19 @@ watch(
         name: template.name || '',
         type: (template.type as 'movie' | 'series') || 'movie',
         template: template.template || '',
+        series_show_template: template.series_show_template || '',
+        series_season_template: template.series_season_template || '',
         default: template.default || false,
       }
     } else {
-      templateForm.value = { name: '', type: 'movie', template: '', default: false }
+      templateForm.value = {
+        name: '',
+        type: 'movie',
+        template: '',
+        series_show_template: '',
+        series_season_template: '',
+        default: false,
+      }
     }
     templateError.value = null
   },
@@ -86,24 +92,25 @@ const handleSave = async () => {
   }
 
   try {
+    const body = {
+      name: templateForm.value.name,
+      type: templateForm.value.type,
+      template: templateForm.value.template,
+      series_show_template:
+        templateForm.value.type === 'series' ? templateForm.value.series_show_template : '',
+      series_season_template:
+        templateForm.value.type === 'series' ? templateForm.value.series_season_template : '',
+      default: templateForm.value.default,
+    }
+
     if (props.template?.id) {
       await updateTemplateMutation.mutateAsync({
         path: { id: props.template.id },
-        body: {
-          name: templateForm.value.name,
-          type: templateForm.value.type,
-          template: templateForm.value.template,
-          default: templateForm.value.default,
-        },
+        body,
       })
     } else {
       await createTemplateMutation.mutateAsync({
-        body: {
-          name: templateForm.value.name,
-          type: templateForm.value.type,
-          template: templateForm.value.template,
-          default: templateForm.value.default,
-        },
+        body,
       })
     }
     templateError.value = null
@@ -152,8 +159,30 @@ const isLoading = computed(
         </Select>
       </div>
 
+      <template v-if="templateForm.type === 'series'">
+        <div class="flex flex-col gap-2">
+          <Label for="template-show">Show Directory Template</Label>
+          <Input
+            id="template-show"
+            v-model="templateForm.series_show_template"
+            placeholder="{Title} ({Year})"
+          />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <Label for="template-season">Season Directory Template</Label>
+          <Input
+            id="template-season"
+            v-model="templateForm.series_season_template"
+            placeholder="Season {Season}"
+          />
+        </div>
+      </template>
+
       <div class="flex flex-col gap-2">
-        <Label for="template-template">Template</Label>
+        <Label for="template-template">
+          {{ templateForm.type === 'series' ? 'Episode File Template' : 'Template' }}
+        </Label>
         <Textarea
           id="template-template"
           v-model="templateForm.template"
@@ -182,4 +211,3 @@ const isLoading = computed(
     </template>
   </BaseDialog>
 </template>
-

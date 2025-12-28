@@ -2762,6 +2762,8 @@ const docTemplate = `{
             "required": [
                 "default",
                 "name",
+                "series_season_template",
+                "series_show_template",
                 "template",
                 "type"
             ],
@@ -2770,6 +2772,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "series_season_template": {
+                    "type": "string"
+                },
+                "series_show_template": {
                     "type": "string"
                 },
                 "template": {
@@ -2785,6 +2793,8 @@ const docTemplate = `{
             "required": [
                 "default",
                 "name",
+                "series_season_template",
+                "series_show_template",
                 "template",
                 "type"
             ],
@@ -2793,6 +2803,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "series_season_template": {
+                    "type": "string"
+                },
+                "series_show_template": {
                     "type": "string"
                 },
                 "template": {
@@ -2950,6 +2966,8 @@ const docTemplate = `{
                 "default",
                 "id",
                 "name",
+                "series_season_template",
+                "series_show_template",
                 "template",
                 "type",
                 "updated_at"
@@ -2965,6 +2983,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "series_season_template": {
+                    "type": "string"
+                },
+                "series_show_template": {
                     "type": "string"
                 },
                 "template": {

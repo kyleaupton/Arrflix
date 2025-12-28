@@ -491,9 +491,26 @@ func (s *DownloadCandidatesService) calculatePredictedDestPath(ctx context.Conte
 		context.Episode = fmt.Sprintf("%02d", *episodeNumber)
 	}
 
-	rel, err := template.Render(nt.Template, context)
-	if err != nil {
-		return "", fmt.Errorf("render template: %w", err)
+	var rel string
+	if nt.Type == "series" {
+		showPart, err := template.Render(coalesce(nt.SeriesShowTemplate, ""), context)
+		if err != nil {
+			return "", fmt.Errorf("render show template: %w", err)
+		}
+		seasonPart, err := template.Render(coalesce(nt.SeriesSeasonTemplate, ""), context)
+		if err != nil {
+			return "", fmt.Errorf("render season template: %w", err)
+		}
+		filePart, err := template.Render(nt.Template, context)
+		if err != nil {
+			return "", fmt.Errorf("render file template: %w", err)
+		}
+		rel = filepath.Join(showPart, seasonPart, filePart)
+	} else {
+		rel, err = template.Render(nt.Template, context)
+		if err != nil {
+			return "", fmt.Errorf("render template: %w", err)
+		}
 	}
 
 	// Check if path already has an extension (from template)

@@ -189,6 +189,8 @@ export type HandlersLoginResponse = {
 export type HandlersNameTemplateCreateRequest = {
     default: boolean;
     name: string;
+    series_season_template: string;
+    series_show_template: string;
     template: string;
     type: string;
 };
@@ -196,6 +198,8 @@ export type HandlersNameTemplateCreateRequest = {
 export type HandlersNameTemplateUpdateRequest = {
     default: boolean;
     name: string;
+    series_season_template: string;
+    series_show_template: string;
     template: string;
     type: string;
 };
@@ -251,6 +255,8 @@ export type HandlersNameTemplateSwagger = {
     default: boolean;
     id: string;
     name: string;
+    series_season_template: string;
+    series_show_template: string;
     template: string;
     type: string;
     updated_at: string;

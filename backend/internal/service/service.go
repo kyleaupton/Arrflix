@@ -65,3 +65,10 @@ type withJWT string
 func (w withJWT) apply(c *cfg) { c.jwtSecret = string(w) }
 
 func WithJWTSecret(secret string) Option { return withJWT(secret) }
+
+func coalesce(s *string, def string) string {
+	if s == nil {
+		return def
+	}
+	return *s
+}

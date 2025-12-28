@@ -78,9 +78,25 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 		rel = strings.Replace(*job.PredictedDestPath, ".{ext}", ext, 1)
 	} else {
 		// Fallback to calculating from template (existing logic)
-		rel, err = template.Render(nt.Template, context)
-		if err != nil {
-			return ImportResult{}, fmt.Errorf("render template: %w", err)
+		if nt.Type == "series" {
+			showPart, err := template.Render(coalesce(nt.SeriesShowTemplate, ""), context)
+			if err != nil {
+				return ImportResult{}, fmt.Errorf("render show template: %w", err)
+			}
+			seasonPart, err := template.Render(coalesce(nt.SeriesSeasonTemplate, ""), context)
+			if err != nil {
+				return ImportResult{}, fmt.Errorf("render season template: %w", err)
+			}
+			filePart, err := template.Render(nt.Template, context)
+			if err != nil {
+				return ImportResult{}, fmt.Errorf("render file template: %w", err)
+			}
+			rel = filepath.Join(showPart, seasonPart, filePart)
+		} else {
+			rel, err = template.Render(nt.Template, context)
+			if err != nil {
+				return ImportResult{}, fmt.Errorf("render template: %w", err)
+			}
 		}
 		rel = importer.EnsureExt(rel, ext)
 	}
@@ -232,10 +248,30 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 		}
 
 		ext := filepath.Ext(f.Path)
-		rel, err := template.Render(nt.Template, context)
-		if err != nil {
-			s.log.Error().Err(err).Interface("context", context).Msg("Failed to render template")
-			continue
+		var rel string
+		if nt.Type == "series" {
+			showPart, err := template.Render(coalesce(nt.SeriesShowTemplate, ""), context)
+			if err != nil {
+				s.log.Error().Err(err).Interface("context", context).Msg("Failed to render show template")
+				continue
+			}
+			seasonPart, err := template.Render(coalesce(nt.SeriesSeasonTemplate, ""), context)
+			if err != nil {
+				s.log.Error().Err(err).Interface("context", context).Msg("Failed to render season template")
+				continue
+			}
+			filePart, err := template.Render(nt.Template, context)
+			if err != nil {
+				s.log.Error().Err(err).Interface("context", context).Msg("Failed to render file template")
+				continue
+			}
+			rel = filepath.Join(showPart, seasonPart, filePart)
+		} else {
+			rel, err = template.Render(nt.Template, context)
+			if err != nil {
+				s.log.Error().Err(err).Interface("context", context).Msg("Failed to render template")
+				continue
+			}
 		}
 		rel = importer.EnsureExt(rel, ext)
 

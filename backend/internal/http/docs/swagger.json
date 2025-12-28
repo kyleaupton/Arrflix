@@ -2754,6 +2754,8 @@
             "required": [
                 "default",
                 "name",
+                "series_season_template",
+                "series_show_template",
                 "template",
                 "type"
             ],
@@ -2762,6 +2764,12 @@
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "series_season_template": {
+                    "type": "string"
+                },
+                "series_show_template": {
                     "type": "string"
                 },
                 "template": {
@@ -2777,6 +2785,8 @@
             "required": [
                 "default",
                 "name",
+                "series_season_template",
+                "series_show_template",
                 "template",
                 "type"
             ],
@@ -2785,6 +2795,12 @@
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "series_season_template": {
+                    "type": "string"
+                },
+                "series_show_template": {
                     "type": "string"
                 },
                 "template": {
@@ -2942,6 +2958,8 @@
                 "default",
                 "id",
                 "name",
+                "series_season_template",
+                "series_show_template",
                 "template",
                 "type",
                 "updated_at"
@@ -2957,6 +2975,12 @@
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "series_season_template": {
+                    "type": "string"
+                },
+                "series_show_template": {
                     "type": "string"
                 },
                 "template": {

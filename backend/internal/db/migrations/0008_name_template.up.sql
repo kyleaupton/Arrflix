@@ -4,6 +4,8 @@ create table if not exists name_template (
   name text not null,
   type text not null check (type in ('movie','series')),
   template text not null,
+  series_show_template text,
+  series_season_template text,
   "default" boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

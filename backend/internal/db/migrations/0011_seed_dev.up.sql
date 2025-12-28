@@ -10,11 +10,11 @@ insert into library (name, type, root_path, enabled, "default")
 values ('Main Series Library', 'series', '/data/tv', true, true);
 
 -- seed name templates
-insert into name_template (name, type, template, "default")
-values ('Main Movie Template', 'movie', '{{.Title}} ({{.Year}}) [{{clean .Quality.Resolution}} {{clean .Quality.Codec}}]', true);
+insert into name_template (name, type, template, series_show_template, series_season_template, "default")
+values ('Main Movie Template', 'movie', '{{.Title}} ({{.Year}}) [{{clean .Quality.Resolution}} {{clean .Quality.Codec}}]', null, null, true);
 
-insert into name_template (name, type, template, "default")
-values ('Main Series Template', 'series', '{{.Title}} - S{{.Season}}E{{.Episode}} - {{.EpisodeTitle}} ({{.Year}}) [{{clean .Quality.Resolution}} {{clean .Quality.Codec}}]', true);
+insert into name_template (name, type, template, series_show_template, series_season_template, "default")
+values ('Main Series Template', 'series', '{{.Title}} - S{{.Season}}E{{.Episode}} - {{.EpisodeTitle}} ({{.Year}}) [{{clean .Quality.Resolution}} {{clean .Quality.Codec}}]', '{{.Title}} ({{.Year}})', 'Season {{.Season}}', true);
 
 -- seed downloaders
 insert into downloader (name, type, protocol, url, username, password, enabled, "default")

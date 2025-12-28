@@ -24,29 +24,35 @@ func (h *NameTemplates) RegisterProtected(v1 *echo.Group) {
 // nameTemplateSwagger is a minimal type used only for Swagger schemas.
 // It mirrors fields of dbgen.NameTemplate without importing it here.
 type nameTemplateSwagger struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Template  string `json:"template"`
-	Default   bool   `json:"default"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	ID                   string  `json:"id"`
+	Name                 string  `json:"name"`
+	Type                 string  `json:"type"`
+	Template             string  `json:"template"`
+	SeriesShowTemplate   *string `json:"series_show_template"`
+	SeriesSeasonTemplate *string `json:"series_season_template"`
+	Default              bool    `json:"default"`
+	CreatedAt            string  `json:"created_at"`
+	UpdatedAt            string  `json:"updated_at"`
 }
 
 // NameTemplateCreateRequest payload
 type NameTemplateCreateRequest struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Template string `json:"template"`
-	Default  bool   `json:"default"`
+	Name                 string  `json:"name"`
+	Type                 string  `json:"type"`
+	Template             string  `json:"template"`
+	SeriesShowTemplate   *string `json:"series_show_template"`
+	SeriesSeasonTemplate *string `json:"series_season_template"`
+	Default              bool    `json:"default"`
 }
 
 // NameTemplateUpdateRequest payload
 type NameTemplateUpdateRequest struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Template string `json:"template"`
-	Default  bool   `json:"default"`
+	Name                 string  `json:"name"`
+	Type                 string  `json:"type"`
+	Template             string  `json:"template"`
+	SeriesShowTemplate   *string `json:"series_show_template"`
+	SeriesSeasonTemplate *string `json:"series_season_template"`
+	Default              bool    `json:"default"`
 }
 
 // List name templates
@@ -79,7 +85,7 @@ func (h *NameTemplates) Create(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}
 	ctx := c.Request().Context()
-	template, err := h.svc.NameTemplates.Create(ctx, req.Name, req.Type, req.Template, req.Default)
+	template, err := h.svc.NameTemplates.Create(ctx, req.Name, req.Type, req.Template, req.SeriesShowTemplate, req.SeriesSeasonTemplate, req.Default)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -125,7 +131,7 @@ func (h *NameTemplates) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
 	}
 	ctx := c.Request().Context()
-	template, err := h.svc.NameTemplates.Update(ctx, id, req.Name, req.Type, req.Template, req.Default)
+	template, err := h.svc.NameTemplates.Update(ctx, id, req.Name, req.Type, req.Template, req.SeriesShowTemplate, req.SeriesSeasonTemplate, req.Default)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

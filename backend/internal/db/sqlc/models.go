@@ -292,13 +292,15 @@ type MediaSeason struct {
 }
 
 type NameTemplate struct {
-	ID        pgtype.UUID `json:"id"`
-	Name      string      `json:"name"`
-	Type      string      `json:"type"`
-	Template  string      `json:"template"`
-	Default   bool        `json:"default"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
+	ID                   pgtype.UUID `json:"id"`
+	Name                 string      `json:"name"`
+	Type                 string      `json:"type"`
+	Template             string      `json:"template"`
+	SeriesShowTemplate   *string     `json:"series_show_template"`
+	SeriesSeasonTemplate *string     `json:"series_season_template"`
+	Default              bool        `json:"default"`
+	CreatedAt            time.Time   `json:"created_at"`
+	UpdatedAt            time.Time   `json:"updated_at"`
 }
 
 type Permission struct {
