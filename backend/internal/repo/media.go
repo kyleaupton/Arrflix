@@ -19,10 +19,14 @@ type MediaRepo interface {
 
 	// Seasons
 	ListSeasonsForMedia(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.MediaSeason, error)
+	GetSeason(ctx context.Context, id pgtype.UUID) (dbgen.MediaSeason, error)
+	GetSeasonByNumber(ctx context.Context, mediaItemID pgtype.UUID, seasonNumber int32) (dbgen.MediaSeason, error)
 	UpsertSeason(ctx context.Context, mediaItemID pgtype.UUID, seasonNumber int32, airDate pgtype.Date) (dbgen.MediaSeason, error)
 
 	// Episodes
 	ListEpisodesForSeason(ctx context.Context, seasonID pgtype.UUID) ([]dbgen.MediaEpisode, error)
+	GetEpisode(ctx context.Context, id pgtype.UUID) (dbgen.MediaEpisode, error)
+	GetEpisodeByNumber(ctx context.Context, seasonID pgtype.UUID, episodeNumber int32) (dbgen.MediaEpisode, error)
 	UpsertEpisode(ctx context.Context, seasonID pgtype.UUID, episodeNumber int32, title *string, airDate pgtype.Date, tmdbID *int64, tvdbID *int64) (dbgen.MediaEpisode, error)
 
 	// Files
@@ -78,6 +82,17 @@ func (r *Repository) ListSeasonsForMedia(ctx context.Context, mediaID pgtype.UUI
 	return r.Q.ListSeasonsForMedia(ctx, mediaID)
 }
 
+func (r *Repository) GetSeason(ctx context.Context, id pgtype.UUID) (dbgen.MediaSeason, error) {
+	return r.Q.GetSeason(ctx, id)
+}
+
+func (r *Repository) GetSeasonByNumber(ctx context.Context, mediaItemID pgtype.UUID, seasonNumber int32) (dbgen.MediaSeason, error) {
+	return r.Q.GetSeasonByNumber(ctx, dbgen.GetSeasonByNumberParams{
+		MediaItemID:  mediaItemID,
+		SeasonNumber: seasonNumber,
+	})
+}
+
 func (r *Repository) UpsertSeason(ctx context.Context, mediaItemID pgtype.UUID, seasonNumber int32, airDate pgtype.Date) (dbgen.MediaSeason, error) {
 	return r.Q.UpsertSeason(ctx, dbgen.UpsertSeasonParams{
 		MediaItemID:  mediaItemID,
@@ -88,6 +103,17 @@ func (r *Repository) UpsertSeason(ctx context.Context, mediaItemID pgtype.UUID, 
 
 func (r *Repository) ListEpisodesForSeason(ctx context.Context, seasonID pgtype.UUID) ([]dbgen.MediaEpisode, error) {
 	return r.Q.ListEpisodesForSeason(ctx, seasonID)
+}
+
+func (r *Repository) GetEpisode(ctx context.Context, id pgtype.UUID) (dbgen.MediaEpisode, error) {
+	return r.Q.GetEpisode(ctx, id)
+}
+
+func (r *Repository) GetEpisodeByNumber(ctx context.Context, seasonID pgtype.UUID, episodeNumber int32) (dbgen.MediaEpisode, error) {
+	return r.Q.GetEpisodeByNumber(ctx, dbgen.GetEpisodeByNumberParams{
+		SeasonID:      seasonID,
+		EpisodeNumber: episodeNumber,
+	})
 }
 
 func (r *Repository) UpsertEpisode(ctx context.Context, seasonID pgtype.UUID, episodeNumber int32, title *string, airDate pgtype.Date, tmdbID *int64, tvdbID *int64) (dbgen.MediaEpisode, error) {

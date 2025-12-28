@@ -133,63 +133,103 @@ func (w *Worker) processJob(ctx context.Context, job dbgen.DownloadJob) error {
 		return nil
 	}
 
-	// Import when completed (movies v1)
+	// Import when completed
 	if jobStatus == "completed" && job.ImportDestPath == nil {
-		files, err := client.ListFiles(ctx, externalID)
-		if err != nil && !errors.Is(err, downloader.ErrUnsupported) {
-			return fmt.Errorf("list files: %w", err)
-		}
-
-		sourcePath := ""
-		if len(files) > 0 {
-			mainFile, ok := importer.PickMainMovieFile(files)
-			if !ok {
-				return fmt.Errorf("no files available for import")
+		if job.MediaType == "movie" {
+			files, err := client.ListFiles(ctx, externalID)
+			if err != nil && !errors.Is(err, downloader.ErrUnsupported) {
+				return fmt.Errorf("list files: %w", err)
 			}
-			// qBittorrent file paths are relative; use SavePath as root.
-			if filepath.IsAbs(mainFile.Path) {
-				sourcePath = mainFile.Path
-			} else if item.SavePath != "" {
-				sourcePath = filepath.Join(item.SavePath, mainFile.Path)
-			} else if item.ContentPath != "" {
-				// Best-effort fallback
-				sourcePath = filepath.Join(item.ContentPath, mainFile.Path)
+
+			sourcePath := ""
+			if len(files) > 0 {
+				mainFile, ok := importer.PickMainMovieFile(files)
+				if !ok {
+					return fmt.Errorf("no files available for import")
+				}
+				// qBittorrent file paths are relative; use SavePath as root.
+				if filepath.IsAbs(mainFile.Path) {
+					sourcePath = mainFile.Path
+				} else if item.SavePath != "" {
+					sourcePath = filepath.Join(item.SavePath, mainFile.Path)
+				} else if item.ContentPath != "" {
+					// Best-effort fallback
+					sourcePath = filepath.Join(item.ContentPath, mainFile.Path)
+				}
+			} else {
+				// If file listing unsupported, try to use content path directly.
+				sourcePath = item.ContentPath
 			}
-		} else {
-			// If file listing unsupported, try to use content path directly.
-			sourcePath = item.ContentPath
-		}
 
-		if sourcePath == "" {
-			return fmt.Errorf("unable to determine source path for import")
-		}
+			if sourcePath == "" {
+				return fmt.Errorf("unable to determine source path for import")
+			}
 
-		if importing, err := w.repo.SetDownloadJobImporting(ctx, job.ID, sourcePath); err != nil {
-			return fmt.Errorf("mark importing: %w", err)
-		} else {
-			w.publishJobUpdated(importing)
-		}
+			if importing, err := w.repo.SetDownloadJobImporting(ctx, job.ID, sourcePath); err != nil {
+				return fmt.Errorf("mark importing: %w", err)
+			} else {
+				w.publishJobUpdated(importing)
+			}
 
-		res, err := w.importer.ImportMovieFile(ctx, job, sourcePath)
-		if err != nil {
-			return fmt.Errorf("import: %w", err)
-		}
+			res, err := w.importer.ImportMovieFile(ctx, job, sourcePath)
+			if err != nil {
+				return fmt.Errorf("import: %w", err)
+			}
 
-		method := res.Method
-		imported, err := w.repo.SetDownloadJobImported(ctx, dbgen.SetDownloadJobImportedParams{
-			ID:                 job.ID,
-			ImportSourcePath:   &res.SourcePath,
-			ImportDestPath:     &res.DestRelPath,
-			ImportMethod:       &method,
-			PrimaryMediaFileID: res.MediaFile.ID,
-		})
-		if err != nil {
-			return fmt.Errorf("mark imported: %w", err)
+			method := res.Method
+			imported, err := w.repo.SetDownloadJobImported(ctx, dbgen.SetDownloadJobImportedParams{
+				ID:                 job.ID,
+				ImportSourcePath:   &res.SourcePath,
+				ImportDestPath:     &res.DestRelPath,
+				ImportMethod:       &method,
+				PrimaryMediaFileID: res.MediaFile.ID,
+			})
+			if err != nil {
+				return fmt.Errorf("mark imported: %w", err)
+			}
+			if linkErr := w.repo.LinkDownloadJobMediaFile(ctx, job.ID, res.MediaFile.ID); linkErr != nil {
+				w.log.Warn().Err(linkErr).Msg("failed to link download job to media file")
+			}
+			w.publishJobUpdated(imported)
+		} else if job.MediaType == "series" {
+			sourcePath := item.SavePath
+			if sourcePath == "" {
+				sourcePath = item.ContentPath
+			}
+
+			if importing, err := w.repo.SetDownloadJobImporting(ctx, job.ID, sourcePath); err != nil {
+				return fmt.Errorf("mark importing: %w", err)
+			} else {
+				w.publishJobUpdated(importing)
+			}
+
+			results, err := w.importer.ImportSeriesJob(ctx, job, client)
+			if err != nil {
+				w.log.Error().Err(err).Str("job_id", job.ID.String()).Msg("ImportSeriesJob failed")
+				return fmt.Errorf("import series: %w", err)
+			}
+
+			w.log.Debug().Int("results_count", len(results)).Str("job_id", job.ID.String()).Msg("ImportSeriesJob completed")
+
+			if len(results) > 0 {
+				// Mark job as imported using the first file as primary for the snapshot
+				res := results[0]
+				method := res.Method
+				imported, err := w.repo.SetDownloadJobImported(ctx, dbgen.SetDownloadJobImportedParams{
+					ID:                 job.ID,
+					ImportSourcePath:   &sourcePath, // Use the root source path
+					ImportDestPath:     &res.DestRelPath,
+					ImportMethod:       &method,
+					PrimaryMediaFileID: res.MediaFile.ID,
+				})
+				if err != nil {
+					return fmt.Errorf("mark imported: %w", err)
+				}
+				w.publishJobUpdated(imported)
+			} else {
+				return fmt.Errorf("no episodes were successfully imported")
+			}
 		}
-		if linkErr := w.repo.LinkDownloadJobMediaFile(ctx, job.ID, res.MediaFile.ID); linkErr != nil {
-			w.log.Warn().Err(linkErr).Msg("failed to link download job to media file")
-		}
-		w.publishJobUpdated(imported)
 	}
 
 	return nil

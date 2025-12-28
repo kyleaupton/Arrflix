@@ -14,7 +14,7 @@ insert into name_template (name, type, template, "default")
 values ('Main Movie Template', 'movie', '{{.Title}} ({{.Year}}) [{{clean .Quality.Resolution}} {{clean .Quality.Codec}}]', true);
 
 insert into name_template (name, type, template, "default")
-values ('Main Series Template', 'series', '{{.Title}} - S{{.Season:00}}E{{.Episode:00}} - {{.EpisodeTitle}} ({{.Year}}) [{{clean .Quality.Resolution}} {{clean .Quality.Codec}}]', true);
+values ('Main Series Template', 'series', '{{.Title}} - S{{.Season}}E{{.Episode}} - {{.EpisodeTitle}} ({{.Year}}) [{{clean .Quality.Resolution}} {{clean .Quality.Codec}}]', true);
 
 -- seed downloaders
 insert into downloader (name, type, protocol, url, username, password, enabled, "default")

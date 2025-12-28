@@ -40,6 +40,14 @@ select * from media_season
 where media_item_id = $1
 order by season_number asc;
 
+-- name: GetSeason :one
+select * from media_season
+where id = $1;
+
+-- name: GetSeasonByNumber :one
+select * from media_season
+where media_item_id = $1 and season_number = $2;
+
 -- name: UpsertSeason :one
 insert into media_season (media_item_id, season_number, air_date)
 values (sqlc.arg(media_item_id), sqlc.arg(season_number), sqlc.arg(air_date))
@@ -53,6 +61,14 @@ returning *;
 select * from media_episode
 where season_id = $1
 order by episode_number asc;
+
+-- name: GetEpisode :one
+select * from media_episode
+where id = $1;
+
+-- name: GetEpisodeByNumber :one
+select * from media_episode
+where season_id = $1 and episode_number = $2;
 
 -- name: UpsertEpisode :one
 insert into media_episode (season_id, episode_number, title, air_date, tmdb_id, tvdb_id)

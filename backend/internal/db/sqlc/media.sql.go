@@ -101,6 +101,53 @@ func (q *Queries) DeleteMediaItem(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const getEpisode = `-- name: GetEpisode :one
+select id, season_id, episode_number, title, air_date, tmdb_id, tvdb_id, created_at from media_episode
+where id = $1
+`
+
+func (q *Queries) GetEpisode(ctx context.Context, id pgtype.UUID) (MediaEpisode, error) {
+	row := q.db.QueryRow(ctx, getEpisode, id)
+	var i MediaEpisode
+	err := row.Scan(
+		&i.ID,
+		&i.SeasonID,
+		&i.EpisodeNumber,
+		&i.Title,
+		&i.AirDate,
+		&i.TmdbID,
+		&i.TvdbID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getEpisodeByNumber = `-- name: GetEpisodeByNumber :one
+select id, season_id, episode_number, title, air_date, tmdb_id, tvdb_id, created_at from media_episode
+where season_id = $1 and episode_number = $2
+`
+
+type GetEpisodeByNumberParams struct {
+	SeasonID      pgtype.UUID `json:"season_id"`
+	EpisodeNumber int32       `json:"episode_number"`
+}
+
+func (q *Queries) GetEpisodeByNumber(ctx context.Context, arg GetEpisodeByNumberParams) (MediaEpisode, error) {
+	row := q.db.QueryRow(ctx, getEpisodeByNumber, arg.SeasonID, arg.EpisodeNumber)
+	var i MediaEpisode
+	err := row.Scan(
+		&i.ID,
+		&i.SeasonID,
+		&i.EpisodeNumber,
+		&i.Title,
+		&i.AirDate,
+		&i.TmdbID,
+		&i.TvdbID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getMediaFileByLibraryAndPath = `-- name: GetMediaFileByLibraryAndPath :one
 
 select id, library_id, media_item_id, season_id, episode_id, path, status, added_at from media_file where library_id = $1 and path = $2
@@ -189,6 +236,47 @@ func (q *Queries) GetMediaItemByTmdbIDAndType(ctx context.Context, arg GetMediaI
 		&i.TmdbID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getSeason = `-- name: GetSeason :one
+select id, media_item_id, season_number, air_date, created_at from media_season
+where id = $1
+`
+
+func (q *Queries) GetSeason(ctx context.Context, id pgtype.UUID) (MediaSeason, error) {
+	row := q.db.QueryRow(ctx, getSeason, id)
+	var i MediaSeason
+	err := row.Scan(
+		&i.ID,
+		&i.MediaItemID,
+		&i.SeasonNumber,
+		&i.AirDate,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getSeasonByNumber = `-- name: GetSeasonByNumber :one
+select id, media_item_id, season_number, air_date, created_at from media_season
+where media_item_id = $1 and season_number = $2
+`
+
+type GetSeasonByNumberParams struct {
+	MediaItemID  pgtype.UUID `json:"media_item_id"`
+	SeasonNumber int32       `json:"season_number"`
+}
+
+func (q *Queries) GetSeasonByNumber(ctx context.Context, arg GetSeasonByNumberParams) (MediaSeason, error) {
+	row := q.db.QueryRow(ctx, getSeasonByNumber, arg.MediaItemID, arg.SeasonNumber)
+	var i MediaSeason
+	err := row.Scan(
+		&i.ID,
+		&i.MediaItemID,
+		&i.SeasonNumber,
+		&i.AirDate,
+		&i.CreatedAt,
 	)
 	return i, err
 }

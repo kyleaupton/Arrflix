@@ -41,11 +41,12 @@ type ParsedQuality struct {
 
 // NamingContext represents the data available to naming templates.
 type NamingContext struct {
-	Title   string
-	Year    string
-	Season  string
-	Episode string
-	Quality ParsedQuality
+	Title        string
+	Year         string
+	Season       string
+	Episode      string
+	EpisodeTitle string
+	Quality      ParsedQuality
 }
 
 type AudioInfo struct {

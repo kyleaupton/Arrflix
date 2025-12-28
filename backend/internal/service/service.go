@@ -41,7 +41,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 		Downloaders:        NewDownloadersService(r),
 		DownloadCandidates: NewDownloadCandidatesService(r, l, indexer, media, policyEngine),
 		DownloadJobs:       NewDownloadJobsService(r),
-		Import:             NewImportService(r),
+		Import:             NewImportService(r, l),
 		Indexer:            indexer,
 		Libraries:          NewLibrariesService(r),
 		Media:              media,
