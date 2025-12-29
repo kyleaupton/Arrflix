@@ -61,13 +61,12 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 	}
 
 	// Parse quality from the candidate title if available
-	parser := quality.NewParser()
-	q := parser.Parse(job.CandidateTitle)
+	q := quality.ParseQuality(job.CandidateTitle)
 
-	context := quality.NamingContext{
-		Title:   mediaItem.Title,
-		Year:    year,
-		Quality: q,
+	context := map[string]any{
+		"Title":   mediaItem.Title,
+		"Year":    year,
+		"Quality": q,
 	}
 
 	var rel string
@@ -199,8 +198,7 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 	}
 
 	var results []ImportResult
-	parser := quality.NewParser()
-	q := parser.Parse(job.CandidateTitle)
+	q := quality.ParseQuality(job.CandidateTitle)
 
 	for epNum, f := range matchedFiles {
 		s.log.Debug().Int("episode", epNum).Str("file", f.Path).Msg("Processing matched file")
@@ -238,13 +236,13 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 			epTitle = *episode.Title
 		}
 
-		context := quality.NamingContext{
-			Title:        mediaItem.Title,
-			Year:         fmt.Sprintf("%d", *mediaItem.Year),
-			Season:       fmt.Sprintf("%02d", season.SeasonNumber),
-			Episode:      fmt.Sprintf("%02d", episode.EpisodeNumber),
-			EpisodeTitle: epTitle,
-			Quality:      q,
+		context := map[string]any{
+			"Title":        mediaItem.Title,
+			"Year":         fmt.Sprintf("%d", *mediaItem.Year),
+			"Season":       fmt.Sprintf("%02d", season.SeasonNumber),
+			"Episode":      fmt.Sprintf("%02d", episode.EpisodeNumber),
+			"EpisodeTitle": epTitle,
+			"Quality":      q,
 		}
 
 		ext := filepath.Ext(f.Path)

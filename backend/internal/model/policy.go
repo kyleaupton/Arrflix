@@ -14,7 +14,7 @@ type Plan struct {
 // TorrentMetadata represents metadata about a torrent for policy evaluation
 type CandidateContext struct {
 	Candidate DownloadCandidate
-	Quality   quality.ParsedQuality
+	Quality   quality.QualityModel
 }
 
 type Policy struct {

@@ -77,7 +77,7 @@ func (e *Engine) Evaluate(ctx context.Context, candidate model.DownloadCandidate
 
 		candidateContext := model.CandidateContext{
 			Candidate: candidate,
-			Quality:   quality.NewParser().Parse(candidate.Title),
+			Quality:   quality.ParseQuality(candidate.Title),
 		}
 
 		// Evaluate rule
@@ -355,51 +355,22 @@ func (e *Engine) getCandidateField(field string, candidateContext model.Candidat
 	}
 }
 
-// getQualityField gets a value from the parsed quality
+// getQualityField gets a value from the parsed quality using the field registry
 func (e *Engine) getQualityField(field string, candidateContext model.CandidateContext) (interface{}, error) {
-	quality := candidateContext.Quality
+	// Convert snake_case to PascalCase for registry lookup
+	fieldName := snakeToPascal(field)
+	return quality.GetField(fieldName, candidateContext.Quality)
+}
 
-	// Handle nested audio fields
-	if strings.HasPrefix(field, "audio.") {
-		audioField := strings.TrimPrefix(field, "audio.")
-		switch audioField {
-		case "codec":
-			return string(quality.Audio.Codec), nil
-		case "channels":
-			return string(quality.Audio.Channels), nil
-		default:
-			return nil, fmt.Errorf("unknown quality.audio field: %s", audioField)
+// snakeToPascal converts snake_case to PascalCase (e.g., "is_remux" -> "IsRemux")
+func snakeToPascal(s string) string {
+	parts := strings.Split(s, "_")
+	for i, part := range parts {
+		if len(part) > 0 {
+			parts[i] = strings.ToUpper(part[:1]) + strings.ToLower(part[1:])
 		}
 	}
-
-	switch field {
-	case "resolution":
-		return string(quality.Resolution), nil
-	case "source":
-		return string(quality.Source), nil
-	case "codec":
-		return string(quality.Codec), nil
-	case "container":
-		return string(quality.Container), nil
-	case "hdr":
-		return string(quality.HDR), nil
-	case "bit_depth":
-		return string(quality.BitDepth), nil
-	case "tier":
-		return string(quality.Tier), nil
-	case "is_remux":
-		return quality.IsRemux, nil
-	case "is_proper":
-		return quality.IsProper, nil
-	case "is_repack":
-		return quality.IsRepack, nil
-	case "is_extended":
-		return quality.IsExtended, nil
-	case "release_group":
-		return quality.ReleaseGroup, nil
-	default:
-		return nil, fmt.Errorf("unknown quality field: %s", field)
-	}
+	return strings.Join(parts, "")
 }
 
 // compare compares two values based on operator

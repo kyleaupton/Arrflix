@@ -19,12 +19,6 @@
         <template #poster>
           <Poster :item="data" size="large" :clickable="false" :is-downloading="isDownloading" />
         </template>
-        <template #actions>
-          <Button @click="searchForSeriesCandidates">
-            <Download class="mr-2 size-4" />
-            Snag Series
-          </Button>
-        </template>
       </MediaHero>
 
       <div v-if="data.seasons?.length" class="space-y-4">
@@ -206,15 +200,6 @@ const isDownloading = computed(() => {
 onMounted(() => {
   downloadJobs.connectLive()
 })
-
-const searchForSeriesCandidates = () => {
-  modal.open(DownloadCandidatesDialog, {
-    props: {
-      class: 'max-w-[90vw] sm:max-w-4xl lg:max-w-6xl',
-      seriesId: id.value,
-    },
-  })
-}
 
 const searchForSeasonCandidates = (seasonNumber: number) => {
   modal.open(DownloadCandidatesDialog, {

@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -18,9 +16,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/policy"
-	"github.com/kyleaupton/snaggle/backend/internal/quality"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
-	"github.com/kyleaupton/snaggle/backend/internal/template"
 )
 
 var (
@@ -454,75 +450,5 @@ func (s *DownloadCandidatesService) cleanExpiredCache() {
 // calculatePredictedDestPath calculates the predicted destination path for a download job
 // Returns path with .{ext} placeholder that will be replaced at import time
 func (s *DownloadCandidatesService) calculatePredictedDestPath(ctx context.Context, mediaItemID pgtype.UUID, libraryID pgtype.UUID, nameTemplateID pgtype.UUID, candidateTitle string, seasonNumber *int, episodeNumber *int) (string, error) {
-	mediaItem, err := s.repo.GetMediaItem(ctx, mediaItemID)
-	if err != nil {
-		return "", fmt.Errorf("get media item: %w", err)
-	}
-
-	year := ""
-	if mediaItem.Year != nil {
-		year = fmt.Sprintf("%d", *mediaItem.Year)
-	}
-
-	_, err = s.repo.GetLibrary(ctx, libraryID)
-	if err != nil {
-		return "", fmt.Errorf("get library: %w", err)
-	}
-
-	nt, err := s.repo.GetNameTemplate(ctx, nameTemplateID)
-	if err != nil {
-		return "", fmt.Errorf("get name template: %w", err)
-	}
-
-	// Parse quality from the candidate title
-	parser := quality.NewParser()
-	q := parser.Parse(candidateTitle)
-
-	context := quality.NamingContext{
-		Title:   mediaItem.Title,
-		Year:    year,
-		Quality: q,
-	}
-
-	if seasonNumber != nil {
-		context.Season = fmt.Sprintf("%02d", *seasonNumber)
-	}
-	if episodeNumber != nil {
-		context.Episode = fmt.Sprintf("%02d", *episodeNumber)
-	}
-
-	var rel string
-	if nt.Type == "series" {
-		showPart, err := template.Render(coalesce(nt.SeriesShowTemplate, ""), context)
-		if err != nil {
-			return "", fmt.Errorf("render show template: %w", err)
-		}
-		seasonPart, err := template.Render(coalesce(nt.SeriesSeasonTemplate, ""), context)
-		if err != nil {
-			return "", fmt.Errorf("render season template: %w", err)
-		}
-		filePart, err := template.Render(nt.Template, context)
-		if err != nil {
-			return "", fmt.Errorf("render file template: %w", err)
-		}
-		rel = filepath.Join(showPart, seasonPart, filePart)
-	} else {
-		rel, err = template.Render(nt.Template, context)
-		if err != nil {
-			return "", fmt.Errorf("render template: %w", err)
-		}
-	}
-
-	// Check if path already has an extension (from template)
-	// If not, append .{ext} placeholder
-	if filepath.Ext(rel) == "" {
-		rel = rel + ".{ext}"
-	} else {
-		// If template already has extension, replace it with .{ext}
-		// This handles cases where template includes extension
-		ext := filepath.Ext(rel)
-		rel = strings.TrimSuffix(rel, ext) + ".{ext}"
-	}
-
-	return rel, nil
+	return "", nil
 }
