@@ -21,10 +21,10 @@ const (
 	colorCyan   = "\033[36m"
 )
 
-// Test cases from Sonarr's QualityParserFixture.cs
-// Organized by expected quality type
+// testTitles contains release titles to test against Sonarr
+// These are used to validate parity between Snaggle and Sonarr's quality parser
 var testTitles = []string{
-	// ===== SDTV =====
+	// SDTV
 	"S07E23 .avi",
 	"The.Series.S01E13.x264-CtrlSD",
 	"The Series S02E01 HDTV XviD 2HD",
@@ -49,7 +49,7 @@ var testTitles = []string{
 	"[SubsPlease] Series Title (540p) [AB649D32].mkv",
 	"[Erai-raws] Series Title [540p][Multiple Subtitle].mkv",
 
-	// ===== DVD =====
+	// DVD
 	"The.Series.S01E13.NTSC.x264-CtrlSD",
 	"The.Series.S03E06.DVDRip.XviD-WiDE",
 	"The.Series.S03E06.DVD.Rip.XviD-WiDE",
@@ -58,7 +58,7 @@ var testTitles = []string{
 	"[FroZen] Series - 23 [DVD][7F6170E6]",
 	"[AniDL] Series - 26 -[360p][DVD][D - A][Exiled - Destiny]",
 
-	// ===== WEBDL-480p =====
+	// WEBDL-480p
 	"The.Series.S01E10.The.Leviathan.480p.WEB-DL.x264-mSD",
 	"The.Series.S04E10.Glee.Actually.480p.WEB-DL.x264-mSD",
 	"The.SeriesS06E11.The.Santa.Simulation.480p.WEB-DL.x264-mSD",
@@ -68,7 +68,7 @@ var testTitles = []string{
 	"[HorribleSubs] Series Title! S01 [Web][MKV][h264][480p][AAC 2.0][Softsubs (HorribleSubs)]",
 	"Series.Title.S13E11.Ausgebacken.German.AmazonSD.h264-4SF",
 
-	// ===== Bluray-480p =====
+	// Bluray-480p
 	"SERIES.S03E01-06.DUAL.XviD.Bluray.AC3-REPACK.-HELLYWOOD.avi",
 	"SERIES.S03E01-06.DUAL.BDRip.XviD.AC3.-HELLYWOOD",
 	"SERIES.S03E01-06.DUAL.BDRip.X-viD.AC3.-HELLYWOOD",
@@ -81,15 +81,15 @@ var testTitles = []string{
 	"Adventures.of.Sonic.the.Hedgehog.S01.BluRay.480i.DD.2.0.AVC.REMUX-FraMeSToR",
 	"Adventures.of.Sonic.the.Hedgehog.S01E01.Best.Hedgehog.480i.DD.2.0.AVC.REMUX-FraMeSToR",
 
-	// ===== WEBRip-480p =====
+	// WEBRip-480p
 	"The.Series.S02E10.480p.HULU.WEBRip.x264-Puffin",
 	"The.Series.S10E14.Techs.And.Balances.480p.AE.WEBRip.AAC2.0.x264-SEA",
 	"Series.Title.1x04.ITA.WEBMux.x264-NovaRip",
 
-	// ===== Bluray-576p =====
+	// Bluray-576p
 	"The.Series.S01E05.576p.BluRay.DD5.1.x264-HiSD",
 
-	// ===== HDTV-720p =====
+	// HDTV-720p
 	"Series - S01E01 - Title [HDTV]",
 	"Series - S01E01 - Title [HDTV-720p]",
 	"The Series S04E87 REPACK 720p HDTV x264 aAF",
@@ -112,7 +112,7 @@ var testTitles = []string{
 	"Series.Title.1x01.ITA.720p.x264-RlsGrp [01/54] - \"series.title.1x01.ita.720p.x264-rlsgrp.nfo\"",
 	"[TMS-Remux].Series.Title.X.21.720p.[76EA1C53].mkv",
 
-	// ===== HDTV-1080p =====
+	// HDTV-1080p
 	"Under the Series S01E10 Let the Sonarr Begin 1080p",
 	"Series.S07E01.ARE.YOU.1080P.HDTV.X264-QCF",
 	"Series.S07E01.ARE.YOU.1080P.HDTV.x264-QCF",
@@ -130,12 +130,12 @@ var testTitles = []string{
 	"Series como paso - 19x15 [344] Cuarenta anos de baile [HDTV 1080i AVC MP2 2.0 Sub][GrupoHDS]",
 	"Super.Seires.Go.S01E02.Depths.of.Sonarr.1080i.HDTV.DD5.1.H.264-NOGRP",
 
-	// ===== HDTV-2160p =====
+	// HDTV-2160p
 	"My Title - S01E01 - EpTitle [HEVC 4k DTSHD-MA-6ch]",
 	"My Title - S01E01 - EpTitle [HEVC-4k DTSHD-MA-6ch]",
 	"My Title - S01E01 - EpTitle [4k HEVC DTSHD-MA-6ch]",
 
-	// ===== WEBDL-720p =====
+	// WEBDL-720p
 	"Series S01E04 Mexicos Death Train 720p WEB DL",
 	"Series Five 0 S02E21 720p WEB DL DD5 1 H 264",
 	"Series S04E22 720p WEB DL DD5 1 H 264 NFHD",
@@ -165,13 +165,13 @@ var testTitles = []string{
 	"Series.Title.S01E01.Erste.Begegnungen.German.DD51.Synced.DL.720p.HBOMaxHD.AVC-TVS",
 	"Series.Title.S01E05.Tavora.greift.an.German.DL.720p.DisneyHD.h264-4SF",
 
-	// ===== WEBRip-720p =====
+	// WEBRip-720p
 	"Series.Title.S04E01.720p.WEBRip.AAC2.0.x264-NFRiP",
 	"Series.Title.S01E07.A.Prayer.For.Mad.Sweeney.720p.AMZN.WEBRip.DD5.1.x264-NTb",
 	"Series.Title.S07E01.A.New.Home.720p.DSNY.WEBRip.AAC2.0.x264-TVSmash",
 	"Series.Title.1x04.ITA.720p.WEBMux.x264-NovaRip",
 
-	// ===== WEBDL-1080p =====
+	// WEBDL-1080p
 	"Series S09E03 1080p WEB DL DD5 1 H264 NFHD",
 	"Two and a Half Developers of the Series S10E03 1080p WEB DL DD5 1 H 264 NFHD",
 	"Series.S08E01.1080p.WEB-DL.DD5.1.H264-NFHD",
@@ -205,7 +205,7 @@ var testTitles = []string{
 	"Series.Title.S01E05.Tavora.greift.an.German.DL.1080p.DisneyHD.h264-4SF",
 	"Series.Title.S02E04.German.Dubbed.DL.AAC.1080p.WEB.AVC-GROUP",
 
-	// ===== WEBRip-1080p =====
+	// WEBRip-1080p
 	"Series.Title.S04E01.iNTERNAL.1080p.WEBRip.x264-QRUS",
 	"Series.Title.S07E20.1080p.AMZN.WEBRip.DDP5.1.x264-ViSUM ac3.(NLsub)",
 	"Series.Title.S03E09.1080p.NF.WEBRip.DD5.1.x264-ViSUM",
@@ -214,7 +214,7 @@ var testTitles = []string{
 	"Series.Title.2019.S02E07.Chapter.15.The.Believer.4Kto1080p.DSNYP.Webrip.x265.10bit.EAC3.5.1.Atmos.GokiTAoE",
 	"Series.Title.S01.1080p.AMZN.WEB-Rip.DDP5.1.H.264-Telly",
 
-	// ===== WEBDL-2160p =====
+	// WEBDL-2160p
 	"Series.Title.2016.03.14.2160p.WEB.x264-spamTV",
 	"Series.Title.2016.03.14.2160p.WEB.h264-spamTV",
 	"Series.Title.2016.03.14.2160p.WEB.PROPER.h264-spamTV",
@@ -225,7 +225,7 @@ var testTitles = []string{
 	"Series.Title.S02E02.This.Year.Will.Be.Different.2160p.WEB.H.265",
 	"Series.Title.S02E04.German.Dubbed.DL.AAC.2160p.DV.HDR.WEB.HEVC-GROUP",
 
-	// ===== WEBRip-2160p =====
+	// WEBRip-2160p
 	"Series S01E01.2160P AMZN WEBRIP DD2.0 HI10P X264-TROLLUHD",
 	"JUST ADD SONARR S01E01.2160P AMZN WEBRIP DD2.0 X264-TROLLUHD",
 	"The.Man.In.The.Series.S01E01.2160p.AMZN.WEBRip.DD2.0.Hi10p.X264-TrollUHD",
@@ -233,7 +233,7 @@ var testTitles = []string{
 	"House.of.Sonarr.AK.S05E08.Chapter.60.2160p.NF.WEBRip.DD5.1.x264-NTb.NLsubs",
 	"Sonarr Saves the World S01 2160p Netflix WEBRip DD5.1 x264-TrollUHD",
 
-	// ===== Bluray-720p =====
+	// Bluray-720p
 	"SERIES.S03E01-06.DUAL.Bluray.AC3.-HELLYWOOD.avi",
 	"Series - S01E03 - Come Fly With Me - 720p BluRay.mkv",
 	"The Big Series.S03E01.The Sonarr Can Opener.m2ts",
@@ -252,7 +252,7 @@ var testTitles = []string{
 	"Series.Hunter.S02.720p.Blu-ray.Remux.AVC.FLAC.2.0-SiCFoI",
 	"Adventures.of.Sonic.the.Hedgehog.S01E01.Best.Hedgehog.720p.DD.2.0.AVC.REMUX-FraMeSToR",
 
-	// ===== Bluray-1080p =====
+	// Bluray-1080p
 	"Series - S01E03 - Come Fly With Me - 1080p BluRay.mkv",
 	"Sonarr.Of.Series.S02E13.1080p.BluRay.x264-AVCDVD",
 	"Series.S01E02.Chained.Heat.[Bluray1080p].mkv",
@@ -268,7 +268,7 @@ var testTitles = []string{
 	"Series.Title.2011.1080p.UHD.BluRay.DD5.1.HDR.x265-CtrlHD.mkv",
 	"Fall.Of.The.Release.Groups.S02E13.1080p.BDLight.x265-AVCDVD",
 
-	// ===== Bluray-1080p Remux =====
+	// Bluray-1080p Remux
 	"Series!!! on ICE - S01E12[JP BD Remux][ENG subs]",
 	"Series.Title.S01E08.The.Well.BluRay.1080p.AVC.DTS-HD.MA.5.1.REMUX-FraMeSToR",
 	"Series.Title.2x11.Nato.Per.La.Truffa.Bluray.Remux.AVC.1080p.AC3.ITA",
@@ -280,14 +280,14 @@ var testTitles = []string{
 	"Series Title S01 2018 1080p BluRay Hybrid-REMUX AVC TRUEHD 5.1 Dual Audio-ZR-",
 	"Series.Title.S01.2018.1080p.BluRay.Hybrid-REMUX.AVC.TRUEHD.5.1.Dual.Audio-ZR-",
 
-	// ===== Bluray-2160p =====
+	// Bluray-2160p
 	"Series.Title.US.s05e13.4K.UHD.Bluray",
 	"Series.Title.US.s05e13.UHD.4K.Bluray",
 	"[DameDesuYo] Series Bundle - Part 1 (BD 4K 8bit FLAC)",
 	"Series.Title.2014.2160p.UHD.BluRay.X265-IAMABLE.mkv",
 	"Series.Title.S05EO1.Episode.Title.2160p.BDRip.AAC.7.1.HDR10.x265.10bit-Markll",
 
-	// ===== Bluray-2160p Remux =====
+	// Bluray-2160p Remux
 	"Series!!! on ICE - S01E12[JP BD 2160p Remux][ENG subs]",
 	"Series.Title.S01E08.The.Sonarr.BluRay.2160p.AVC.DTS-HD.MA.5.1.REMUX-FraMeSToR",
 	"Series.Title.2x11.Nato.Per.The.Sonarr.Bluray.Remux.AVC.2160p.AC3.ITA",
@@ -296,7 +296,7 @@ var testTitles = []string{
 	"Series Title S01 2018 2160p BluRay Hybrid-REMUX AVC TRUEHD 5.1 Dual Audio-ZR-",
 	"Series.Title.S01.2018.2160p.BluRay.Hybrid-REMUX.AVC.TRUEHD.5.1.Dual.Audio-ZR-",
 
-	// ===== Raw-HD =====
+	// Raw-HD
 	"POI S02E11 1080i HDTV DD5.1 MPEG2-TrollHD",
 	"How I Met Your Developer S01E18 Nothing Good Happens After Sonarr 720p HDTV DD5.1 MPEG2-TrollHD",
 	"The Series S01E11 The Finals 1080i HDTV DD5.1 MPEG2-TrollHD",
@@ -306,96 +306,6 @@ var testTitles = []string{
 	"Show - S03E01 - Episode Title Raw-HD.ts",
 	"Series.Title.S10E09.Title.1080i.UPSCALE.HDTV.DD5.1.MPEG2-zebra",
 	"Series.Title.2011-08-04.1080i.HDTV.MPEG-2-CtrlHD",
-
-	// ===== Our additional custom test cases =====
-	// WEB-DL variants
-	"The.Show.S01E01.1080p.WEB-DL.DD5.1.H.264-GROUP",
-	"The.Show.S01E02.720p.WEB-DL.AAC2.0.H.264-GROUP",
-	"The.Show.S01E03.2160p.WEB-DL.DDP5.1.H.265-GROUP",
-	"The.Show.S01E04.480p.WEB-DL.AAC2.0.H.264-GROUP",
-
-	// WEBRip variants
-	"The.Show.S02E01.1080p.WEBRip.x264-GROUP",
-	"The.Show.S02E02.720p.WEBRip.AAC2.0.H.264-GROUP",
-	"The.Show.S02E03.2160p.WEBRip.x265-GROUP",
-	"The.Show.S02E04.480p.WEBRip.x264-GROUP",
-
-	// HDTV variants
-	"The.Show.S03E01.1080p.HDTV.x264-GROUP",
-	"The.Show.S03E02.720p.HDTV.x264-GROUP",
-	"The.Show.S03E03.2160p.HDTV.x265-GROUP",
-	"The.Show.S03E04.HDTV.x264-GROUP",
-
-	// BluRay variants
-	"The.Show.S04E01.1080p.BluRay.x264-GROUP",
-	"The.Show.S04E02.720p.BluRay.x264-GROUP",
-	"The.Show.S04E03.2160p.BluRay.x265-GROUP",
-	"The.Show.S04E04.480p.BluRay.x264-GROUP",
-	"The.Show.S04E05.576p.BluRay.x264-GROUP",
-
-	// REMUX variants
-	"The.Show.S05E01.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-GROUP",
-	"The.Show.S05E02.2160p.UHD.BluRay.REMUX.HDR.HEVC.DTS-HD.MA.5.1-GROUP",
-
-	// DVD
-	"The.Show.S06E01.DVDRip.x264-GROUP",
-	"The.Show.S06E02.DVD.x264-GROUP",
-
-	// Edge cases - PROPER/REPACK
-	"The.Show.S07E01.1080p.WEB-DL.DD5.1.H.264-GROUP.PROPER",
-	"The.Show.S07E02.1080p.WEB-DL.DD5.1.H.264-GROUP.REPACK",
-	"The.Show.S07E03.720p.HDTV.x264-GROUP.REPACK2",
-
-	// Version tags
-	"The.Show.S08E01.v2.1080p.WEB-DL.DD5.1.H.264-GROUP",
-	"[Group] The Show - S01E01 [1080p][WEB-DL][v2]",
-
-	// Streaming service specific patterns
-	"The.Show.S09E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-GROUP",
-	"The.Show.S09E02.1080p.NF.WEB-DL.DDP5.1.H.264-GROUP",
-	"The.Show.S09E03.2160p.DSNP.WEB-DL.DDP5.1.H.265-GROUP",
-
-	// More edge cases
-	"The.Show.2024.S01E01.1080p.WEB.H264-GROUP",
-	"The.Show.S01E01.1080i.HDTV.DD5.1.MPEG2-GROUP",
-	"The.Show.S01E01.4K.UHD.BluRay.x265-GROUP",
-
-	// Raw-HD variants
-	"The.Show.S01E01.1080i.RawHD.DD5.1-GROUP",
-	"The.Show.S01E02.Raw-HD.x264-GROUP",
-	"The.Show.S01E03.720p.HDTV.MPEG2-GROUP",
-
-	// BDRip/BRRip variants
-	"The.Show.S01E01.1080p.BDRip.x264-GROUP",
-	"The.Show.S01E02.720p.BDRip.x264-GROUP",
-	"The.Show.S01E03.1080p.BRRip.x264-GROUP",
-	"The.Show.S01E04.720p.BRRip.x264-GROUP",
-	"The.Show.S01E05.BDRip.x264-GROUP",
-
-	// PDTV/DSR/TVRip/SDTV variants
-	"The.Show.S01E01.PDTV.x264-GROUP",
-	"The.Show.S01E02.720p.PDTV.x264-GROUP",
-	"The.Show.S01E03.1080p.PDTV.x264-GROUP",
-	"The.Show.S01E04.DSR.x264-GROUP",
-	"The.Show.S01E05.WS.DSR.x264-GROUP",
-	"The.Show.S01E06.TVRip.x264-GROUP",
-	"The.Show.S01E07.SDTV.x264-GROUP",
-
-	// Alternative resolution detection
-	"The.Show.S01E01.UHD.BluRay.x265-GROUP",
-	"The.Show.S01E02.[4K].BluRay.x265-GROUP",
-	"The.Show.S01E03.UHD.WEB-DL.x265-GROUP",
-
-	// Anime patterns
-	"[SubGroup] Anime Title - 01 [BD 1080p]",
-	"[SubGroup] Anime Title - 02 [BD 720p]",
-	"[SubGroup] Anime Title - 03 [BD 2160p]",
-	"[SubGroup] Anime Title - 04 [WEB 1080p]",
-	"[SubGroup] Anime Title - 05 [WEB 720p]",
-	"[SubGroup] Anime Title - 06 (WEB 1080p)",
-
-	// BDLight variant
-	"The.Show.S01E01.1080p.BDLight.x264-GROUP",
 }
 
 func main() {
@@ -453,6 +363,8 @@ func main() {
 
 	// Print summary
 	total := matches + mismatches
+	parity := float64(matches) / float64(total) * 100
+
 	fmt.Printf("\n%s══════════════════════════════════════════════════════════════════%s\n", colorCyan, colorReset)
 	fmt.Printf("%s                              SUMMARY                              %s\n", colorCyan, colorReset)
 	fmt.Printf("%s══════════════════════════════════════════════════════════════════%s\n\n", colorCyan, colorReset)
@@ -462,8 +374,8 @@ func main() {
 	if errors > 0 {
 		fmt.Printf("%sErrors:       %d%s\n", colorYellow, errors, colorReset)
 	}
-	fmt.Printf("%sMatches:      %d (%.1f%%)%s\n", colorGreen, matches, float64(matches)/float64(total)*100, colorReset)
-	fmt.Printf("%sMismatches:   %d (%.1f%%)%s\n", colorRed, mismatches, float64(mismatches)/float64(total)*100, colorReset)
+	fmt.Printf("%sMatches:      %d (%.1f%%)%s\n", colorGreen, matches, parity, colorReset)
+	fmt.Printf("%sMismatches:   %d (%.1f%%)%s\n", colorRed, mismatches, 100-parity, colorReset)
 
 	if len(mismatchDetails) > 0 {
 		fmt.Printf("\n%s── Mismatch Details ──────────────────────────────────────────────%s\n\n", colorYellow, colorReset)
