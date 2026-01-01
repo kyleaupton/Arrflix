@@ -1,0 +1,3 @@
+[submodule "submodules/Sonarr"]
+	path = submodules/Sonarr
+	url = https://github.com/Sonarr/Sonarr
