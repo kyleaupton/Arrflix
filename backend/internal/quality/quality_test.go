@@ -72,7 +72,7 @@ func TestFull(t *testing.T) {
 		expected string
 	}{
 		{"HDTV720p", HDTV720p, "HDTV-720p"},
-		{"WEBDL1080p", WEBDL1080p, "WEB-DL-1080p"},
+		{"WEBDL1080p", WEBDL1080p, "WEBDL-1080p"},
 		{"Bluray2160pRemux", Bluray2160pRemux, "Bluray-2160p Remux"},
 		{"SDTV", SDTV, "SDTV"},
 		{"Unknown", Unknown, "Unknown"},
