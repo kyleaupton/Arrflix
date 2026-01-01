@@ -130,23 +130,46 @@
                       <Badge variant="secondary" class="text-xs">
                         Priority: {{ policy.priority }}
                       </Badge>
-                      <Badge v-if="policy.matched" variant="default" class="text-xs"> Matched </Badge>
+                      <Badge v-if="policy.matched" variant="default" class="text-xs">
+                        Matched
+                      </Badge>
                     </div>
 
                     <div v-if="policy.ruleEvaluated" class="text-sm text-muted-foreground mb-2">
                       <span class="font-medium">Rule:</span>
-                      <code class="ml-2 px-2 py-1 bg-muted rounded text-xs font-mono inline-flex items-center gap-1 flex-wrap">
+                      <code
+                        class="ml-2 px-2 py-1 bg-muted rounded text-xs font-mono inline-flex items-center gap-1 flex-wrap"
+                      >
                         <span>{{ policy.ruleEvaluated.leftOperand }}</span>
                         <span
-                          v-if="policy.ruleEvaluated.leftResolvedValue !== undefined && policy.ruleEvaluated.leftResolvedValue !== null"
+                          v-if="
+                            policy.ruleEvaluated.leftResolvedValue !== undefined &&
+                            policy.ruleEvaluated.leftResolvedValue !== null
+                          "
                           class="text-primary font-semibold"
-                        >[{{ formatResolvedValue(policy.ruleEvaluated.leftResolvedValue, policy.ruleEvaluated.leftOperand) }}]</span>
+                          >[{{
+                            formatResolvedValue(
+                              policy.ruleEvaluated.leftResolvedValue,
+                              policy.ruleEvaluated.leftOperand,
+                            )
+                          }}]</span
+                        >
                         <span class="text-yellow-500">{{ policy.ruleEvaluated.operator }}</span>
                         <span>{{ policy.ruleEvaluated.rightOperand }}</span>
                         <span
-                          v-if="policy.ruleEvaluated.rightResolvedValue !== undefined && policy.ruleEvaluated.rightResolvedValue !== null && isVariable(policy.ruleEvaluated.rightOperand)"
+                          v-if="
+                            policy.ruleEvaluated.rightResolvedValue !== undefined &&
+                            policy.ruleEvaluated.rightResolvedValue !== null &&
+                            isVariable(policy.ruleEvaluated.rightOperand)
+                          "
                           class="text-primary font-semibold"
-                        >[{{ formatResolvedValue(policy.ruleEvaluated.rightResolvedValue, policy.ruleEvaluated.rightOperand) }}]</span>
+                          >[{{
+                            formatResolvedValue(
+                              policy.ruleEvaluated.rightResolvedValue,
+                              policy.ruleEvaluated.rightOperand,
+                            )
+                          }}]</span
+                        >
                       </code>
                     </div>
 
@@ -258,9 +281,7 @@
             </div>
           </div>
 
-          <div v-else class="text-center py-8 text-muted-foreground">
-            No context available
-          </div>
+          <div v-else class="text-center py-8 text-muted-foreground">No context available</div>
         </TabsContent>
       </Tabs>
     </div>
@@ -335,7 +356,9 @@ const seriesPreviewMutation = useMutation({
   },
 })
 
-const isLoading = computed(() => moviePreviewMutation.isPending.value || seriesPreviewMutation.isPending.value)
+const isLoading = computed(
+  () => moviePreviewMutation.isPending.value || seriesPreviewMutation.isPending.value,
+)
 
 // Trigger preview when candidate changes
 watch(
