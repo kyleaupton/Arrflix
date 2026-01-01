@@ -5,6 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
+	"github.com/kyleaupton/snaggle/backend/internal/quality"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 	"github.com/labstack/echo/v4"
 )
@@ -422,8 +423,13 @@ func (h *Policies) Evaluate(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}
+
+	// Convert DownloadCandidate to EvaluationContext
+	q := quality.ParseQuality(req.Title)
+	evalCtx := model.NewEvaluationContext(req, q)
+
 	ctx := c.Request().Context()
-	trace, err := h.svc.Policies.Evaluate(ctx, req)
+	trace, err := h.svc.Policies.Evaluate(ctx, evalCtx)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

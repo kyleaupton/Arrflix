@@ -3150,6 +3150,32 @@ const docTemplate = `{
                 }
             }
         },
+        "model.ContextSnapshot": {
+            "type": "object",
+            "required": [
+                "candidate",
+                "media",
+                "quality"
+            ],
+            "properties": {
+                "candidate": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "media": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "mediainfo": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "quality": {
+                    "type": "object",
+                    "additionalProperties": {}
+                }
+            }
+        },
         "model.Credits": {
             "type": "object",
             "required": [
@@ -3329,6 +3355,14 @@ const docTemplate = `{
                 "policies"
             ],
             "properties": {
+                "context": {
+                    "description": "Full evaluation context for debugging",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.ContextSnapshot"
+                        }
+                    ]
+                },
                 "finalPlan": {
                     "$ref": "#/definitions/model.Plan"
                 },
@@ -4290,11 +4324,17 @@ const docTemplate = `{
                 "leftOperand": {
                     "type": "string"
                 },
+                "leftResolvedValue": {
+                    "description": "Resolved value of left operand"
+                },
                 "operator": {
                     "type": "string"
                 },
                 "rightOperand": {
                     "type": "string"
+                },
+                "rightResolvedValue": {
+                    "description": "Resolved value of right operand"
                 }
             }
         },

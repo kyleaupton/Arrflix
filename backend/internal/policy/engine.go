@@ -11,7 +11,6 @@ import (
 	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/quality"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
 
@@ -26,7 +25,7 @@ func NewEngine(r *repo.Repository, l *logger.Logger) *Engine {
 }
 
 // Evaluate evaluates all enabled policies in priority order and returns an EvaluationTrace
-func (e *Engine) Evaluate(ctx context.Context, candidate model.DownloadCandidate) (model.EvaluationTrace, error) {
+func (e *Engine) Evaluate(ctx context.Context, evalCtx model.EvaluationContext) (model.EvaluationTrace, error) {
 	trace := model.EvaluationTrace{
 		Policies: []model.PolicyEvaluation{},
 		FinalPlan: model.Plan{
@@ -34,6 +33,7 @@ func (e *Engine) Evaluate(ctx context.Context, candidate model.DownloadCandidate
 			LibraryID:      "",
 			NameTemplateID: "",
 		},
+		Context: e.buildContextSnapshot(evalCtx),
 	}
 
 	policies, err := e.repo.ListPolicies(ctx)
@@ -68,20 +68,21 @@ func (e *Engine) Evaluate(ctx context.Context, candidate model.DownloadCandidate
 			continue
 		}
 
-		// Store rule info
-		policyEval.RuleEvaluated = &model.RuleInfo{
-			LeftOperand:  rule.LeftOperand,
-			Operator:     rule.Operator,
-			RightOperand: rule.RightOperand,
-		}
+		// Resolve values for the rule operands
+		leftVal, _ := e.getValue(rule.LeftOperand, evalCtx)
+		rightVal, _ := e.getValue(rule.RightOperand, evalCtx)
 
-		candidateContext := model.CandidateContext{
-			Candidate: candidate,
-			Quality:   quality.ParseQuality(candidate.Title),
+		// Store rule info with resolved values
+		policyEval.RuleEvaluated = &model.RuleInfo{
+			LeftOperand:        rule.LeftOperand,
+			LeftResolvedValue:  leftVal,
+			Operator:           rule.Operator,
+			RightOperand:       rule.RightOperand,
+			RightResolvedValue: rightVal,
 		}
 
 		// Evaluate rule
-		matches, err := e.evaluateRule(ctx, rule, candidateContext)
+		matches, err := e.evaluateRule(ctx, rule, evalCtx)
 		if err != nil {
 			return trace, fmt.Errorf("evaluate rule for policy %s: %w", policy.ID.String(), err)
 		}
@@ -138,9 +139,20 @@ func (e *Engine) Evaluate(ctx context.Context, candidate model.DownloadCandidate
 		trace.FinalPlan.DownloaderID = downloader.ID.String()
 	}
 
-	mediaType, err := candidate.GetMediaType()
-	if err != nil {
-		return trace, fmt.Errorf("get media type: %w", err)
+	// Determine media type from context
+	mediaType := model.MediaType(evalCtx.Media.Type)
+	if mediaType == "" {
+		// Fallback: try to infer from categories
+		for _, cat := range evalCtx.Candidate.Categories {
+			if strings.HasPrefix(cat, "Movies/") || cat == "Movies" {
+				mediaType = model.MediaTypeMovie
+				break
+			}
+			if strings.HasPrefix(cat, "TV/") || cat == "TV" {
+				mediaType = model.MediaTypeSeries
+				break
+			}
+		}
 	}
 
 	if trace.FinalPlan.LibraryID == "" {
@@ -162,28 +174,28 @@ func (e *Engine) Evaluate(ctx context.Context, candidate model.DownloadCandidate
 	return trace, nil
 }
 
-// evaluateRule evaluates a rule against torrent metadata
-func (e *Engine) evaluateRule(ctx context.Context, rule dbgen.Rule, candidateContext model.CandidateContext) (bool, error) {
+// evaluateRule evaluates a rule against the evaluation context
+func (e *Engine) evaluateRule(ctx context.Context, rule dbgen.Rule, evalCtx model.EvaluationContext) (bool, error) {
 	operator := model.Operator(rule.Operator)
 
 	// Handle logical operators (and, or, not) which reference other rules
 	switch operator {
 	case model.OpAnd:
-		return e.evaluateLogicalAnd(ctx, rule, candidateContext)
+		return e.evaluateLogicalAnd(ctx, rule, evalCtx)
 	case model.OpOr:
-		return e.evaluateLogicalOr(ctx, rule, candidateContext)
+		return e.evaluateLogicalOr(ctx, rule, evalCtx)
 	case model.OpNot:
-		return e.evaluateLogicalNot(ctx, rule, candidateContext)
+		return e.evaluateLogicalNot(ctx, rule, evalCtx)
 	}
 
 	// Evaluate left operand
-	leftVal, err := e.getValue(rule.LeftOperand, candidateContext)
+	leftVal, err := e.getValue(rule.LeftOperand, evalCtx)
 	if err != nil {
 		return false, fmt.Errorf("get left value: %w", err)
 	}
 
 	// Evaluate right operand
-	rightVal, err := e.getValue(rule.RightOperand, candidateContext)
+	rightVal, err := e.getValue(rule.RightOperand, evalCtx)
 	if err != nil {
 		return false, fmt.Errorf("get right value: %w", err)
 	}
@@ -193,7 +205,7 @@ func (e *Engine) evaluateRule(ctx context.Context, rule dbgen.Rule, candidateCon
 }
 
 // evaluateLogicalAnd evaluates an AND rule (left and right are rule UUIDs)
-func (e *Engine) evaluateLogicalAnd(ctx context.Context, rule dbgen.Rule, candidateContext model.CandidateContext) (bool, error) {
+func (e *Engine) evaluateLogicalAnd(ctx context.Context, rule dbgen.Rule, evalCtx model.EvaluationContext) (bool, error) {
 	leftRule, err := e.getRuleByID(ctx, rule.LeftOperand)
 	if err != nil {
 		return false, err
@@ -203,11 +215,11 @@ func (e *Engine) evaluateLogicalAnd(ctx context.Context, rule dbgen.Rule, candid
 		return false, err
 	}
 
-	leftResult, err := e.evaluateRule(ctx, leftRule, candidateContext)
+	leftResult, err := e.evaluateRule(ctx, leftRule, evalCtx)
 	if err != nil {
 		return false, err
 	}
-	rightResult, err := e.evaluateRule(ctx, rightRule, candidateContext)
+	rightResult, err := e.evaluateRule(ctx, rightRule, evalCtx)
 	if err != nil {
 		return false, err
 	}
@@ -216,7 +228,7 @@ func (e *Engine) evaluateLogicalAnd(ctx context.Context, rule dbgen.Rule, candid
 }
 
 // evaluateLogicalOr evaluates an OR rule (left and right are rule UUIDs)
-func (e *Engine) evaluateLogicalOr(ctx context.Context, rule dbgen.Rule, candidateContext model.CandidateContext) (bool, error) {
+func (e *Engine) evaluateLogicalOr(ctx context.Context, rule dbgen.Rule, evalCtx model.EvaluationContext) (bool, error) {
 	leftRule, err := e.getRuleByID(ctx, rule.LeftOperand)
 	if err != nil {
 		return false, err
@@ -226,11 +238,11 @@ func (e *Engine) evaluateLogicalOr(ctx context.Context, rule dbgen.Rule, candida
 		return false, err
 	}
 
-	leftResult, err := e.evaluateRule(ctx, leftRule, candidateContext)
+	leftResult, err := e.evaluateRule(ctx, leftRule, evalCtx)
 	if err != nil {
 		return false, err
 	}
-	rightResult, err := e.evaluateRule(ctx, rightRule, candidateContext)
+	rightResult, err := e.evaluateRule(ctx, rightRule, evalCtx)
 	if err != nil {
 		return false, err
 	}
@@ -239,13 +251,13 @@ func (e *Engine) evaluateLogicalOr(ctx context.Context, rule dbgen.Rule, candida
 }
 
 // evaluateLogicalNot evaluates a NOT rule (right is a rule UUID)
-func (e *Engine) evaluateLogicalNot(ctx context.Context, rule dbgen.Rule, candidateContext model.CandidateContext) (bool, error) {
+func (e *Engine) evaluateLogicalNot(ctx context.Context, rule dbgen.Rule, evalCtx model.EvaluationContext) (bool, error) {
 	rightRule, err := e.getRuleByID(ctx, rule.RightOperand)
 	if err != nil {
 		return false, err
 	}
 
-	result, err := e.evaluateRule(ctx, rightRule, candidateContext)
+	result, err := e.evaluateRule(ctx, rightRule, evalCtx)
 	if err != nil {
 		return false, err
 	}
@@ -282,25 +294,31 @@ func (e *Engine) getRuleByID(ctx context.Context, ruleIDStr string) (dbgen.Rule,
 	return dbgen.Rule{}, fmt.Errorf("rule not found: %s", ruleIDStr)
 }
 
-// getValue gets a value from metadata or returns the literal value
-func (e *Engine) getValue(operand string, candidateContext model.CandidateContext) (interface{}, error) {
-	// Check if it's a field reference (candidate.*)
-	if strings.HasPrefix(operand, "candidate.") {
-		field := strings.TrimPrefix(operand, "candidate.")
-		return e.getCandidateField(field, candidateContext)
-	}
+// getValue gets a value from the evaluation context or returns the literal value
+func (e *Engine) getValue(operand string, evalCtx model.EvaluationContext) (interface{}, error) {
+	// Check if it's a field reference using the unified context
+	if strings.Contains(operand, ".") {
+		parts := strings.SplitN(operand, ".", 2)
+		namespace := parts[0]
 
-	// Check if it's a field reference (quality.*)
-	if strings.HasPrefix(operand, "quality.") {
-		field := strings.TrimPrefix(operand, "quality.")
-		return e.getQualityField(field, candidateContext)
-	}
-
-	// Backward compatibility: support torrent.* (deprecated)
-	if strings.HasPrefix(operand, "torrent.") {
-		e.logger.Warn().Str("field", operand).Msg("Using deprecated torrent.* field, please migrate to candidate.*")
-		field := strings.TrimPrefix(operand, "torrent.")
-		return e.getCandidateField(field, candidateContext)
+		// Handle known namespaces using the unified GetField
+		switch namespace {
+		case "candidate", "quality", "media", "mediainfo":
+			val, err := evalCtx.GetField(operand)
+			if err != nil {
+				// For mediainfo fields that aren't available yet, return nil gracefully
+				if namespace == "mediainfo" && strings.Contains(err.Error(), "not available") {
+					return nil, nil
+				}
+				return nil, err
+			}
+			return val, nil
+		case "torrent":
+			// Backward compatibility: support torrent.* (deprecated)
+			e.logger.Warn().Str("field", operand).Msg("Using deprecated torrent.* field, please migrate to candidate.*")
+			newPath := "candidate." + parts[1]
+			return evalCtx.GetField(newPath)
+		}
 	}
 
 	// Try to parse as number
@@ -313,64 +331,6 @@ func (e *Engine) getValue(operand string, candidateContext model.CandidateContex
 
 	// Return as string
 	return operand, nil
-}
-
-// getCandidateField gets a value from the candidate
-func (e *Engine) getCandidateField(field string, candidateContext model.CandidateContext) (interface{}, error) {
-	candidate := candidateContext.Candidate
-	switch field {
-	case "size":
-		return int64(candidate.Size), nil
-	case "title":
-		return candidate.Title, nil
-	case "indexer":
-		return candidate.Indexer, nil
-	case "indexer_id":
-		return int64(candidate.IndexerID), nil
-	case "categories":
-		return candidate.Categories, nil
-	case "protocol":
-		return candidate.Protocol, nil
-	case "torrent_seeders":
-		if candidate.Protocol == "torrent" {
-			return int64(candidate.Seeders), nil
-		}
-		return nil, fmt.Errorf("field torrent_seeders only available for torrent protocol")
-	case "torrent_peers":
-		if candidate.Protocol == "torrent" {
-			return int64(candidate.Peers), nil
-		}
-		return nil, fmt.Errorf("field torrent_peers only available for torrent protocol")
-	// Backward compatibility mappings
-	case "seeders":
-		return int64(candidate.Seeders), nil
-	case "peers":
-		return int64(candidate.Peers), nil
-	case "tracker":
-		return candidate.Indexer, nil
-	case "tracker_id":
-		return int64(candidate.IndexerID), nil
-	default:
-		return nil, fmt.Errorf("unknown candidate field: %s", field)
-	}
-}
-
-// getQualityField gets a value from the parsed quality using the field registry
-func (e *Engine) getQualityField(field string, candidateContext model.CandidateContext) (interface{}, error) {
-	// Convert snake_case to PascalCase for registry lookup
-	fieldName := snakeToPascal(field)
-	return quality.GetField(fieldName, candidateContext.Quality)
-}
-
-// snakeToPascal converts snake_case to PascalCase (e.g., "is_remux" -> "IsRemux")
-func snakeToPascal(s string) string {
-	parts := strings.Split(s, "_")
-	for i, part := range parts {
-		if len(part) > 0 {
-			parts[i] = strings.ToUpper(part[:1]) + strings.ToLower(part[1:])
-		}
-	}
-	return strings.Join(parts, "")
 }
 
 // compare compares two values based on operator
@@ -507,4 +467,67 @@ func (e *Engine) applyAction(plan *model.Plan, action dbgen.Action) error {
 	}
 
 	return nil
+}
+
+// buildContextSnapshot creates a JSON-friendly snapshot of the evaluation context
+func (e *Engine) buildContextSnapshot(evalCtx model.EvaluationContext) *model.ContextSnapshot {
+	snapshot := &model.ContextSnapshot{
+		Candidate: map[string]any{
+			"size":         evalCtx.Candidate.Size,
+			"title":        evalCtx.Candidate.Title,
+			"indexer":      evalCtx.Candidate.Indexer,
+			"indexer_id":   evalCtx.Candidate.IndexerID,
+			"categories":   evalCtx.Candidate.Categories,
+			"protocol":     evalCtx.Candidate.Protocol,
+			"seeders":      evalCtx.Candidate.Seeders,
+			"peers":        evalCtx.Candidate.Peers,
+			"age":          evalCtx.Candidate.Age,
+			"age_hours":    evalCtx.Candidate.AgeHours,
+			"grabs":        evalCtx.Candidate.Grabs,
+			"publish_date": evalCtx.Candidate.PublishDate,
+			"link":         evalCtx.Candidate.Link,
+			"guid":         evalCtx.Candidate.GUID,
+		},
+		Quality: map[string]any{
+			"full":       evalCtx.Quality.Full,
+			"resolution": evalCtx.Quality.Resolution,
+			"source":     evalCtx.Quality.Source,
+			"is_remux":   evalCtx.Quality.IsRemux,
+			"is_repack":  evalCtx.Quality.IsRepack,
+			"version":    evalCtx.Quality.Version,
+		},
+		Media: map[string]any{
+			"type":    evalCtx.Media.Type,
+			"title":   evalCtx.Media.Title,
+			"year":    evalCtx.Media.Year,
+			"tmdb_id": evalCtx.Media.TmdbID,
+		},
+	}
+
+	// Add optional media fields
+	if evalCtx.Media.Season != nil {
+		snapshot.Media["season"] = *evalCtx.Media.Season
+	}
+	if evalCtx.Media.Episode != nil {
+		snapshot.Media["episode"] = *evalCtx.Media.Episode
+	}
+	if evalCtx.Media.EpisodeTitle != nil {
+		snapshot.Media["episode_title"] = *evalCtx.Media.EpisodeTitle
+	}
+
+	// Add mediainfo if available
+	if evalCtx.MediaInfo != nil {
+		snapshot.MediaInfo = map[string]any{
+			"video_codec":     evalCtx.MediaInfo.VideoCodec,
+			"video_bit_depth": evalCtx.MediaInfo.VideoBitDepth,
+			"audio_codec":     evalCtx.MediaInfo.AudioCodec,
+			"audio_channels":  evalCtx.MediaInfo.AudioChannels,
+			"container":       evalCtx.MediaInfo.Container,
+			"duration":        evalCtx.MediaInfo.Duration,
+			"file_size":       evalCtx.MediaInfo.FileSize,
+			"hdr":             evalCtx.MediaInfo.HDR,
+		}
+	}
+
+	return snapshot
 }

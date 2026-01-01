@@ -305,6 +305,21 @@ export type ModelCategories = {
     subCategories: Array<ModelCategories>;
 };
 
+export type ModelContextSnapshot = {
+    candidate: {
+        [key: string]: unknown;
+    };
+    media: {
+        [key: string]: unknown;
+    };
+    mediainfo?: {
+        [key: string]: unknown;
+    };
+    quality: {
+        [key: string]: unknown;
+    };
+};
+
 export type ModelCredits = {
     cast: Array<ModelCastMember>;
     crew: Array<ModelCrewMember>;
@@ -371,6 +386,10 @@ export type ModelEpisodeAvailability = {
 };
 
 export type ModelEvaluationTrace = {
+    /**
+     * Full evaluation context for debugging
+     */
+    context?: ModelContextSnapshot;
     finalPlan: ModelPlan;
     policies: Array<ModelPolicyEvaluation>;
 };
@@ -659,8 +678,16 @@ export type ModelRail = {
 
 export type ModelRuleInfo = {
     leftOperand: string;
+    /**
+     * Resolved value of left operand
+     */
+    leftResolvedValue?: unknown;
     operator: string;
     rightOperand: string;
+    /**
+     * Resolved value of right operand
+     */
+    rightResolvedValue?: unknown;
 };
 
 export type ModelSeasonDetail = {

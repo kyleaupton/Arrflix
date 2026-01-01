@@ -1,0 +1,318 @@
+package model
+
+import (
+	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
+	"github.com/kyleaupton/snaggle/backend/internal/quality"
+)
+
+// Phase indicates when a field becomes available
+type Phase string
+
+const (
+	PhasePreDownload  Phase = "pre_download"
+	PhasePostDownload Phase = "post_download"
+)
+
+// EvaluationContext is the unified context available to both the policy engine
+// and name template system. It uses prefixed namespaces:
+//   - candidate.* - Torrent/release metadata (available at policy time)
+//   - quality.*   - Parsed quality info (available at policy time)
+//   - media.*     - TMDB/media metadata (available at policy time)
+//   - mediainfo.* - Video file analysis (available only post-download)
+type EvaluationContext struct {
+	Candidate CandidateFields  `namespace:"candidate"`
+	Quality   QualityFields    `namespace:"quality"`
+	Media     MediaFields      `namespace:"media"`
+	MediaInfo *MediaInfoFields `namespace:"mediainfo"` // nil until post-download
+}
+
+// CandidateFields contains torrent/release metadata from indexers
+type CandidateFields struct {
+	Size        int64     `path:"candidate.size" label:"Size" type:"number" phase:"pre_download"`
+	Title       string    `path:"candidate.title" label:"Candidate Title" type:"text" phase:"pre_download"`
+	Indexer     string    `path:"candidate.indexer" label:"Indexer" type:"dynamic" dynamicSource:"/api/v1/indexers/configured" phase:"pre_download"`
+	IndexerID   int64     `path:"candidate.indexer_id" label:"Indexer ID" type:"number" phase:"pre_download"`
+	Categories  []string  `path:"candidate.categories" label:"Categories" type:"dynamic" phase:"pre_download"`
+	Protocol    string    `path:"candidate.protocol" label:"Protocol" type:"enum" enumValues:"torrent,usenet" phase:"pre_download"`
+	Seeders     int       `path:"candidate.seeders" label:"Seeders" type:"number" phase:"pre_download"`
+	Peers       int       `path:"candidate.peers" label:"Peers" type:"number" phase:"pre_download"`
+	Age         int64     `path:"candidate.age" label:"Age (seconds)" type:"number" phase:"pre_download"`
+	AgeHours    float64   `path:"candidate.age_hours" label:"Age (hours)" type:"number" phase:"pre_download"`
+	Grabs       int       `path:"candidate.grabs" label:"Grabs" type:"number" phase:"pre_download"`
+	PublishDate time.Time `path:"candidate.publish_date" label:"Publish Date" type:"text" phase:"pre_download"`
+	Link        string    `path:"candidate.link" label:"Link" type:"text" phase:"pre_download"`
+	GUID        string    `path:"candidate.guid" label:"GUID" type:"text" phase:"pre_download"`
+}
+
+// QualityFields contains parsed quality information from the release title
+type QualityFields struct {
+	Full       string `path:"quality.full" label:"Full Quality" type:"text" phase:"pre_download"`
+	Resolution string `path:"quality.resolution" label:"Resolution" type:"enum" enumValues:"Unknown,SD,480p,576p,720p,1080p,1440p,2160p,4320p" phase:"pre_download"`
+	Source     string `path:"quality.source" label:"Source" type:"enum" enumValues:"Unknown,SDTV,CAM,Telesync,Telecine,Screener,DVD,DVD-Rip,HDTV,WEBRip,WEB-DL,BluRay,REMUX,Raw-HD" phase:"pre_download"`
+	IsRemux    bool   `path:"quality.is_remux" label:"Is Remux" type:"boolean" phase:"pre_download"`
+	IsRepack   bool   `path:"quality.is_repack" label:"Is Repack" type:"boolean" phase:"pre_download"`
+	Version    int    `path:"quality.version" label:"Version" type:"number" phase:"pre_download"`
+}
+
+// MediaFields contains TMDB/media metadata
+type MediaFields struct {
+	Type         string  `path:"media.type" label:"Media Type" type:"enum" enumValues:"movie,series" phase:"pre_download"`
+	Title        string  `path:"media.title" label:"Media Title" type:"text" phase:"pre_download"`
+	Year         int     `path:"media.year" label:"Year" type:"number" phase:"pre_download"`
+	TmdbID       int64   `path:"media.tmdb_id" label:"TMDB ID" type:"number" phase:"pre_download"`
+	Season       *int    `path:"media.season" label:"Season" type:"number" phase:"pre_download"`
+	Episode      *int    `path:"media.episode" label:"Episode" type:"number" phase:"pre_download"`
+	EpisodeTitle *string `path:"media.episode_title" label:"Episode Title" type:"text" phase:"pre_download"`
+}
+
+// MediaInfoFields contains video file analysis data (populated post-download via ffprobe/mediainfo)
+type MediaInfoFields struct {
+	VideoCodec    string `path:"mediainfo.video_codec" label:"Video Codec" type:"enum" enumValues:"Unknown,H.264,H.265,AV1,VP9,MPEG-2" phase:"post_download"`
+	VideoBitDepth int    `path:"mediainfo.video_bit_depth" label:"Video Bit Depth" type:"number" phase:"post_download"`
+	AudioCodec    string `path:"mediainfo.audio_codec" label:"Audio Codec" type:"enum" enumValues:"Unknown,AAC,AC3,DTS,DTS-HD MA,TrueHD,FLAC,Opus" phase:"post_download"`
+	AudioChannels string `path:"mediainfo.audio_channels" label:"Audio Channels" type:"enum" enumValues:"Unknown,2.0,5.1,7.1" phase:"post_download"`
+	Container     string `path:"mediainfo.container" label:"Container" type:"enum" enumValues:"Unknown,MKV,MP4,AVI,TS" phase:"post_download"`
+	Duration      int64  `path:"mediainfo.duration" label:"Duration (seconds)" type:"number" phase:"post_download"`
+	FileSize      int64  `path:"mediainfo.file_size" label:"File Size" type:"number" phase:"post_download"`
+	HDR           string `path:"mediainfo.hdr" label:"HDR Format" type:"enum" enumValues:"None,HDR10,HDR10+,Dolby Vision,HLG" phase:"post_download"`
+}
+
+// NewEvaluationContext creates an EvaluationContext from a DownloadCandidate and optional media info
+func NewEvaluationContext(candidate DownloadCandidate, q quality.QualityModel) EvaluationContext {
+	return EvaluationContext{
+		Candidate: CandidateFields{
+			Size:        candidate.Size,
+			Title:       candidate.Title,
+			Indexer:     candidate.Indexer,
+			IndexerID:   candidate.IndexerID,
+			Categories:  candidate.Categories,
+			Protocol:    candidate.Protocol,
+			Seeders:     candidate.Seeders,
+			Peers:       candidate.Peers,
+			Age:         candidate.Age,
+			AgeHours:    candidate.AgeHours,
+			Grabs:       candidate.Grabs,
+			PublishDate: candidate.PublishDate,
+			Link:        candidate.Link,
+			GUID:        candidate.GUID,
+		},
+		Quality: QualityFields{
+			Full:       q.Full(),
+			Resolution: q.Resolution(),
+			Source:     q.Source(),
+			IsRemux:    q.IsRemux(),
+			IsRepack:   q.Revision.IsRepack,
+			Version:    q.Version(),
+		},
+		Media:     MediaFields{},
+		MediaInfo: nil,
+	}
+}
+
+// WithMedia sets the media fields on the context
+func (ctx EvaluationContext) WithMedia(mediaType MediaType, title string, year int, tmdbID int64) EvaluationContext {
+	ctx.Media = MediaFields{
+		Type:   string(mediaType),
+		Title:  title,
+		Year:   year,
+		TmdbID: tmdbID,
+	}
+	return ctx
+}
+
+// WithSeriesInfo sets series-specific media fields
+func (ctx EvaluationContext) WithSeriesInfo(season, episode *int, episodeTitle *string) EvaluationContext {
+	ctx.Media.Season = season
+	ctx.Media.Episode = episode
+	ctx.Media.EpisodeTitle = episodeTitle
+	return ctx
+}
+
+// WithMediaInfo sets the mediainfo fields (post-download)
+func (ctx EvaluationContext) WithMediaInfo(mi *MediaInfoFields) EvaluationContext {
+	ctx.MediaInfo = mi
+	return ctx
+}
+
+// GetField retrieves a field value by its path (e.g., "candidate.size", "quality.resolution")
+func (ctx *EvaluationContext) GetField(path string) (interface{}, error) {
+	parts := strings.SplitN(path, ".", 2)
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid field path: %s (expected namespace.field)", path)
+	}
+
+	namespace := parts[0]
+	fieldPath := parts[1]
+
+	switch namespace {
+	case "candidate":
+		return getFieldByPath(&ctx.Candidate, "candidate."+fieldPath)
+	case "quality":
+		return getFieldByPath(&ctx.Quality, "quality."+fieldPath)
+	case "media":
+		return getFieldByPath(&ctx.Media, "media."+fieldPath)
+	case "mediainfo":
+		if ctx.MediaInfo == nil {
+			return nil, fmt.Errorf("mediainfo not available (pre-download phase)")
+		}
+		return getFieldByPath(ctx.MediaInfo, "mediainfo."+fieldPath)
+	default:
+		return nil, fmt.Errorf("unknown namespace: %s", namespace)
+	}
+}
+
+// getFieldByPath uses reflection to find a struct field by its path tag
+func getFieldByPath(obj interface{}, path string) (interface{}, error) {
+	v := reflect.ValueOf(obj)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	if v.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("expected struct, got %s", v.Kind())
+	}
+
+	t := v.Type()
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if tag := field.Tag.Get("path"); tag == path {
+			fieldVal := v.Field(i)
+			// Handle pointer fields
+			if fieldVal.Kind() == reflect.Ptr {
+				if fieldVal.IsNil() {
+					return nil, nil
+				}
+				return fieldVal.Elem().Interface(), nil
+			}
+			return fieldVal.Interface(), nil
+		}
+	}
+
+	return nil, fmt.Errorf("unknown field: %s", path)
+}
+
+// ContextFieldInfo represents metadata about a field available in EvaluationContext
+type ContextFieldInfo struct {
+	Path          string   `json:"path"`
+	Label         string   `json:"label"`
+	Type          string   `json:"type"`      // text, number, enum, boolean, dynamic
+	ValueType     string   `json:"valueType"` // string, int64, int, float64, bool, []string
+	Phase         Phase    `json:"phase"`
+	EnumValues    []string `json:"enumValues,omitempty"`
+	DynamicSource string   `json:"dynamicSource,omitempty"`
+}
+
+// ListContextFields returns all available fields with their metadata
+func ListContextFields() []ContextFieldInfo {
+	var fields []ContextFieldInfo
+
+	// Collect fields from each namespace struct
+	fields = append(fields, extractFieldsFromStruct(reflect.TypeOf(CandidateFields{}))...)
+	fields = append(fields, extractFieldsFromStruct(reflect.TypeOf(QualityFields{}))...)
+	fields = append(fields, extractFieldsFromStruct(reflect.TypeOf(MediaFields{}))...)
+	fields = append(fields, extractFieldsFromStruct(reflect.TypeOf(MediaInfoFields{}))...)
+
+	return fields
+}
+
+// extractFieldsFromStruct extracts ContextFieldInfo from struct tags
+func extractFieldsFromStruct(t reflect.Type) []ContextFieldInfo {
+	var fields []ContextFieldInfo
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		path := field.Tag.Get("path")
+		if path == "" {
+			continue
+		}
+
+		info := ContextFieldInfo{
+			Path:          path,
+			Label:         field.Tag.Get("label"),
+			Type:          field.Tag.Get("type"),
+			Phase:         Phase(field.Tag.Get("phase")),
+			DynamicSource: field.Tag.Get("dynamicSource"),
+		}
+
+		// Determine value type from Go type
+		info.ValueType = goTypeToValueType(field.Type)
+
+		// Parse enum values if present
+		if enumStr := field.Tag.Get("enumValues"); enumStr != "" {
+			info.EnumValues = strings.Split(enumStr, ",")
+		}
+
+		fields = append(fields, info)
+	}
+
+	return fields
+}
+
+// goTypeToValueType converts Go reflect.Type to a string representation
+func goTypeToValueType(t reflect.Type) string {
+	switch t.Kind() {
+	case reflect.String:
+		return "string"
+	case reflect.Int, reflect.Int32:
+		return "int"
+	case reflect.Int64:
+		return "int64"
+	case reflect.Float64:
+		return "float64"
+	case reflect.Bool:
+		return "bool"
+	case reflect.Slice:
+		if t.Elem().Kind() == reflect.String {
+			return "[]string"
+		}
+		return "[]any"
+	case reflect.Ptr:
+		return goTypeToValueType(t.Elem())
+	default:
+		return "any"
+	}
+}
+
+// ToTemplateData converts the context to a map suitable for Go templates
+// This provides both dot-notation access (e.g., .Candidate.Title) and
+// maintains backwards compatibility with existing templates
+func (ctx *EvaluationContext) ToTemplateData() map[string]any {
+	data := map[string]any{
+		// Namespaced access (new style)
+		"Candidate": ctx.Candidate,
+		"Quality":   ctx.Quality,
+		"Media":     ctx.Media,
+	}
+
+	if ctx.MediaInfo != nil {
+		data["MediaInfo"] = ctx.MediaInfo
+	}
+
+	// Backwards compatibility: expose common fields at top level
+	// These match the old template context format
+	data["Title"] = ctx.Media.Title
+	if ctx.Media.Year > 0 {
+		data["Year"] = fmt.Sprintf("%d", ctx.Media.Year)
+	} else {
+		data["Year"] = ""
+	}
+
+	// For series, expose season/episode info
+	if ctx.Media.Season != nil {
+		data["Season"] = fmt.Sprintf("%02d", *ctx.Media.Season)
+	}
+	if ctx.Media.Episode != nil {
+		data["Episode"] = fmt.Sprintf("%02d", *ctx.Media.Episode)
+	}
+	if ctx.Media.EpisodeTitle != nil {
+		data["EpisodeTitle"] = *ctx.Media.EpisodeTitle
+	} else {
+		data["EpisodeTitle"] = ""
+	}
+
+	return data
+}
+

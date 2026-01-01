@@ -13,6 +13,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/downloader"
 	"github.com/kyleaupton/snaggle/backend/internal/importer"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
+	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/quality"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 	"github.com/kyleaupton/snaggle/backend/internal/template"
@@ -46,11 +47,6 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 		return ImportResult{}, fmt.Errorf("get media item: %w", err)
 	}
 
-	year := ""
-	if mediaItem.Year != nil {
-		year = fmt.Sprintf("%d", *mediaItem.Year)
-	}
-
 	lib, err := s.repo.GetLibrary(ctx, job.LibraryID)
 	if err != nil {
 		return ImportResult{}, fmt.Errorf("get library: %w", err)
@@ -60,14 +56,13 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 		return ImportResult{}, fmt.Errorf("get name template: %w", err)
 	}
 
-	// Parse quality from the candidate title if available
-	q := quality.ParseQuality(job.CandidateTitle)
+	// Build evaluation context for template rendering
+	evalCtx := s.buildMovieEvalContext(mediaItem, job.CandidateTitle)
 
-	context := map[string]any{
-		"Title":   mediaItem.Title,
-		"Year":    year,
-		"Quality": q,
-	}
+	// TODO: Add mediainfo here once ffprobe integration is complete
+	// evalCtx = evalCtx.WithMediaInfo(mediainfo.Analyze(sourcePath))
+
+	templateData := evalCtx.ToTemplateData()
 
 	var rel string
 	ext := filepath.Ext(sourcePath)
@@ -78,21 +73,21 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 	} else {
 		// Fallback to calculating from template (existing logic)
 		if nt.Type == "series" {
-			showPart, err := template.Render(coalesce(nt.SeriesShowTemplate, ""), context)
+			showPart, err := template.Render(coalesce(nt.SeriesShowTemplate, ""), templateData)
 			if err != nil {
 				return ImportResult{}, fmt.Errorf("render show template: %w", err)
 			}
-			seasonPart, err := template.Render(coalesce(nt.SeriesSeasonTemplate, ""), context)
+			seasonPart, err := template.Render(coalesce(nt.SeriesSeasonTemplate, ""), templateData)
 			if err != nil {
 				return ImportResult{}, fmt.Errorf("render season template: %w", err)
 			}
-			filePart, err := template.Render(nt.Template, context)
+			filePart, err := template.Render(nt.Template, templateData)
 			if err != nil {
 				return ImportResult{}, fmt.Errorf("render file template: %w", err)
 			}
 			rel = filepath.Join(showPart, seasonPart, filePart)
 		} else {
-			rel, err = template.Render(nt.Template, context)
+			rel, err = template.Render(nt.Template, templateData)
 			if err != nil {
 				return ImportResult{}, fmt.Errorf("render template: %w", err)
 			}
@@ -198,7 +193,6 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 	}
 
 	var results []ImportResult
-	q := quality.ParseQuality(job.CandidateTitle)
 
 	for epNum, f := range matchedFiles {
 		s.log.Debug().Int("episode", epNum).Str("file", f.Path).Msg("Processing matched file")
@@ -231,43 +225,39 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 			continue
 		}
 
-		epTitle := ""
-		if episode.Title != nil {
-			epTitle = *episode.Title
-		}
+		// Build evaluation context for this episode
+		seasonNum := int(season.SeasonNumber)
+		episodeNum := int(episode.EpisodeNumber)
+		evalCtx := s.buildSeriesEvalContext(mediaItem, job.CandidateTitle, &seasonNum, &episodeNum, episode.Title)
 
-		context := map[string]any{
-			"Title":        mediaItem.Title,
-			"Year":         fmt.Sprintf("%d", *mediaItem.Year),
-			"Season":       fmt.Sprintf("%02d", season.SeasonNumber),
-			"Episode":      fmt.Sprintf("%02d", episode.EpisodeNumber),
-			"EpisodeTitle": epTitle,
-			"Quality":      q,
-		}
+		// TODO: Add mediainfo here once ffprobe integration is complete
+		// evalCtx = evalCtx.WithMediaInfo(mediainfo.Analyze(f.Path))
+
+		templateData := evalCtx.ToTemplateData()
 
 		ext := filepath.Ext(f.Path)
 		var rel string
 		if nt.Type == "series" {
-			showPart, err := template.Render(coalesce(nt.SeriesShowTemplate, ""), context)
+			showPart, err := template.Render(coalesce(nt.SeriesShowTemplate, ""), templateData)
 			if err != nil {
-				s.log.Error().Err(err).Interface("context", context).Msg("Failed to render show template")
+				s.log.Error().Err(err).Interface("templateData", templateData).Msg("Failed to render show template")
 				continue
 			}
-			seasonPart, err := template.Render(coalesce(nt.SeriesSeasonTemplate, ""), context)
+			seasonPart, err := template.Render(coalesce(nt.SeriesSeasonTemplate, ""), templateData)
 			if err != nil {
-				s.log.Error().Err(err).Interface("context", context).Msg("Failed to render season template")
+				s.log.Error().Err(err).Interface("templateData", templateData).Msg("Failed to render season template")
 				continue
 			}
-			filePart, err := template.Render(nt.Template, context)
+			filePart, err := template.Render(nt.Template, templateData)
 			if err != nil {
-				s.log.Error().Err(err).Interface("context", context).Msg("Failed to render file template")
+				s.log.Error().Err(err).Interface("templateData", templateData).Msg("Failed to render file template")
 				continue
 			}
 			rel = filepath.Join(showPart, seasonPart, filePart)
 		} else {
-			rel, err = template.Render(nt.Template, context)
+			rel, err = template.Render(nt.Template, templateData)
 			if err != nil {
-				s.log.Error().Err(err).Interface("context", context).Msg("Failed to render template")
+				s.log.Error().Err(err).Interface("templateData", templateData).Msg("Failed to render template")
 				continue
 			}
 		}
@@ -314,4 +304,55 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 	}
 
 	return results, nil
+}
+
+// buildMovieEvalContext creates an EvaluationContext for movie imports
+func (s *ImportService) buildMovieEvalContext(mediaItem dbgen.MediaItem, candidateTitle string) model.EvaluationContext {
+	q := quality.ParseQuality(candidateTitle)
+
+	// Create a minimal candidate from job info (we don't have full candidate data at import time)
+	candidate := model.DownloadCandidate{
+		Title: candidateTitle,
+	}
+
+	evalCtx := model.NewEvaluationContext(candidate, q)
+
+	// Add media metadata
+	year := 0
+	if mediaItem.Year != nil {
+		year = int(*mediaItem.Year)
+	}
+	tmdbID := int64(0)
+	if mediaItem.TmdbID != nil {
+		tmdbID = *mediaItem.TmdbID
+	}
+	evalCtx = evalCtx.WithMedia(model.MediaTypeMovie, mediaItem.Title, year, tmdbID)
+
+	return evalCtx
+}
+
+// buildSeriesEvalContext creates an EvaluationContext for series imports
+func (s *ImportService) buildSeriesEvalContext(mediaItem dbgen.MediaItem, candidateTitle string, season, episode *int, episodeTitle *string) model.EvaluationContext {
+	q := quality.ParseQuality(candidateTitle)
+
+	// Create a minimal candidate from job info
+	candidate := model.DownloadCandidate{
+		Title: candidateTitle,
+	}
+
+	evalCtx := model.NewEvaluationContext(candidate, q)
+
+	// Add media metadata
+	year := 0
+	if mediaItem.Year != nil {
+		year = int(*mediaItem.Year)
+	}
+	tmdbID := int64(0)
+	if mediaItem.TmdbID != nil {
+		tmdbID = *mediaItem.TmdbID
+	}
+	evalCtx = evalCtx.WithMedia(model.MediaTypeSeries, mediaItem.Title, year, tmdbID)
+	evalCtx = evalCtx.WithSeriesInfo(season, episode, episodeTitle)
+
+	return evalCtx
 }

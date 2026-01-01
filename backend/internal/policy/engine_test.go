@@ -8,6 +8,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
+	"github.com/kyleaupton/snaggle/backend/internal/quality"
 )
 
 func TestEngine_Evaluate(t *testing.T) {
@@ -18,7 +19,8 @@ func TestEngine_Evaluate(t *testing.T) {
 	r := internal.GetRepo()
 	logg := logger.New(true)
 	engine := NewEngine(r, logg)
-	trace, err := engine.Evaluate(context.Background(), model.DownloadCandidate{
+
+	candidate := model.DownloadCandidate{
 		Protocol:  "http",
 		Filename:  "test.torrent",
 		Link:      "https://example.com/torrent.torrent",
@@ -29,7 +31,11 @@ func TestEngine_Evaluate(t *testing.T) {
 		Seeders:   10,
 		Age:       1000,
 		AgeHours:  10,
-	})
+	}
+	q := quality.ParseQuality(candidate.Title)
+	evalCtx := model.NewEvaluationContext(candidate, q)
+
+	trace, err := engine.Evaluate(context.Background(), evalCtx)
 
 	if err != nil {
 		t.Fatalf("error evaluating plan: %v", err)

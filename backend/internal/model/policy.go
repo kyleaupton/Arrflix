@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/google/uuid"
-	"github.com/kyleaupton/snaggle/backend/internal/quality"
 )
 
 type Plan struct {
@@ -11,11 +10,8 @@ type Plan struct {
 	NameTemplateID string `json:"nameTemplateId"` // how to name the file
 }
 
-// TorrentMetadata represents metadata about a torrent for policy evaluation
-type CandidateContext struct {
-	Candidate DownloadCandidate
-	Quality   quality.QualityModel
-}
+// Note: CandidateContext has been replaced by EvaluationContext in context.go
+// which provides a unified context for both the policy engine and name templates.
 
 type Policy struct {
 	ID          uuid.UUID
@@ -71,6 +67,16 @@ type Action struct {
 type EvaluationTrace struct {
 	Policies  []PolicyEvaluation `json:"policies"`
 	FinalPlan Plan               `json:"finalPlan"`
+	Context   *ContextSnapshot   `json:"context,omitempty"` // Full evaluation context for debugging
+}
+
+// ContextSnapshot is a JSON-friendly representation of EvaluationContext
+// Used to expose all available variables to the UI for debugging/transparency
+type ContextSnapshot struct {
+	Candidate map[string]any `json:"candidate"`
+	Quality   map[string]any `json:"quality"`
+	Media     map[string]any `json:"media"`
+	MediaInfo map[string]any `json:"mediainfo,omitempty"`
 }
 
 // PolicyEvaluation represents the evaluation result for a single policy
@@ -86,9 +92,11 @@ type PolicyEvaluation struct {
 
 // RuleInfo represents information about a rule
 type RuleInfo struct {
-	LeftOperand  string `json:"leftOperand"`
-	Operator     string `json:"operator"`
-	RightOperand string `json:"rightOperand"`
+	LeftOperand        string `json:"leftOperand"`
+	LeftResolvedValue  any    `json:"leftResolvedValue,omitempty"`  // Resolved value of left operand
+	Operator           string `json:"operator"`
+	RightOperand       string `json:"rightOperand"`
+	RightResolvedValue any    `json:"rightResolvedValue,omitempty"` // Resolved value of right operand
 }
 
 // ActionInfo represents information about an action

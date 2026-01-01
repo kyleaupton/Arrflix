@@ -16,6 +16,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/policy"
+	"github.com/kyleaupton/snaggle/backend/internal/quality"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
 
@@ -169,7 +170,10 @@ func (s *DownloadCandidatesService) EvaluateCandidate(ctx context.Context, movie
 	// Transform to DownloadCandidate
 	candidate := s.searchResultToCandidate(result)
 
-	trace, err := s.policyEngine.Evaluate(ctx, candidate)
+	// Build evaluation context with media info
+	evalCtx := s.buildMovieEvaluationContext(ctx, candidate, movieID)
+
+	trace, err := s.policyEngine.Evaluate(ctx, evalCtx)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("Failed to evaluate policy")
 		return model.EvaluationTrace{}, fmt.Errorf("failed to evaluate policy: %w", err)
@@ -205,7 +209,10 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 
 	candidate := s.searchResultToCandidate(cached.result)
 
-	trace, err := s.policyEngine.Evaluate(ctx, candidate)
+	// Build evaluation context with media info
+	evalCtx := s.buildMovieEvaluationContext(ctx, candidate, movieID)
+
+	trace, err := s.policyEngine.Evaluate(ctx, evalCtx)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("Failed to evaluate policy")
 		return model.EvaluationTrace{}, dbgen.DownloadJob{}, fmt.Errorf("failed to evaluate policy: %w", err)
@@ -302,7 +309,10 @@ func (s *DownloadCandidatesService) EnqueueSeriesCandidate(ctx context.Context, 
 
 	candidate := s.searchResultToCandidate(cached.result)
 
-	trace, err := s.policyEngine.Evaluate(ctx, candidate)
+	// Build evaluation context with media info
+	evalCtx := s.buildSeriesEvaluationContext(ctx, candidate, seriesID, seasonNumber, episodeNumber)
+
+	trace, err := s.policyEngine.Evaluate(ctx, evalCtx)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("Failed to evaluate policy")
 		return model.EvaluationTrace{}, dbgen.DownloadJob{}, fmt.Errorf("failed to evaluate policy: %w", err)
@@ -451,4 +461,55 @@ func (s *DownloadCandidatesService) cleanExpiredCache() {
 // Returns path with .{ext} placeholder that will be replaced at import time
 func (s *DownloadCandidatesService) calculatePredictedDestPath(ctx context.Context, mediaItemID pgtype.UUID, libraryID pgtype.UUID, nameTemplateID pgtype.UUID, candidateTitle string, seasonNumber *int, episodeNumber *int) (string, error) {
 	return "", nil
+}
+
+// buildMovieEvaluationContext creates an EvaluationContext for a movie candidate
+func (s *DownloadCandidatesService) buildMovieEvaluationContext(ctx context.Context, candidate model.DownloadCandidate, movieID int64) model.EvaluationContext {
+	q := quality.ParseQuality(candidate.Title)
+	evalCtx := model.NewEvaluationContext(candidate, q)
+
+	// Try to get movie details from TMDB to populate media fields
+	movie, err := s.media.GetMovie(ctx, movieID)
+	if err == nil {
+		year := 0
+		if len(movie.ReleaseDate) >= 4 {
+			if y, err := strconv.Atoi(movie.ReleaseDate[:4]); err == nil {
+				year = y
+			}
+		}
+		evalCtx = evalCtx.WithMedia(model.MediaTypeMovie, movie.Title, year, movieID)
+	}
+
+	return evalCtx
+}
+
+// buildSeriesEvaluationContext creates an EvaluationContext for a series candidate
+func (s *DownloadCandidatesService) buildSeriesEvaluationContext(ctx context.Context, candidate model.DownloadCandidate, seriesID int64, seasonNumber *int, episodeNumber *int) model.EvaluationContext {
+	q := quality.ParseQuality(candidate.Title)
+	evalCtx := model.NewEvaluationContext(candidate, q)
+
+	// Try to get series details from TMDB to populate media fields
+	series, err := s.media.GetSeries(ctx, seriesID)
+	if err == nil {
+		year := 0
+		if len(series.FirstAirDate) >= 4 {
+			if y, err := strconv.Atoi(series.FirstAirDate[:4]); err == nil {
+				year = y
+			}
+		}
+		evalCtx = evalCtx.WithMedia(model.MediaTypeSeries, series.Title, year, seriesID)
+	}
+
+	// Add season/episode info if available
+	var episodeTitle *string
+	if seasonNumber != nil && episodeNumber != nil {
+		// Try to get episode title from TMDB
+		tmdbEpisode, err := s.media.tmdb.GetEpisodeDetails(ctx, seriesID, int64(*seasonNumber), int64(*episodeNumber))
+		if err == nil && tmdbEpisode.Name != "" {
+			episodeTitle = &tmdbEpisode.Name
+		}
+	}
+	evalCtx = evalCtx.WithSeriesInfo(seasonNumber, episodeNumber, episodeTitle)
+
+	return evalCtx
 }

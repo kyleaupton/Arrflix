@@ -714,6 +714,25 @@ definitions:
     - name
     - subCategories
     type: object
+  model.ContextSnapshot:
+    properties:
+      candidate:
+        additionalProperties: {}
+        type: object
+      media:
+        additionalProperties: {}
+        type: object
+      mediainfo:
+        additionalProperties: {}
+        type: object
+      quality:
+        additionalProperties: {}
+        type: object
+    required:
+    - candidate
+    - media
+    - quality
+    type: object
   model.Credits:
     properties:
       cast:
@@ -838,6 +857,10 @@ definitions:
     type: object
   model.EvaluationTrace:
     properties:
+      context:
+        allOf:
+        - $ref: '#/definitions/model.ContextSnapshot'
+        description: Full evaluation context for debugging
       finalPlan:
         $ref: '#/definitions/model.Plan'
       policies:
@@ -1517,10 +1540,14 @@ definitions:
     properties:
       leftOperand:
         type: string
+      leftResolvedValue:
+        description: Resolved value of left operand
       operator:
         type: string
       rightOperand:
         type: string
+      rightResolvedValue:
+        description: Resolved value of right operand
     required:
     - leftOperand
     - operator
