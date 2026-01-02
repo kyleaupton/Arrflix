@@ -7,9 +7,21 @@ import (
 	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
 )
 
+// LibraryQueryParams contains parameters for paginated library queries
+type LibraryQueryParams struct {
+	TypeFilter *string
+	Search     *string
+	SortBy     string
+	SortDir    string
+	PageSize   int32
+	Offset     int32
+}
+
 type MediaRepo interface {
 	// Media items
 	ListMediaItems(ctx context.Context) ([]dbgen.MediaItem, error)
+	ListMediaItemsPaginated(ctx context.Context, params LibraryQueryParams) ([]dbgen.MediaItem, error)
+	CountMediaItems(ctx context.Context, typeFilter, search *string) (int64, error)
 	GetMediaItem(ctx context.Context, id pgtype.UUID) (dbgen.MediaItem, error)
 	GetMediaItemByTmdbID(ctx context.Context, tmdbID int64) (dbgen.MediaItem, error)
 	GetMediaItemByTmdbIDAndType(ctx context.Context, tmdbID int64, typ string) (dbgen.MediaItem, error)
@@ -39,6 +51,24 @@ type MediaRepo interface {
 
 func (r *Repository) ListMediaItems(ctx context.Context) ([]dbgen.MediaItem, error) {
 	return r.Q.ListMediaItems(ctx)
+}
+
+func (r *Repository) ListMediaItemsPaginated(ctx context.Context, params LibraryQueryParams) ([]dbgen.MediaItem, error) {
+	return r.Q.ListMediaItemsPaginated(ctx, dbgen.ListMediaItemsPaginatedParams{
+		TypeFilter: params.TypeFilter,
+		Search:     params.Search,
+		SortBy:     params.SortBy,
+		SortDir:    params.SortDir,
+		PageSize:   params.PageSize,
+		OffsetVal:  params.Offset,
+	})
+}
+
+func (r *Repository) CountMediaItems(ctx context.Context, typeFilter, search *string) (int64, error) {
+	return r.Q.CountMediaItems(ctx, dbgen.CountMediaItemsParams{
+		TypeFilter: typeFilter,
+		Search:     search,
+	})
 }
 
 func (r *Repository) GetMediaItem(ctx context.Context, id pgtype.UUID) (dbgen.MediaItem, error) {

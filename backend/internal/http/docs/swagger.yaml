@@ -158,31 +158,6 @@ definitions:
     - url
     - username
     type: object
-  dbgen.MediaItem:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: string
-      title:
-        type: string
-      tmdb_id:
-        type: integer
-      type:
-        type: string
-      updated_at:
-        type: string
-      year:
-        type: integer
-    required:
-    - created_at
-    - id
-    - title
-    - tmdb_id
-    - type
-    - updated_at
-    - year
-    type: object
   dbgen.Policy:
     properties:
       created_at:
@@ -1346,6 +1321,28 @@ definitions:
     - libraryId
     - statusRollup
     type: object
+  model.LibraryItem:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      posterPath:
+        type: string
+      title:
+        type: string
+      tmdbId:
+        type: integer
+      type:
+        type: string
+      year:
+        type: integer
+    required:
+    - createdAt
+    - id
+    - title
+    - type
+    type: object
   model.MovieDetail:
     properties:
       backdropPath:
@@ -1425,6 +1422,34 @@ definitions:
     - releaseDate
     - title
     - tmdbId
+    type: object
+  model.PaginatedLibraryResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.LibraryItem'
+        type: array
+      pagination:
+        $ref: '#/definitions/model.Pagination'
+    required:
+    - data
+    - pagination
+    type: object
+  model.Pagination:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    required:
+    - page
+    - pageSize
+    - total
+    - totalPages
     type: object
   model.PersonDetail:
     properties:
@@ -2249,15 +2274,42 @@ paths:
       - libraries
   /v1/library:
     get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: pageSize
+        type: integer
+      - description: Filter by type (movie/series)
+        in: query
+        name: type
+        type: string
+      - description: Search by title
+        in: query
+        name: search
+        type: string
+      - default: createdAt
+        description: Sort field (title/year/createdAt)
+        in: query
+        name: sortBy
+        type: string
+      - default: desc
+        description: Sort direction (asc/desc)
+        in: query
+        name: sortDir
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dbgen.MediaItem'
-            type: array
+            $ref: '#/definitions/model.PaginatedLibraryResponse'
       summary: List media items
       tags:
       - media

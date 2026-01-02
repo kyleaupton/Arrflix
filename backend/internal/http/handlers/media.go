@@ -22,19 +22,47 @@ func (h *Media) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/person/:id", h.GetPerson)
 }
 
-// List media items
+// LibraryQueryParams for query parameter binding
+type LibraryQueryParams struct {
+	Page     int    `query:"page"`
+	PageSize int    `query:"pageSize"`
+	Type     string `query:"type"`
+	Search   string `query:"search"`
+	SortBy   string `query:"sortBy"`
+	SortDir  string `query:"sortDir"`
+}
+
+// List media items with pagination
 // @Summary List media items
 // @Tags    media
 // @Produce json
-// @Success 200 {array} dbgen.MediaItem
+// @Param   page query int false "Page number" default(1)
+// @Param   pageSize query int false "Items per page" default(20)
+// @Param   type query string false "Filter by type (movie/series)"
+// @Param   search query string false "Search by title"
+// @Param   sortBy query string false "Sort field (title/year/createdAt)" default(createdAt)
+// @Param   sortDir query string false "Sort direction (asc/desc)" default(desc)
+// @Success 200 {object} model.PaginatedLibraryResponse
 // @Router  /v1/library [get]
 func (h *Media) List(c echo.Context) error {
+	var params LibraryQueryParams
+	if err := c.Bind(&params); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid params"})
+	}
+
 	ctx := c.Request().Context()
-	items, err := h.svc.Media.ListLibraryItems(ctx)
+	result, err := h.svc.Media.ListLibraryItemsPaginated(ctx, service.LibraryQueryParams{
+		Page:     params.Page,
+		PageSize: params.PageSize,
+		Type:     params.Type,
+		Search:   params.Search,
+		SortBy:   params.SortBy,
+		SortDir:  params.SortDir,
+	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list"})
 	}
-	return c.JSON(http.StatusOK, items)
+	return c.JSON(http.StatusOK, result)
 }
 
 // GetMovie

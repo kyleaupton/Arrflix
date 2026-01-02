@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"math"
 	"sort"
 	"strconv"
+	"sync"
+	"time"
 
 	tmdb "github.com/cyruzin/golang-tmdb"
 	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
@@ -24,6 +27,123 @@ func NewMediaService(r *repo.Repository, l *logger.Logger, tmdb *TmdbService) *M
 
 func (s *MediaService) ListLibraryItems(ctx context.Context) ([]dbgen.MediaItem, error) {
 	return s.repo.ListMediaItems(ctx)
+}
+
+// LibraryQueryParams contains query parameters for the paginated library endpoint
+type LibraryQueryParams struct {
+	Page     int
+	PageSize int
+	Type     string
+	Search   string
+	SortBy   string
+	SortDir  string
+}
+
+// ListLibraryItemsPaginated returns a paginated list of library items with TMDB enrichment
+func (s *MediaService) ListLibraryItemsPaginated(ctx context.Context, params LibraryQueryParams) (model.PaginatedLibraryResponse, error) {
+	// Validate and set defaults
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.PageSize < 1 {
+		params.PageSize = 20
+	}
+	if params.PageSize > 100 {
+		params.PageSize = 100
+	}
+	if params.SortBy == "" {
+		params.SortBy = "createdAt"
+	}
+	if params.SortDir == "" {
+		params.SortDir = "desc"
+	}
+
+	offset := (params.Page - 1) * params.PageSize
+
+	// Convert empty strings to nil for SQL
+	var typeFilter, search *string
+	if params.Type != "" {
+		typeFilter = &params.Type
+	}
+	if params.Search != "" {
+		search = &params.Search
+	}
+
+	// Get total count for pagination metadata
+	total, err := s.repo.CountMediaItems(ctx, typeFilter, search)
+	if err != nil {
+		return model.PaginatedLibraryResponse{}, err
+	}
+
+	// Get paginated items
+	dbItems, err := s.repo.ListMediaItemsPaginated(ctx, repo.LibraryQueryParams{
+		TypeFilter: typeFilter,
+		Search:     search,
+		SortBy:     params.SortBy,
+		SortDir:    params.SortDir,
+		PageSize:   int32(params.PageSize),
+		Offset:     int32(offset),
+	})
+	if err != nil {
+		return model.PaginatedLibraryResponse{}, err
+	}
+
+	// Enrich with TMDB data concurrently
+	items := s.enrichLibraryItemsConcurrently(ctx, dbItems)
+
+	// Calculate total pages
+	totalPages := int(math.Ceil(float64(total) / float64(params.PageSize)))
+
+	return model.PaginatedLibraryResponse{
+		Data: items,
+		Pagination: model.Pagination{
+			Total:      total,
+			Page:       params.Page,
+			PageSize:   params.PageSize,
+			TotalPages: totalPages,
+		},
+	}, nil
+}
+
+// enrichLibraryItemsConcurrently fetches TMDB poster paths for each item concurrently
+func (s *MediaService) enrichLibraryItemsConcurrently(ctx context.Context, dbItems []dbgen.MediaItem) []model.LibraryItem {
+	items := make([]model.LibraryItem, len(dbItems))
+	var wg sync.WaitGroup
+
+	for i, dbItem := range dbItems {
+		wg.Add(1)
+		go func(idx int, item dbgen.MediaItem) {
+			defer wg.Done()
+
+			var posterPath string
+			if item.TmdbID != nil {
+				if item.Type == "movie" {
+					details, err := s.tmdb.GetMovieDetails(ctx, *item.TmdbID)
+					if err == nil {
+						posterPath = details.PosterPath
+					}
+				} else {
+					details, err := s.tmdb.GetSeriesDetails(ctx, *item.TmdbID)
+					if err == nil {
+						posterPath = details.PosterPath
+					}
+				}
+			}
+
+			items[idx] = model.LibraryItem{
+				ID:         item.ID.String(),
+				Type:       item.Type,
+				Title:      item.Title,
+				Year:       item.Year,
+				TmdbID:     item.TmdbID,
+				PosterPath: posterPath,
+				CreatedAt:  item.CreatedAt.Format(time.RFC3339),
+			}
+		}(i, dbItem)
+	}
+
+	wg.Wait()
+	return items
 }
 
 func transformMovieCredits(tmdbCredits tmdb.MovieCredits) *model.Credits {

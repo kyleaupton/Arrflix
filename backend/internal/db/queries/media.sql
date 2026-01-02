@@ -128,6 +128,25 @@ left join media_file mf on mf.episode_id = me.id
 where mi.id = $1
 order by ms.season_number, me.episode_number;
 
+-- Paginated library queries
 
+-- name: ListMediaItemsPaginated :many
+SELECT * FROM media_item
+WHERE 
+    (sqlc.narg(type_filter)::text IS NULL OR type = sqlc.narg(type_filter)) AND
+    (sqlc.narg(search)::text IS NULL OR title ILIKE '%' || sqlc.narg(search) || '%')
+ORDER BY 
+    CASE WHEN sqlc.arg(sort_by)::text = 'title' AND sqlc.arg(sort_dir)::text = 'asc' THEN title END ASC,
+    CASE WHEN sqlc.arg(sort_by)::text = 'title' AND sqlc.arg(sort_dir)::text = 'desc' THEN title END DESC,
+    CASE WHEN sqlc.arg(sort_by)::text = 'year' AND sqlc.arg(sort_dir)::text = 'asc' THEN year END ASC NULLS LAST,
+    CASE WHEN sqlc.arg(sort_by)::text = 'year' AND sqlc.arg(sort_dir)::text = 'desc' THEN year END DESC NULLS LAST,
+    CASE WHEN sqlc.arg(sort_by)::text = 'createdAt' AND sqlc.arg(sort_dir)::text = 'asc' THEN created_at END ASC,
+    CASE WHEN sqlc.arg(sort_by)::text = 'createdAt' AND sqlc.arg(sort_dir)::text = 'desc' THEN created_at END DESC,
+    created_at DESC
+LIMIT sqlc.arg(page_size)::int OFFSET sqlc.arg(offset_val)::int;
 
-
+-- name: CountMediaItems :one
+SELECT COUNT(*) FROM media_item
+WHERE 
+    (sqlc.narg(type_filter)::text IS NULL OR type = sqlc.narg(type_filter)) AND
+    (sqlc.narg(search)::text IS NULL OR title ILIKE '%' || sqlc.narg(search) || '%');

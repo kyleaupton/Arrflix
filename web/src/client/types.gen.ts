@@ -61,16 +61,6 @@ export type DbgenDownloader = {
     username: string;
 };
 
-export type DbgenMediaItem = {
-    created_at: string;
-    id: string;
-    title: string;
-    tmdb_id: number;
-    type: string;
-    updated_at: string;
-    year: number;
-};
-
 export type DbgenPolicy = {
     created_at: string;
     description: string;
@@ -595,6 +585,16 @@ export type ModelLibraryAvailability = {
     statusRollup: string;
 };
 
+export type ModelLibraryItem = {
+    createdAt: string;
+    id: string;
+    posterPath?: string;
+    title: string;
+    tmdbId?: number;
+    type: string;
+    year?: number;
+};
+
 export type ModelMovieDetail = {
     backdropPath?: string;
     credits?: ModelCredits;
@@ -624,6 +624,18 @@ export type ModelMovieRail = {
     title: string;
     tmdbId: number;
     year?: number;
+};
+
+export type ModelPaginatedLibraryResponse = {
+    data: Array<ModelLibraryItem>;
+    pagination: ModelPagination;
+};
+
+export type ModelPagination = {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
 };
 
 export type ModelPersonDetail = {
@@ -1416,7 +1428,32 @@ export type PostV1LibrariesByIdScanResponse = PostV1LibrariesByIdScanResponses[k
 export type GetV1LibraryData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page number
+         */
+        page?: number;
+        /**
+         * Items per page
+         */
+        pageSize?: number;
+        /**
+         * Filter by type (movie/series)
+         */
+        type?: string;
+        /**
+         * Search by title
+         */
+        search?: string;
+        /**
+         * Sort field (title/year/createdAt)
+         */
+        sortBy?: string;
+        /**
+         * Sort direction (asc/desc)
+         */
+        sortDir?: string;
+    };
     url: '/v1/library';
 };
 
@@ -1424,7 +1461,7 @@ export type GetV1LibraryResponses = {
     /**
      * OK
      */
-    200: Array<DbgenMediaItem>;
+    200: ModelPaginatedLibraryResponse;
 };
 
 export type GetV1LibraryResponse = GetV1LibraryResponses[keyof GetV1LibraryResponses];

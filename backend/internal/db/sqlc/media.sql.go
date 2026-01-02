@@ -12,6 +12,25 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countMediaItems = `-- name: CountMediaItems :one
+SELECT COUNT(*) FROM media_item
+WHERE 
+    ($1::text IS NULL OR type = $1) AND
+    ($2::text IS NULL OR title ILIKE '%' || $2 || '%')
+`
+
+type CountMediaItemsParams struct {
+	TypeFilter *string `json:"type_filter"`
+	Search     *string `json:"search"`
+}
+
+func (q *Queries) CountMediaItems(ctx context.Context, arg CountMediaItemsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countMediaItems, arg.TypeFilter, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createMediaFile = `-- name: CreateMediaFile :one
 insert into media_file (library_id, media_item_id, season_id, episode_id, path, status)
 values ($1, $2, $3, $4, $5, coalesce($6, 'available'))
@@ -448,6 +467,68 @@ order by created_at desc
 // Media queries
 func (q *Queries) ListMediaItems(ctx context.Context) ([]MediaItem, error) {
 	rows, err := q.db.Query(ctx, listMediaItems)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MediaItem
+	for rows.Next() {
+		var i MediaItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.Type,
+			&i.Title,
+			&i.Year,
+			&i.TmdbID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMediaItemsPaginated = `-- name: ListMediaItemsPaginated :many
+
+SELECT id, type, title, year, tmdb_id, created_at, updated_at FROM media_item
+WHERE 
+    ($1::text IS NULL OR type = $1) AND
+    ($2::text IS NULL OR title ILIKE '%' || $2 || '%')
+ORDER BY 
+    CASE WHEN $3::text = 'title' AND $4::text = 'asc' THEN title END ASC,
+    CASE WHEN $3::text = 'title' AND $4::text = 'desc' THEN title END DESC,
+    CASE WHEN $3::text = 'year' AND $4::text = 'asc' THEN year END ASC NULLS LAST,
+    CASE WHEN $3::text = 'year' AND $4::text = 'desc' THEN year END DESC NULLS LAST,
+    CASE WHEN $3::text = 'createdAt' AND $4::text = 'asc' THEN created_at END ASC,
+    CASE WHEN $3::text = 'createdAt' AND $4::text = 'desc' THEN created_at END DESC,
+    created_at DESC
+LIMIT $6::int OFFSET $5::int
+`
+
+type ListMediaItemsPaginatedParams struct {
+	TypeFilter *string `json:"type_filter"`
+	Search     *string `json:"search"`
+	SortBy     string  `json:"sort_by"`
+	SortDir    string  `json:"sort_dir"`
+	OffsetVal  int32   `json:"offset_val"`
+	PageSize   int32   `json:"page_size"`
+}
+
+// Paginated library queries
+func (q *Queries) ListMediaItemsPaginated(ctx context.Context, arg ListMediaItemsPaginatedParams) ([]MediaItem, error) {
+	rows, err := q.db.Query(ctx, listMediaItemsPaginated,
+		arg.TypeFilter,
+		arg.Search,
+		arg.SortBy,
+		arg.SortDir,
+		arg.OffsetVal,
+		arg.PageSize,
+	)
 	if err != nil {
 		return nil, err
 	}
