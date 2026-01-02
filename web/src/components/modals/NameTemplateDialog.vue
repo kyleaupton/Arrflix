@@ -158,7 +158,7 @@ const isLoading = computed(
           <TemplateTokenEditor
             v-model="templateForm.series_show_template"
             :media-type="templateForm.type"
-            placeholder="Type {{ to insert a variable, e.g. {{.Title}} ({{.Year}})"
+            placeholder="Type { to insert a variable"
             class="min-h-[60px]"
           />
         </div>
@@ -168,7 +168,7 @@ const isLoading = computed(
           <TemplateTokenEditor
             v-model="templateForm.series_season_template"
             :media-type="templateForm.type"
-            placeholder="Type {{ to insert a variable, e.g. Season {{.Season}}"
+            placeholder="Type { to insert a variable"
             class="min-h-[60px]"
           />
         </div>
@@ -181,14 +181,10 @@ const isLoading = computed(
         <TemplateTokenEditor
           v-model="templateForm.template"
           :media-type="templateForm.type"
-          :placeholder="
-            templateForm.type === 'series'
-              ? 'Type {{ to insert a variable, e.g. {{.Title}} S{{.Season}}E{{.Episode}} - {{.EpisodeTitle}}'
-              : 'Type {{ to insert a variable, e.g. {{.Title}} ({{.Year}}) [{{.Quality.Resolution}}]'
-          "
+          placeholder="Type { to insert a variable"
         />
         <p class="text-xs text-muted-foreground">
-          Type <code class="px-1 py-0.5 rounded bg-muted font-mono">{{ '{{' }}</code> to insert a
+          Type <code class="px-1 py-0.5 rounded bg-muted font-mono">{</code> to insert a
           variable. Right-click on a variable to wrap it with a function.
         </p>
       </div>

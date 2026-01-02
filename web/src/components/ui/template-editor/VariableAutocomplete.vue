@@ -102,57 +102,59 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    class="variable-autocomplete absolute z-50 w-72 rounded-md border bg-popover p-0 text-popover-foreground shadow-md outline-none"
-    :style="{
-      top: `${position.top}px`,
-      left: `${position.left}px`,
-    }"
-  >
-    <Command class="rounded-lg border-0 shadow-none" :should-filter="false">
-      <CommandInput
-        v-model="searchQuery"
-        placeholder="Search variables..."
-        class="h-9"
-        autofocus
-      />
-      <CommandList>
-        <ScrollArea class="h-[300px]">
-          <CommandEmpty v-if="!isLoading && !hasResults">
-            No variables found.
-          </CommandEmpty>
+  <Teleport to="body">
+    <div
+      class="variable-autocomplete fixed z-[100] w-72 rounded-md border bg-popover p-0 text-popover-foreground shadow-md outline-none"
+      :style="{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+      }"
+    >
+      <Command class="rounded-lg border-0 shadow-none" :should-filter="false">
+        <CommandInput
+          v-model="searchQuery"
+          placeholder="Search variables..."
+          class="h-9"
+          autofocus
+        />
+        <CommandList>
+          <ScrollArea class="h-[300px]">
+            <CommandEmpty v-if="!isLoading && !hasResults">
+              No variables found.
+            </CommandEmpty>
 
-          <div v-if="isLoading" class="py-6 text-center text-sm text-muted-foreground">
-            Loading variables...
-          </div>
+            <div v-if="isLoading" class="py-6 text-center text-sm text-muted-foreground">
+              Loading variables...
+            </div>
 
-          <template v-for="namespace in orderedNamespaces" :key="namespace">
-            <CommandGroup :heading="namespace">
-              <CommandItem
-                v-for="variable in filteredVariables[namespace]"
-                :key="variable.path"
-                :value="variable.path"
-                class="flex items-center justify-between gap-2"
-                @select="handleSelect(variable)"
-              >
-                <div class="flex flex-col gap-0.5">
-                  <span class="font-medium">{{ variable.label }}</span>
-                  <code class="text-xs text-muted-foreground">{{ variable.path }}</code>
-                </div>
-                <span
-                  v-if="variable.postDownloadOnly"
-                  class="text-xs text-amber-500"
-                  title="Only available after download"
+            <template v-for="namespace in orderedNamespaces" :key="namespace">
+              <CommandGroup :heading="namespace">
+                <CommandItem
+                  v-for="variable in filteredVariables[namespace]"
+                  :key="variable.path"
+                  :value="variable.path"
+                  class="flex items-center justify-between gap-2"
+                  @select="handleSelect(variable)"
                 >
-                  post-DL
-                </span>
-              </CommandItem>
-            </CommandGroup>
-          </template>
-        </ScrollArea>
-      </CommandList>
-    </Command>
-  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="font-medium">{{ variable.label }}</span>
+                    <code class="text-xs text-muted-foreground">{{ variable.path }}</code>
+                  </div>
+                  <span
+                    v-if="variable.postDownloadOnly"
+                    class="text-xs text-amber-500"
+                    title="Only available after download"
+                  >
+                    post-DL
+                  </span>
+                </CommandItem>
+              </CommandGroup>
+            </template>
+          </ScrollArea>
+        </CommandList>
+      </Command>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>

@@ -108,13 +108,15 @@ function serializeTokens(tokenList: Token[]): string {
 }
 
 /**
- * Get display label for a variable
+ * Get display label for a variable (format: {Title} or {func Title})
  */
 function getVariableLabel(token: Token): string {
+  // Remove leading dot but keep sub-dots (e.g., ".Quality.Resolution" -> "Quality.Resolution")
+  const displayValue = token.value.startsWith('.') ? token.value.slice(1) : token.value
   if (token.func) {
-    return `${token.func} ${token.value}`
+    return `${token.func} ${displayValue}`
   }
-  return token.value
+  return displayValue
 }
 
 // Initialize tokens from modelValue
@@ -147,9 +149,9 @@ function handleInput(event: Event) {
 
   const range = selection.getRangeAt(0)
 
-  // Check if we should trigger autocomplete
+  // Check if we should trigger autocomplete (single { triggers it)
   const textBeforeCursor = getTextBeforeCursor(range)
-  const autocompleteMatch = textBeforeCursor.match(/\{\{([^}]*)$/)
+  const autocompleteMatch = textBeforeCursor.match(/\{([^{}]*)$/)
 
   if (autocompleteMatch) {
     // Show autocomplete
@@ -157,14 +159,11 @@ function handleInput(event: Event) {
     showAutocomplete.value = true
     pendingAutocompleteRange.value = range.cloneRange()
 
-    // Position autocomplete near cursor
+    // Position autocomplete near cursor (using viewport coordinates for fixed positioning)
     const rect = range.getBoundingClientRect()
-    const editorRect = editorRef.value?.getBoundingClientRect()
-    if (editorRect) {
-      autocompletePosition.value = {
-        top: rect.bottom - editorRect.top + 4,
-        left: rect.left - editorRect.left,
-      }
+    autocompletePosition.value = {
+      top: rect.bottom + 4,
+      left: rect.left,
     }
   } else {
     showAutocomplete.value = false
@@ -239,14 +238,27 @@ function handleVariableSelect(variable: TemplateVariable) {
 
   if (!editorRef.value) return
 
-  // Get the current content and find the {{ trigger
+  // Get the current content and find the { trigger
   const currentContent = serializeTokens(tokens.value)
 
-  // Find the last {{ in the content (this is the trigger we want to replace)
-  const triggerPos = currentContent.lastIndexOf('{{')
+  // Find the last incomplete { trigger (single { that's not part of {{ or }})
+  // We need to find the { that triggered the autocomplete
+  let triggerPos = -1
+  for (let i = currentContent.length - 1; i >= 0; i--) {
+    if (currentContent[i] === '{') {
+      // Check if this is a standalone { (not part of {{ already)
+      if (i > 0 && currentContent[i - 1] === '{') {
+        // This is the second { of {{, skip
+        i--
+        continue
+      }
+      triggerPos = i
+      break
+    }
+  }
 
   if (triggerPos !== -1) {
-    // Build new content: everything before {{ + the new token
+    // Build new content: everything before { + the new token (with proper {{ }} syntax)
     const beforeTrigger = currentContent.slice(0, triggerPos)
     const newContent = beforeTrigger + `{{${variable.path}}}`
 
@@ -275,21 +287,20 @@ function handleVariableSelect(variable: TemplateVariable) {
 }
 
 /**
- * Create a token DOM element
+ * Create a token DOM element (styled like shadcn Badge with default variant)
  */
 function createTokenElement(token: Token): HTMLSpanElement {
   const span = document.createElement('span')
-  span.className = 'template-token'
+  // Use Badge-like classes: base + default variant
+  span.className =
+    'template-token inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-medium font-mono whitespace-nowrap border-transparent bg-primary text-primary-foreground'
   span.contentEditable = 'false'
   span.dataset.variable = token.value
   if (token.func) {
     span.dataset.func = token.func
   }
 
-  const label = document.createElement('span')
-  label.className = 'token-label'
-  label.textContent = getVariableLabel(token)
-  span.appendChild(label)
+  span.textContent = getVariableLabel(token)
 
   return span
 }
@@ -594,42 +605,16 @@ watch(
 </template>
 
 <style>
+/* Token styling handled by Tailwind classes in createTokenElement */
 .template-token {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.5rem;
-  margin: 0 0.125rem;
-  background-color: var(--secondary);
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.8125rem;
-  color: var(--secondary-foreground);
   cursor: default;
   user-select: none;
   vertical-align: middle;
-  white-space: nowrap;
-  transition: background-color 0.15s ease;
+  margin: 0 0.125rem;
 }
 
 .template-token:hover {
-  background-color: var(--accent);
-}
-
-.template-token .token-label {
-  white-space: nowrap;
-}
-
-/* Tokens with a function wrapper (clean, sanitize) get a distinct style */
-.template-token[data-func] {
-  background-color: color-mix(in oklch, var(--chart-2) 20%, transparent);
-  border-color: color-mix(in oklch, var(--chart-2) 40%, transparent);
-  color: var(--foreground);
-}
-
-.template-token[data-func]:hover {
-  background-color: color-mix(in oklch, var(--chart-2) 30%, transparent);
+  opacity: 0.9;
 }
 </style>
 

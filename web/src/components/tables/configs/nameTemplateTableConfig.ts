@@ -1,6 +1,8 @@
+import { h } from 'vue'
 import { type TableColumn, type TableAction } from '../types'
 import { type HandlersNameTemplateSwagger } from '@/client/types.gen'
 import { PrimeIcons } from '@/icons'
+import TemplateDisplay from '@/components/ui/template-editor/TemplateDisplay.vue'
 
 export const nameTemplateColumns: TableColumn<HandlersNameTemplateSwagger>[] = [
   {
@@ -26,19 +28,20 @@ export const nameTemplateColumns: TableColumn<HandlersNameTemplateSwagger>[] = [
     sortable: true,
     filterable: true,
     render: (value: string, row: HandlersNameTemplateSwagger) => {
-      if (row.type === 'series' && (row.series_show_template || row.series_season_template)) {
-        const parts = [
-          row.series_show_template || '...',
-          row.series_season_template || '...',
-          value || '...',
-        ]
-        return `<div class="flex flex-col gap-0.5">
-          <span class="font-mono text-xs opacity-70">${parts[0]} /</span>
-          <span class="font-mono text-xs opacity-70">${parts[1]} /</span>
-          <span class="font-mono text-sm">${parts[2]}</span>
-        </div>`
+      if (row.type === 'series') {
+        return h(TemplateDisplay, {
+          template: value || '',
+          seriesTemplates: [
+            row.series_show_template || '',
+            row.series_season_template || '',
+            value || '',
+          ],
+          isSeries: true,
+        })
       }
-      return `<span class="font-mono text-sm">${value || ''}</span>`
+      return h(TemplateDisplay, {
+        template: value || '',
+      })
     },
   },
   {
