@@ -60,13 +60,17 @@
 
     <!-- Content -->
     <template v-else>
-      <!-- Grid View -->
-      <div v-if="viewMode === 'grid'" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <!-- Grid View with Flexbox -->
+      <div
+        v-if="viewMode === 'grid'"
+        class="flex flex-wrap gap-3 max-w-[1600px]"
+      >
         <Poster
           v-for="item in data.data"
           :key="item.id"
           :item="item"
           :to="getItemRoute(item)"
+          size="medium"
         />
       </div>
 
