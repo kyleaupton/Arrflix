@@ -23,7 +23,7 @@ withDefaults(defineProps<Props>(), {
       </DialogDescription>
     </DialogHeader>
 
-    <div class="flex-1 min-h-0 overflow-auto">
+    <div class="flex-1 min-h-0 overflow-auto -mx-1 px-1">
       <slot />
     </div>
 

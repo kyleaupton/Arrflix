@@ -11,7 +11,6 @@ import BaseDialog from './BaseDialog.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
   Select,
@@ -20,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { TemplateTokenEditor } from '@/components/ui/template-editor'
 
 interface Props {
   template?: HandlersNameTemplateSwagger | null
@@ -42,16 +42,6 @@ const templateForm = ref({
 })
 
 const templateError = ref<string | null>(null)
-
-const commonVariables = ['{Title}', '{Year}', '{Quality}', '{Resolution}', '{Extension}']
-const seriesOnlyVariables = ['{Season}', '{Episode}', '{EpisodeTitle}']
-
-const movieVariables = [...commonVariables]
-const seriesVariables = [...commonVariables, ...seriesOnlyVariables]
-
-const availableVariables = computed(() => {
-  return templateForm.value.type === 'series' ? seriesVariables : movieVariables
-})
 
 const typeOptions = [
   { label: 'Movies', value: 'movie' },
@@ -165,41 +155,42 @@ const isLoading = computed(
       <template v-if="templateForm.type === 'series'">
         <div class="flex flex-col gap-2">
           <Label for="template-show">Show Directory Template</Label>
-          <Input
-            id="template-show"
+          <TemplateTokenEditor
             v-model="templateForm.series_show_template"
-            placeholder="{Title} ({Year})"
+            :media-type="templateForm.type"
+            placeholder="Type {{ to insert a variable, e.g. {{.Title}} ({{.Year}})"
+            class="min-h-[60px]"
           />
         </div>
 
         <div class="flex flex-col gap-2">
           <Label for="template-season">Season Directory Template</Label>
-          <Input
-            id="template-season"
+          <TemplateTokenEditor
             v-model="templateForm.series_season_template"
-            placeholder="Season {Season}"
+            :media-type="templateForm.type"
+            placeholder="Type {{ to insert a variable, e.g. Season {{.Season}}"
+            class="min-h-[60px]"
           />
         </div>
       </template>
 
       <div class="flex flex-col gap-2">
         <Label for="template-template">
-          {{ templateForm.type === 'series' ? 'Episode File Template' : 'Template' }}
+          {{ templateForm.type === 'series' ? 'Episode File Template' : 'File Template' }}
         </Label>
-        <Textarea
-          id="template-template"
+        <TemplateTokenEditor
           v-model="templateForm.template"
+          :media-type="templateForm.type"
           :placeholder="
             templateForm.type === 'series'
-              ? '{Title} S{Season}E{Episode} - {EpisodeTitle}'
-              : '{Title} ({Year})'
+              ? 'Type {{ to insert a variable, e.g. {{.Title}} S{{.Season}}E{{.Episode}} - {{.EpisodeTitle}}'
+              : 'Type {{ to insert a variable, e.g. {{.Title}} ({{.Year}}) [{{.Quality.Resolution}}]'
           "
-          rows="3"
         />
-        <div class="text-xs text-muted-foreground mt-1">
-          Available variables:
-          <span class="font-mono">{{ availableVariables.join(', ') }}</span>
-        </div>
+        <p class="text-xs text-muted-foreground">
+          Type <code class="px-1 py-0.5 rounded bg-muted font-mono">{{ '{{' }}</code> to insert a
+          variable. Right-click on a variable to wrap it with a function.
+        </p>
       </div>
 
       <div class="flex items-center justify-between">
