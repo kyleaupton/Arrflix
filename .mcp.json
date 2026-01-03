@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "snaggle": {
+      "command": "npx",
+      "args": ["-y", "tsx", "./mcp/src/index.ts"]
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": ["shadcn-vue@latest", "mcp"]
+    }
+  }
+}

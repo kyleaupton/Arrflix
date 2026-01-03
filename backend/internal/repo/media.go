@@ -25,8 +25,8 @@ type MediaRepo interface {
 	GetMediaItem(ctx context.Context, id pgtype.UUID) (dbgen.MediaItem, error)
 	GetMediaItemByTmdbID(ctx context.Context, tmdbID int64) (dbgen.MediaItem, error)
 	GetMediaItemByTmdbIDAndType(ctx context.Context, tmdbID int64, typ string) (dbgen.MediaItem, error)
-	CreateMediaItem(ctx context.Context, typ, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error)
-	UpdateMediaItem(ctx context.Context, id pgtype.UUID, title string, year *int32, tmdbID *int32) (dbgen.MediaItem, error)
+	CreateMediaItem(ctx context.Context, typ, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error)
+	UpdateMediaItem(ctx context.Context, id pgtype.UUID, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error)
 	DeleteMediaItem(ctx context.Context, id pgtype.UUID) error
 
 	// Seasons
