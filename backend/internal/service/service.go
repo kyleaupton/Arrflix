@@ -22,6 +22,7 @@ type Services struct {
 	Scanner            *ScannerService
 	Settings           *SettingsService
 	Tmdb               *TmdbService
+	Users              *UsersService
 }
 
 func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option) *Services {
@@ -51,6 +52,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 		Scanner:            NewScannerService(r, l, tmdb),
 		Settings:           NewSettingsService(r),
 		Tmdb:               tmdb,
+		Users:              NewUsersService(r),
 	}
 }
 

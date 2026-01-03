@@ -3,8 +3,8 @@
 import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { deleteV1DownloadersById, deleteV1DownloadJobsById, deleteV1IndexersById, deleteV1LibrariesById, deleteV1NameTemplatesById, deleteV1PoliciesById, deleteV1PoliciesByIdActionsByActionId, deleteV1PoliciesByIdRule, getHealth, getV1Downloaders, getV1DownloadersById, getV1DownloadersDefaultByProtocol, getV1DownloadJobs, getV1DownloadJobsById, getV1Home, getV1IndexersById, getV1IndexersConfigured, getV1IndexersSchema, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1MovieByIdCandidates, getV1MovieByIdDownloadJobs, getV1NameTemplates, getV1NameTemplatesById, getV1NameTemplatesDefaultByType, getV1PersonById, getV1Policies, getV1PoliciesById, getV1PoliciesByIdActions, getV1PoliciesByIdActionsByActionId, getV1PoliciesByIdRule, getV1PoliciesFields, getV1SeriesById, getV1SeriesByIdCandidates, getV1Settings, type Options, patchV1Settings, postV1AuthLogin, postV1Downloaders, postV1DownloadersByIdTest, postV1DownloadersTest, postV1Indexer, postV1IndexerActionByName, postV1Libraries, postV1LibrariesByIdScan, postV1MovieByIdCandidateDownload, postV1MovieByIdCandidatePreview, postV1NameTemplates, postV1Policies, postV1PoliciesByIdActions, postV1PoliciesByIdRule, postV1PoliciesEvaluate, postV1SeriesByIdCandidateDownload, postV1SeriesByIdCandidatePreview, putV1DownloadersById, putV1LibrariesById, putV1NameTemplatesById, putV1PoliciesById, putV1PoliciesByIdActionsByActionId, putV1PoliciesByIdRule } from '../sdk.gen';
-import type { DeleteV1DownloadersByIdData, DeleteV1DownloadersByIdResponse, DeleteV1DownloadJobsByIdData, DeleteV1DownloadJobsByIdError, DeleteV1DownloadJobsByIdResponse, DeleteV1IndexersByIdData, DeleteV1IndexersByIdError, DeleteV1IndexersByIdResponse, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponse, DeleteV1PoliciesByIdActionsByActionIdData, DeleteV1PoliciesByIdActionsByActionIdResponse, DeleteV1PoliciesByIdData, DeleteV1PoliciesByIdResponse, DeleteV1PoliciesByIdRuleData, DeleteV1PoliciesByIdRuleResponse, GetHealthData, GetV1DownloadersByIdData, GetV1DownloadersData, GetV1DownloadersDefaultByProtocolData, GetV1DownloadJobsByIdData, GetV1DownloadJobsData, GetV1HomeData, GetV1IndexersByIdData, GetV1IndexersConfiguredData, GetV1IndexersSchemaData, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1LibraryResponse, GetV1MovieByIdCandidatesData, GetV1MovieByIdData, GetV1MovieByIdDownloadJobsData, GetV1NameTemplatesByIdData, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1PersonByIdData, GetV1PoliciesByIdActionsByActionIdData, GetV1PoliciesByIdActionsData, GetV1PoliciesByIdData, GetV1PoliciesByIdRuleData, GetV1PoliciesData, GetV1PoliciesFieldsData, GetV1SeriesByIdCandidatesData, GetV1SeriesByIdData, GetV1SettingsData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1DownloadersByIdTestData, PostV1DownloadersByIdTestError, PostV1DownloadersByIdTestResponse, PostV1DownloadersData, PostV1DownloadersError, PostV1DownloadersResponse, PostV1DownloadersTestData, PostV1DownloadersTestError, PostV1DownloadersTestResponse, PostV1IndexerActionByNameData, PostV1IndexerActionByNameError, PostV1IndexerData, PostV1IndexerError, PostV1IndexerResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PostV1MovieByIdCandidateDownloadData, PostV1MovieByIdCandidateDownloadError, PostV1MovieByIdCandidateDownloadResponse, PostV1MovieByIdCandidatePreviewData, PostV1MovieByIdCandidatePreviewError, PostV1MovieByIdCandidatePreviewResponse, PostV1NameTemplatesData, PostV1NameTemplatesError, PostV1NameTemplatesResponse, PostV1PoliciesByIdActionsData, PostV1PoliciesByIdActionsError, PostV1PoliciesByIdActionsResponse, PostV1PoliciesByIdRuleData, PostV1PoliciesByIdRuleError, PostV1PoliciesByIdRuleResponse, PostV1PoliciesData, PostV1PoliciesError, PostV1PoliciesEvaluateData, PostV1PoliciesEvaluateError, PostV1PoliciesEvaluateResponse, PostV1PoliciesResponse, PostV1SeriesByIdCandidateDownloadData, PostV1SeriesByIdCandidateDownloadError, PostV1SeriesByIdCandidateDownloadResponse, PostV1SeriesByIdCandidatePreviewData, PostV1SeriesByIdCandidatePreviewError, PostV1SeriesByIdCandidatePreviewResponse, PutV1DownloadersByIdData, PutV1DownloadersByIdError, PutV1DownloadersByIdResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdError, PutV1NameTemplatesByIdResponse, PutV1PoliciesByIdActionsByActionIdData, PutV1PoliciesByIdActionsByActionIdError, PutV1PoliciesByIdActionsByActionIdResponse, PutV1PoliciesByIdData, PutV1PoliciesByIdError, PutV1PoliciesByIdResponse, PutV1PoliciesByIdRuleData, PutV1PoliciesByIdRuleError, PutV1PoliciesByIdRuleResponse } from '../types.gen';
+import { deleteV1DownloadersById, deleteV1DownloadJobsById, deleteV1IndexersById, deleteV1LibrariesById, deleteV1NameTemplatesById, deleteV1PoliciesById, deleteV1PoliciesByIdActionsByActionId, deleteV1PoliciesByIdRule, deleteV1UsersById, getHealth, getV1AuthProfile, getV1Downloaders, getV1DownloadersById, getV1DownloadersDefaultByProtocol, getV1DownloadJobs, getV1DownloadJobsById, getV1Home, getV1IndexersById, getV1IndexersConfigured, getV1IndexersSchema, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1MovieByIdCandidates, getV1MovieByIdDownloadJobs, getV1NameTemplates, getV1NameTemplatesById, getV1NameTemplatesDefaultByType, getV1PersonById, getV1Policies, getV1PoliciesById, getV1PoliciesByIdActions, getV1PoliciesByIdActionsByActionId, getV1PoliciesByIdRule, getV1PoliciesFields, getV1Roles, getV1SeriesById, getV1SeriesByIdCandidates, getV1Settings, getV1Users, getV1UsersById, type Options, patchV1Settings, postV1AuthLogin, postV1Downloaders, postV1DownloadersByIdTest, postV1DownloadersTest, postV1Indexer, postV1IndexerActionByName, postV1Libraries, postV1LibrariesByIdScan, postV1MovieByIdCandidateDownload, postV1MovieByIdCandidatePreview, postV1NameTemplates, postV1Policies, postV1PoliciesByIdActions, postV1PoliciesByIdRule, postV1PoliciesEvaluate, postV1SeriesByIdCandidateDownload, postV1SeriesByIdCandidatePreview, postV1Users, putV1AuthProfile, putV1AuthProfilePassword, putV1DownloadersById, putV1LibrariesById, putV1NameTemplatesById, putV1PoliciesById, putV1PoliciesByIdActionsByActionId, putV1PoliciesByIdRule, putV1UsersById, putV1UsersByIdPassword, putV1UsersByIdRole } from '../sdk.gen';
+import type { DeleteV1DownloadersByIdData, DeleteV1DownloadersByIdResponse, DeleteV1DownloadJobsByIdData, DeleteV1DownloadJobsByIdError, DeleteV1DownloadJobsByIdResponse, DeleteV1IndexersByIdData, DeleteV1IndexersByIdError, DeleteV1IndexersByIdResponse, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponse, DeleteV1PoliciesByIdActionsByActionIdData, DeleteV1PoliciesByIdActionsByActionIdResponse, DeleteV1PoliciesByIdData, DeleteV1PoliciesByIdResponse, DeleteV1PoliciesByIdRuleData, DeleteV1PoliciesByIdRuleResponse, DeleteV1UsersByIdData, DeleteV1UsersByIdResponse, GetHealthData, GetV1AuthProfileData, GetV1DownloadersByIdData, GetV1DownloadersData, GetV1DownloadersDefaultByProtocolData, GetV1DownloadJobsByIdData, GetV1DownloadJobsData, GetV1HomeData, GetV1IndexersByIdData, GetV1IndexersConfiguredData, GetV1IndexersSchemaData, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1LibraryResponse, GetV1MovieByIdCandidatesData, GetV1MovieByIdData, GetV1MovieByIdDownloadJobsData, GetV1NameTemplatesByIdData, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1PersonByIdData, GetV1PoliciesByIdActionsByActionIdData, GetV1PoliciesByIdActionsData, GetV1PoliciesByIdData, GetV1PoliciesByIdRuleData, GetV1PoliciesData, GetV1PoliciesFieldsData, GetV1RolesData, GetV1SeriesByIdCandidatesData, GetV1SeriesByIdData, GetV1SettingsData, GetV1UsersByIdData, GetV1UsersData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1DownloadersByIdTestData, PostV1DownloadersByIdTestError, PostV1DownloadersByIdTestResponse, PostV1DownloadersData, PostV1DownloadersError, PostV1DownloadersResponse, PostV1DownloadersTestData, PostV1DownloadersTestError, PostV1DownloadersTestResponse, PostV1IndexerActionByNameData, PostV1IndexerActionByNameError, PostV1IndexerData, PostV1IndexerError, PostV1IndexerResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PostV1MovieByIdCandidateDownloadData, PostV1MovieByIdCandidateDownloadError, PostV1MovieByIdCandidateDownloadResponse, PostV1MovieByIdCandidatePreviewData, PostV1MovieByIdCandidatePreviewError, PostV1MovieByIdCandidatePreviewResponse, PostV1NameTemplatesData, PostV1NameTemplatesError, PostV1NameTemplatesResponse, PostV1PoliciesByIdActionsData, PostV1PoliciesByIdActionsError, PostV1PoliciesByIdActionsResponse, PostV1PoliciesByIdRuleData, PostV1PoliciesByIdRuleError, PostV1PoliciesByIdRuleResponse, PostV1PoliciesData, PostV1PoliciesError, PostV1PoliciesEvaluateData, PostV1PoliciesEvaluateError, PostV1PoliciesEvaluateResponse, PostV1PoliciesResponse, PostV1SeriesByIdCandidateDownloadData, PostV1SeriesByIdCandidateDownloadError, PostV1SeriesByIdCandidateDownloadResponse, PostV1SeriesByIdCandidatePreviewData, PostV1SeriesByIdCandidatePreviewError, PostV1SeriesByIdCandidatePreviewResponse, PostV1UsersData, PostV1UsersError, PostV1UsersResponse, PutV1AuthProfileData, PutV1AuthProfilePasswordData, PutV1AuthProfilePasswordResponse, PutV1AuthProfileResponse, PutV1DownloadersByIdData, PutV1DownloadersByIdError, PutV1DownloadersByIdResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdError, PutV1NameTemplatesByIdResponse, PutV1PoliciesByIdActionsByActionIdData, PutV1PoliciesByIdActionsByActionIdError, PutV1PoliciesByIdActionsByActionIdResponse, PutV1PoliciesByIdData, PutV1PoliciesByIdError, PutV1PoliciesByIdResponse, PutV1PoliciesByIdRuleData, PutV1PoliciesByIdRuleError, PutV1PoliciesByIdRuleResponse, PutV1UsersByIdData, PutV1UsersByIdError, PutV1UsersByIdPasswordData, PutV1UsersByIdPasswordResponse, PutV1UsersByIdResponse, PutV1UsersByIdRoleData, PutV1UsersByIdRoleResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -68,6 +68,60 @@ export const postV1AuthLoginMutation = (options?: Partial<Options<PostV1AuthLogi
     const mutationOptions: UseMutationOptions<PostV1AuthLoginResponse, DefaultError, Options<PostV1AuthLoginData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await postV1AuthLogin({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getV1AuthProfileQueryKey = (options?: Options<GetV1AuthProfileData>) => createQueryKey('getV1AuthProfile', options);
+
+/**
+ * Get current user profile
+ */
+export const getV1AuthProfileOptions = (options?: Options<GetV1AuthProfileData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1AuthProfile({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1AuthProfileQueryKey(options)
+    });
+};
+
+/**
+ * Update current user profile
+ */
+export const putV1AuthProfileMutation = (options?: Partial<Options<PutV1AuthProfileData>>): UseMutationOptions<PutV1AuthProfileResponse, DefaultError, Options<PutV1AuthProfileData>> => {
+    const mutationOptions: UseMutationOptions<PutV1AuthProfileResponse, DefaultError, Options<PutV1AuthProfileData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await putV1AuthProfile({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update current user password
+ */
+export const putV1AuthProfilePasswordMutation = (options?: Partial<Options<PutV1AuthProfilePasswordData>>): UseMutationOptions<PutV1AuthProfilePasswordResponse, DefaultError, Options<PutV1AuthProfilePasswordData>> => {
+    const mutationOptions: UseMutationOptions<PutV1AuthProfilePasswordResponse, DefaultError, Options<PutV1AuthProfilePasswordData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await putV1AuthProfilePassword({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -1114,6 +1168,26 @@ export const putV1PoliciesByIdRuleMutation = (options?: Partial<Options<PutV1Pol
     return mutationOptions;
 };
 
+export const getV1RolesQueryKey = (options?: Options<GetV1RolesData>) => createQueryKey('getV1Roles', options);
+
+/**
+ * List roles
+ */
+export const getV1RolesOptions = (options?: Options<GetV1RolesData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1Roles({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1RolesQueryKey(options)
+    });
+};
+
 export const getV1SeriesByIdQueryKey = (options: Options<GetV1SeriesByIdData>) => createQueryKey('getV1SeriesById', options);
 
 /**
@@ -1215,6 +1289,131 @@ export const patchV1SettingsMutation = (options?: Partial<Options<PatchV1Setting
     const mutationOptions: UseMutationOptions<PatchV1SettingsResponse, PatchV1SettingsError, Options<PatchV1SettingsData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await patchV1Settings({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getV1UsersQueryKey = (options?: Options<GetV1UsersData>) => createQueryKey('getV1Users', options);
+
+/**
+ * List users
+ */
+export const getV1UsersOptions = (options?: Options<GetV1UsersData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1Users({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1UsersQueryKey(options)
+    });
+};
+
+/**
+ * Create user
+ */
+export const postV1UsersMutation = (options?: Partial<Options<PostV1UsersData>>): UseMutationOptions<PostV1UsersResponse, PostV1UsersError, Options<PostV1UsersData>> => {
+    const mutationOptions: UseMutationOptions<PostV1UsersResponse, PostV1UsersError, Options<PostV1UsersData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postV1Users({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete user
+ */
+export const deleteV1UsersByIdMutation = (options?: Partial<Options<DeleteV1UsersByIdData>>): UseMutationOptions<DeleteV1UsersByIdResponse, DefaultError, Options<DeleteV1UsersByIdData>> => {
+    const mutationOptions: UseMutationOptions<DeleteV1UsersByIdResponse, DefaultError, Options<DeleteV1UsersByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteV1UsersById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getV1UsersByIdQueryKey = (options: Options<GetV1UsersByIdData>) => createQueryKey('getV1UsersById', options);
+
+/**
+ * Get user
+ */
+export const getV1UsersByIdOptions = (options: Options<GetV1UsersByIdData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1UsersById({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1UsersByIdQueryKey(options)
+    });
+};
+
+/**
+ * Update user
+ */
+export const putV1UsersByIdMutation = (options?: Partial<Options<PutV1UsersByIdData>>): UseMutationOptions<PutV1UsersByIdResponse, PutV1UsersByIdError, Options<PutV1UsersByIdData>> => {
+    const mutationOptions: UseMutationOptions<PutV1UsersByIdResponse, PutV1UsersByIdError, Options<PutV1UsersByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await putV1UsersById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update user password
+ */
+export const putV1UsersByIdPasswordMutation = (options?: Partial<Options<PutV1UsersByIdPasswordData>>): UseMutationOptions<PutV1UsersByIdPasswordResponse, DefaultError, Options<PutV1UsersByIdPasswordData>> => {
+    const mutationOptions: UseMutationOptions<PutV1UsersByIdPasswordResponse, DefaultError, Options<PutV1UsersByIdPasswordData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await putV1UsersByIdPassword({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Assign role to user
+ */
+export const putV1UsersByIdRoleMutation = (options?: Partial<Options<PutV1UsersByIdRoleData>>): UseMutationOptions<PutV1UsersByIdRoleResponse, DefaultError, Options<PutV1UsersByIdRoleData>> => {
+    const mutationOptions: UseMutationOptions<PutV1UsersByIdRoleResponse, DefaultError, Options<PutV1UsersByIdRoleData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await putV1UsersByIdRole({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

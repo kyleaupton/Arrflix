@@ -3,7 +3,7 @@ SELECT * FROM app_user WHERE lower(email) = lower($1) AND is_active = true;
 
 -- name: CreateUser :one
 INSERT INTO app_user (email, display_name, password_hash, is_active)
-VALUES ($1, $2, $3, true)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: UpsertIdentity :one
@@ -18,3 +18,55 @@ RETURNING *;
 UPDATE app_user
 SET password_hash = $2, updated_at = now()
 WHERE id = $1;
+
+-- name: ListUsers :many
+SELECT u.*,
+  COALESCE(
+    json_agg(
+      json_build_object('id', r.id, 'name', r.name, 'description', r.description)
+    ) FILTER (WHERE r.id IS NOT NULL),
+    '[]'
+  ) as roles
+FROM app_user u
+LEFT JOIN user_role ur ON ur.user_id = u.id
+LEFT JOIN role r ON r.id = ur.role_id
+GROUP BY u.id
+ORDER BY u.created_at DESC;
+
+-- name: GetUser :one
+SELECT u.*,
+  COALESCE(
+    json_agg(
+      json_build_object('id', r.id, 'name', r.name, 'description', r.description)
+    ) FILTER (WHERE r.id IS NOT NULL),
+    '[]'
+  ) as roles
+FROM app_user u
+LEFT JOIN user_role ur ON ur.user_id = u.id
+LEFT JOIN role r ON r.id = ur.role_id
+WHERE u.id = $1
+GROUP BY u.id;
+
+-- name: UpdateUser :one
+UPDATE app_user
+SET email = $2,
+    display_name = $3,
+    is_active = $4,
+    updated_at = now()
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteUser :exec
+DELETE FROM app_user WHERE id = $1;
+
+-- name: UnassignAllRoles :exec
+DELETE FROM user_role WHERE user_id = $1;
+
+-- name: ListRoles :many
+SELECT * FROM role ORDER BY name ASC;
+
+-- name: GetRoleByName :one
+SELECT * FROM role WHERE name = $1;
+
+-- name: CountUsersByRole :one
+SELECT COUNT(*) FROM user_role WHERE role_id = $1;

@@ -14,6 +14,7 @@ import {
   Home,
   Download,
   ChevronRight,
+  Users,
 } from 'lucide-vue-next'
 import NavUser from '@/components/NavUser.vue'
 
@@ -87,6 +88,11 @@ const data = {
       title: 'Requests',
       url: '/requests',
       icon: Clock,
+    },
+    {
+      title: 'Users',
+      url: '/users',
+      icon: Users,
     },
     {
       title: 'Settings',

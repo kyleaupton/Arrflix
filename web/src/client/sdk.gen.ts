@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteV1DownloadersByIdData, DeleteV1DownloadersByIdResponses, DeleteV1DownloadJobsByIdData, DeleteV1DownloadJobsByIdErrors, DeleteV1DownloadJobsByIdResponses, DeleteV1IndexersByIdData, DeleteV1IndexersByIdErrors, DeleteV1IndexersByIdResponses, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponses, DeleteV1PoliciesByIdActionsByActionIdData, DeleteV1PoliciesByIdActionsByActionIdResponses, DeleteV1PoliciesByIdData, DeleteV1PoliciesByIdResponses, DeleteV1PoliciesByIdRuleData, DeleteV1PoliciesByIdRuleResponses, GetHealthData, GetHealthResponses, GetV1DownloadersByIdData, GetV1DownloadersByIdResponses, GetV1DownloadersData, GetV1DownloadersDefaultByProtocolData, GetV1DownloadersDefaultByProtocolResponses, GetV1DownloadersResponses, GetV1DownloadJobsByIdData, GetV1DownloadJobsByIdErrors, GetV1DownloadJobsByIdResponses, GetV1DownloadJobsData, GetV1DownloadJobsResponses, GetV1HomeData, GetV1HomeResponses, GetV1IndexersByIdData, GetV1IndexersByIdErrors, GetV1IndexersByIdResponses, GetV1IndexersConfiguredData, GetV1IndexersConfiguredResponses, GetV1IndexersSchemaData, GetV1IndexersSchemaResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdCandidatesData, GetV1MovieByIdCandidatesErrors, GetV1MovieByIdCandidatesResponses, GetV1MovieByIdData, GetV1MovieByIdDownloadJobsData, GetV1MovieByIdDownloadJobsErrors, GetV1MovieByIdDownloadJobsResponses, GetV1MovieByIdResponses, GetV1NameTemplatesByIdData, GetV1NameTemplatesByIdResponses, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1NameTemplatesDefaultByTypeErrors, GetV1NameTemplatesDefaultByTypeResponses, GetV1NameTemplatesResponses, GetV1PersonByIdData, GetV1PersonByIdResponses, GetV1PoliciesByIdActionsByActionIdData, GetV1PoliciesByIdActionsByActionIdResponses, GetV1PoliciesByIdActionsData, GetV1PoliciesByIdActionsResponses, GetV1PoliciesByIdData, GetV1PoliciesByIdResponses, GetV1PoliciesByIdRuleData, GetV1PoliciesByIdRuleResponses, GetV1PoliciesData, GetV1PoliciesFieldsData, GetV1PoliciesFieldsResponses, GetV1PoliciesResponses, GetV1SeriesByIdCandidatesData, GetV1SeriesByIdCandidatesErrors, GetV1SeriesByIdCandidatesResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1DownloadersByIdTestData, PostV1DownloadersByIdTestErrors, PostV1DownloadersByIdTestResponses, PostV1DownloadersData, PostV1DownloadersErrors, PostV1DownloadersResponses, PostV1DownloadersTestData, PostV1DownloadersTestErrors, PostV1DownloadersTestResponses, PostV1IndexerActionByNameData, PostV1IndexerActionByNameErrors, PostV1IndexerActionByNameResponses, PostV1IndexerData, PostV1IndexerErrors, PostV1IndexerResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PostV1MovieByIdCandidateDownloadData, PostV1MovieByIdCandidateDownloadErrors, PostV1MovieByIdCandidateDownloadResponses, PostV1MovieByIdCandidatePreviewData, PostV1MovieByIdCandidatePreviewErrors, PostV1MovieByIdCandidatePreviewResponses, PostV1NameTemplatesData, PostV1NameTemplatesErrors, PostV1NameTemplatesResponses, PostV1PoliciesByIdActionsData, PostV1PoliciesByIdActionsErrors, PostV1PoliciesByIdActionsResponses, PostV1PoliciesByIdRuleData, PostV1PoliciesByIdRuleErrors, PostV1PoliciesByIdRuleResponses, PostV1PoliciesData, PostV1PoliciesErrors, PostV1PoliciesEvaluateData, PostV1PoliciesEvaluateErrors, PostV1PoliciesEvaluateResponses, PostV1PoliciesResponses, PostV1SeriesByIdCandidateDownloadData, PostV1SeriesByIdCandidateDownloadErrors, PostV1SeriesByIdCandidateDownloadResponses, PostV1SeriesByIdCandidatePreviewData, PostV1SeriesByIdCandidatePreviewErrors, PostV1SeriesByIdCandidatePreviewResponses, PutV1DownloadersByIdData, PutV1DownloadersByIdErrors, PutV1DownloadersByIdResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdErrors, PutV1NameTemplatesByIdResponses, PutV1PoliciesByIdActionsByActionIdData, PutV1PoliciesByIdActionsByActionIdErrors, PutV1PoliciesByIdActionsByActionIdResponses, PutV1PoliciesByIdData, PutV1PoliciesByIdErrors, PutV1PoliciesByIdResponses, PutV1PoliciesByIdRuleData, PutV1PoliciesByIdRuleErrors, PutV1PoliciesByIdRuleResponses } from './types.gen';
+import type { DeleteV1DownloadersByIdData, DeleteV1DownloadersByIdResponses, DeleteV1DownloadJobsByIdData, DeleteV1DownloadJobsByIdErrors, DeleteV1DownloadJobsByIdResponses, DeleteV1IndexersByIdData, DeleteV1IndexersByIdErrors, DeleteV1IndexersByIdResponses, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponses, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponses, DeleteV1PoliciesByIdActionsByActionIdData, DeleteV1PoliciesByIdActionsByActionIdResponses, DeleteV1PoliciesByIdData, DeleteV1PoliciesByIdResponses, DeleteV1PoliciesByIdRuleData, DeleteV1PoliciesByIdRuleResponses, DeleteV1UsersByIdData, DeleteV1UsersByIdResponses, GetHealthData, GetHealthResponses, GetV1AuthProfileData, GetV1AuthProfileResponses, GetV1DownloadersByIdData, GetV1DownloadersByIdResponses, GetV1DownloadersData, GetV1DownloadersDefaultByProtocolData, GetV1DownloadersDefaultByProtocolResponses, GetV1DownloadersResponses, GetV1DownloadJobsByIdData, GetV1DownloadJobsByIdErrors, GetV1DownloadJobsByIdResponses, GetV1DownloadJobsData, GetV1DownloadJobsResponses, GetV1HomeData, GetV1HomeResponses, GetV1IndexersByIdData, GetV1IndexersByIdErrors, GetV1IndexersByIdResponses, GetV1IndexersConfiguredData, GetV1IndexersConfiguredResponses, GetV1IndexersSchemaData, GetV1IndexersSchemaResponses, GetV1LibrariesByIdData, GetV1LibrariesByIdResponses, GetV1LibrariesData, GetV1LibrariesResponses, GetV1LibraryData, GetV1LibraryResponses, GetV1MovieByIdCandidatesData, GetV1MovieByIdCandidatesErrors, GetV1MovieByIdCandidatesResponses, GetV1MovieByIdData, GetV1MovieByIdDownloadJobsData, GetV1MovieByIdDownloadJobsErrors, GetV1MovieByIdDownloadJobsResponses, GetV1MovieByIdResponses, GetV1NameTemplatesByIdData, GetV1NameTemplatesByIdResponses, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1NameTemplatesDefaultByTypeErrors, GetV1NameTemplatesDefaultByTypeResponses, GetV1NameTemplatesResponses, GetV1PersonByIdData, GetV1PersonByIdResponses, GetV1PoliciesByIdActionsByActionIdData, GetV1PoliciesByIdActionsByActionIdResponses, GetV1PoliciesByIdActionsData, GetV1PoliciesByIdActionsResponses, GetV1PoliciesByIdData, GetV1PoliciesByIdResponses, GetV1PoliciesByIdRuleData, GetV1PoliciesByIdRuleResponses, GetV1PoliciesData, GetV1PoliciesFieldsData, GetV1PoliciesFieldsResponses, GetV1PoliciesResponses, GetV1RolesData, GetV1RolesResponses, GetV1SeriesByIdCandidatesData, GetV1SeriesByIdCandidatesErrors, GetV1SeriesByIdCandidatesResponses, GetV1SeriesByIdData, GetV1SeriesByIdResponses, GetV1SettingsData, GetV1SettingsResponses, GetV1UsersByIdData, GetV1UsersByIdResponses, GetV1UsersData, GetV1UsersResponses, PatchV1SettingsData, PatchV1SettingsErrors, PatchV1SettingsResponses, PostV1AuthLoginData, PostV1AuthLoginResponses, PostV1DownloadersByIdTestData, PostV1DownloadersByIdTestErrors, PostV1DownloadersByIdTestResponses, PostV1DownloadersData, PostV1DownloadersErrors, PostV1DownloadersResponses, PostV1DownloadersTestData, PostV1DownloadersTestErrors, PostV1DownloadersTestResponses, PostV1IndexerActionByNameData, PostV1IndexerActionByNameErrors, PostV1IndexerActionByNameResponses, PostV1IndexerData, PostV1IndexerErrors, PostV1IndexerResponses, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponses, PostV1LibrariesData, PostV1LibrariesErrors, PostV1LibrariesResponses, PostV1MovieByIdCandidateDownloadData, PostV1MovieByIdCandidateDownloadErrors, PostV1MovieByIdCandidateDownloadResponses, PostV1MovieByIdCandidatePreviewData, PostV1MovieByIdCandidatePreviewErrors, PostV1MovieByIdCandidatePreviewResponses, PostV1NameTemplatesData, PostV1NameTemplatesErrors, PostV1NameTemplatesResponses, PostV1PoliciesByIdActionsData, PostV1PoliciesByIdActionsErrors, PostV1PoliciesByIdActionsResponses, PostV1PoliciesByIdRuleData, PostV1PoliciesByIdRuleErrors, PostV1PoliciesByIdRuleResponses, PostV1PoliciesData, PostV1PoliciesErrors, PostV1PoliciesEvaluateData, PostV1PoliciesEvaluateErrors, PostV1PoliciesEvaluateResponses, PostV1PoliciesResponses, PostV1SeriesByIdCandidateDownloadData, PostV1SeriesByIdCandidateDownloadErrors, PostV1SeriesByIdCandidateDownloadResponses, PostV1SeriesByIdCandidatePreviewData, PostV1SeriesByIdCandidatePreviewErrors, PostV1SeriesByIdCandidatePreviewResponses, PostV1UsersData, PostV1UsersErrors, PostV1UsersResponses, PutV1AuthProfileData, PutV1AuthProfilePasswordData, PutV1AuthProfilePasswordResponses, PutV1AuthProfileResponses, PutV1DownloadersByIdData, PutV1DownloadersByIdErrors, PutV1DownloadersByIdResponses, PutV1LibrariesByIdData, PutV1LibrariesByIdErrors, PutV1LibrariesByIdResponses, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdErrors, PutV1NameTemplatesByIdResponses, PutV1PoliciesByIdActionsByActionIdData, PutV1PoliciesByIdActionsByActionIdErrors, PutV1PoliciesByIdActionsByActionIdResponses, PutV1PoliciesByIdData, PutV1PoliciesByIdErrors, PutV1PoliciesByIdResponses, PutV1PoliciesByIdRuleData, PutV1PoliciesByIdRuleErrors, PutV1PoliciesByIdRuleResponses, PutV1UsersByIdData, PutV1UsersByIdErrors, PutV1UsersByIdPasswordData, PutV1UsersByIdPasswordResponses, PutV1UsersByIdResponses, PutV1UsersByIdRoleData, PutV1UsersByIdRoleResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -34,6 +34,44 @@ export const getHealth = <ThrowOnError extends boolean = false>(options?: Option
 export const postV1AuthLogin = <ThrowOnError extends boolean = false>(options: Options<PostV1AuthLoginData, ThrowOnError>) => {
     return (options.client ?? client).post<PostV1AuthLoginResponses, unknown, ThrowOnError>({
         url: '/v1/auth/login',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Get current user profile
+ */
+export const getV1AuthProfile = <ThrowOnError extends boolean = false>(options?: Options<GetV1AuthProfileData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1AuthProfileResponses, unknown, ThrowOnError>({
+        url: '/v1/auth/profile',
+        ...options
+    });
+};
+
+/**
+ * Update current user profile
+ */
+export const putV1AuthProfile = <ThrowOnError extends boolean = false>(options: Options<PutV1AuthProfileData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1AuthProfileResponses, unknown, ThrowOnError>({
+        url: '/v1/auth/profile',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Update current user password
+ */
+export const putV1AuthProfilePassword = <ThrowOnError extends boolean = false>(options: Options<PutV1AuthProfilePasswordData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1AuthProfilePasswordResponses, unknown, ThrowOnError>({
+        url: '/v1/auth/profile/password',
         ...options,
         headers: {
             'Content-Type': 'application/json',
@@ -641,6 +679,16 @@ export const putV1PoliciesByIdRule = <ThrowOnError extends boolean = false>(opti
 };
 
 /**
+ * List roles
+ */
+export const getV1Roles = <ThrowOnError extends boolean = false>(options?: Options<GetV1RolesData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1RolesResponses, unknown, ThrowOnError>({
+        url: '/v1/roles',
+        ...options
+    });
+};
+
+/**
  * Get series (by TMDB id)
  */
 export const getV1SeriesById = <ThrowOnError extends boolean = false>(options: Options<GetV1SeriesByIdData, ThrowOnError>) => {
@@ -704,6 +752,92 @@ export const getV1Settings = <ThrowOnError extends boolean = false>(options?: Op
 export const patchV1Settings = <ThrowOnError extends boolean = false>(options: Options<PatchV1SettingsData, ThrowOnError>) => {
     return (options.client ?? client).patch<PatchV1SettingsResponses, PatchV1SettingsErrors, ThrowOnError>({
         url: '/v1/settings',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * List users
+ */
+export const getV1Users = <ThrowOnError extends boolean = false>(options?: Options<GetV1UsersData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetV1UsersResponses, unknown, ThrowOnError>({
+        url: '/v1/users',
+        ...options
+    });
+};
+
+/**
+ * Create user
+ */
+export const postV1Users = <ThrowOnError extends boolean = false>(options: Options<PostV1UsersData, ThrowOnError>) => {
+    return (options.client ?? client).post<PostV1UsersResponses, PostV1UsersErrors, ThrowOnError>({
+        url: '/v1/users',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Delete user
+ */
+export const deleteV1UsersById = <ThrowOnError extends boolean = false>(options: Options<DeleteV1UsersByIdData, ThrowOnError>) => {
+    return (options.client ?? client).delete<DeleteV1UsersByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/users/{id}',
+        ...options
+    });
+};
+
+/**
+ * Get user
+ */
+export const getV1UsersById = <ThrowOnError extends boolean = false>(options: Options<GetV1UsersByIdData, ThrowOnError>) => {
+    return (options.client ?? client).get<GetV1UsersByIdResponses, unknown, ThrowOnError>({
+        url: '/v1/users/{id}',
+        ...options
+    });
+};
+
+/**
+ * Update user
+ */
+export const putV1UsersById = <ThrowOnError extends boolean = false>(options: Options<PutV1UsersByIdData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1UsersByIdResponses, PutV1UsersByIdErrors, ThrowOnError>({
+        url: '/v1/users/{id}',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Update user password
+ */
+export const putV1UsersByIdPassword = <ThrowOnError extends boolean = false>(options: Options<PutV1UsersByIdPasswordData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1UsersByIdPasswordResponses, unknown, ThrowOnError>({
+        url: '/v1/users/{id}/password',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Assign role to user
+ */
+export const putV1UsersByIdRole = <ThrowOnError extends boolean = false>(options: Options<PutV1UsersByIdRoleData, ThrowOnError>) => {
+    return (options.client ?? client).put<PutV1UsersByIdRoleResponses, unknown, ThrowOnError>({
+        url: '/v1/users/{id}/role',
         ...options,
         headers: {
             'Content-Type': 'application/json',

@@ -183,6 +183,25 @@ definitions:
     - priority
     - updated_at
     type: object
+  dbgen.Role:
+    properties:
+      built_in:
+        type: boolean
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    required:
+    - built_in
+    - created_at
+    - description
+    - id
+    - name
+    type: object
   dbgen.Rule:
     properties:
       created_at:
@@ -527,6 +546,52 @@ definitions:
   handlers.SettingsListResponse:
     additionalProperties: {}
     type: object
+  handlers.UserCreateRequest:
+    properties:
+      display_name:
+        type: string
+      email:
+        type: string
+      is_active:
+        type: boolean
+      password:
+        type: string
+      role:
+        type: string
+    required:
+    - display_name
+    - email
+    - is_active
+    - password
+    - role
+    type: object
+  handlers.UserPasswordUpdateRequest:
+    properties:
+      password:
+        type: string
+    required:
+    - password
+    type: object
+  handlers.UserRoleUpdateRequest:
+    properties:
+      role:
+        type: string
+    required:
+    - role
+    type: object
+  handlers.UserUpdateRequest:
+    properties:
+      display_name:
+        type: string
+      email:
+        type: string
+      is_active:
+        type: boolean
+    required:
+    - display_name
+    - email
+    - is_active
+    type: object
   handlers.librarySwagger:
     properties:
       created_at:
@@ -584,6 +649,33 @@ definitions:
     - series_show_template
     - template
     - type
+    - updated_at
+    type: object
+  handlers.userSwagger:
+    properties:
+      created_at:
+        type: string
+      display_name:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      roles:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    required:
+    - created_at
+    - display_name
+    - email
+    - id
+    - is_active
+    - roles
     - updated_at
     type: object
   model.ActionInfo:
@@ -1763,6 +1855,57 @@ paths:
           schema:
             $ref: '#/definitions/handlers.LoginResponse'
       summary: Login
+      tags:
+      - auth
+  /v1/auth/profile:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.userSwagger'
+      summary: Get current user profile
+      tags:
+      - auth
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update profile
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.userSwagger'
+      summary: Update current user profile
+      tags:
+      - auth
+  /v1/auth/profile/password:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Update password
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserPasswordUpdateRequest'
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Update current user password
       tags:
       - auth
   /v1/download-jobs:
@@ -2958,6 +3101,20 @@ paths:
       summary: Get field definitions
       tags:
       - policies
+  /v1/roles:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.Role'
+            type: array
+      summary: List roles
+      tags:
+      - users
   /v1/series/{id}:
     get:
       parameters:
@@ -3140,4 +3297,156 @@ paths:
       summary: Update a setting
       tags:
       - settings
+  /v1/users:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.userSwagger'
+            type: array
+      summary: List users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create user
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.userSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create user
+      tags:
+      - users
+  /v1/users/{id}:
+    delete:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Delete user
+      tags:
+      - users
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.userSwagger'
+      summary: Get user
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update user
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.userSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update user
+      tags:
+      - users
+  /v1/users/{id}/password:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update password
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserPasswordUpdateRequest'
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Update user password
+      tags:
+      - users
+  /v1/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Assign role
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserRoleUpdateRequest'
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Assign role to user
+      tags:
+      - users
 swagger: "2.0"

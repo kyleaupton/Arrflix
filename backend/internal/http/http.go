@@ -38,6 +38,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	policies := handlers.NewPolicies(services)
 	rails := handlers.NewRails(services)
 	settings := handlers.NewSettings(services)
+	users := handlers.NewUsers(services)
 
 	api := e.Group("/api")
 	v1 := api.Group("/v1")
@@ -60,6 +61,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	policies.RegisterProtected(protected)
 	rails.RegisterProtected(protected)
 	settings.RegisterProtected(protected)
+	users.RegisterProtected(protected)
 
 	// Dev-only routes
 	if cfg.Env == "dev" {

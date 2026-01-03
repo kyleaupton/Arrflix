@@ -71,6 +71,14 @@ export type DbgenPolicy = {
     updated_at: string;
 };
 
+export type DbgenRole = {
+    built_in: boolean;
+    created_at: string;
+    description: string;
+    id: string;
+    name: string;
+};
+
 export type DbgenRule = {
     created_at: string;
     id: string;
@@ -229,6 +237,28 @@ export type HandlersSettingsListResponse = {
     [key: string]: unknown;
 };
 
+export type HandlersUserCreateRequest = {
+    display_name: string;
+    email: string;
+    is_active: boolean;
+    password: string;
+    role: string;
+};
+
+export type HandlersUserPasswordUpdateRequest = {
+    password: string;
+};
+
+export type HandlersUserRoleUpdateRequest = {
+    role: string;
+};
+
+export type HandlersUserUpdateRequest = {
+    display_name: string;
+    email: string;
+    is_active: boolean;
+};
+
 export type HandlersLibrarySwagger = {
     created_at: string;
     default: boolean;
@@ -249,6 +279,16 @@ export type HandlersNameTemplateSwagger = {
     series_show_template: string;
     template: string;
     type: string;
+    updated_at: string;
+};
+
+export type HandlersUserSwagger = {
+    created_at: string;
+    display_name: string;
+    email: string;
+    id: string;
+    is_active: boolean;
+    roles: Array<string>;
     updated_at: string;
 };
 
@@ -807,6 +847,60 @@ export type PostV1AuthLoginResponses = {
 };
 
 export type PostV1AuthLoginResponse = PostV1AuthLoginResponses[keyof PostV1AuthLoginResponses];
+
+export type GetV1AuthProfileData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/auth/profile';
+};
+
+export type GetV1AuthProfileResponses = {
+    /**
+     * OK
+     */
+    200: HandlersUserSwagger;
+};
+
+export type GetV1AuthProfileResponse = GetV1AuthProfileResponses[keyof GetV1AuthProfileResponses];
+
+export type PutV1AuthProfileData = {
+    /**
+     * Update profile
+     */
+    body: HandlersUserUpdateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/auth/profile';
+};
+
+export type PutV1AuthProfileResponses = {
+    /**
+     * OK
+     */
+    200: HandlersUserSwagger;
+};
+
+export type PutV1AuthProfileResponse = PutV1AuthProfileResponses[keyof PutV1AuthProfileResponses];
+
+export type PutV1AuthProfilePasswordData = {
+    /**
+     * Update password
+     */
+    body: HandlersUserPasswordUpdateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/auth/profile/password';
+};
+
+export type PutV1AuthProfilePasswordResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type PutV1AuthProfilePasswordResponse = PutV1AuthProfilePasswordResponses[keyof PutV1AuthProfilePasswordResponses];
 
 export type GetV1DownloadJobsData = {
     body?: never;
@@ -2224,6 +2318,22 @@ export type PutV1PoliciesByIdRuleResponses = {
 
 export type PutV1PoliciesByIdRuleResponse = PutV1PoliciesByIdRuleResponses[keyof PutV1PoliciesByIdRuleResponses];
 
+export type GetV1RolesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/roles';
+};
+
+export type GetV1RolesResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenRole>;
+};
+
+export type GetV1RolesResponse = GetV1RolesResponses[keyof GetV1RolesResponses];
+
 export type GetV1SeriesByIdData = {
     body?: never;
     path: {
@@ -2431,3 +2541,174 @@ export type PatchV1SettingsResponses = {
 };
 
 export type PatchV1SettingsResponse = PatchV1SettingsResponses[keyof PatchV1SettingsResponses];
+
+export type GetV1UsersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/users';
+};
+
+export type GetV1UsersResponses = {
+    /**
+     * OK
+     */
+    200: Array<HandlersUserSwagger>;
+};
+
+export type GetV1UsersResponse = GetV1UsersResponses[keyof GetV1UsersResponses];
+
+export type PostV1UsersData = {
+    /**
+     * Create user
+     */
+    body: HandlersUserCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/users';
+};
+
+export type PostV1UsersErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1UsersError = PostV1UsersErrors[keyof PostV1UsersErrors];
+
+export type PostV1UsersResponses = {
+    /**
+     * Created
+     */
+    201: HandlersUserSwagger;
+};
+
+export type PostV1UsersResponse = PostV1UsersResponses[keyof PostV1UsersResponses];
+
+export type DeleteV1UsersByIdData = {
+    body?: never;
+    path: {
+        /**
+         * User ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/users/{id}';
+};
+
+export type DeleteV1UsersByIdResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type DeleteV1UsersByIdResponse = DeleteV1UsersByIdResponses[keyof DeleteV1UsersByIdResponses];
+
+export type GetV1UsersByIdData = {
+    body?: never;
+    path: {
+        /**
+         * User ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/users/{id}';
+};
+
+export type GetV1UsersByIdResponses = {
+    /**
+     * OK
+     */
+    200: HandlersUserSwagger;
+};
+
+export type GetV1UsersByIdResponse = GetV1UsersByIdResponses[keyof GetV1UsersByIdResponses];
+
+export type PutV1UsersByIdData = {
+    /**
+     * Update user
+     */
+    body: HandlersUserUpdateRequest;
+    path: {
+        /**
+         * User ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/users/{id}';
+};
+
+export type PutV1UsersByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PutV1UsersByIdError = PutV1UsersByIdErrors[keyof PutV1UsersByIdErrors];
+
+export type PutV1UsersByIdResponses = {
+    /**
+     * OK
+     */
+    200: HandlersUserSwagger;
+};
+
+export type PutV1UsersByIdResponse = PutV1UsersByIdResponses[keyof PutV1UsersByIdResponses];
+
+export type PutV1UsersByIdPasswordData = {
+    /**
+     * Update password
+     */
+    body: HandlersUserPasswordUpdateRequest;
+    path: {
+        /**
+         * User ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/users/{id}/password';
+};
+
+export type PutV1UsersByIdPasswordResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type PutV1UsersByIdPasswordResponse = PutV1UsersByIdPasswordResponses[keyof PutV1UsersByIdPasswordResponses];
+
+export type PutV1UsersByIdRoleData = {
+    /**
+     * Assign role
+     */
+    body: HandlersUserRoleUpdateRequest;
+    path: {
+        /**
+         * User ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/users/{id}/role';
+};
+
+export type PutV1UsersByIdRoleResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type PutV1UsersByIdRoleResponse = PutV1UsersByIdRoleResponses[keyof PutV1UsersByIdRoleResponses];
