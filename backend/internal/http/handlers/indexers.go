@@ -124,8 +124,13 @@ func (h *Indexers) Delete(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "indexer ID required"})
 	}
 
+	indexerIDInt, err := strconv.ParseInt(indexerID, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid indexer ID"})
+	}
+
 	ctx := c.Request().Context()
-	if err := h.svc.Indexer.DeleteIndexer(ctx, indexerID); err != nil {
+	if err := h.svc.Indexer.DeleteIndexer(ctx, indexerIDInt); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to delete indexer"})
 	}
 

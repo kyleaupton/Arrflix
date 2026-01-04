@@ -78,27 +78,44 @@ func (s *IndexerService) GetIndexer(ctx context.Context, indexerID int64) (*prow
 	return res, nil
 }
 
-// UpdateIndexerConfig updates the configuration for a specific indexer
+// SaveIndexerConfig saves or updates the configuration for a specific indexer
 func (s *IndexerService) SaveIndexerConfig(ctx context.Context, input *prowlarr.IndexerInput) (*prowlarr.IndexerOutput, error) {
-	res, err := s.prowlarr.AddIndexerContext(ctx, input)
-	if err != nil {
-		return nil, err
+	var res *prowlarr.IndexerOutput
+	var err error
+
+	// If ID is set, update the existing indexer, otherwise add a new one
+	if input.ID != 0 {
+		s.logger.Info().Int64("indexerID", input.ID).Msg("Updating indexer")
+		res, err = s.prowlarr.UpdateIndexerContext(ctx, input, false)
+		if err != nil {
+			s.logger.Error().Int64("indexerID", input.ID).Err(err).Msg("Failed to update indexer")
+			return nil, err
+		}
+		s.logger.Info().Int64("indexerID", input.ID).Msg("Successfully updated indexer")
+	} else {
+		s.logger.Info().Str("name", input.Name).Msg("Adding new indexer")
+		res, err = s.prowlarr.AddIndexerContext(ctx, input)
+		if err != nil {
+			s.logger.Error().Str("name", input.Name).Err(err).Msg("Failed to add indexer")
+			return nil, err
+		}
+		s.logger.Info().Int64("indexerID", res.ID).Str("name", input.Name).Msg("Successfully added indexer")
 	}
 
 	return res, nil
 }
 
 // DeleteIndexer removes an indexer by its ID
-func (s *IndexerService) DeleteIndexer(ctx context.Context, indexerID string) error {
-	// s.logger.Info().Str("indexerID", indexerID).Msg("Deleting indexer")
+func (s *IndexerService) DeleteIndexer(ctx context.Context, indexerID int64) error {
+	s.logger.Info().Int64("indexerID", indexerID).Msg("Deleting indexer")
 
-	// err := s.jackett.DeleteIndexer(ctx, indexerID)
-	// if err != nil {
-	// 	s.logger.Error().Str("indexerID", indexerID).Err(err).Msg("Failed to delete indexer")
-	// 	return err
-	// }
+	err := s.prowlarr.DeleteIndexerContext(ctx, indexerID)
+	if err != nil {
+		s.logger.Error().Int64("indexerID", indexerID).Err(err).Msg("Failed to delete indexer")
+		return err
+	}
 
-	// s.logger.Info().Str("indexerID", indexerID).Msg("Successfully deleted indexer")
+	s.logger.Info().Int64("indexerID", indexerID).Msg("Successfully deleted indexer")
 	return nil
 }
 

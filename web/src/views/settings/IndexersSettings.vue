@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useQuery } from '@tanstack/vue-query'
+import { useQuery, useMutation } from '@tanstack/vue-query'
 import { Plus, Check } from 'lucide-vue-next'
-import { getV1IndexersConfiguredOptions } from '@/client/@tanstack/vue-query.gen'
+import { getV1IndexersConfiguredOptions, deleteV1IndexersByIdMutation } from '@/client/@tanstack/vue-query.gen'
 import { type ModelIndexerOutput } from '@/client/types.gen'
 import {
   indexerColumns,
@@ -21,6 +21,9 @@ import { client } from '@/client/client.gen'
 const { data: indexers, isLoading, error, refetch } = useQuery(getV1IndexersConfiguredOptions())
 const modal = useModal()
 const isTestingAll = ref(false)
+
+// Mutations
+const deleteIndexerMutation = useMutation(deleteV1IndexersByIdMutation())
 
 const handleEdit = (indexer: ModelIndexerOutput) => {
   modal.open(EditIndexerDialog, {
@@ -72,9 +75,25 @@ const handleToggle = (indexer: ModelIndexerOutput) => {
   // TODO: Implement toggle functionality
 }
 
-const handleDelete = (indexer: ModelIndexerOutput) => {
-  console.log('Delete indexer:', indexer)
-  // TODO: Implement delete functionality
+const handleDelete = async (indexer: ModelIndexerOutput) => {
+  if (!indexer.id) return
+  const confirmed = await modal.confirm({
+    title: 'Delete Indexer',
+    message: `Are you sure you want to delete "${indexer.name}"?`,
+    severity: 'danger',
+  })
+  if (!confirmed) return
+  try {
+    await deleteIndexerMutation.mutateAsync({ path: { id: String(indexer.id) } })
+    refetch()
+  } catch (err) {
+    const error = err as { message?: string }
+    await modal.alert({
+      title: 'Delete Failed',
+      message: error.message || 'Failed to delete indexer',
+      severity: 'error',
+    })
+  }
 }
 
 const handleTestAll = async () => {
