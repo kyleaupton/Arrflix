@@ -1,0 +1,39 @@
+# Development data
+.data
+*.db
+*.sqlite
+
+# Node modules
+node_modules
+web/node_modules
+**/node_modules
+
+# Build outputs
+web/dist
+backend/tmp
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml

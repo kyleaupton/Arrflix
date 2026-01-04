@@ -9,7 +9,7 @@ if [[ "$mode" == "dev" ]]; then
   # bind on 0.0.0.0 so Docker can hit it from host/other containers
   exec npm run dev -- --host 0.0.0.0 --port 5173
 else
-  echo "[web] prod mode: nginx serving built assets"
-  # simple example: nginx with /opt/app/frontend as root
-  exec nginx -g "daemon off;"
+  echo "[web] prod mode: static assets already built at /usr/share/nginx/html, served by nginx service"
+  # In prod, this service is not needed but must stay running for s6
+  exec sleep infinity
 fi
