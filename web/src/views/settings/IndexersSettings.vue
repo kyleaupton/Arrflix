@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useQuery, useMutation } from '@tanstack/vue-query'
 import { Plus, Check } from 'lucide-vue-next'
-import { getV1IndexersConfiguredOptions, deleteV1IndexersByIdMutation } from '@/client/@tanstack/vue-query.gen'
+import { getV1IndexersConfiguredOptions, deleteV1IndexerByIdMutation } from '@/client/@tanstack/vue-query.gen'
 import { type ModelIndexerOutput } from '@/client/types.gen'
 import {
   indexerColumns,
@@ -23,7 +23,7 @@ const modal = useModal()
 const isTestingAll = ref(false)
 
 // Mutations
-const deleteIndexerMutation = useMutation(deleteV1IndexersByIdMutation())
+const deleteIndexerMutation = useMutation(deleteV1IndexerByIdMutation())
 
 const handleEdit = (indexer: ModelIndexerOutput) => {
   modal.open(EditIndexerDialog, {

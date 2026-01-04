@@ -53,7 +53,6 @@ export function useModal() {
           confirmLabel: options.confirmLabel,
           cancelLabel: options.cancelLabel,
           severity: options.severity,
-          style: { width: '450px' },
         },
         onClose: (result) => {
           currentDialogInstance.value = null
@@ -79,7 +78,6 @@ export function useModal() {
           message: options.message,
           severity: options.severity,
           okLabel: options.okLabel,
-          style: { width: '450px' },
         },
         onClose: () => {
           currentDialogInstance.value = null

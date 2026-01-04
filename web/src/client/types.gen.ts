@@ -1328,6 +1328,38 @@ export type PostV1IndexerTestResponses = {
 
 export type PostV1IndexerTestResponse = PostV1IndexerTestResponses[keyof PostV1IndexerTestResponses];
 
+export type DeleteV1IndexerByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Indexer ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/indexer/{id}';
+};
+
+export type DeleteV1IndexerByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type DeleteV1IndexerByIdError = DeleteV1IndexerByIdErrors[keyof DeleteV1IndexerByIdErrors];
+
+export type DeleteV1IndexerByIdResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type DeleteV1IndexerByIdResponse = DeleteV1IndexerByIdResponses[keyof DeleteV1IndexerByIdResponses];
+
 export type PostV1IndexerByIdTestData = {
     body?: never;
     path: {
@@ -1424,38 +1456,6 @@ export type PostV1IndexersTestallResponses = {
 };
 
 export type PostV1IndexersTestallResponse = PostV1IndexersTestallResponses[keyof PostV1IndexersTestallResponses];
-
-export type DeleteV1IndexersByIdData = {
-    body?: never;
-    path: {
-        /**
-         * Indexer ID
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/v1/indexers/{id}';
-};
-
-export type DeleteV1IndexersByIdErrors = {
-    /**
-     * Bad Request
-     */
-    400: {
-        [key: string]: string;
-    };
-};
-
-export type DeleteV1IndexersByIdError = DeleteV1IndexersByIdErrors[keyof DeleteV1IndexersByIdErrors];
-
-export type DeleteV1IndexersByIdResponses = {
-    /**
-     * No Content
-     */
-    204: string;
-};
-
-export type DeleteV1IndexersByIdResponse = DeleteV1IndexersByIdResponses[keyof DeleteV1IndexersByIdResponses];
 
 export type GetV1IndexersByIdData = {
     body?: never;

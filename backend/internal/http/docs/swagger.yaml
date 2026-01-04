@@ -2215,6 +2215,28 @@ paths:
       summary: Save indexer configuration
       tags:
       - indexers
+  /v1/indexer/{id}:
+    delete:
+      parameters:
+      - description: Indexer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete indexer
+      tags:
+      - indexers
   /v1/indexer/{id}/test:
     post:
       parameters:
@@ -2309,27 +2331,6 @@ paths:
       tags:
       - indexers
   /v1/indexers/{id}:
-    delete:
-      parameters:
-      - description: Indexer ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "204":
-          description: No Content
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Delete indexer
-      tags:
-      - indexers
     get:
       parameters:
       - description: Indexer ID

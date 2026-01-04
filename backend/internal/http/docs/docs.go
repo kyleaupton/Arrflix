@@ -676,6 +676,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/indexer/{id}": {
+            "delete": {
+                "tags": [
+                    "indexers"
+                ],
+                "summary": "Delete indexer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Indexer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/indexer/{id}/test": {
             "post": {
                 "tags": [
@@ -831,38 +865,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "indexers"
-                ],
-                "summary": "Delete indexer",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Indexer ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
