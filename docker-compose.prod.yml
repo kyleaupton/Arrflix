@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.prod
     image: snaggle:prod
-    container_name: snaggle
+    container_name: snaggle-prod
     environment:
       TMDB_API_KEY: ${TMDB_API_KEY}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}

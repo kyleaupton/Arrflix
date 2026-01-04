@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.dev
     image: snaggle:dev
-    container_name: snaggle
+    container_name: snaggle-dev
     environment:
       APP_ENV: dev
       TMDB_API_KEY: ${TMDB_API_KEY}
