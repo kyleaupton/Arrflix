@@ -30,7 +30,7 @@ func Load(log *logger.Logger) Config {
 	godotenv.Load()
 
 	config := Config{
-		Env:            envOr("ENV", "dev"),
+		Env:            envOr("APP_ENV", "prod"),
 		Port:           envOr("PORT", "8080"),
 		DatabaseURL:    envOr("DATABASE_URL", "postgres://snaggle:snaggle@127.0.0.1:5432/snaggle?sslmode=disable"),
 		CORSOrigin:     envOr("SSE_ALLOW_ORIGIN", "*"),

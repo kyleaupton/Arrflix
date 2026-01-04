@@ -7,7 +7,6 @@ services:
     container_name: snaggle
     environment:
       APP_ENV: prod
-      ENV: prod
       TMDB_API_KEY: ${TMDB_API_KEY}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
     ports:
