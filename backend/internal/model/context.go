@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/kyleaupton/snaggle/backend/internal/quality"
+	"github.com/kyleaupton/snaggle/backend/internal/template"
 )
 
 // Phase indicates when a field becomes available
@@ -62,6 +63,7 @@ type QualityFields struct {
 type MediaFields struct {
 	Type         string  `path:"media.type" label:"Media Type" type:"enum" enumValues:"movie,series" phase:"pre_download"`
 	Title        string  `path:"media.title" label:"Media Title" type:"text" phase:"pre_download"`
+	CleanTitle   string  `path:"media.clean_title" label:"Clean Title" type:"text" phase:"pre_download"`
 	Year         int     `path:"media.year" label:"Year" type:"number" phase:"pre_download"`
 	TmdbID       int64   `path:"media.tmdb_id" label:"TMDB ID" type:"number" phase:"pre_download"`
 	Season       *int    `path:"media.season" label:"Season" type:"number" phase:"pre_download"`
@@ -116,10 +118,11 @@ func NewEvaluationContext(candidate DownloadCandidate, q quality.QualityModel) E
 // WithMedia sets the media fields on the context
 func (ctx EvaluationContext) WithMedia(mediaType MediaType, title string, year int, tmdbID int64) EvaluationContext {
 	ctx.Media = MediaFields{
-		Type:   string(mediaType),
-		Title:  title,
-		Year:   year,
-		TmdbID: tmdbID,
+		Type:       string(mediaType),
+		Title:      title,
+		CleanTitle: template.CleanTitle(title),
+		Year:       year,
+		TmdbID:     tmdbID,
 	}
 	return ctx
 }
@@ -277,11 +280,9 @@ func goTypeToValueType(t reflect.Type) string {
 }
 
 // ToTemplateData converts the context to a map suitable for Go templates
-// This provides both dot-notation access (e.g., .Candidate.Title) and
-// maintains backwards compatibility with existing templates
+// This provides namespaced access (e.g., .Candidate.Title, .Media.Title)
 func (ctx *EvaluationContext) ToTemplateData() map[string]any {
 	data := map[string]any{
-		// Namespaced access (new style)
 		"Candidate": ctx.Candidate,
 		"Quality":   ctx.Quality,
 		"Media":     ctx.Media,
@@ -291,28 +292,5 @@ func (ctx *EvaluationContext) ToTemplateData() map[string]any {
 		data["MediaInfo"] = ctx.MediaInfo
 	}
 
-	// Backwards compatibility: expose common fields at top level
-	// These match the old template context format
-	data["Title"] = ctx.Media.Title
-	if ctx.Media.Year > 0 {
-		data["Year"] = fmt.Sprintf("%d", ctx.Media.Year)
-	} else {
-		data["Year"] = ""
-	}
-
-	// For series, expose season/episode info
-	if ctx.Media.Season != nil {
-		data["Season"] = fmt.Sprintf("%02d", *ctx.Media.Season)
-	}
-	if ctx.Media.Episode != nil {
-		data["Episode"] = fmt.Sprintf("%02d", *ctx.Media.Episode)
-	}
-	if ctx.Media.EpisodeTitle != nil {
-		data["EpisodeTitle"] = *ctx.Media.EpisodeTitle
-	} else {
-		data["EpisodeTitle"] = ""
-	}
-
 	return data
 }
-

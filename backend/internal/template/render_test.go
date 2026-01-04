@@ -9,9 +9,15 @@ import (
 func TestRender(t *testing.T) {
 	q := quality.ParseQuality("21.Jump.Street.2012.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.Atmos-GROUP")
 
+	// Create a namespaced context structure matching EvaluationContext.ToTemplateData()
+	media := map[string]any{
+		"Title":      "21 Jump Street",
+		"CleanTitle": "21 Jump Street",
+		"Year":       2012,
+	}
+
 	ctx := map[string]any{
-		"Title":   "21 Jump Street",
-		"Year":    "2012",
+		"Media":   media,
 		"Quality": q,
 	}
 
@@ -22,33 +28,33 @@ func TestRender(t *testing.T) {
 	}{
 		{
 			name:     "Simple title and year",
-			template: "{{.Title}} ({{.Year}})",
+			template: "{{.Media.Title}} ({{.Media.Year}})",
 			want:     "21 Jump Street (2012)",
 		},
 		{
 			name:     "With quality resolution",
-			template: "{{.Title}} ({{.Year}}) [{{.Quality.Resolution}}]",
+			template: "{{.Media.Title}} ({{.Media.Year}}) [{{.Quality.Resolution}}]",
 			want:     "21 Jump Street (2012) [2160p]",
 		},
-		// {
-		// 	name:     "With quality resolution and codec",
-		// 	template: "{{.Title}} ({{.Year}}) [{{.Quality.Resolution}} {{.Quality.Codec}}]",
-		// 	want:     "21 Jump Street (2012) [2160p h265]",
-		// },
+		{
+			name:     "With clean title",
+			template: "{{.Media.CleanTitle}} ({{.Media.Year}})",
+			want:     "21 Jump Street (2012)",
+		},
 		{
 			name:     "With clean function for unknown",
-			template: "{{.Title}} ({{.Year}}) [{{clean .Quality.Resolution}}]",
+			template: "{{.Media.Title}} ({{.Media.Year}}) [{{clean .Quality.Resolution}}]",
 			want:     "21 Jump Street (2012) [2160p]",
 		},
-		// {
-		// 	name:     "With unknown value using clean",
-		// 	template: "{{.Title}} [{{clean .Quality.Edition}}]",
-		// 	want:     "21 Jump Street []",
-		// },
 		{
 			name:     "With sanitize function",
-			template: "{{sanitize .Title}}",
+			template: "{{sanitize .Media.Title}}",
 			want:     "21 Jump Street",
+		},
+		{
+			name:     "Full quality string",
+			template: "{{.Media.CleanTitle}} ({{.Media.Year}}) [{{.Quality.Full}}]",
+			want:     "21 Jump Street (2012) [Bluray-2160p Remux]",
 		},
 	}
 

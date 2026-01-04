@@ -48,6 +48,12 @@ func sanitizeValue(s string) string {
 	return s
 }
 
+// CleanTitle sanitizes a title for use in filenames
+// This is the same logic as sanitizeValue but exported for use in context building
+func CleanTitle(s string) string {
+	return sanitizeValue(s)
+}
+
 // cleanQualityValue returns an empty string if the value is "unknown", otherwise returns the value sanitized.
 func cleanQualityValue(v any) string {
 	s := strings.TrimSpace(strings.ToLower(fmt.Sprintf("%v", v)))
