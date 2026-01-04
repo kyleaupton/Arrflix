@@ -190,3 +190,19 @@ type IndexerInput struct {
 	Tags           []int         `json:"tags,omitempty"`
 	Fields         []*FieldInput `json:"fields"`
 }
+
+// IndexerTestResult represents the result of testing a single indexer
+type IndexerTestResult struct {
+	Success bool   `json:"success" swagger:"description:Whether the test passed"`
+	Message string `json:"message,omitempty" swagger:"description:Success message"`
+	Error   string `json:"error,omitempty" swagger:"description:Error message if test failed"`
+}
+
+// IndexerBatchTestResult represents test results for batch testing
+type IndexerBatchTestResult struct {
+	IndexerID   int64  `json:"indexer_id" swagger:"description:Indexer ID"`
+	IndexerName string `json:"indexer_name" swagger:"description:Indexer name"`
+	Success     bool   `json:"success" swagger:"description:Whether the test passed"`
+	Message     string `json:"message,omitempty" swagger:"description:Success message"`
+	Error       string `json:"error,omitempty" swagger:"description:Error message if test failed"`
+}

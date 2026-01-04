@@ -502,6 +502,14 @@ export type ModelGenre = {
     tmdbId: number;
 };
 
+export type ModelIndexerBatchTestResult = {
+    error?: string;
+    indexer_id: number;
+    indexer_name: string;
+    message?: string;
+    success: boolean;
+};
+
 export type ModelIndexerCapabilities = {
     bookSearchParams: Array<string>;
     categories: Array<ModelIndexerCategory>;
@@ -617,6 +625,12 @@ export type ModelIndexerSelectOption = {
     name: string;
     order: number;
     value: unknown;
+};
+
+export type ModelIndexerTestResult = {
+    error?: string;
+    message?: string;
+    success: boolean;
 };
 
 export type ModelLibraryAvailability = {
@@ -1278,6 +1292,80 @@ export type PostV1IndexerActionByNameResponses = {
     200: unknown;
 };
 
+export type PostV1IndexerTestData = {
+    /**
+     * Indexer config
+     */
+    body: ModelIndexerInput;
+    path?: never;
+    query?: never;
+    url: '/v1/indexer/test';
+};
+
+export type PostV1IndexerTestErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1IndexerTestError = PostV1IndexerTestErrors[keyof PostV1IndexerTestErrors];
+
+export type PostV1IndexerTestResponses = {
+    /**
+     * OK
+     */
+    200: ModelIndexerTestResult;
+};
+
+export type PostV1IndexerTestResponse = PostV1IndexerTestResponses[keyof PostV1IndexerTestResponses];
+
+export type PostV1IndexerByIdTestData = {
+    body?: never;
+    path: {
+        /**
+         * Indexer ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1/indexer/{id}/test';
+};
+
+export type PostV1IndexerByIdTestErrors = {
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1IndexerByIdTestError = PostV1IndexerByIdTestErrors[keyof PostV1IndexerByIdTestErrors];
+
+export type PostV1IndexerByIdTestResponses = {
+    /**
+     * OK
+     */
+    200: ModelIndexerTestResult;
+};
+
+export type PostV1IndexerByIdTestResponse = PostV1IndexerByIdTestResponses[keyof PostV1IndexerByIdTestResponses];
+
 export type GetV1IndexersConfiguredData = {
     body?: never;
     path?: never;
@@ -1309,6 +1397,33 @@ export type GetV1IndexersSchemaResponses = {
 };
 
 export type GetV1IndexersSchemaResponse = GetV1IndexersSchemaResponses[keyof GetV1IndexersSchemaResponses];
+
+export type PostV1IndexersTestallData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/indexers/testall';
+};
+
+export type PostV1IndexersTestallErrors = {
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1IndexersTestallError = PostV1IndexersTestallErrors[keyof PostV1IndexersTestallErrors];
+
+export type PostV1IndexersTestallResponses = {
+    /**
+     * OK
+     */
+    200: Array<ModelIndexerBatchTestResult>;
+};
+
+export type PostV1IndexersTestallResponse = PostV1IndexersTestallResponses[keyof PostV1IndexersTestallResponses];
 
 export type DeleteV1IndexersByIdData = {
     body?: never;

@@ -14,6 +14,7 @@ import (
 
 	"github.com/kyleaupton/snaggle/backend/internal/config"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
+	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
 
@@ -150,6 +151,133 @@ func (s *IndexerService) Action(ctx context.Context, actionName string, input in
 	}
 
 	return action, nil
+}
+
+// TestIndexer tests an unsaved indexer configuration
+func (s *IndexerService) TestIndexer(ctx context.Context, input *prowlarr.IndexerInput) (*model.IndexerTestResult, error) {
+	testCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	err := s.prowlarr.TestIndexerContext(testCtx, input)
+	if err != nil {
+		return &model.IndexerTestResult{
+			Success: false,
+			Error:   err.Error(),
+		}, nil
+	}
+
+	return &model.IndexerTestResult{
+		Success: true,
+		Message: "Connection test passed",
+	}, nil
+}
+
+// TestIndexerByID tests a saved indexer by ID
+func (s *IndexerService) TestIndexerByID(ctx context.Context, indexerID int64) (*model.IndexerTestResult, error) {
+	// Get the indexer config from Prowlarr
+	indexer, err := s.prowlarr.GetIndexerContext(ctx, indexerID)
+	if err != nil {
+		return nil, fmt.Errorf("get indexer: %w", err)
+	}
+
+	// Convert to IndexerInput for testing
+	// Convert FieldOutput to FieldInput
+	fields := make([]*starr.FieldInput, len(indexer.Fields))
+	for i, field := range indexer.Fields {
+		fields[i] = &starr.FieldInput{
+			Name:  field.Name,
+			Value: field.Value,
+		}
+	}
+
+	input := &prowlarr.IndexerInput{
+		ID:             indexer.ID,
+		Enable:         indexer.Enable,
+		Redirect:       indexer.Redirect,
+		Priority:       indexer.Priority,
+		AppProfileID:   indexer.AppProfileID,
+		ConfigContract: indexer.ConfigContract,
+		Implementation: indexer.Implementation,
+		Name:           indexer.Name,
+		Protocol:       indexer.Protocol,
+		Tags:           indexer.Tags,
+		Fields:         fields,
+	}
+
+	return s.TestIndexer(ctx, input)
+}
+
+// TestAllIndexers tests all configured indexers using Prowlarr's testall endpoint
+func (s *IndexerService) TestAllIndexers(ctx context.Context) ([]*model.IndexerBatchTestResult, error) {
+	_, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// First, fetch all configured indexers to get their names
+	indexers, err := s.prowlarr.GetIndexersContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get indexers: %w", err)
+	}
+
+	// Create a map of indexer ID to name
+	indexerNames := make(map[int64]string)
+	for _, indexer := range indexers {
+		indexerNames[indexer.ID] = indexer.Name
+	}
+
+	url := fmt.Sprintf("%s/api/v1/indexer/testall", s.prowlarrURL)
+
+	headers := map[string]string{
+		"x-api-key":    s.prowlarrAPIKey,
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	}
+
+	responseBytes, err := post(url, headers, nil)
+	if err != nil {
+		return nil, fmt.Errorf("testall request failed: %w", err)
+	}
+
+	// Parse Prowlarr response (returns array of test results)
+	var prowlarrResults []map[string]interface{}
+	if err := json.Unmarshal(responseBytes, &prowlarrResults); err != nil {
+		return nil, fmt.Errorf("parse response: %w", err)
+	}
+
+	// Convert to our result type
+	results := make([]*model.IndexerBatchTestResult, 0, len(prowlarrResults))
+	for _, pr := range prowlarrResults {
+		result := &model.IndexerBatchTestResult{}
+
+		// Safely extract ID
+		if id, ok := pr["id"].(float64); ok {
+			result.IndexerID = int64(id)
+			// Look up the name from our map
+			if name, found := indexerNames[result.IndexerID]; found {
+				result.IndexerName = name
+			}
+		}
+
+		// Safely extract isValid
+		if isValid, ok := pr["isValid"].(bool); ok {
+			result.Success = isValid
+		}
+
+		if !result.Success {
+			if validationFailures, ok := pr["validationFailures"].([]interface{}); ok && len(validationFailures) > 0 {
+				if failure, ok := validationFailures[0].(map[string]interface{}); ok {
+					if msg, ok := failure["errorMessage"].(string); ok {
+						result.Error = msg
+					}
+				}
+			}
+		} else {
+			result.Message = "Test passed"
+		}
+
+		results = append(results, result)
+	}
+
+	return results, nil
 }
 
 // Helpers

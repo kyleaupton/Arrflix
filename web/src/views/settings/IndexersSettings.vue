@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { Plus } from 'lucide-vue-next'
+import { Plus, Check } from 'lucide-vue-next'
 import { getV1IndexersConfiguredOptions } from '@/client/@tanstack/vue-query.gen'
 import { type ModelIndexerOutput } from '@/client/types.gen'
 import {
@@ -10,13 +11,16 @@ import {
 import DataTable from '@/components/tables/DataTable.vue'
 import AddIndexerModal from '@/components/modals/AddIndexerModal.vue'
 import EditIndexerDialog from '@/components/modals/EditIndexerDialog.vue'
+import IndexerTestResultsDialog from '@/components/modals/IndexerTestResultsDialog.vue'
 import { useModal } from '@/composables/useModal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { client } from '@/client/client.gen'
 
 const { data: indexers, isLoading, error, refetch } = useQuery(getV1IndexersConfiguredOptions())
 const modal = useModal()
+const isTestingAll = ref(false)
 
 const handleEdit = (indexer: ModelIndexerOutput) => {
   modal.open(EditIndexerDialog, {
@@ -32,6 +36,37 @@ const handleEdit = (indexer: ModelIndexerOutput) => {
   })
 }
 
+const handleTest = async (indexer: ModelIndexerOutput) => {
+  try {
+    const response = await client.post({
+      url: `/v1/indexer/${indexer.id}/test`,
+    })
+
+    const result = response.data as { success: boolean; message?: string; error?: string }
+
+    if (result.success) {
+      await modal.alert({
+        title: 'Test Successful',
+        message: `${indexer.name}: ${result.message || 'Connection test passed'}`,
+        severity: 'success',
+      })
+    } else {
+      await modal.alert({
+        title: 'Test Failed',
+        message: `${indexer.name}: ${result.error || 'Connection test failed'}`,
+        severity: 'error',
+      })
+    }
+  } catch (err) {
+    const error = err as { message?: string; data?: { error?: string } }
+    await modal.alert({
+      title: 'Test Failed',
+      message: error.data?.error || error.message || 'Test failed',
+      severity: 'error',
+    })
+  }
+}
+
 const handleToggle = (indexer: ModelIndexerOutput) => {
   console.log('Toggle indexer:', indexer)
   // TODO: Implement toggle functionality
@@ -40,6 +75,39 @@ const handleToggle = (indexer: ModelIndexerOutput) => {
 const handleDelete = (indexer: ModelIndexerOutput) => {
   console.log('Delete indexer:', indexer)
   // TODO: Implement delete functionality
+}
+
+const handleTestAll = async () => {
+  isTestingAll.value = true
+  try {
+    const response = await client.post({
+      url: '/v1/indexers/testall',
+    })
+
+    const results = response.data as Array<{
+      indexer_id: number
+      indexer_name: string
+      success: boolean
+      message?: string
+      error?: string
+    }>
+
+    modal.open(IndexerTestResultsDialog, {
+      props: {
+        results,
+        class: 'max-w-[90vw] sm:max-w-2xl lg:max-w-4xl',
+      },
+    })
+  } catch (err) {
+    const error = err as { message?: string }
+    await modal.alert({
+      title: 'Test All Failed',
+      message: error.message || 'Failed to test indexers',
+      severity: 'error',
+    })
+  } finally {
+    isTestingAll.value = false
+  }
 }
 
 const handleAddIndexer = () => {
@@ -55,7 +123,7 @@ const handleAddIndexer = () => {
   })
 }
 
-const indexerActions = createIndexerActions(handleEdit, handleToggle, handleDelete)
+const indexerActions = createIndexerActions(handleEdit, handleTest, handleToggle, handleDelete)
 </script>
 
 <template>
@@ -69,10 +137,20 @@ const indexerActions = createIndexerActions(handleEdit, handleToggle, handleDele
               Configure your media indexers and search providers.
             </p>
           </div>
-          <Button @click="handleAddIndexer">
-            <Plus class="mr-2 size-4" />
-            Add Indexer
-          </Button>
+          <div class="flex gap-2">
+            <Button
+              variant="outline"
+              :disabled="isTestingAll || !indexers?.length"
+              @click="handleTestAll"
+            >
+              <Check class="mr-2 size-4" />
+              Test All
+            </Button>
+            <Button @click="handleAddIndexer">
+              <Plus class="mr-2 size-4" />
+              Add Indexer
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

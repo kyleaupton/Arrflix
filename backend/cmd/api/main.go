@@ -11,8 +11,8 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/db"
 	"github.com/kyleaupton/snaggle/backend/internal/downloader"
 	"github.com/kyleaupton/snaggle/backend/internal/downloader/qbittorrent"
-	"github.com/kyleaupton/snaggle/backend/internal/jobs/downloadjobs"
 	"github.com/kyleaupton/snaggle/backend/internal/http"
+	"github.com/kyleaupton/snaggle/backend/internal/jobs/downloadjobs"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
@@ -51,7 +51,7 @@ func main() {
 	downloaderRegistry := downloader.NewRegistry()
 	qbittorrent.Register(downloaderRegistry)
 	downloaderManager := downloader.NewManager(downloaderRegistry, repo, logg)
-	
+
 	// Initialize downloader manager (loads all enabled downloaders)
 	ctx := context.Background()
 	if err := downloaderManager.Initialize(ctx); err != nil {

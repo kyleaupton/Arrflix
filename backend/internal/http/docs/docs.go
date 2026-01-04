@@ -628,6 +628,98 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/indexer/test": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "indexers"
+                ],
+                "summary": "Test unsaved indexer configuration",
+                "parameters": [
+                    {
+                        "description": "Indexer config",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.IndexerInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.IndexerTestResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/indexer/{id}/test": {
+            "post": {
+                "tags": [
+                    "indexers"
+                ],
+                "summary": "Test saved indexer",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Indexer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.IndexerTestResult"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/indexers/configured": {
             "get": {
                 "produces": [
@@ -669,6 +761,34 @@ const docTemplate = `{
                                 "items": {
                                     "$ref": "#/definitions/model.IndexerDefinition"
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/indexers/testall": {
+            "post": {
+                "tags": [
+                    "indexers"
+                ],
+                "summary": "Test all indexers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.IndexerBatchTestResult"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     }
@@ -4025,6 +4145,31 @@ const docTemplate = `{
                 }
             }
         },
+        "model.IndexerBatchTestResult": {
+            "type": "object",
+            "required": [
+                "indexer_id",
+                "indexer_name",
+                "success"
+            ],
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "indexer_id": {
+                    "type": "integer"
+                },
+                "indexer_name": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "model.IndexerCapabilities": {
             "type": "object",
             "required": [
@@ -4493,6 +4638,23 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "value": {}
+            }
+        },
+        "model.IndexerTestResult": {
+            "type": "object",
+            "required": [
+                "success"
+            ],
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
             }
         },
         "model.LibraryAvailability": {

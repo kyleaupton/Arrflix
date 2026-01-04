@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, inject } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Plus, X, Check } from 'lucide-vue-next'
 import { type ModelIndexerDefinition, type ModelIndexerInput } from '@/client/types.gen'
 import { postV1IndexerMutation } from '@/client/@tanstack/vue-query.gen'
 import { Button } from '@/components/ui/button'
@@ -9,13 +9,17 @@ import SelectIndexerTypeStep from './steps/SelectIndexerTypeStep.vue'
 import ConfigurationStep from './steps/ConfigurationStep.vue'
 import ReviewStep from './steps/ReviewStep.vue'
 import BaseDialog from './BaseDialog.vue'
+import { client } from '@/client/client.gen'
+import { useModal } from '@/composables/useModal'
 
 const dialogRef = inject('dialogRef') as { value: { close: (data?: unknown) => void } }
+const modal = useModal()
 
 // Form state
 const currentStep = ref(0)
 const selectedIndexerType = ref<ModelIndexerDefinition | null>(null)
 const saveData = ref<ModelIndexerInput | undefined>(undefined)
+const isTestingConfig = ref(false)
 
 const createIndexerMutation = useMutation({
   ...postV1IndexerMutation(),
@@ -65,6 +69,47 @@ const prevStep = () => {
 
 const selectIndexerType = (indexer: ModelIndexerDefinition) => {
   selectedIndexerType.value = indexer
+}
+
+const handleTestIndexer = async () => {
+  if (!saveData.value) {
+    console.error('No configuration data to test')
+    return
+  }
+
+  isTestingConfig.value = true
+
+  try {
+    const response = await client.post({
+      url: '/v1/indexer/test',
+      body: saveData.value,
+    })
+
+    const result = response.data as { success: boolean; message?: string; error?: string }
+
+    if (result.success) {
+      await modal.alert({
+        title: 'Test Successful',
+        message: result.message || 'Indexer connection test passed',
+        severity: 'success',
+      })
+    } else {
+      await modal.alert({
+        title: 'Test Failed',
+        message: result.error || 'Connection test failed',
+        severity: 'error',
+      })
+    }
+  } catch (err) {
+    const error = err as { message?: string; data?: { error?: string } }
+    await modal.alert({
+      title: 'Test Failed',
+      message: error.data?.error || error.message || 'Test failed',
+      severity: 'error',
+    })
+  } finally {
+    isTestingConfig.value = false
+  }
 }
 
 const createIndexer = () => {
@@ -152,6 +197,15 @@ const closeModal = () => {
         </Button>
 
         <div class="flex gap-2">
+          <Button
+            v-if="currentStep === 1"
+            variant="outline"
+            :disabled="isTestingConfig || !saveData"
+            @click="handleTestIndexer"
+          >
+            <Check class="mr-2 size-4" />
+            Test
+          </Button>
           <Button v-if="!isLastStep" :disabled="!canProceed" @click="nextStep">
             Next
             <ChevronRight class="ml-2 size-4" />

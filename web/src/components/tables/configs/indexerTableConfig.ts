@@ -40,6 +40,7 @@ export const indexerColumns: TableColumn<ModelIndexerOutput>[] = [
 
 export const createIndexerActions = (
   onEdit: (indexer: ModelIndexerOutput) => void,
+  onTest: (indexer: ModelIndexerOutput) => void,
   onToggle: (indexer: ModelIndexerOutput) => void,
   onDelete: (indexer: ModelIndexerOutput) => void,
 ): TableAction<ModelIndexerOutput>[] => [
@@ -50,6 +51,14 @@ export const createIndexerActions = (
     severity: 'primary',
     variant: 'text',
     command: onEdit,
+  },
+  {
+    key: 'test',
+    label: 'Test',
+    icon: PrimeIcons.CHECK,
+    severity: 'secondary',
+    variant: 'text',
+    command: onTest,
   },
   {
     key: 'toggle',

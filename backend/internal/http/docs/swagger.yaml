@@ -1063,6 +1063,23 @@ definitions:
     - name
     - tmdbId
     type: object
+  model.IndexerBatchTestResult:
+    properties:
+      error:
+        type: string
+      indexer_id:
+        type: integer
+      indexer_name:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    required:
+    - indexer_id
+    - indexer_name
+    - success
+    type: object
   model.IndexerCapabilities:
     properties:
       bookSearchParams:
@@ -1399,6 +1416,17 @@ definitions:
     - name
     - order
     - value
+    type: object
+  model.IndexerTestResult:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    required:
+    - success
     type: object
   model.LibraryAvailability:
     properties:
@@ -2187,6 +2215,35 @@ paths:
       summary: Save indexer configuration
       tags:
       - indexers
+  /v1/indexer/{id}/test:
+    post:
+      parameters:
+      - description: Indexer ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.IndexerTestResult'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Test saved indexer
+      tags:
+      - indexers
   /v1/indexer/action/{name}:
     post:
       parameters:
@@ -2218,6 +2275,37 @@ paths:
               type: string
             type: object
       summary: Perform an action on an indexer
+      tags:
+      - indexers
+  /v1/indexer/test:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Indexer config
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/model.IndexerInput'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.IndexerTestResult'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Test unsaved indexer configuration
       tags:
       - indexers
   /v1/indexers/{id}:
@@ -2299,6 +2387,24 @@ paths:
               type: array
             type: array
       summary: Get schema of indexers
+      tags:
+      - indexers
+  /v1/indexers/testall:
+    post:
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.IndexerBatchTestResult'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Test all indexers
       tags:
       - indexers
   /v1/libraries:

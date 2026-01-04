@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 	"github.com/labstack/echo/v4"
@@ -20,6 +22,9 @@ func (h *Indexers) RegisterProtected(v1 *echo.Group) {
 	v1.POST("/indexer", h.SaveConfig)
 	v1.DELETE("/indexer/:id", h.Delete)
 	v1.POST("/indexer/action/:name", h.Action)
+	v1.POST("/indexer/:id/test", h.TestSaved)
+	v1.POST("/indexer/test", h.TestUnsaved)
+	v1.POST("/indexers/testall", h.TestAll)
 }
 
 // ListConfigured returns only configured indexers
@@ -154,4 +159,74 @@ func (h *Indexers) Action(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, action)
+}
+
+// TestSaved tests a saved indexer configuration
+// @Summary Test saved indexer
+// @Tags    indexers
+// @Param   id path int64 true "Indexer ID"
+// @Success 200 {object} model.IndexerTestResult
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router  /v1/indexer/{id}/test [post]
+func (h *Indexers) TestSaved(c echo.Context) error {
+	idStr := c.Param("id")
+	indexerID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid indexer ID"})
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 15*time.Second)
+	defer cancel()
+
+	result, err := h.svc.Indexer.TestIndexerByID(ctx, indexerID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+// TestUnsaved tests an unsaved indexer configuration
+// @Summary Test unsaved indexer configuration
+// @Tags    indexers
+// @Accept  json
+// @Param   config body model.IndexerInput true "Indexer config"
+// @Success 200 {object} model.IndexerTestResult
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router  /v1/indexer/test [post]
+func (h *Indexers) TestUnsaved(c echo.Context) error {
+	var config prowlarr.IndexerInput
+	if err := c.Bind(&config); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 15*time.Second)
+	defer cancel()
+
+	result, err := h.svc.Indexer.TestIndexer(ctx, &config)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+// TestAll tests all configured indexers
+// @Summary Test all indexers
+// @Tags    indexers
+// @Success 200 {array} model.IndexerBatchTestResult
+// @Failure 500 {object} map[string]string
+// @Router  /v1/indexers/testall [post]
+func (h *Indexers) TestAll(c echo.Context) error {
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 45*time.Second)
+	defer cancel()
+
+	results, err := h.svc.Indexer.TestAllIndexers(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, results)
 }
