@@ -1,5 +1,5 @@
 services:
-  snaggle:
+  snaggle-prod:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
