@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import {
   type ModelIndexerDefinition,
+  type ModelIndexerOutput,
   type ModelIndexerInput,
   type ModelProtocol,
 } from '@/client/types.gen'
@@ -11,7 +12,7 @@ import ConfigurationStepField from './ConfigurationStepField.vue'
 const model = defineModel<ModelIndexerInput | undefined>(undefined)
 
 const props = defineProps<{
-  selectedIndexer: ModelIndexerDefinition
+  selectedIndexer: ModelIndexerDefinition | ModelIndexerOutput
 }>()
 
 onMounted(() => {
@@ -55,7 +56,7 @@ const handleValueChange = (fieldName: string, value: unknown) => {
       <ConfigurationStepField
         v-for="field in selectedIndexer.fields"
         :key="field.name"
-        :field="field"
+        :field="field as any"
         :selected-indexer="selectedIndexer"
         @value-change="handleValueChange"
       />

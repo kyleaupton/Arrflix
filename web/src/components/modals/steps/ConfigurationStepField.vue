@@ -13,7 +13,12 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Eye, EyeOff } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { type ModelIndexerDefinition, type ModelIndexerField } from '@/client/types.gen'
+import {
+  type ModelIndexerDefinition,
+  type ModelIndexerOutput,
+  type ModelIndexerField,
+  type ModelFieldOutput,
+} from '@/client/types.gen'
 import { postV1IndexerActionByNameMutation } from '@/client/@tanstack/vue-query.gen'
 import { cn } from '@/lib/utils'
 
@@ -29,8 +34,8 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-  selectedIndexer: ModelIndexerDefinition
-  field: ModelIndexerField
+  selectedIndexer: ModelIndexerDefinition | ModelIndexerOutput
+  field: ModelIndexerField | ModelFieldOutput
 }>()
 
 const options = computed(() => {
@@ -59,7 +64,22 @@ const isMultiSelect = computed(() => {
 })
 
 const hasHelpText = computed(() => {
-  return props.field.helpText || props.field.helpTextWarning
+  return (
+    props.field.helpText ||
+    ('helpTextWarning' in props.field ? props.field.helpTextWarning : undefined)
+  )
+})
+
+const helpTextWarning = computed(() => {
+  return 'helpTextWarning' in props.field ? props.field.helpTextWarning : undefined
+})
+
+const fieldUnit = computed(() => {
+  return 'unit' in props.field ? props.field.unit : undefined
+})
+
+const isFloat = computed(() => {
+  return 'isFloat' in props.field ? props.field.isFloat : false
 })
 
 const fieldId = computed(() => `field-${props.field.name}`)
@@ -112,8 +132,8 @@ onMounted(() => {
         :id="fieldId"
         v-model="model as string"
         :placeholder="`Enter ${field.label}`"
-        :class="cn('w-full', field.helpTextWarning && 'border-destructive')"
-        :aria-invalid="field.helpTextWarning ? 'true' : undefined"
+        :class="cn('w-full', helpTextWarning && 'border-destructive')"
+        :aria-invalid="helpTextWarning ? 'true' : undefined"
       />
     </template>
 
@@ -129,8 +149,8 @@ onMounted(() => {
           v-model="model as string"
           :type="showPassword ? 'text' : 'password'"
           :placeholder="`Enter ${field.label}`"
-          :class="cn('w-full pr-10', field.helpTextWarning && 'border-destructive')"
-          :aria-invalid="field.helpTextWarning ? 'true' : undefined"
+          :class="cn('w-full pr-10', helpTextWarning && 'border-destructive')"
+          :aria-invalid="helpTextWarning ? 'true' : undefined"
         />
         <Button
           type="button"
@@ -150,7 +170,7 @@ onMounted(() => {
     <template v-else-if="field.type === 'number'">
       <Label :for="fieldId" class="flex items-center gap-1">
         {{ field.label }}
-        <span v-if="field.unit" class="text-xs text-muted-foreground">({{ field.unit }})</span>
+        <span v-if="fieldUnit" class="text-xs text-muted-foreground">({{ fieldUnit }})</span>
         <span v-if="field.advanced" class="text-xs text-muted-foreground">(Advanced)</span>
       </Label>
       <Input
@@ -158,15 +178,15 @@ onMounted(() => {
         v-model="model as string"
         type="number"
         :placeholder="`Enter ${field.label}`"
-        :step="field.isFloat ? 0.01 : 1"
-        :class="cn('w-full', field.helpTextWarning && 'border-destructive')"
-        :aria-invalid="field.helpTextWarning ? 'true' : undefined"
+        :step="isFloat ? 0.01 : 1"
+        :class="cn('w-full', helpTextWarning && 'border-destructive')"
+        :aria-invalid="helpTextWarning ? 'true' : undefined"
         @update:model-value="
           (val) => {
             if (val === '' || val === null) {
               model = undefined
             } else {
-              const num = field.isFloat ? parseFloat(String(val)) : parseInt(String(val), 10)
+              const num = isFloat ? parseFloat(String(val)) : parseInt(String(val), 10)
               model = isNaN(num) ? undefined : num
             }
           }
@@ -231,8 +251,8 @@ onMounted(() => {
       >
         <SelectTrigger
           :id="fieldId"
-          :class="cn('w-full', field.helpTextWarning && 'border-destructive')"
-          :aria-invalid="field.helpTextWarning ? 'true' : undefined"
+          :class="cn('w-full', helpTextWarning && 'border-destructive')"
+          :aria-invalid="helpTextWarning ? 'true' : undefined"
         >
           <SelectValue :placeholder="`Select ${field.label}`" />
         </SelectTrigger>
@@ -279,11 +299,11 @@ onMounted(() => {
       :class="
         cn(
           'text-sm',
-          field.helpTextWarning ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground',
+          helpTextWarning ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground',
         )
       "
     >
-      {{ field.helpText || field.helpTextWarning }}
+      {{ field.helpText || helpTextWarning }}
       <a
         v-if="field.helpLink"
         :href="field.helpLink"

@@ -2,13 +2,14 @@
 import { useQuery } from '@tanstack/vue-query'
 import { Plus } from 'lucide-vue-next'
 import { getV1IndexersConfiguredOptions } from '@/client/@tanstack/vue-query.gen'
-import { type ModelIndexerDefinition } from '@/client/types.gen'
+import { type ModelIndexerOutput } from '@/client/types.gen'
 import {
   indexerColumns,
   createIndexerActions,
 } from '@/components/tables/configs/indexerTableConfig'
 import DataTable from '@/components/tables/DataTable.vue'
 import AddIndexerModal from '@/components/modals/AddIndexerModal.vue'
+import EditIndexerDialog from '@/components/modals/EditIndexerDialog.vue'
 import { useModal } from '@/composables/useModal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,17 +18,26 @@ import { Skeleton } from '@/components/ui/skeleton'
 const { data: indexers, isLoading, error, refetch } = useQuery(getV1IndexersConfiguredOptions())
 const modal = useModal()
 
-const handleEdit = (indexer: ModelIndexerDefinition) => {
-  console.log('Edit indexer:', indexer)
-  // TODO: Implement edit functionality
+const handleEdit = (indexer: ModelIndexerOutput) => {
+  modal.open(EditIndexerDialog, {
+    props: {
+      indexer,
+      class: 'max-w-[90vw] sm:max-w-2xl lg:max-w-4xl',
+    },
+    onClose: (result) => {
+      if ((result?.data as { indexerUpdated?: boolean })?.indexerUpdated) {
+        refetch()
+      }
+    },
+  })
 }
 
-const handleToggle = (indexer: ModelIndexerDefinition) => {
+const handleToggle = (indexer: ModelIndexerOutput) => {
   console.log('Toggle indexer:', indexer)
   // TODO: Implement toggle functionality
 }
 
-const handleDelete = (indexer: ModelIndexerDefinition) => {
+const handleDelete = (indexer: ModelIndexerOutput) => {
   console.log('Delete indexer:', indexer)
   // TODO: Implement delete functionality
 }
@@ -73,7 +83,7 @@ const indexerActions = createIndexerActions(handleEdit, handleToggle, handleDele
         </div>
         <DataTable
           v-else
-          :data="(indexers || []) as unknown as ModelIndexerDefinition[]"
+          :data="(indexers || []) as unknown as ModelIndexerOutput[]"
           :columns="indexerColumns"
           :actions="indexerActions"
           :loading="isLoading"
