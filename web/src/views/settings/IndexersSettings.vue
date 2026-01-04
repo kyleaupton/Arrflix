@@ -70,9 +70,21 @@ const handleTest = async (indexer: ModelIndexerOutput) => {
   }
 }
 
-const handleToggle = (indexer: ModelIndexerOutput) => {
-  console.log('Toggle indexer:', indexer)
-  // TODO: Implement toggle functionality
+const handleToggle = async (indexer: ModelIndexerOutput) => {
+  if (!indexer.id) return
+  try {
+    await client.put({
+      url: `/v1/indexer/${indexer.id}/toggle`,
+    })
+    refetch()
+  } catch (err) {
+    const error = err as { message?: string }
+    await modal.alert({
+      title: 'Toggle Failed',
+      message: error.message || 'Failed to toggle indexer',
+      severity: 'error',
+    })
+  }
 }
 
 const handleDelete = async (indexer: ModelIndexerOutput) => {

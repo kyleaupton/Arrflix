@@ -119,6 +119,52 @@ func (s *IndexerService) DeleteIndexer(ctx context.Context, indexerID int64) err
 	return nil
 }
 
+// ToggleIndexer toggles the enable state of an indexer
+func (s *IndexerService) ToggleIndexer(ctx context.Context, indexerID int64) (*prowlarr.IndexerOutput, error) {
+	s.logger.Info().Int64("indexerID", indexerID).Msg("Toggling indexer enable state")
+
+	// Get the indexer config from Prowlarr
+	indexer, err := s.prowlarr.GetIndexerContext(ctx, indexerID)
+	if err != nil {
+		s.logger.Error().Int64("indexerID", indexerID).Err(err).Msg("Failed to get indexer")
+		return nil, fmt.Errorf("get indexer: %w", err)
+	}
+
+	// Convert FieldOutput to FieldInput
+	fields := make([]*starr.FieldInput, len(indexer.Fields))
+	for i, field := range indexer.Fields {
+		fields[i] = &starr.FieldInput{
+			Name:  field.Name,
+			Value: field.Value,
+		}
+	}
+
+	// Create input with toggled enable state
+	input := &prowlarr.IndexerInput{
+		ID:             indexer.ID,
+		Enable:         !indexer.Enable, // Toggle the boolean
+		Redirect:       indexer.Redirect,
+		Priority:       indexer.Priority,
+		AppProfileID:   indexer.AppProfileID,
+		ConfigContract: indexer.ConfigContract,
+		Implementation: indexer.Implementation,
+		Name:           indexer.Name,
+		Protocol:       indexer.Protocol,
+		Tags:           indexer.Tags,
+		Fields:         fields,
+	}
+
+	// Save the updated configuration
+	result, err := s.SaveIndexerConfig(ctx, input)
+	if err != nil {
+		s.logger.Error().Int64("indexerID", indexerID).Err(err).Msg("Failed to toggle indexer")
+		return nil, fmt.Errorf("save indexer config: %w", err)
+	}
+
+	s.logger.Info().Int64("indexerID", indexerID).Bool("enabled", result.Enable).Msg("Successfully toggled indexer")
+	return result, nil
+}
+
 // Search performs a search query against Prowlarr
 func (s *IndexerService) Search(ctx context.Context, input prowlarr.SearchInput) ([]*prowlarr.Search, error) {
 	results, err := s.prowlarr.SearchContext(ctx, input)

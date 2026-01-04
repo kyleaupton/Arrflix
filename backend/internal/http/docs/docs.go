@@ -754,6 +754,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/indexer/{id}/toggle": {
+            "put": {
+                "tags": [
+                    "indexers"
+                ],
+                "summary": "Toggle indexer enable state",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Indexer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.IndexerOutput"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/indexers/configured": {
             "get": {
                 "produces": [

@@ -22,6 +22,7 @@ func (h *Indexers) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/indexer/:id", h.GetIndexer)
 	v1.POST("/indexer", h.SaveConfig)
 	v1.DELETE("/indexer/:id", h.Delete)
+	v1.PUT("/indexer/:id/toggle", h.Toggle)
 	v1.POST("/indexer/action/:name", h.Action)
 	v1.POST("/indexer/:id/test", h.TestSaved)
 	v1.POST("/indexer/test", h.TestUnsaved)
@@ -137,6 +138,34 @@ func (h *Indexers) Delete(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+// Toggle toggles the enable state of an indexer
+// @Summary Toggle indexer enable state
+// @Tags    indexers
+// @Param   id path string true "Indexer ID"
+// @Success 200 {object} model.IndexerOutput
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router  /v1/indexer/{id}/toggle [put]
+func (h *Indexers) Toggle(c echo.Context) error {
+	indexerID := c.Param("id")
+	if indexerID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "indexer ID required"})
+	}
+
+	indexerIDInt, err := strconv.ParseInt(indexerID, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid indexer ID"})
+	}
+
+	ctx := c.Request().Context()
+	result, err := h.svc.Indexer.ToggleIndexer(ctx, indexerIDInt)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to toggle indexer"})
+	}
+
+	return c.JSON(http.StatusOK, result)
 }
 
 // Action performs an action on an indexer

@@ -1398,6 +1398,44 @@ export type PostV1IndexerByIdTestResponses = {
 
 export type PostV1IndexerByIdTestResponse = PostV1IndexerByIdTestResponses[keyof PostV1IndexerByIdTestResponses];
 
+export type PutV1IndexerByIdToggleData = {
+    body?: never;
+    path: {
+        /**
+         * Indexer ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/indexer/{id}/toggle';
+};
+
+export type PutV1IndexerByIdToggleErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type PutV1IndexerByIdToggleError = PutV1IndexerByIdToggleErrors[keyof PutV1IndexerByIdToggleErrors];
+
+export type PutV1IndexerByIdToggleResponses = {
+    /**
+     * OK
+     */
+    200: ModelIndexerOutput;
+};
+
+export type PutV1IndexerByIdToggleResponse = PutV1IndexerByIdToggleResponses[keyof PutV1IndexerByIdToggleResponses];
+
 export type GetV1IndexersConfiguredData = {
     body?: never;
     path?: never;
