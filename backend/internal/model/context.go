@@ -315,6 +315,7 @@ func (ctx *EvaluationContext) ToTemplateData() map[string]any {
 	data := map[string]any{
 		"Candidate": ctx.Candidate,
 		"Quality":   ctx.Quality,
+		"Release":   ctx.Release,
 		"Media":     ctx.Media,
 	}
 

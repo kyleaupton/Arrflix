@@ -61,7 +61,7 @@ const filteredVariables = computed(() => {
 })
 
 // Order of namespaces for display
-const namespaceOrder = ['Shortcuts', 'Media', 'Quality', 'Candidate', 'MediaInfo']
+const namespaceOrder = ['Media', 'Quality', 'Release', 'Candidate', 'MediaInfo']
 
 const orderedNamespaces = computed(() => {
   const groups = filteredVariables.value

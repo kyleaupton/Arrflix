@@ -40,7 +40,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
       @pointer-down-outside="(event) => {
         // Prevent dialog close when clicking on teleported elements (autocomplete, context menus, etc.)
         const target = event.target as HTMLElement
-        if (target?.closest('.variable-autocomplete, .token-context-menu, [data-reka-portal]')) {
+        if (target?.closest('.variable-autocomplete, .token-context-menu, .field-picker, .slash-commands, [data-reka-portal]')) {
           event.preventDefault()
         }
       }"

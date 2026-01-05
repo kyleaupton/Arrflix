@@ -37,13 +37,40 @@ export const TEMPLATE_FUNCTIONS: TemplateFunction[] = [
 ]
 
 /**
- * Converts snake_case to PascalCase
- * e.g., "clean_title" -> "CleanTitle", "video_codec" -> "VideoCodec"
+ * Converts snake_case to PascalCase with Go acronym conventions
+ * e.g., "clean_title" -> "CleanTitle", "tmdb_id" -> "TmdbID", "guid" -> "GUID"
  */
 function snakeToPascal(str: string): string {
+  // Special compound words that need specific capitalization
+  const specialWords: Record<string, string> = {
+    'mediainfo': 'MediaInfo',
+    'tmdb': 'Tmdb',
+  }
+  
+  // Common Go acronyms that should be all uppercase
+  const acronyms = new Set(['id', 'guid', 'url', 'http', 'https', 'api', 'uri', 'uuid'])
+  
+  // Check if the entire string is a special word
+  const lower = str.toLowerCase()
+  if (specialWords[lower]) {
+    return specialWords[lower]
+  }
+  
   return str
     .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part) => {
+      const partLower = part.toLowerCase()
+      // If the entire part is an acronym, uppercase it
+      if (acronyms.has(partLower)) {
+        return part.toUpperCase()
+      }
+      // Check for special words in parts
+      if (specialWords[partLower]) {
+        return specialWords[partLower]
+      }
+      // Otherwise, just capitalize first letter
+      return part.charAt(0).toUpperCase() + part.slice(1)
+    })
     .join('')
 }
 
@@ -98,29 +125,14 @@ export function useTemplateVariables(options?: { mediaType?: 'movie' | 'series' 
     }))
   })
 
-  /** Top-level shortcut variables (Title, Year, Season, Episode, EpisodeTitle) */
+  /** Top-level shortcut variables - REMOVED in favor of namespaced fields */
   const shortcutVariables = computed<TemplateVariable[]>(() => {
-    const shortcuts = [
-      { path: '.Title', label: 'Title', namespace: 'Shortcuts', valueType: 'string' },
-      { path: '.Year', label: 'Year', namespace: 'Shortcuts', valueType: 'string' },
-    ]
-
-    if (options?.mediaType === 'series') {
-      shortcuts.push(
-        { path: '.Season', label: 'Season', namespace: 'Shortcuts', valueType: 'string' },
-        { path: '.Episode', label: 'Episode', namespace: 'Shortcuts', valueType: 'string' },
-        { path: '.EpisodeTitle', label: 'Episode Title', namespace: 'Shortcuts', valueType: 'string' },
-      )
-    }
-
-    return shortcuts.map((s) => ({ ...s, postDownloadOnly: false }))
+    return []
   })
 
   /** Variables grouped by namespace */
   const variablesByNamespace = computed(() => {
-    const groups: Record<string, TemplateVariable[]> = {
-      Shortcuts: shortcutVariables.value,
-    }
+    const groups: Record<string, TemplateVariable[]> = {}
 
     for (const variable of allVariables.value) {
       // Skip series-only fields for movie templates
@@ -143,48 +155,33 @@ export function useTemplateVariables(options?: { mediaType?: 'movie' | 'series' 
     return groups
   })
 
-  /** Flat list of commonly used variables (shortcuts + quality) */
+  /** Flat list of commonly used variables */
   const commonVariables = computed<TemplateVariable[]>(() => {
-    const common = [...shortcutVariables.value]
-
-    // Add commonly used quality fields
-    const qualityPaths = ['.Quality.Resolution', '.Quality.Source', '.Quality.Full']
-    for (const path of qualityPaths) {
-      const variable = allVariables.value.find((v) => v.path === path)
-      if (variable) {
-        common.push(variable)
-      }
-    }
-
-    return common
+    // Common fields for quick access
+    const commonPaths = [
+      '.Media.Title',
+      '.Media.CleanTitle', 
+      '.Media.Year',
+      '.Quality.Resolution',
+      '.Quality.Source',
+      '.Quality.Full',
+    ]
+    
+    return allVariables.value.filter((v) => commonPaths.includes(v.path))
   })
 
   /** Search variables by label or path */
   const searchVariables = (query: string): TemplateVariable[] => {
     const q = query.toLowerCase()
-    const all = [...shortcutVariables.value, ...allVariables.value]
-
-    // Deduplicate by path
-    const seen = new Set<string>()
-    const unique: TemplateVariable[] = []
-    for (const v of all) {
-      if (!seen.has(v.path)) {
-        seen.add(v.path)
-        unique.push(v)
-      }
-    }
-
-    return unique.filter(
+    
+    return allVariables.value.filter(
       (v) => v.label.toLowerCase().includes(q) || v.path.toLowerCase().includes(q),
     )
   }
 
   /** Get variable by template path */
   const getVariableByPath = (path: string): TemplateVariable | undefined => {
-    return (
-      shortcutVariables.value.find((v) => v.path === path) ||
-      allVariables.value.find((v) => v.path === path)
-    )
+    return allVariables.value.find((v) => v.path === path)
   }
 
   return {

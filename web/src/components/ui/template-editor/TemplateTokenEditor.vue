@@ -4,7 +4,11 @@ import { useEditor, EditorContent, type Editor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import { VariableMention } from './extensions/VariableMention'
 import { variableSuggestion } from './extensions/variableSuggestion'
+import { ConditionalBlock } from './extensions/ConditionalBlock'
+import { SlashCommand } from './extensions/SlashCommand'
+import SlashCommandsList from './extensions/SlashCommandsList.vue'
 import TokenContextMenu from './TokenContextMenu.vue'
+import FieldPicker from './extensions/FieldPicker.vue'
 import { cn } from '@/lib/utils'
 
 export interface Token {
@@ -36,8 +40,60 @@ const showContextMenu = ref(false)
 const contextMenuPosition = ref({ x: 0, y: 0 })
 const selectedNodePos = ref<number | null>(null)
 
+// Slash commands state
+const showSlashCommands = ref(false)
+const slashCommandPosition = ref({ top: 0, left: 0 })
+
+// Field picker state for conditional insertion
+const showFieldPicker = ref(false)
+const fieldPickerPosition = ref({ top: 0, left: 0 })
+
 // Template parsing regex - matches {{.Var}} or {{func .Var}}
 const TEMPLATE_REGEX = /\{\{(clean|sanitize)?\s*([.\w]+)\}\}/g
+// Conditional regex - matches {{if .Field}}...{{end}}
+const CONDITIONAL_REGEX = /\{\{if\s+([.\w]+)\}\}(.*?)\{\{end\}\}/gs
+
+/**
+ * Parse a string segment (handles variables and text)
+ */
+function parseSegment(segment: string): Array<Record<string, unknown>> {
+  const nodes: Array<Record<string, unknown>> = []
+  let lastIndex = 0
+
+  TEMPLATE_REGEX.lastIndex = 0
+  let match
+
+  while ((match = TEMPLATE_REGEX.exec(segment)) !== null) {
+    // Add text before match
+    if (match.index > lastIndex) {
+      const text = segment.slice(lastIndex, match.index)
+      if (text) {
+        nodes.push({ type: 'text', text })
+      }
+    }
+
+    // Add variable mention
+    nodes.push({
+      type: 'variableMention',
+      attrs: {
+        path: match[2],
+        func: match[1] || null,
+      },
+    })
+
+    lastIndex = match.index + match[0].length
+  }
+
+  // Add remaining text
+  if (lastIndex < segment.length) {
+    const text = segment.slice(lastIndex)
+    if (text) {
+      nodes.push({ type: 'text', text })
+    }
+  }
+
+  return nodes
+}
 
 /**
  * Parse template string to Tiptap JSON
@@ -53,36 +109,36 @@ function parseTemplateToTiptap(template: string) {
   const content: Array<Record<string, unknown>> = []
   let lastIndex = 0
 
-  TEMPLATE_REGEX.lastIndex = 0
-  let match
+  // First, handle conditionals
+  CONDITIONAL_REGEX.lastIndex = 0
+  let condMatch
 
-  while ((match = TEMPLATE_REGEX.exec(template)) !== null) {
-    // Add text before match
-    if (match.index > lastIndex) {
-      const text = template.slice(lastIndex, match.index)
-      if (text) {
-        content.push({ type: 'text', text })
-      }
+  while ((condMatch = CONDITIONAL_REGEX.exec(template)) !== null) {
+    // Add content before the conditional
+    if (condMatch.index > lastIndex) {
+      const beforeText = template.slice(lastIndex, condMatch.index)
+      content.push(...parseSegment(beforeText))
     }
 
-    // Add variable mention
+    // Parse the content inside the conditional
+    const innerContent = parseSegment(condMatch[2] || '')
+
+    // Add conditional block
     content.push({
-      type: 'variableMention',
+      type: 'conditionalBlock',
       attrs: {
-        path: match[2],
-        func: match[1] || null,
+        field: condMatch[1],
       },
+      content: innerContent.length > 0 ? innerContent : [{ type: 'text', text: '' }],
     })
 
-    lastIndex = match.index + match[0].length
+    lastIndex = condMatch.index + condMatch[0].length
   }
 
-  // Add remaining text
+  // Add remaining content
   if (lastIndex < template.length) {
-    const text = template.slice(lastIndex)
-    if (text) {
-      content.push({ type: 'text', text })
-    }
+    const remaining = template.slice(lastIndex)
+    content.push(...parseSegment(remaining))
   }
 
   return {
@@ -118,6 +174,13 @@ function serializeTiptapToTemplate(editorInstance: Editor): string {
       } else {
         parts.push(`{{${path}}}`)
       }
+    } else if (node.type === 'conditionalBlock') {
+      const { field } = node.attrs || {}
+      parts.push(`{{if ${field}}}`)
+      if (node.content) {
+        node.content.forEach(processNode)
+      }
+      parts.push(`{{end}}`)
     } else if (node.content) {
       node.content.forEach(processNode)
     }
@@ -125,6 +188,30 @@ function serializeTiptapToTemplate(editorInstance: Editor): string {
 
   json.content?.forEach(processNode as (node: Record<string, unknown>) => void)
   return parts.join('')
+}
+
+// Handle showing slash command list
+function handleShowSlashCommands(position: { top: number; left: number }) {
+  slashCommandPosition.value = position
+  showSlashCommands.value = true
+}
+
+// Handle command selection from slash commands
+function handleCommandSelect(commandId: string) {
+  showSlashCommands.value = false
+
+  if (commandId === 'if') {
+    // Remove the typed "/" character
+    if (editor.value) {
+      const { state } = editor.value
+      const { from } = state.selection
+      editor.value.commands.deleteRange({ from: from - 1, to: from })
+    }
+
+    // Show field picker at same position
+    fieldPickerPosition.value = slashCommandPosition.value
+    showFieldPicker.value = true
+  }
 }
 
 // Initialize editor
@@ -147,6 +234,10 @@ const editor = useEditor({
     }),
     VariableMention.configure({
       suggestion: variableSuggestion({ mediaType: props.mediaType }),
+    }),
+    ConditionalBlock,
+    SlashCommand.configure({
+      onShowCommandList: handleShowSlashCommands,
     }),
   ],
   content: parseTemplateToTiptap(props.modelValue),
@@ -278,6 +369,18 @@ watch(selectedNode, (node) => {
   }
 })
 
+// Handle field selection for conditional
+function handleFieldSelect(field: string) {
+  if (editor.value) {
+    // Insert the conditional block
+    editor.value.chain().focus().insertConditionalBlock({ field }).run()
+
+    // Position cursor inside the conditional block
+    // The cursor should automatically be positioned at the end of the inserted content
+  }
+  showFieldPicker.value = false
+}
+
 // Cleanup
 onBeforeUnmount(() => {
   editor.value?.destroy()
@@ -298,6 +401,46 @@ onBeforeUnmount(() => {
       @delete="handleDeleteToken"
       @close="showContextMenu = false"
     />
+
+    <!-- Slash Commands List -->
+    <Teleport to="body">
+      <div
+        v-if="showSlashCommands"
+        class="fixed z-[100]"
+        :style="{
+          top: `${slashCommandPosition.top}px`,
+          left: `${slashCommandPosition.left}px`,
+        }"
+        @click.stop
+        @mousedown.stop
+      >
+        <SlashCommandsList
+          :commands="[{ id: 'if', title: 'if', description: 'Add conditional block', icon: '🔀' }]"
+          @select="handleCommandSelect"
+          @close="showSlashCommands = false"
+        />
+      </div>
+    </Teleport>
+
+    <!-- Field Picker for Conditionals -->
+    <Teleport to="body">
+      <div
+        v-if="showFieldPicker"
+        class="fixed z-[100]"
+        :style="{
+          top: `${fieldPickerPosition.top}px`,
+          left: `${fieldPickerPosition.left}px`,
+        }"
+        @click.stop
+        @mousedown.stop
+      >
+        <FieldPicker
+          :media-type="mediaType"
+          @select="handleFieldSelect"
+          @close="showFieldPicker = false"
+        />
+      </div>
+    </Teleport>
   </div>
 </template>
 
