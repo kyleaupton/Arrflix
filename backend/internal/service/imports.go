@@ -13,6 +13,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/downloader"
 	"github.com/kyleaupton/snaggle/backend/internal/importer"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
+	"github.com/kyleaupton/snaggle/backend/internal/mediainfo"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
 	"github.com/kyleaupton/snaggle/backend/internal/release"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
@@ -20,12 +21,17 @@ import (
 )
 
 type ImportService struct {
-	repo *repo.Repository
-	log  *logger.Logger
+	repo      *repo.Repository
+	log       *logger.Logger
+	mediaInfo *mediainfo.Analyzer
 }
 
 func NewImportService(r *repo.Repository, l *logger.Logger) *ImportService {
-	return &ImportService{repo: r, log: l}
+	return &ImportService{
+		repo:      r,
+		log:       l,
+		mediaInfo: mediainfo.NewAnalyzer(*l),
+	}
 }
 
 type ImportResult struct {
@@ -59,8 +65,12 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 	// Build evaluation context for template rendering
 	evalCtx := s.buildMovieEvalContext(mediaItem, job.CandidateTitle)
 
-	// TODO: Add mediainfo here once ffprobe integration is complete
-	// evalCtx = evalCtx.WithMediaInfo(mediainfo.Analyze(sourcePath))
+	// Extract mediainfo from source file BEFORE rendering template
+	if mi := s.mediaInfo.Analyze(sourcePath); mi != nil {
+		evalCtx = evalCtx.WithMediaInfo(mi)
+	} else {
+		s.log.Warn().Str("path", sourcePath).Msg("Failed to extract mediainfo, continuing without it")
+	}
 
 	templateData := evalCtx.ToTemplateData()
 
@@ -230,8 +240,16 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 		episodeNum := int(episode.EpisodeNumber)
 		evalCtx := s.buildSeriesEvalContext(mediaItem, job.CandidateTitle, &seasonNum, &episodeNum, episode.Title)
 
-		// TODO: Add mediainfo here once ffprobe integration is complete
-		// evalCtx = evalCtx.WithMediaInfo(mediainfo.Analyze(f.Path))
+		// Extract mediainfo from source file BEFORE rendering template
+		sourcePath := f.Path
+		if !filepath.IsAbs(sourcePath) && dlItem.SavePath != "" {
+			sourcePath = filepath.Join(dlItem.SavePath, f.Path)
+		}
+		if mi := s.mediaInfo.Analyze(sourcePath); mi != nil {
+			evalCtx = evalCtx.WithMediaInfo(mi)
+		} else {
+			s.log.Warn().Str("path", sourcePath).Msg("Failed to extract mediainfo, continuing without it")
+		}
 
 		templateData := evalCtx.ToTemplateData()
 
@@ -262,11 +280,6 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 			}
 		}
 		rel = importer.EnsureExt(rel, ext)
-
-		sourcePath := f.Path
-		if !filepath.IsAbs(sourcePath) && dlItem.SavePath != "" {
-			sourcePath = filepath.Join(dlItem.SavePath, f.Path)
-		}
 
 		dest := filepath.Join(lib.RootPath, rel)
 		destRel, err := filepath.Rel(lib.RootPath, dest)

@@ -21,7 +21,8 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     nginx \
     ca-certificates \
-    curl && \
+    curl \
+    mediainfo && \
     rm -rf /var/lib/apt/lists/*
 
 # Install s6-overlay

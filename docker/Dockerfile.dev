@@ -12,6 +12,7 @@ RUN apt-get update && \
         postgresql-client \
         nginx \
         ca-certificates \
+        mediainfo \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Go

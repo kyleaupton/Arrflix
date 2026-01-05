@@ -79,16 +79,33 @@ type MediaFields struct {
 	EpisodeTitle *string `path:"media.episode_title" label:"Episode Title" type:"text" phase:"pre_download"`
 }
 
-// MediaInfoFields contains video file analysis data (populated post-download via ffprobe/mediainfo)
+// MediaInfoFields contains video file analysis data (populated post-download via mediainfo)
 type MediaInfoFields struct {
-	VideoCodec    string `path:"mediainfo.video_codec" label:"Video Codec" type:"enum" enumValues:"Unknown,H.264,H.265,AV1,VP9,MPEG-2" phase:"post_download"`
-	VideoBitDepth int    `path:"mediainfo.video_bit_depth" label:"Video Bit Depth" type:"number" phase:"post_download"`
-	AudioCodec    string `path:"mediainfo.audio_codec" label:"Audio Codec" type:"enum" enumValues:"Unknown,AAC,AC3,DTS,DTS-HD MA,TrueHD,FLAC,Opus" phase:"post_download"`
-	AudioChannels string `path:"mediainfo.audio_channels" label:"Audio Channels" type:"enum" enumValues:"Unknown,2.0,5.1,7.1" phase:"post_download"`
-	Container     string `path:"mediainfo.container" label:"Container" type:"enum" enumValues:"Unknown,MKV,MP4,AVI,TS" phase:"post_download"`
-	Duration      int64  `path:"mediainfo.duration" label:"Duration (seconds)" type:"number" phase:"post_download"`
-	FileSize      int64  `path:"mediainfo.file_size" label:"File Size" type:"number" phase:"post_download"`
-	HDR           string `path:"mediainfo.hdr" label:"HDR Format" type:"enum" enumValues:"None,HDR10,HDR10+,Dolby Vision,HLG" phase:"post_download"`
+	// Video properties
+	VideoCodec    string  `path:"mediainfo.video_codec" label:"Video Codec" type:"enum" enumValues:"Unknown,H.264,H.265,AV1,VP9,MPEG-2" phase:"post_download"`
+	VideoBitDepth int     `path:"mediainfo.video_bit_depth" label:"Video Bit Depth" type:"number" phase:"post_download"`
+	VideoProfile  string  `path:"mediainfo.video_profile" label:"Video Profile" type:"text" phase:"post_download"`
+	Width         int     `path:"mediainfo.width" label:"Width" type:"number" phase:"post_download"`
+	Height        int     `path:"mediainfo.height" label:"Height" type:"number" phase:"post_download"`
+	VideoBitrate  int64   `path:"mediainfo.video_bitrate" label:"Video Bitrate" type:"number" phase:"post_download"`
+	VideoFps      float64 `path:"mediainfo.video_fps" label:"Video FPS" type:"number" phase:"post_download"`
+	ScanType      string  `path:"mediainfo.scan_type" label:"Scan Type" type:"enum" enumValues:"Unknown,Progressive,Interlaced" phase:"post_download"`
+	HDR           string  `path:"mediainfo.hdr" label:"HDR Format" type:"enum" enumValues:"None,HDR10,HDR10+,Dolby Vision,HLG" phase:"post_download"`
+
+	// Audio properties
+	AudioCodec       string   `path:"mediainfo.audio_codec" label:"Audio Codec" type:"enum" enumValues:"Unknown,AAC,AC3,DTS,DTS-HD MA,TrueHD,FLAC,Opus" phase:"post_download"`
+	AudioChannels    string   `path:"mediainfo.audio_channels" label:"Audio Channels" type:"enum" enumValues:"Unknown,2.0,5.1,7.1" phase:"post_download"`
+	AudioProfile     string   `path:"mediainfo.audio_profile" label:"Audio Profile" type:"text" phase:"post_download"`
+	AudioBitrate     int64    `path:"mediainfo.audio_bitrate" label:"Audio Bitrate" type:"number" phase:"post_download"`
+	AudioStreamCount int      `path:"mediainfo.audio_stream_count" label:"Audio Stream Count" type:"number" phase:"post_download"`
+	AudioLanguages   []string `path:"mediainfo.audio_languages" label:"Audio Languages" type:"text" phase:"post_download"`
+
+	// Container and general properties
+	Container           string   `path:"mediainfo.container" label:"Container" type:"enum" enumValues:"Unknown,MKV,MP4,AVI,TS" phase:"post_download"`
+	Duration            int64    `path:"mediainfo.duration" label:"Duration (seconds)" type:"number" phase:"post_download"`
+	FileSize            int64    `path:"mediainfo.file_size" label:"File Size" type:"number" phase:"post_download"`
+	Subtitles           []string `path:"mediainfo.subtitles" label:"Subtitles" type:"text" phase:"post_download"`
+	VideoMultiViewCount int      `path:"mediainfo.video_multi_view_count" label:"Video Multi-View Count" type:"number" phase:"post_download"`
 }
 
 // NewEvaluationContext creates an EvaluationContext from a DownloadCandidate and parse result
