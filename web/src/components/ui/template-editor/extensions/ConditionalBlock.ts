@@ -81,12 +81,20 @@ export const ConditionalBlock = Node.create<ConditionalBlockOptions>({
     return {
       insertConditionalBlock:
         (attributes) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: attributes,
-            // Don't specify content - let it be empty, user can type into it
-          })
+        ({ commands, state, chain }) => {
+          const { selection } = state
+          const position = selection.$from.pos
+
+          // Insert the conditional block without initial content
+          // TipTap will handle creating the proper empty structure
+          return chain()
+            .insertContent({
+              type: this.name,
+              attrs: attributes,
+            })
+            .focus()
+            .setTextSelection(position + 1)
+            .run()
         },
       updateConditionalField:
         (pos, field) =>

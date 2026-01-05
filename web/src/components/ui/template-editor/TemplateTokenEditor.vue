@@ -129,7 +129,9 @@ function parseTemplateToTiptap(template: string) {
       attrs: {
         field: condMatch[1],
       },
-      content: innerContent.length > 0 ? innerContent : [{ type: 'text', text: '' }],
+      // Don't add empty text nodes - TipTap doesn't allow them
+      // If empty, omit content property to let TipTap handle empty inline content
+      content: innerContent.length > 0 ? innerContent : undefined,
     })
 
     lastIndex = condMatch.index + condMatch[0].length
@@ -372,11 +374,9 @@ watch(selectedNode, (node) => {
 // Handle field selection for conditional
 function handleFieldSelect(field: string) {
   if (editor.value) {
-    // Insert the conditional block
+    // Insert the conditional block with cursor positioned inside
+    // The insertConditionalBlock command handles cursor positioning automatically
     editor.value.chain().focus().insertConditionalBlock({ field }).run()
-
-    // Position cursor inside the conditional block
-    // The cursor should automatically be positioned at the end of the inserted content
   }
   showFieldPicker.value = false
 }

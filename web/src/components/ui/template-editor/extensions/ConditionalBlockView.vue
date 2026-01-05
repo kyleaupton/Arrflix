@@ -61,7 +61,7 @@ function handleDelete() {
       <span class="text-[10px]">▼</span>
     </button>
     <span class="text-primary/40 text-xs">❰</span>
-    <NodeViewContent class="conditional-content inline" />
+    <NodeViewContent class="conditional-content inline min-w-[3ch] px-1" data-placeholder="..." />
     <span class="text-primary/40 text-xs">❱</span>
     <button
       class="conditional-delete opacity-0 hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80 ml-1"
@@ -89,8 +89,18 @@ function handleDelete() {
   opacity: 1;
 }
 
-.conditional-content {
-  min-width: 2ch;
+/* Show placeholder when content is empty */
+.conditional-content:empty::before {
+  content: attr(data-placeholder);
+  color: hsl(var(--muted-foreground));
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Subtle highlight on hover to show interactivity */
+.conditional-block:hover {
+  background-color: hsl(var(--primary) / 0.08);
+  border-color: hsl(var(--primary) / 0.4);
 }
 </style>
 
