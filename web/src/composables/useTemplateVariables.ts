@@ -37,15 +37,26 @@ export const TEMPLATE_FUNCTIONS: TemplateFunction[] = [
 ]
 
 /**
+ * Converts snake_case to PascalCase
+ * e.g., "clean_title" -> "CleanTitle", "video_codec" -> "VideoCodec"
+ */
+function snakeToPascal(str: string): string {
+  return str
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('')
+}
+
+/**
  * Converts an API field path to Go template syntax
- * e.g., "media.title" -> ".Media.Title"
+ * e.g., "media.clean_title" -> ".Media.CleanTitle"
  */
 function toTemplatePath(apiPath: string): string {
   return (
     '.' +
     apiPath
       .split('.')
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .map((part) => snakeToPascal(part))
       .join('.')
   )
 }
