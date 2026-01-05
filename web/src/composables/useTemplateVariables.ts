@@ -52,11 +52,20 @@ function toTemplatePath(apiPath: string): string {
 
 /**
  * Extracts the namespace from an API field path
- * e.g., "media.title" -> "Media"
+ * e.g., "media.title" -> "Media", "mediainfo.video_codec" -> "MediaInfo"
  */
 function extractNamespace(apiPath: string): string {
+  const NAMESPACE_MAP: Record<string, string> = {
+    candidate: 'Candidate',
+    quality: 'Quality',
+    media: 'Media',
+    mediainfo: 'MediaInfo',
+    release: 'Release',
+  }
+  
   const ns = apiPath.split('.')[0]
-  return ns.charAt(0).toUpperCase() + ns.slice(1)
+  if (!ns) return 'Unknown'
+  return NAMESPACE_MAP[ns] || ns.charAt(0).toUpperCase() + ns.slice(1)
 }
 
 /**
@@ -117,7 +126,7 @@ export function useTemplateVariables(options?: { mediaType?: 'movie' | 'series' 
       if (!groups[variable.namespace]) {
         groups[variable.namespace] = []
       }
-      groups[variable.namespace].push(variable)
+      groups[variable.namespace]!.push(variable)
     }
 
     return groups

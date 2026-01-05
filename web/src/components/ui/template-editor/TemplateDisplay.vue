@@ -42,7 +42,7 @@ function parseTemplate(template: string): ParsedSegment[] {
 
     // Add the variable
     const func = match[1]?.trim()
-    const variable = match[2]
+    const variable = match[2] || ''
     segments.push({
       type: 'variable',
       value: variable,

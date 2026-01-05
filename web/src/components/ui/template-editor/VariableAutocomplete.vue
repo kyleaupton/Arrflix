@@ -54,7 +54,7 @@ const filteredVariables = computed(() => {
     if (!grouped[variable.namespace]) {
       grouped[variable.namespace] = []
     }
-    grouped[variable.namespace].push(variable)
+    grouped[variable.namespace]!.push(variable)
   }
 
   return grouped
@@ -119,9 +119,7 @@ onUnmounted(() => {
         />
         <CommandList>
           <ScrollArea class="h-[300px]">
-            <CommandEmpty v-if="!isLoading && !hasResults">
-              No variables found.
-            </CommandEmpty>
+            <CommandEmpty v-if="!isLoading && !hasResults"> No variables found. </CommandEmpty>
 
             <div v-if="isLoading" class="py-6 text-center text-sm text-muted-foreground">
               Loading variables...
@@ -173,5 +171,3 @@ onUnmounted(() => {
   }
 }
 </style>
-
-

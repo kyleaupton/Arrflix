@@ -244,6 +244,7 @@ func ListContextFields() []ContextFieldInfo {
 	// Collect fields from each namespace struct
 	fields = append(fields, extractFieldsFromStruct(reflect.TypeOf(CandidateFields{}))...)
 	fields = append(fields, extractFieldsFromStruct(reflect.TypeOf(QualityFields{}))...)
+	fields = append(fields, extractFieldsFromStruct(reflect.TypeOf(ReleaseFields{}))...)
 	fields = append(fields, extractFieldsFromStruct(reflect.TypeOf(MediaFields{}))...)
 	fields = append(fields, extractFieldsFromStruct(reflect.TypeOf(MediaInfoFields{}))...)
 
