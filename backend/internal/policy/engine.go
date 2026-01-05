@@ -496,6 +496,10 @@ func (e *Engine) buildContextSnapshot(evalCtx model.EvaluationContext) *model.Co
 			"is_repack":  evalCtx.Quality.IsRepack,
 			"version":    evalCtx.Quality.Version,
 		},
+		Release: map[string]any{
+			"release_group": evalCtx.Release.ReleaseGroup,
+			"edition":       evalCtx.Release.Edition,
+		},
 		Media: map[string]any{
 			"type":    evalCtx.Media.Type,
 			"title":   evalCtx.Media.Title,

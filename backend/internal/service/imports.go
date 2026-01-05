@@ -14,7 +14,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal/importer"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/quality"
+	"github.com/kyleaupton/snaggle/backend/internal/release"
 	"github.com/kyleaupton/snaggle/backend/internal/repo"
 	"github.com/kyleaupton/snaggle/backend/internal/template"
 )
@@ -308,7 +308,7 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 
 // buildMovieEvalContext creates an EvaluationContext for movie imports
 func (s *ImportService) buildMovieEvalContext(mediaItem dbgen.MediaItem, candidateTitle string) model.EvaluationContext {
-	q := quality.ParseQuality(candidateTitle)
+	q := release.Parse(candidateTitle)
 
 	// Create a minimal candidate from job info (we don't have full candidate data at import time)
 	candidate := model.DownloadCandidate{
@@ -333,7 +333,7 @@ func (s *ImportService) buildMovieEvalContext(mediaItem dbgen.MediaItem, candida
 
 // buildSeriesEvalContext creates an EvaluationContext for series imports
 func (s *ImportService) buildSeriesEvalContext(mediaItem dbgen.MediaItem, candidateTitle string, season, episode *int, episodeTitle *string) model.EvaluationContext {
-	q := quality.ParseQuality(candidateTitle)
+	q := release.Parse(candidateTitle)
 
 	// Create a minimal candidate from job info
 	candidate := model.DownloadCandidate{

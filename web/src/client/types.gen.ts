@@ -348,6 +348,9 @@ export type ModelContextSnapshot = {
     quality: {
         [key: string]: unknown;
     };
+    release: {
+        [key: string]: unknown;
+    };
 };
 
 export type ModelCredits = {

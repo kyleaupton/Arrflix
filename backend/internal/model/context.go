@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyleaupton/snaggle/backend/internal/quality"
+	"github.com/kyleaupton/snaggle/backend/internal/release"
 	"github.com/kyleaupton/snaggle/backend/internal/template"
 )
 
@@ -22,11 +22,13 @@ const (
 // and name template system. It uses prefixed namespaces:
 //   - candidate.* - Torrent/release metadata (available at policy time)
 //   - quality.*   - Parsed quality info (available at policy time)
+//   - release.*   - Release metadata like group and edition (available at policy time)
 //   - media.*     - TMDB/media metadata (available at policy time)
 //   - mediainfo.* - Video file analysis (available only post-download)
 type EvaluationContext struct {
 	Candidate CandidateFields  `namespace:"candidate"`
 	Quality   QualityFields    `namespace:"quality"`
+	Release   ReleaseFields    `namespace:"release"`
 	Media     MediaFields      `namespace:"media"`
 	MediaInfo *MediaInfoFields `namespace:"mediainfo"` // nil until post-download
 }
@@ -59,6 +61,12 @@ type QualityFields struct {
 	Version    int    `path:"quality.version" label:"Version" type:"number" phase:"pre_download"`
 }
 
+// ReleaseFields contains release metadata (not quality-related)
+type ReleaseFields struct {
+	ReleaseGroup string `path:"release.release_group" label:"Release Group" type:"text" phase:"pre_download"`
+	Edition      string `path:"release.edition" label:"Edition" type:"text" phase:"pre_download"`
+}
+
 // MediaFields contains TMDB/media metadata
 type MediaFields struct {
 	Type         string  `path:"media.type" label:"Media Type" type:"enum" enumValues:"movie,series" phase:"pre_download"`
@@ -83,8 +91,8 @@ type MediaInfoFields struct {
 	HDR           string `path:"mediainfo.hdr" label:"HDR Format" type:"enum" enumValues:"None,HDR10,HDR10+,Dolby Vision,HLG" phase:"post_download"`
 }
 
-// NewEvaluationContext creates an EvaluationContext from a DownloadCandidate and optional media info
-func NewEvaluationContext(candidate DownloadCandidate, q quality.QualityModel) EvaluationContext {
+// NewEvaluationContext creates an EvaluationContext from a DownloadCandidate and parse result
+func NewEvaluationContext(candidate DownloadCandidate, result release.ParseResult) EvaluationContext {
 	return EvaluationContext{
 		Candidate: CandidateFields{
 			Size:        candidate.Size,
@@ -103,12 +111,16 @@ func NewEvaluationContext(candidate DownloadCandidate, q quality.QualityModel) E
 			GUID:        candidate.GUID,
 		},
 		Quality: QualityFields{
-			Full:       q.Full(),
-			Resolution: q.Resolution(),
-			Source:     q.Source(),
-			IsRemux:    q.IsRemux(),
-			IsRepack:   q.Revision.IsRepack,
-			Version:    q.Version(),
+			Full:       result.Quality.Full(),
+			Resolution: result.Quality.Resolution(),
+			Source:     result.Quality.Source(),
+			IsRemux:    result.Quality.IsRemux(),
+			IsRepack:   result.Quality.Revision.IsRepack,
+			Version:    result.Quality.Version(),
+		},
+		Release: ReleaseFields{
+			ReleaseGroup: result.Release.GetReleaseGroup(),
+			Edition:      result.Release.GetEdition(),
 		},
 		Media:     MediaFields{},
 		MediaInfo: nil,

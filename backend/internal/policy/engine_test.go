@@ -8,7 +8,7 @@ import (
 	"github.com/kyleaupton/snaggle/backend/internal"
 	"github.com/kyleaupton/snaggle/backend/internal/logger"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/quality"
+	"github.com/kyleaupton/snaggle/backend/internal/release"
 )
 
 func TestEngine_Evaluate(t *testing.T) {
@@ -32,7 +32,7 @@ func TestEngine_Evaluate(t *testing.T) {
 		Age:       1000,
 		AgeHours:  10,
 	}
-	q := quality.ParseQuality(candidate.Title)
+	q := release.Parse(candidate.Title)
 	evalCtx := model.NewEvaluationContext(candidate, q)
 
 	trace, err := engine.Evaluate(context.Background(), evalCtx)

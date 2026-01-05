@@ -795,10 +795,14 @@ definitions:
       quality:
         additionalProperties: {}
         type: object
+      release:
+        additionalProperties: {}
+        type: object
     required:
     - candidate
     - media
     - quality
+    - release
     type: object
   model.Credits:
     properties:

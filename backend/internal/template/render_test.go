@@ -3,11 +3,11 @@ package template
 import (
 	"testing"
 
-	"github.com/kyleaupton/snaggle/backend/internal/quality"
+	"github.com/kyleaupton/snaggle/backend/internal/release"
 )
 
 func TestRender(t *testing.T) {
-	q := quality.ParseQuality("21.Jump.Street.2012.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.Atmos-GROUP")
+	result := release.Parse("21.Jump.Street.2012.2160p.UHD.BluRay.REMUX.HEVC.TrueHD.Atmos-GROUP")
 
 	// Create a namespaced context structure matching EvaluationContext.ToTemplateData()
 	media := map[string]any{
@@ -18,7 +18,7 @@ func TestRender(t *testing.T) {
 
 	ctx := map[string]any{
 		"Media":   media,
-		"Quality": q,
+		"Quality": result.Quality,
 	}
 
 	tests := []struct {

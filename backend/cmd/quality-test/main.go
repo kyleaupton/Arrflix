@@ -9,7 +9,7 @@ import (
 	"golift.io/starr"
 	"golift.io/starr/sonarr"
 
-	"github.com/kyleaupton/snaggle/backend/internal/quality"
+	"github.com/kyleaupton/snaggle/backend/internal/release"
 )
 
 // ANSI color codes
@@ -407,8 +407,8 @@ func getSonarrQuality(ctx context.Context, client *sonarr.Sonarr, title string) 
 
 // getSnaggleQuality uses Snaggle's quality parser
 func getSnaggleQuality(title string) string {
-	qm := quality.ParseQuality(title)
-	return qm.Full()
+	result := release.Parse(title)
+	return result.Quality.Full()
 }
 
 // truncate shortens a string to maxLen characters

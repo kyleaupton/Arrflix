@@ -1,4 +1,4 @@
-package quality
+package release
 
 import (
 	"testing"
@@ -38,7 +38,7 @@ func TestQualityMethods(t *testing.T) {
 
 // TestParseQuality tests the quality parser against expected values
 // These expected values are derived from Sonarr's QualityParser behavior
-func TestParseQuality(t *testing.T) {
+func TestParse(t *testing.T) {
 	tests := []struct {
 		title    string
 		expected Quality
@@ -405,10 +405,10 @@ func TestParseQuality(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.title, func(t *testing.T) {
-			result := ParseQuality(tt.title)
-			if result.Quality != tt.expected {
-				t.Errorf("ParseQuality(%q) = %v (%s), want %v (%s)",
-					tt.title, result.Quality, result.Quality.String(),
+			result := Parse(tt.title)
+			if result.Quality.Quality != tt.expected {
+				t.Errorf("Parse(%q) = %v (%s), want %v (%s)",
+					tt.title, result.Quality.Quality, result.Quality.Quality.String(),
 					tt.expected, tt.expected.String())
 			}
 		})
@@ -525,5 +525,192 @@ func TestGetField(t *testing.T) {
 	_, err := GetField("UnknownField", qm)
 	if err == nil {
 		t.Error("GetField() with unknown field should return error")
+	}
+}
+
+func TestParseReleaseGroup(t *testing.T) {
+	tests := []struct {
+		name     string
+		title    string
+		expected string // empty string if should be nil/not found
+	}{
+		// Standard release groups with dash prefix
+		{"Standard dash format", "Movie.2009.S01E14.English.HDTV.XviD-LOL", "LOL"},
+		{"Without dash separator", "Movie 2009 S01E14 English HDTV XviD LOL", ""},
+		{"With dash suffix", "Punky.Brewster.S01.EXTRAS.DVDRip.XviD-RUNNER", "RUNNER"},
+		{"Standard format 2", "2020.NZ.2011.12.02.PDTV.XviD-C4TV", "C4TV"},
+		{"Standard format 3", "Some.Movie.S03E115.DVDRip.XviD-OSiTV", "OSiTV"},
+		{"Standard format 4", "Movie.Name.S04E13.720p.WEB-DL.AAC2.0.H.264-Cyphanix", "Cyphanix"},
+		{"Standard bracket at end", "The.Movie.Title.2013.720p.BluRay.x264-ROUGH [PublicHD]", "ROUGH"},
+
+		// No group detected
+		{"No group - resolution only", "Some Movie - S01E01 - Pilot [HTDV-480p]", ""},
+		{"No group - resolution 720p", "Some Movie - S01E01 - Pilot [HTDV-720p]", ""},
+		{"No group - resolution 1080p", "Some Movie - S01E01 - Pilot [HTDV-1080p]", ""},
+		{"No group - no separator", "Movie.Name.S02E01.720p.WEB-DL.DD5.1.H.264.mkv", ""},
+		{"No group - title only", "Series Title S01E01 Episode Title", ""},
+		{"No group - date format", "Movie.Name- 2014-06-02 - Some Movie.mkv", ""},
+		{"No group - no extension", "Acropolis Now S05 EXTRAS DVDRip XviD RUNNER", ""},
+
+		// Website prefix cleaning
+		{"Website prefix www.Torrenting.com", "[ www.Torrenting.com ] - Movie.Name.S03E14.720p.HDTV.X264-DIMENSION", "DIMENSION"},
+
+		// Tracker suffix cleaning
+		{"Tracker suffix rarbg", "Movie.Name S02E09 HDTV x264-2HD [eztv]-[rarbg.com]", "2HD"},
+
+		// Clean suffixes (Rakuv*, postbot, xpost, etc.)
+		{"Clean Rakuv suffix", "Blue.Movie.Name.S08E05.The.Movie.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb-Rakuv", "NTb"},
+		{"Clean Rakuvfinhel suffix", "Movie.Name.S01E13.720p.BluRay.x264-SiNNERS-Rakuvfinhel", "SiNNERS"},
+		{"Clean RakuvUS suffix", "Movie.Name.S01E01.INTERNAL.720p.HDTV.x264-aAF-RakuvUS-Obfuscated", "aAF"},
+		{"Clean postbot suffix", "Movie.Name.2018.720p.WEBRip.DDP5.1.x264-NTb-postbot", "NTb"},
+		{"Clean xpost suffix", "Movie.Name.2018.720p.WEBRip.DDP5.1.x264-NTb-xpost", "NTb"},
+		{"Clean AsRequested suffix", "Movie.Name.S02E24.1080p.AMZN.WEBRip.DD5.1.x264-CasStudio-AsRequested", "CasStudio"},
+		{"Clean AlternativeToRequested", "Movie.Name.S04E11.Lamster.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb-AlternativeToRequested", "NTb"},
+		{"Clean GEROV suffix", "Movie.Name.S16E04.Third.Wheel.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb-GEROV", "NTb"},
+		{"Clean Z0iDS3N suffix", "Movie.NameS10E06.Kid.n.Play.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb-Z0iDS3N", "NTb"},
+		{"Clean Chamele0n suffix", "Movie.Name.S02E06.The.House.of.Lords.DVDRip.x264-MaG-Chamele0n", "MaG"},
+
+		// Exception groups (exact matches)
+		{"Exception D-Z0N3", "SomeMovie.1080p.BluRay.DTS-X.264.-D-Z0N3.mkv", "D-Z0N3"},
+		{"Exception D-Z0N3 variant", "Some.Dead.Movie.2006.1080p.BluRay.DTS.x264.D-Z0N3", "D-Z0N3"},
+		{"Exception YTS.LT bracket", "Movie.Title.2010.720p.BluRay.x264.-[YTS.LT]", "YTS.LT"},
+		{"Exception YTS.AG bracket", "Movie.Name.2022.1080p.BluRay.x264-[YTS.AG]", "YTS.AG"},
+		{"Exception YTS.MX bracket", "Movie Name (2020) [1080p] [WEBRip] [5.1] [YTS.MX]", "YTS.MX"},
+		{"Exception KRaLiMaRKo", "Movie Name.2018.1080p.Blu-ray.Remux.AVC.DTS-HD.MA.5.1.KRaLiMaRKo", "KRaLiMaRKo"},
+		{"Exception E.N.D", "Movie Name (2001) 1080p NF WEB-DL DDP2.0 x264-E.N.D", "E.N.D"},
+		{"Exception VARYG", "Movie.Name.2022.1080p.BluRay.x264-VARYG", "VARYG"},
+		{"Exception TAoE parentheses", "Movie Name (2017) (Showtime) (1080p.BD.DD5.1.x265-TheSickle[TAoE])", "TAoE"},
+
+		// Pattern exception groups (ending with ) or ])
+		{"Pattern Joy closing paren", "Movie Name (2020) [2160p x265 10bit S82 Joy]", "Joy"},
+		{"Pattern QxR closing bracket", "Movie Name (2003) (2160p BluRay X265 HEVC 10bit HDR AAC 7.1 Tigole) [QxR]", "QxR"},
+		{"Pattern Joy closing paren 2", "Ode To Joy (2009) (2160p BluRay x265 10bit HDR Joy)", "Joy"},
+		{"Pattern FreetheFish", "Ode To Joy (2009) (2160p BluRay x265 10bit HDR FreetheFish)", "FreetheFish"},
+		{"Pattern afm72", "Ode To Joy (2009) (2160p BluRay x265 10bit HDR afm72)", "afm72"},
+		{"Pattern Anna", "Movie Name (2012) (1080p BluRay x265 HEVC 10bit AC3 2.0 Anna)", "Anna"},
+		{"Pattern Bandi", "Movie Name (2019) (2160p BluRay x265 HEVC 10bit HDR AAC 7.1 Bandi)", "Bandi"},
+		{"Pattern Ghost", "Movie Name (2009) (1080p HDTV x265 HEVC 10bit AAC 2.0 Ghost)", "Ghost"},
+		{"Pattern Tigole", "Movie Name in the Movie (2017) (1080p BluRay x265 HEVC 10bit AAC 7.1 Tigole)", "Tigole"},
+		{"Pattern Tigole 2", "Mission - Movie Name - Movie Protocol (2011) (1080p BluRay x265 HEVC 10bit AAC 7.1 Tigole)", "Tigole"},
+		{"Pattern Silence", "Movie Name (1990) (1080p BluRay x265 HEVC 10bit AAC 5.1 Silence)", "Silence"},
+		{"Pattern Kappa", "Happy Movie Name (1999) (1080p BluRay x265 HEVC 10bit AAC 5.1 Korean Kappa)", "Kappa"},
+		{"Pattern MONOLITH", "Movie Name (2007) Open Matte (1080p AMZN WEB-DL x265 HEVC 10bit AAC 5.1 MONOLITH)", "MONOLITH"},
+		{"Pattern Qman", "Movie-Name (2019) (1080p BluRay x265 HEVC 10bit DTS 7.1 Qman)", "Qman"},
+		{"Pattern RZeroX", "Movie Name - Hell to Ticket (2018) + Extras (1080p BluRay x265 HEVC 10bit AAC 5.1 RZeroX)", "RZeroX"},
+		{"Pattern SAMPA", "Movie Name (2013) (Diamond Luxe Edition) + Extras (1080p BluRay x265 HEVC 10bit EAC3 7.1 SAMPA)", "SAMPA"},
+		{"Pattern theincognito", "Movie Name 2016 (1080p BluRay x265 HEVC 10bit DDP 5.1 theincognito)", "theincognito"},
+		{"Pattern t3nzin", "Movie Name - A History of Movie (2017) (1080p AMZN WEB-DL x265 HEVC 10bit EAC3 2.0 t3nzin)", "t3nzin"},
+		{"Pattern Vyndros", "Movie Name (2019) (1080p BluRay x265 HEVC 10bit AAC 7.1 Vyndros)", "Vyndros"},
+		{"Pattern HDO closing bracket", "Movie Name (2015) [BDRemux 1080p AVC ES-CAT-EN DTS-HD MA 5.1 Subs][HDO]", "HDO"},
+		{"Pattern DusIctv", "Another Crappy Anime Movie Name 1999 [DusIctv] [Blu-ray][MKV][h264][1080p][DTS-HD MA 5.1][Dual Audio][Softsubs (DusIctv)", "DusIctv"},
+		{"Pattern DHD", "Another Crappy Anime Movie Name 1999 [DHD] [Blu-ray][MKV][h264][1080p][AAC 5.1][Dual Audio][Softsubs (DHD)]", "DHD"},
+		{"Pattern SEV", "Another Crappy Anime Movie Name 1999 [SEV] [Blu-ray][MKV][h265 10-bit][1080p][FLAC 5.1][Dual Audio][Softsubs (SEV)]", "SEV"},
+		{"Pattern CtrlHD", "Another Crappy Anime Movie Name 1999 [CtrlHD] [Blu-ray][MKV][h264][720p][AC3 2.0][Dual Audio][Softsubs (CtrlHD)]", "CtrlHD"},
+
+		// No pattern exception match (should use standard parsing)
+		{"No pattern exception", "Ode To Joy (2009) (2160p BluRay x265 10bit HDR)", ""},
+		{"No HDO match without bracket", "Movie Name (2015) [BDRemux 1080p AVC ES-CAT-EN DTS-HD MA 5.1 Subs]", ""},
+
+		// REMUX without release group
+		{"REMUX no group DTS-X", "Some.Movie.2013.1080p.BluRay.REMUX.AVC.DTS-X.MA.5.1", ""},
+		{"REMUX no group DTS-MA", "Some.Movie.2013.1080p.BluRay.REMUX.AVC.DTS-MA.5.1", ""},
+		{"REMUX no group DTS-ES", "Movie.Name.2013.1080p.BluRay.REMUX.AVC.DTS-ES.MA.5.1", ""},
+
+		// Multi-part groups with dash
+		{"Multi-part group", "SomeMovie.1080p.BluRay.DTS.x264.-Blu-bits.mkv", "Blu-bits"},
+		{"Multi-part group 2", "SomeMovie.1080p.BluRay.DTS.x264.-DX-TV.mkv", "DX-TV"},
+		{"Multi-part group 3", "SomeMovie.1080p.BluRay.DTS.x264.-FTW-HS.mkv", "FTW-HS"},
+		{"Multi-part group 4", "SomeMovie.1080p.BluRay.DTS.x264.-VH-PROD.mkv", "VH-PROD"},
+
+		// Various edge cases
+		{"Pre suffix cleaned", "The.Movie.Name.720p.HEVC.x265-MeGusta-Pre", "MeGusta"},
+		{"Dash rl group", "Movie.Name 10x11 - Wild Movies Cant Be Broken [rl].avi", "rl"},
+		{"Standard PSA group", "The.Movie.of.the.Name.1991.REMASTERED.720p.10bit.BluRay.6CH.x265.HEVC-PSA", "PSA"},
+		{"No WEB-DL group", "Movie.Title.2019.1080p.AMZN.WEB-Rip.DDP.5.1.HEVC", ""},
+		{"DataLass with dash", "Movie Name (2017) [2160p REMUX] [HEVC DV HYBRID HDR10+ Dolby TrueHD Atmos 7 1 24-bit Audio English]-DataLass", "DataLass"},
+		{"No group in REMUX", "Movie Name (2017) [2160p REMUX] [HEVC DV HYBRID HDR10+ Dolby TrueHD Atmos 7 1 24-bit Audio English] [Data Lass]", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := Parse(tt.title)
+			got := result.Release.GetReleaseGroup()
+			if got != tt.expected {
+				t.Errorf("Parse(%q).Release.ReleaseGroup = %q, want %q",
+					tt.title, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestParseEdition(t *testing.T) {
+	tests := []struct {
+		name     string
+		title    string
+		expected string // empty if should be nil/empty
+	}{
+		// Basic editions
+		{"Directors Cut with year after", "Movie Title 2012 Directors Cut", "Directors Cut"},
+		{"Despecialized in parens", "Movie Title 1999 (Despecialized).mkv", "Despecialized"},
+		{"Special Edition Remastered dots", "Movie Title.2012.(Special.Edition.Remastered).[Bluray-1080p].mkv", "Special Edition Remastered"},
+		{"Extended simple", "Movie Title 2012 Extended", "Extended"},
+		{"Extended Directors Cut Fan Edit", "Movie Title 2012 Extended Directors Cut Fan Edit", "Extended Directors Cut Fan Edit"},
+		{"Director's Cut apostrophe", "Movie Title 2012 Director's Cut", "Director's Cut"},
+		{"Directors Cut no apostrophe", "Movie Title 2012 Directors Cut", "Directors Cut"},
+		{"Extended Theatrical Version IMAX", "Movie Title.2012.(Extended.Theatrical.Version.IMAX).BluRay.1080p.2012.asdf", "Extended Theatrical Version IMAX"},
+		{"Director's Cut with weird year", "2021 A Movie (1968) Director's Cut .mkv", "Director's Cut"},
+		{"Extended Directors Cut FanEdit parens", "2021 A Movie 1968 (Extended Directors Cut FanEdit)", "Extended Directors Cut FanEdit"},
+		{"Directors only", "A Fake Movie 2035 2012 Directors.mkv", "Directors"},
+		{"Director's Cut year in middle", "Movie 2049 Director's Cut.mkv", "Director's Cut"},
+		{"50th Anniversary Edition", "Movie Title 2012 50th Anniversary Edition.mkv", "50th Anniversary Edition"},
+		{"2in1 edition", "Movie 2012 2in1.mkv", "2in1"},
+		{"IMAX simple", "Movie 2012 IMAX.mkv", "IMAX"},
+		{"Restored edition", "Movie 2012 Restored.mkv", "Restored"},
+		{"Special Edition Fan Edit", "Movie Title.Special.Edition.Fan Edit.2012..BRRip.x264.AAC-m2g", "Special Edition Fan Edit"},
+		{"Despecialized parens year after", "Movie Title (Despecialized) 1999.mkv", "Despecialized"},
+		{"Special Edition Remastered parens year after", "Movie Title.(Special.Edition.Remastered).2012.[Bluray-1080p].mkv", "Special Edition Remastered"},
+		{"Extended year after", "Movie Title Extended 2012", "Extended"},
+		{"Extended Directors Cut Fan Edit year after", "Movie Title Extended Directors Cut Fan Edit 2012", "Extended Directors Cut Fan Edit"},
+		{"Director's Cut year after", "Movie Title Director's Cut 2012", "Director's Cut"},
+		{"Directors Cut year after", "Movie Title Directors Cut 2012", "Directors Cut"},
+		{"Extended Theatrical Version IMAX year after", "Movie Title.(Extended.Theatrical.Version.IMAX).2012.BluRay.1080p.asdf", "Extended Theatrical Version IMAX"},
+		{"Director's Cut year in parens", "Movie Director's Cut (1968).mkv", "Director's Cut"},
+		{"Extended Directors Cut FanEdit complex", "2021 A Movie (Extended Directors Cut FanEdit) 1968 Bluray 1080p", "Extended Directors Cut FanEdit"},
+		{"Directors middle of title", "A Fake Movie 2035 Directors 2012.mkv", "Directors"},
+		{"Director's Cut middle of title", "Movie Director's Cut 2049.mkv", "Director's Cut"},
+		{"50th Anniversary Edition year after", "Movie Title 50th Anniversary Edition 2012.mkv", "50th Anniversary Edition"},
+		{"2in1 year after", "Movie 2in1 2012.mkv", "2in1"},
+		{"IMAX year after", "Movie IMAX 2012.mkv", "IMAX"},
+		{"Final Cut year after", "Fake Movie Final Cut 2016", "Final Cut"},
+		{"Final Cut year after trailing space", "Fake Movie 2016 Final Cut ", "Final Cut"},
+		{"Extended Cut with GERMAN", "My Movie GERMAN Extended Cut 2016", "Extended Cut"},
+		{"Extended Cut dots with GERMAN", "My.Movie.GERMAN.Extended.Cut.2016", "Extended Cut"},
+		{"Extended Cut dots no year", "My.Movie.GERMAN.Extended.Cut", "Extended Cut"},
+		{"Assembly Cut", "My.Movie.Assembly.Cut.1992.REPACK.1080p.BluRay.DD5.1.x264-Group", "Assembly Cut"},
+		{"Ultimate Hunter Edition", "Movie.1987.Ultimate.Hunter.Edition.DTS-HD.DTS.MULTISUBS.1080p.BluRay.x264.HQ-TUSAHD", "Ultimate Hunter Edition"},
+		{"Diamond Edition", "Movie.1950.Diamond.Edition.1080p.BluRay.x264-nikt0", "Diamond Edition"},
+		{"Ultimate Rekall Edition", "Movie.Title.1990.Ultimate.Rekall.Edition.NORDiC.REMUX.1080p.BluRay.AVC.DTS-HD.MA5.1-TWA", "Ultimate Rekall Edition"},
+		{"Signature Edition", "Movie.Title.1971.Signature.Edition.1080p.BluRay.FLAC.2.0.x264-TDD", "Signature Edition"},
+		{"Imperial Edition", "Movie.1979.The.Imperial.Edition.BluRay.720p.DTS.x264-CtrlHD", "Imperial Edition"},
+		{"Open Matte", "Movie.1997.Open.Matte.1080p.BluRay.x264.DTS-FGT", "Open Matte"},
+
+		// Negative cases - should NOT match
+		{"No match - Holiday Special in title", "Movie.Holiday.Special.1978.DVD.REMUX.DD.2.0-ViETNAM", ""},
+		{"No match - Directors Cut as title", "Directors.Cut.German.2006.COMPLETE.PAL.DVDR-LoD", ""},
+		{"No match - Rogue in title", "Movie Impossible: Rogue Movie 2012 Bluray", ""},
+		{"No match - FRENCH MD", "Loving.Movie.2018.TS.FRENCH.MD.x264-DROGUERiE", ""},
+		{"No match - Uncut as prefix", "Uncut.Movie.2019.720p.BluRay.x264-YOL0W", ""},
+		{"No match - Christmas Edition as title", "The.Christmas.Edition.1941.720p.HDTV.x264-CRiMSON", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := Parse(tt.title)
+			got := result.Release.GetEdition()
+			if got != tt.expected {
+				t.Errorf("Parse(%q).Release.Edition = %q, want %q",
+					tt.title, got, tt.expected)
+			}
+		})
 	}
 }

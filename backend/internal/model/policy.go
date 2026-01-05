@@ -75,6 +75,7 @@ type EvaluationTrace struct {
 type ContextSnapshot struct {
 	Candidate map[string]any `json:"candidate"`
 	Quality   map[string]any `json:"quality"`
+	Release   map[string]any `json:"release"`
 	Media     map[string]any `json:"media"`
 	MediaInfo map[string]any `json:"mediainfo,omitempty"`
 }

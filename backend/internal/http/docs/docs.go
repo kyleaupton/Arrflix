@@ -3793,7 +3793,8 @@ const docTemplate = `{
             "required": [
                 "candidate",
                 "media",
-                "quality"
+                "quality",
+                "release"
             ],
             "properties": {
                 "candidate": {
@@ -3809,6 +3810,10 @@ const docTemplate = `{
                     "additionalProperties": {}
                 },
                 "quality": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "release": {
                     "type": "object",
                     "additionalProperties": {}
                 }

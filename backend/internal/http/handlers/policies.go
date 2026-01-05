@@ -5,7 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/quality"
+	"github.com/kyleaupton/snaggle/backend/internal/release"
 	"github.com/kyleaupton/snaggle/backend/internal/service"
 	"github.com/labstack/echo/v4"
 )
@@ -425,7 +425,7 @@ func (h *Policies) Evaluate(c echo.Context) error {
 	}
 
 	// Convert DownloadCandidate to EvaluationContext
-	q := quality.ParseQuality(req.Title)
+	q := release.Parse(req.Title)
 	evalCtx := model.NewEvaluationContext(req, q)
 
 	ctx := c.Request().Context()
