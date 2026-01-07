@@ -422,8 +422,8 @@ var (
 	// Release Group Patterns (Radarr + Sonarr unified)
 	// Main release group regex - captures groups like -GROUP or [GROUP]
 	// Simplified for Go's RE2 engine (no lookahead/lookbehind support)
-	// Allow dots in bracket groups for YTS.LT, YTS.MX, etc.
-	ReleaseGroupRegex = regexp.MustCompile(`(?i)-([a-z0-9]+(?:-[a-z0-9]+)?)(?:\b|[-._ ]|$)|[-._ ]\[([a-z0-9.]+)\]$`)
+	// Note: Dotted release groups like YTS.LT, YTS.MX are handled via exception lists
+	ReleaseGroupRegex = regexp.MustCompile(`(?i)-([a-z0-9]+(?:-[a-z0-9]+)?)(?:\b|[-._ ]|$)|[-._ ]\[([a-z0-9]+)\]$`)
 
 	// Anime-style release groups: [SubGroup] Title
 	// Simplified for Go's RE2 engine

@@ -629,6 +629,15 @@ func TestParseReleaseGroup(t *testing.T) {
 		{"No WEB-DL group", "Movie.Title.2019.1080p.AMZN.WEB-Rip.DDP.5.1.HEVC", ""},
 		{"DataLass with dash", "Movie Name (2017) [2160p REMUX] [HEVC DV HYBRID HDR10+ Dolby TrueHD Atmos 7 1 24-bit Audio English]-DataLass", "DataLass"},
 		{"No group in REMUX", "Movie Name (2017) [2160p REMUX] [HEVC DV HYBRID HDR10+ Dolby TrueHD Atmos 7 1 24-bit Audio English] [Data Lass]", ""},
+
+		// Audio channel patterns should NOT be detected as release groups
+		{"Audio 5.1 at end", "Nuremberg (2025) [1080p] [WEBRip] [5.1]", ""},
+		{"Audio 7.1 at end", "Movie.Title.2020.1080p.BluRay.x264.[7.1]", ""},
+		{"Audio 2.0 at end", "Series.S01E01.720p.WEB-DL.[2.0]", ""},
+		{"Audio DTS-X.MA.5.1", "SomeShow.S20E13.1080p.BluRay.DTS-X.MA.5.1.x264", ""},
+		{"Audio DTS-MA.5.1", "SomeShow.S20E13.1080p.BluRay.DTS-MA.5.1.x264", ""},
+		{"Audio DTS-ES.5.1", "SomeShow.S20E13.1080p.BluRay.DTS-ES.5.1.x264", ""},
+		{"Audio with group after", "SomeShow.S20E13.1080p.Blu-Ray.DTS-ES.5.1.x264-ROUGH [PublicHD]", "ROUGH"},
 	}
 
 	for _, tt := range tests {
