@@ -133,7 +133,8 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 		// (needed for .torrent files where we can't extract hash from URL)
 		existing := map[string]bool{}
 		if !isMagnet {
-			if torrents, listErr := c.client.Torrents(qbt.TorrentsOptions{}); listErr == nil {
+			torrents, listErr := c.listTorrentsWithAuth(ctx, qbt.TorrentsOptions{})
+			if listErr == nil {
 				for _, t := range torrents {
 					existing[t.Hash] = true
 				}
@@ -199,7 +200,7 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 				time.Sleep(pollDelay)
 			}
 
-			torrents, listErr := c.client.Torrents(qbt.TorrentsOptions{})
+			torrents, listErr := c.listTorrentsWithAuth(ctx, qbt.TorrentsOptions{})
 			if listErr != nil {
 				continue
 			}
@@ -394,6 +395,42 @@ func (c *qBittorrentClient) ensureLoggedIn(ctx context.Context) error {
 		return c.client.Login(c.username, c.password)
 	}
 	return nil
+}
+
+// listTorrentsWithAuth lists torrents with authentication retry logic
+// This prevents JSON parsing errors when qBittorrent returns HTML error pages (e.g., "Forbidden")
+func (c *qBittorrentClient) listTorrentsWithAuth(ctx context.Context, opts qbt.TorrentsOptions) ([]qbt.TorrentInfo, error) {
+	var err error
+	var torrents []qbt.TorrentInfo
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			time.Sleep(retryDelay)
+		}
+
+		if err = c.ensureLoggedIn(ctx); err != nil {
+			continue
+		}
+
+		torrents, err = c.client.Torrents(opts)
+		if err != nil {
+			// If it's an auth error, clear session and retry
+			if strings.Contains(err.Error(), "login") ||
+				strings.Contains(err.Error(), "401") ||
+				strings.Contains(err.Error(), "403") ||
+				strings.Contains(err.Error(), "unauthorized") ||
+				strings.Contains(err.Error(), "Forbidden") ||
+				strings.Contains(err.Error(), "invalid character") { // JSON parse errors often indicate auth issues
+				c.client.Authenticated = false
+				continue
+			}
+			return nil, err
+		}
+
+		return torrents, nil
+	}
+
+	return nil, fmt.Errorf("failed to list torrents after %d attempts: %w", maxRetries+1, err)
 }
 
 // withRetry executes a function with retry logic
