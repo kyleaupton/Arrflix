@@ -4,17 +4,17 @@ values ('dev@local.seed', 'Dev User', 'v1:bcrypt:$2a$12$n180ANBjuXfZrr.hWFZXjuki
 
 -- seed libraries
 insert into library (name, type, root_path, enabled, "default")
-values ('Main Movie Library', 'movie', '/data/movies', true, true);
+values ('Main Movie Library', 'movie', '/data/media/movies', true, true);
 
 insert into library (name, type, root_path, enabled, "default")
-values ('Main Series Library', 'series', '/data/tv', true, true);
+values ('Main Series Library', 'series', '/data/media/tv', true, true);
 
 -- seed name templates
 insert into name_template (name, type, template, series_show_template, series_season_template, "default")
-values ('Main Movie Template', 'movie', '{{.Media.CleanTitle}} ({{.Media.Year}}) [{{.Quality.Full}}]', null, null, true);
+values ('Main Movie Template', 'movie', '{{.Media.CleanTitle}} ({{.Media.Year}}) {tmdb-{{.Media.TmdbID}}} [{{.Quality.Full}}][{{.MediaInfo.AudioCodec}} {{.MediaInfo.AudioChannels}}][{{.MediaInfo.VideoCodec}}]-{{.Release.ReleaseGroup}}', null, null, true);
 
 insert into name_template (name, type, template, series_show_template, series_season_template, "default")
-values ('Main Series Template', 'series', '{{.Media.CleanTitle}} - S{{printf "%02d" .Media.Season}}E{{printf "%02d" .Media.Episode}} - {{.Media.EpisodeTitle}} ({{.Media.Year}}) [{{.Quality.Full}}]', '{{.Media.CleanTitle}} ({{.Media.Year}})', 'Season {{printf "%02d" .Media.Season}}', true);
+values ('Main Series Template', 'series', '{{.Title}} - S{{.Season}}E{{.Episode}} - {{clean .EpisodeTitle}} ({{.Year}}) [{{.Quality.Full}}]', '{{.Title}} ({{.Year}})', 'Season {{.Season}}', true);
 
 -- seed downloaders
 insert into downloader (name, type, protocol, url, username, password, enabled, "default")
