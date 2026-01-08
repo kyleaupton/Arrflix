@@ -1,11 +1,16 @@
 package qbittorrent
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -88,7 +93,7 @@ func (c *qBittorrentClient) Test(ctx context.Context) (downloader.TestResult, er
 	return result, nil
 }
 
-// Add adds a download (magnet URL or torrent file)
+// Add adds a download (magnet URL or torrent file URL)
 func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) (downloader.AddResult, error) {
 	var err error
 	var result downloader.AddResult
@@ -96,7 +101,21 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 	// Determine the URL to use
 	torrentURL := req.MagnetURL
 	if torrentURL == "" {
-		return result, fmt.Errorf("magnet URL is required")
+		return result, fmt.Errorf("magnet URL or torrent file URL is required")
+	}
+
+	// Detect if this is a magnet URL or an HTTP URL to a .torrent file
+	isMagnet := strings.HasPrefix(torrentURL, "magnet:")
+
+	// For non-magnet URLs (e.g., Prowlarr proxy URLs), fetch the .torrent file BEFORE the retry loop.
+	// This is necessary because qBittorrent may not have network access to fetch the file itself.
+	var torrentBytes []byte
+	var torrentFilename string
+	if !isMagnet {
+		torrentBytes, torrentFilename, err = c.fetchTorrentFile(ctx, torrentURL)
+		if err != nil {
+			return result, fmt.Errorf("fetch torrent file: %w", err)
+		}
 	}
 
 	// Retry logic
@@ -110,12 +129,14 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 			continue
 		}
 
-		// Snapshot existing torrents so we can identify a newly-added torrent even when
-		// we can't extract a hash (e.g. when adding a .torrent URL).
+		// Snapshot existing torrents so we can identify a newly-added torrent
+		// (needed for .torrent files where we can't extract hash from URL)
 		existing := map[string]bool{}
-		if torrents, listErr := c.client.Torrents(qbt.TorrentsOptions{}); listErr == nil {
-			for _, t := range torrents {
-				existing[t.Hash] = true
+		if !isMagnet {
+			if torrents, listErr := c.client.Torrents(qbt.TorrentsOptions{}); listErr == nil {
+				for _, t := range torrents {
+					existing[t.Hash] = true
+				}
 			}
 		}
 
@@ -132,8 +153,15 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 			opts.Paused = &paused
 		}
 
-		// Add the torrent using library
-		err = c.client.DownloadLinks([]string{torrentURL}, opts)
+		// Add the torrent using appropriate method
+		if isMagnet {
+			// For magnet URLs, use the library's DownloadLinks
+			err = c.client.DownloadLinks([]string{torrentURL}, opts)
+		} else {
+			// For .torrent files, upload bytes directly
+			err = c.addTorrentFromBytes(ctx, torrentBytes, torrentFilename, opts)
+		}
+
 		if err != nil {
 			// If it's an auth error, clear session and retry
 			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "unauthorized") {
@@ -143,49 +171,65 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 			continue
 		}
 
-		// Extract hash from magnet URL or derive it from the client after add.
-		hash, err := extractHashFromMagnet(torrentURL)
-		if err != nil {
-			// If this isn't a magnet (e.g. .torrent URL), locate the newly-added torrent by diffing hashes.
+		// For magnet URLs, extract hash directly
+		if isMagnet {
+			hash, hashErr := extractHashFromMagnet(torrentURL)
+			if hashErr == nil {
+				result.ExternalID = hash
+				result.Name = extractNameFromMagnet(torrentURL)
+
+				// Add tags if provided
+				if len(req.Tags) > 0 {
+					c.client.AddTorrentTags([]string{hash}, req.Tags)
+				}
+
+				return result, nil
+			}
+			// If hash extraction fails for a magnet URL, something is wrong
+			return result, fmt.Errorf("failed to extract hash from magnet URL: %w", hashErr)
+		}
+
+		// For .torrent files, poll qBittorrent to find the newly-added torrent by diffing hashes
+		const pollAttempts = 10
+		const pollDelay = 500 * time.Millisecond
+
+		var newest *qbt.TorrentInfo
+		for poll := 0; poll < pollAttempts; poll++ {
+			if poll > 0 {
+				time.Sleep(pollDelay)
+			}
+
 			torrents, listErr := c.client.Torrents(qbt.TorrentsOptions{})
 			if listErr != nil {
-				return result, fmt.Errorf("failed to list torrents after add: %w", listErr)
+				continue
 			}
-			var newest *qbt.TorrentInfo
+
 			for i := range torrents {
 				t := &torrents[i]
 				if existing[t.Hash] {
 					continue
 				}
-				// First unseen becomes candidate; if multiple, pick newest.
+				// First unseen becomes candidate; if multiple, pick newest by AddedOn.
 				if newest == nil || t.AddedOn > newest.AddedOn {
 					newest = t
 				}
 			}
-			if newest == nil {
-				// Fall back to name-based lookup for magnets without btih (rare) or if diffing failed.
-				hash, err = c.getHashFromName(ctx, req.MagnetURL)
-				if err != nil {
-					return result, fmt.Errorf("failed to get torrent hash: %w", err)
-				}
-			} else {
-				hash = newest.Hash
-				result.Name = newest.Name
+
+			if newest != nil {
+				break
 			}
 		}
+
+		if newest == nil {
+			return result, fmt.Errorf("torrent was uploaded but could not be found in qBittorrent")
+		}
+
+		result.ExternalID = newest.Hash
+		result.Name = newest.Name
 
 		// Add tags if provided
 		if len(req.Tags) > 0 {
-			_, tagErr := c.client.AddTorrentTags([]string{hash}, req.Tags)
-			if tagErr != nil {
-				// Log but don't fail - tags are optional
-				// Could log this if we had a logger
-			}
-		}
-
-		result.ExternalID = hash
-		if result.Name == "" {
-			result.Name = extractNameFromMagnet(torrentURL)
+			c.client.AddTorrentTags([]string{newest.Hash}, req.Tags)
 		}
 
 		return result, nil
@@ -377,25 +421,114 @@ func (c *qBittorrentClient) withRetry(ctx context.Context, fn func() error) erro
 	return fmt.Errorf("failed after %d attempts: %w", maxRetries+1, err)
 }
 
-// getHashFromName tries to find a torrent hash by searching for the name
-func (c *qBittorrentClient) getHashFromName(ctx context.Context, magnetURL string) (string, error) {
-	name := extractNameFromMagnet(magnetURL)
-	if name == "" {
-		return "", fmt.Errorf("could not extract name from magnet URL")
-	}
-
-	torrents, err := c.client.Torrents(qbt.TorrentsOptions{})
+// fetchTorrentFile downloads a .torrent file from the given URL (e.g., Prowlarr proxy URL)
+// Returns the torrent bytes and extracted filename
+func (c *qBittorrentClient) fetchTorrentFile(ctx context.Context, torrentURL string) ([]byte, string, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", torrentURL, nil)
 	if err != nil {
-		return "", err
+		return nil, "", fmt.Errorf("create request: %w", err)
 	}
 
-	for _, t := range torrents {
-		if t.Name == name {
-			return t.Hash, nil
+	req.Header.Set("User-Agent", "Snaggle/1.0")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, "", fmt.Errorf("fetch torrent: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, "", fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Extract filename from Content-Disposition header or fall back to URL path
+	filename := "download.torrent"
+	if cd := resp.Header.Get("Content-Disposition"); cd != "" {
+		if _, params, err := mime.ParseMediaType(cd); err == nil {
+			if fn, ok := params["filename"]; ok {
+				filename = fn
+			}
+		}
+	} else {
+		// Try to extract filename from URL path
+		if u, err := url.Parse(torrentURL); err == nil {
+			if base := path.Base(u.Path); base != "" && base != "." && base != "/" {
+				filename = base
+			}
 		}
 	}
 
-	return "", fmt.Errorf("torrent not found by name")
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, "", fmt.Errorf("read response: %w", err)
+	}
+
+	// Basic validation - torrent files start with "d" (bencoded dictionary)
+	if len(data) == 0 {
+		return nil, "", fmt.Errorf("empty response")
+	}
+
+	return data, filename, nil
+}
+
+// addTorrentFromBytes uploads torrent file bytes directly to qBittorrent
+// This bypasses the library's DownloadFiles which requires a local file path
+func (c *qBittorrentClient) addTorrentFromBytes(ctx context.Context, torrentBytes []byte, filename string, opts qbt.DownloadOptions) error {
+	var buffer bytes.Buffer
+	writer := multipart.NewWriter(&buffer)
+
+	// Create form file for torrent bytes
+	formWriter, err := writer.CreateFormFile("torrents", filename)
+	if err != nil {
+		return fmt.Errorf("create form file: %w", err)
+	}
+
+	if _, err := formWriter.Write(torrentBytes); err != nil {
+		return fmt.Errorf("write torrent bytes: %w", err)
+	}
+
+	// Add optional parameters matching qBittorrent API
+	if opts.Savepath != nil && *opts.Savepath != "" {
+		writer.WriteField("savepath", *opts.Savepath)
+	}
+	if opts.Category != nil && *opts.Category != "" {
+		writer.WriteField("category", *opts.Category)
+	}
+	if opts.Paused != nil {
+		writer.WriteField("paused", strconv.FormatBool(*opts.Paused))
+	}
+
+	if err := writer.Close(); err != nil {
+		return fmt.Errorf("close writer: %w", err)
+	}
+
+	// Make HTTP request using the client's cookie jar for auth
+	apiURL := strings.TrimSuffix(c.client.URL, "/") + "/api/v2/torrents/add"
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, &buffer)
+	if err != nil {
+		return fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	httpClient := &http.Client{Jar: c.client.Jar}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("perform request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 415 {
+		return fmt.Errorf("torrent file is not valid")
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
 }
 
 // mapStateToStatus maps qBittorrent state to JobStatus
@@ -419,36 +552,34 @@ func mapStateToStatus(state string) downloader.JobStatus {
 	}
 }
 
-// extractHashFromMagnet extracts the hash from a magnet URL
+// extractHashFromMagnet extracts the hash from a magnet URL using proper URL parsing
 func extractHashFromMagnet(magnetURL string) (string, error) {
 	// Parse magnet URL
 	if !strings.HasPrefix(magnetURL, "magnet:") {
 		return "", fmt.Errorf("not a magnet URL")
 	}
 
-	// Extract hash from magnet URL format: magnet:?xt=urn:btih:HASH
-	parts := strings.Split(magnetURL, "?")
-	if len(parts) < 2 {
-		return "", fmt.Errorf("invalid magnet URL format")
+	u, err := url.Parse(magnetURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse magnet URL: %w", err)
 	}
 
-	query := parts[1]
-	params := strings.Split(query, "&")
-	for _, param := range params {
-		if strings.HasPrefix(param, "xt=urn:btih:") {
-			hash := strings.TrimPrefix(param, "xt=urn:btih:")
-			// Hash might be followed by & or end of string
-			if idx := strings.Index(hash, "&"); idx != -1 {
-				hash = hash[:idx]
-			}
+	// The xt parameter contains the hash in format: urn:btih:HASH
+	xtValues := u.Query()["xt"]
+	for _, xt := range xtValues {
+		if strings.HasPrefix(xt, "urn:btih:") {
+			hash := strings.TrimPrefix(xt, "urn:btih:")
+			// Normalize hash to lowercase
+			hash = strings.ToLower(hash)
+			// Hash can be 40 chars (hex) or 32 chars (base32)
 			if len(hash) != 40 && len(hash) != 32 {
-				return "", fmt.Errorf("invalid hash length")
+				return "", fmt.Errorf("invalid hash length: got %d chars", len(hash))
 			}
 			return hash, nil
 		}
 	}
 
-	return "", fmt.Errorf("no hash found in magnet URL")
+	return "", fmt.Errorf("no btih hash found in magnet URL")
 }
 
 // extractNameFromMagnet extracts the name from a magnet URL

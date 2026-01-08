@@ -89,7 +89,6 @@ func (s *DownloadCandidatesService) SearchDownloadCandidates(ctx context.Context
 
 // SearchSeriesDownloadCandidates searches for download candidates for a series, season, or episode
 func (s *DownloadCandidatesService) SearchSeriesDownloadCandidates(ctx context.Context, seriesID int64, season *int, episode *int) ([]model.DownloadCandidate, error) {
-	fmt.Println("SearchSeriesDownloadCandidates", seriesID, &season, &episode)
 	series, err := s.media.GetSeries(ctx, seriesID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get series: %w", err)
@@ -103,8 +102,6 @@ func (s *DownloadCandidatesService) SearchSeriesDownloadCandidates(ctx context.C
 			query = fmt.Sprintf("%s S%02d", series.Title, *season)
 		}
 	}
-
-	fmt.Println("Query", query)
 
 	searchInput := prowlarr.SearchInput{
 		Query: query,
@@ -420,10 +417,9 @@ func (s *DownloadCandidatesService) searchResultToCandidate(result *prowlarr.Sea
 	}
 
 	return model.DownloadCandidate{
-		Protocol: string(result.Protocol),
-		Filename: result.FileName,
-		// Link:        result.DownloadURL,
-		Link:        result.GUID,
+		Protocol:    string(result.Protocol),
+		Filename:    result.FileName,
+		Link:        result.DownloadURL,
 		Indexer:     result.Indexer,
 		IndexerID:   result.IndexerID,
 		GUID:        result.GUID,

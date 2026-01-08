@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -121,7 +120,6 @@ func (h *Indexers) SaveConfig(c echo.Context) error {
 // @Failure 400 {object} map[string]string
 // @Router  /v1/indexer/{id} [delete]
 func (h *Indexers) Delete(c echo.Context) error {
-	fmt.Println("Delete indexer")
 	indexerID := c.Param("id")
 	if indexerID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "indexer ID required"})
