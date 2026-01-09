@@ -28,6 +28,7 @@ import { computed, ref } from 'vue'
 import { CheckCircle2, Loader2 } from 'lucide-vue-next'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
+  type ModelLibraryItem,
   type ModelMovieDetail,
   type ModelMovieRail,
   type ModelSeriesDetail,
@@ -69,16 +70,18 @@ type PosterSize = keyof typeof POSTER_SIZES
 
 const props = withDefaults(
   defineProps<{
-    item: ModelMovieDetail | ModelSeriesDetail | ModelMovieRail | ModelSeriesRail
+    item: ModelMovieDetail | ModelSeriesDetail | ModelMovieRail | ModelSeriesRail | ModelLibraryItem
     size?: PosterSize
     to?: { path: string } | string
     clickable?: boolean
     isDownloading?: boolean
+    responsive?: boolean
   }>(),
   {
     size: 'medium',
     clickable: true,
     isDownloading: false,
+    responsive: false,
   },
 )
 
@@ -100,6 +103,7 @@ const posterPath = computed(() => {
 })
 
 const sizeClass = computed(() => {
+  if (props.responsive) return ''
   return POSTER_SIZES[props.size].class
 })
 

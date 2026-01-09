@@ -6,17 +6,14 @@
         <h1 class="text-2xl font-semibold">Library</h1>
         <p class="text-sm text-muted-foreground">Browse and manage your media</p>
       </div>
-      <div class="flex items-center gap-3">
-        <div class="relative">
-          <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            v-model="searchInput"
-            placeholder="Search titles..."
-            class="pl-9 w-64"
-            @input="onSearchInput"
-          />
-        </div>
-        <ViewToggle v-model="viewMode" />
+      <div class="relative">
+        <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          v-model="searchInput"
+          placeholder="Search titles..."
+          class="pl-9 w-64"
+          @input="onSearchInput"
+        />
       </div>
     </div>
 
@@ -29,28 +26,25 @@
       </TabsList>
     </Tabs>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="space-y-6">
-      <div v-if="viewMode === 'grid'" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        <Skeleton v-for="i in 12" :key="i" class="aspect-[2/3] rounded-lg" />
-      </div>
-      <div v-else class="space-y-2">
-        <Skeleton class="h-10 w-full" />
-        <Skeleton v-for="i in 5" :key="i" class="h-16 w-full" />
-      </div>
+    <!-- Loading State (initial) -->
+    <div
+      v-if="isLoading"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-w-6xl"
+    >
+      <Skeleton v-for="i in pageSize" :key="i" class="aspect-[2/3] rounded-lg" />
     </div>
 
     <!-- Error State -->
     <div v-else-if="isError" class="flex flex-col items-center justify-center py-12 text-center">
       <p class="text-destructive">Failed to load library</p>
       <p class="text-sm text-muted-foreground mt-2">{{ error?.message || 'Please try again later' }}</p>
-      <Button variant="outline" class="mt-4" @click="refetch">
+      <Button variant="outline" class="mt-4" @click="() => refetch()">
         Try Again
       </Button>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="!data?.data || data.data.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+    <div v-else-if="items.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
       <Film class="h-12 w-12 text-muted-foreground mb-4" />
       <p class="text-lg font-medium">No media found</p>
       <p class="text-sm text-muted-foreground mt-1">
@@ -58,109 +52,59 @@
       </p>
     </div>
 
-    <!-- Content -->
+    <!-- Grid Content -->
     <template v-else>
-      <!-- Grid View with Flexbox -->
       <div
-        v-if="viewMode === 'grid'"
-        class="flex flex-wrap gap-3 max-w-[1600px]"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-w-6xl"
       >
         <Poster
-          v-for="item in data.data"
+          v-for="item in items"
           :key="item.id"
           :item="item"
           :to="getItemRoute(item)"
           size="medium"
+          responsive
         />
+
+        <!-- Loading skeletons for next page -->
+        <template v-if="isFetchingNextPage">
+          <Skeleton v-for="i in pageSize" :key="`skeleton-${i}`" class="aspect-[2/3] rounded-lg" />
+        </template>
       </div>
 
-      <!-- Table View -->
-      <div v-else class="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead class="w-16">Poster</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead class="w-24">Type</TableHead>
-              <TableHead class="w-20">Year</TableHead>
-              <TableHead class="w-40">Added</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow
-              v-for="item in data.data"
-              :key="item.id"
-              class="cursor-pointer hover:bg-muted/50"
-              @click="navigateToItem(item)"
-            >
-              <TableCell>
-                <img
-                  v-if="item.posterPath"
-                  :src="`https://image.tmdb.org/t/p/w92${item.posterPath}`"
-                  :alt="item.title"
-                  class="w-10 h-15 object-cover rounded"
-                />
-                <div v-else class="w-10 h-15 bg-muted rounded flex items-center justify-center">
-                  <Film class="h-4 w-4 text-muted-foreground" />
-                </div>
-              </TableCell>
-              <TableCell class="font-medium">{{ item.title }}</TableCell>
-              <TableCell>
-                <Badge :variant="item.type === 'movie' ? 'default' : 'secondary'">
-                  {{ item.type === 'movie' ? 'Movie' : 'Series' }}
-                </Badge>
-              </TableCell>
-              <TableCell>{{ item.year || '-' }}</TableCell>
-              <TableCell class="text-muted-foreground">
-                {{ formatDate(item.createdAt) }}
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
-
-      <!-- Pagination -->
-      <LibraryPagination
-        v-if="data.pagination.totalPages > 1"
-        :pagination="data.pagination"
-        @update:page="onPageChange"
-      />
+      <!-- End of list indicator -->
+      <p v-if="!hasNextPage && items.length > 0" class="text-center text-sm text-muted-foreground py-4">
+        End of library
+      </p>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { useQuery } from '@tanstack/vue-query'
-import { useDebounceFn, useLocalStorage } from '@vueuse/core'
+import { ref, computed } from 'vue'
+import { useInfiniteQuery } from '@tanstack/vue-query'
+import { useDebounceFn, useInfiniteScroll } from '@vueuse/core'
 import { Search, Film } from 'lucide-vue-next'
-import { getV1LibraryOptions, getV1LibraryQueryKey } from '@/client/@tanstack/vue-query.gen'
+import { getV1Library } from '@/client/sdk.gen'
 import type { ModelLibraryItem } from '@/client/types.gen'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import Poster from '@/components/poster/Poster.vue'
-import ViewToggle from '@/components/library/ViewToggle.vue'
-import LibraryPagination from '@/components/library/LibraryPagination.vue'
+import { useGridColumns } from '@/composables/useGridColumns'
 
-const router = useRouter()
+// Grid columns composable
+const { pageSize } = useGridColumns(3)
 
 // State
-const page = ref(1)
-const pageSize = ref(20)
 const typeFilter = ref('')
 const searchQuery = ref('')
 const searchInput = ref('')
-const viewMode = useLocalStorage<'grid' | 'table'>('library-view-mode', 'grid')
 
 // Debounced search
 const debouncedSearch = useDebounceFn((value: string) => {
   searchQuery.value = value
-  page.value = 1 // Reset to first page on search
 }, 300)
 
 const onSearchInput = () => {
@@ -168,49 +112,55 @@ const onSearchInput = () => {
 }
 
 const onTypeFilterChange = () => {
-  page.value = 1 // Reset to first page on filter change
+  // Query will refetch from page 1 due to queryKey change
 }
 
-const onPageChange = (newPage: number) => {
-  page.value = newPage
-}
-
-// Query
-const queryParams = computed(() => ({
-  query: {
-    page: page.value,
-    pageSize: pageSize.value,
-    type: typeFilter.value || undefined,
-    search: searchQuery.value || undefined,
+// Infinite Query
+const {
+  data,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  isLoading,
+  isError,
+  error,
+  refetch,
+} = useInfiniteQuery({
+  queryKey: computed(() => ['library', { type: typeFilter.value, search: searchQuery.value, pageSize: pageSize.value }]),
+  queryFn: async ({ pageParam = 1 }) => {
+    const { data } = await getV1Library({
+      query: {
+        page: pageParam,
+        pageSize: pageSize.value,
+        type: typeFilter.value || undefined,
+        search: searchQuery.value || undefined,
+      },
+    })
+    return data!
   },
-}))
-
-const { isLoading, isError, error, data, refetch } = useQuery({
-  ...getV1LibraryOptions(queryParams.value),
-  queryKey: computed(() => getV1LibraryQueryKey(queryParams.value)),
+  getNextPageParam: (lastPage) => {
+    const { page, totalPages } = lastPage.pagination
+    return page < totalPages ? page + 1 : undefined
+  },
+  initialPageParam: 1,
 })
 
-// Watch for query param changes to refetch
-watch([page, pageSize, typeFilter, searchQuery], () => {
-  // Query will auto-refetch due to reactive queryKey
-})
+// Flatten pages into single array
+const items = computed(() => data.value?.pages.flatMap(p => p.data) ?? [])
+
+// Infinite scroll - use window as scroll container
+useInfiniteScroll(
+  window,
+  () => {
+    if (hasNextPage.value && !isFetchingNextPage.value) {
+      fetchNextPage()
+    }
+  },
+  { distance: 200 }
+)
 
 // Navigation
 const getItemRoute = (item: ModelLibraryItem) => {
   return { path: `/${item.type}/${item.tmdbId}` }
-}
-
-const navigateToItem = (item: ModelLibraryItem) => {
-  router.push(getItemRoute(item))
-}
-
-// Formatting
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 </script>
