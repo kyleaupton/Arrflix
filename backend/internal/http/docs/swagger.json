@@ -3285,6 +3285,7 @@
             "type": "object",
             "required": [
                 "default",
+                "movie_dir_template",
                 "name",
                 "series_season_template",
                 "series_show_template",
@@ -3294,6 +3295,9 @@
             "properties": {
                 "default": {
                     "type": "boolean"
+                },
+                "movie_dir_template": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -3316,6 +3320,7 @@
             "type": "object",
             "required": [
                 "default",
+                "movie_dir_template",
                 "name",
                 "series_season_template",
                 "series_show_template",
@@ -3325,6 +3330,9 @@
             "properties": {
                 "default": {
                     "type": "boolean"
+                },
+                "movie_dir_template": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -3557,6 +3565,7 @@
                 "created_at",
                 "default",
                 "id",
+                "movie_dir_template",
                 "name",
                 "series_season_template",
                 "series_show_template",
@@ -3572,6 +3581,9 @@
                     "type": "boolean"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "movie_dir_template": {
                     "type": "string"
                 },
                 "name": {

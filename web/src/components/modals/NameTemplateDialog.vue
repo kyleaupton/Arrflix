@@ -38,6 +38,7 @@ const templateForm = ref({
   template: '',
   series_show_template: '',
   series_season_template: '',
+  movie_dir_template: '',
   default: false,
 })
 
@@ -59,6 +60,7 @@ watch(
         template: template.template || '',
         series_show_template: template.series_show_template || '',
         series_season_template: template.series_season_template || '',
+        movie_dir_template: template.movie_dir_template || '',
         default: template.default || false,
       }
     } else {
@@ -68,6 +70,7 @@ watch(
         template: '',
         series_show_template: '',
         series_season_template: '',
+        movie_dir_template: '{{.Media.CleanTitle}} ({{.Media.Year}}) {tmdb-{{.Media.TmdbID}}}',
         default: false,
       }
     }
@@ -81,6 +84,10 @@ const handleSave = async () => {
     templateError.value = 'Name and template are required'
     return
   }
+  if (templateForm.value.type === 'movie' && !templateForm.value.movie_dir_template) {
+    templateError.value = 'Movie directory template is required'
+    return
+  }
 
   try {
     const body = {
@@ -91,6 +98,8 @@ const handleSave = async () => {
         templateForm.value.type === 'series' ? templateForm.value.series_show_template : '',
       series_season_template:
         templateForm.value.type === 'series' ? templateForm.value.series_season_template : '',
+      movie_dir_template:
+        templateForm.value.type === 'movie' ? templateForm.value.movie_dir_template : '',
       default: templateForm.value.default,
     }
 
@@ -167,6 +176,18 @@ const isLoading = computed(
           <Label for="template-season">Season Directory Template</Label>
           <TemplateTokenEditor
             v-model="templateForm.series_season_template"
+            :media-type="templateForm.type"
+            placeholder="Type { to insert a variable"
+            class="min-h-[60px]"
+          />
+        </div>
+      </template>
+
+      <template v-if="templateForm.type === 'movie'">
+        <div class="flex flex-col gap-2">
+          <Label for="template-movie-dir">Movie Directory Template</Label>
+          <TemplateTokenEditor
+            v-model="templateForm.movie_dir_template"
             :media-type="templateForm.type"
             placeholder="Type { to insert a variable"
             class="min-h-[60px]"

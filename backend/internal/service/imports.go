@@ -97,9 +97,22 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 			}
 			rel = filepath.Join(showPart, seasonPart, filePart)
 		} else {
-			rel, err = template.Render(nt.Template, templateData)
+			// Movie type - render directory and file templates
+			var dirPart string
+			if nt.MovieDirTemplate != nil && *nt.MovieDirTemplate != "" {
+				dirPart, err = template.Render(*nt.MovieDirTemplate, templateData)
+				if err != nil {
+					return ImportResult{}, fmt.Errorf("render movie dir template: %w", err)
+				}
+			}
+			filePart, err := template.Render(nt.Template, templateData)
 			if err != nil {
-				return ImportResult{}, fmt.Errorf("render template: %w", err)
+				return ImportResult{}, fmt.Errorf("render file template: %w", err)
+			}
+			if dirPart != "" {
+				rel = filepath.Join(dirPart, filePart)
+			} else {
+				rel = filePart
 			}
 		}
 		rel = importer.EnsureExt(rel, ext)

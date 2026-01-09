@@ -301,6 +301,7 @@ type NameTemplate struct {
 	Default              bool        `json:"default"`
 	CreatedAt            time.Time   `json:"created_at"`
 	UpdatedAt            time.Time   `json:"updated_at"`
+	MovieDirTemplate     *string     `json:"movie_dir_template"`
 }
 
 type Permission struct {

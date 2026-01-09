@@ -30,6 +30,7 @@ type nameTemplateSwagger struct {
 	Template             string  `json:"template"`
 	SeriesShowTemplate   *string `json:"series_show_template"`
 	SeriesSeasonTemplate *string `json:"series_season_template"`
+	MovieDirTemplate     *string `json:"movie_dir_template"`
 	Default              bool    `json:"default"`
 	CreatedAt            string  `json:"created_at"`
 	UpdatedAt            string  `json:"updated_at"`
@@ -42,6 +43,7 @@ type NameTemplateCreateRequest struct {
 	Template             string  `json:"template"`
 	SeriesShowTemplate   *string `json:"series_show_template"`
 	SeriesSeasonTemplate *string `json:"series_season_template"`
+	MovieDirTemplate     *string `json:"movie_dir_template"`
 	Default              bool    `json:"default"`
 }
 
@@ -52,6 +54,7 @@ type NameTemplateUpdateRequest struct {
 	Template             string  `json:"template"`
 	SeriesShowTemplate   *string `json:"series_show_template"`
 	SeriesSeasonTemplate *string `json:"series_season_template"`
+	MovieDirTemplate     *string `json:"movie_dir_template"`
 	Default              bool    `json:"default"`
 }
 
@@ -85,7 +88,7 @@ func (h *NameTemplates) Create(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}
 	ctx := c.Request().Context()
-	template, err := h.svc.NameTemplates.Create(ctx, req.Name, req.Type, req.Template, req.SeriesShowTemplate, req.SeriesSeasonTemplate, req.Default)
+	template, err := h.svc.NameTemplates.Create(ctx, req.Name, req.Type, req.Template, req.SeriesShowTemplate, req.SeriesSeasonTemplate, req.MovieDirTemplate, req.Default)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -131,7 +134,7 @@ func (h *NameTemplates) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
 	}
 	ctx := c.Request().Context()
-	template, err := h.svc.NameTemplates.Update(ctx, id, req.Name, req.Type, req.Template, req.SeriesShowTemplate, req.SeriesSeasonTemplate, req.Default)
+	template, err := h.svc.NameTemplates.Update(ctx, id, req.Name, req.Type, req.Template, req.SeriesShowTemplate, req.SeriesSeasonTemplate, req.MovieDirTemplate, req.Default)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

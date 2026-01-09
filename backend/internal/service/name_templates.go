@@ -29,7 +29,7 @@ func (s *NameTemplatesService) GetDefault(ctx context.Context, typ string) (dbge
 	return s.repo.GetDefaultNameTemplate(ctx, typ)
 }
 
-func (s *NameTemplatesService) Create(ctx context.Context, name, typ, template string, showTemplate, seasonTemplate *string, isDefault bool) (dbgen.NameTemplate, error) {
+func (s *NameTemplatesService) Create(ctx context.Context, name, typ, template string, showTemplate, seasonTemplate, movieDirTemplate *string, isDefault bool) (dbgen.NameTemplate, error) {
 	if name == "" {
 		return dbgen.NameTemplate{}, errors.New("name required")
 	}
@@ -38,6 +38,9 @@ func (s *NameTemplatesService) Create(ctx context.Context, name, typ, template s
 	}
 	if template == "" {
 		return dbgen.NameTemplate{}, errors.New("template required")
+	}
+	if typ == "movie" && (movieDirTemplate == nil || *movieDirTemplate == "") {
+		return dbgen.NameTemplate{}, errors.New("movie_dir_template required for movie type")
 	}
 
 	// If setting as default, unset other defaults of the same type
@@ -47,10 +50,10 @@ func (s *NameTemplatesService) Create(ctx context.Context, name, typ, template s
 		}
 	}
 
-	return s.repo.CreateNameTemplate(ctx, name, typ, template, showTemplate, seasonTemplate, isDefault)
+	return s.repo.CreateNameTemplate(ctx, name, typ, template, showTemplate, seasonTemplate, movieDirTemplate, isDefault)
 }
 
-func (s *NameTemplatesService) Update(ctx context.Context, id pgtype.UUID, name, typ, template string, showTemplate, seasonTemplate *string, isDefault bool) (dbgen.NameTemplate, error) {
+func (s *NameTemplatesService) Update(ctx context.Context, id pgtype.UUID, name, typ, template string, showTemplate, seasonTemplate, movieDirTemplate *string, isDefault bool) (dbgen.NameTemplate, error) {
 	if name == "" {
 		return dbgen.NameTemplate{}, errors.New("name required")
 	}
@@ -60,6 +63,9 @@ func (s *NameTemplatesService) Update(ctx context.Context, id pgtype.UUID, name,
 	if template == "" {
 		return dbgen.NameTemplate{}, errors.New("template required")
 	}
+	if typ == "movie" && (movieDirTemplate == nil || *movieDirTemplate == "") {
+		return dbgen.NameTemplate{}, errors.New("movie_dir_template required for movie type")
+	}
 
 	// If setting as default, unset other defaults of the same type (excluding this one)
 	if isDefault {
@@ -68,7 +74,7 @@ func (s *NameTemplatesService) Update(ctx context.Context, id pgtype.UUID, name,
 		}
 	}
 
-	return s.repo.UpdateNameTemplate(ctx, id, name, typ, template, showTemplate, seasonTemplate, isDefault)
+	return s.repo.UpdateNameTemplate(ctx, id, name, typ, template, showTemplate, seasonTemplate, movieDirTemplate, isDefault)
 }
 
 func (s *NameTemplatesService) Delete(ctx context.Context, id pgtype.UUID) error {
@@ -84,7 +90,7 @@ func (s *NameTemplatesService) unsetOtherDefaults(ctx context.Context, typ strin
 
 	for _, t := range templates {
 		if t.Type == typ && t.Default {
-			_, err := s.repo.UpdateNameTemplate(ctx, t.ID, t.Name, t.Type, t.Template, t.SeriesShowTemplate, t.SeriesSeasonTemplate, false)
+			_, err := s.repo.UpdateNameTemplate(ctx, t.ID, t.Name, t.Type, t.Template, t.SeriesShowTemplate, t.SeriesSeasonTemplate, t.MovieDirTemplate, false)
 			if err != nil {
 				return err
 			}
@@ -103,7 +109,7 @@ func (s *NameTemplatesService) unsetOtherDefaultsExcluding(ctx context.Context, 
 
 	for _, t := range templates {
 		if t.Type == typ && t.Default && t.ID != excludeID {
-			_, err := s.repo.UpdateNameTemplate(ctx, t.ID, t.Name, t.Type, t.Template, t.SeriesShowTemplate, t.SeriesSeasonTemplate, false)
+			_, err := s.repo.UpdateNameTemplate(ctx, t.ID, t.Name, t.Type, t.Template, t.SeriesShowTemplate, t.SeriesSeasonTemplate, t.MovieDirTemplate, false)
 			if err != nil {
 				return err
 			}

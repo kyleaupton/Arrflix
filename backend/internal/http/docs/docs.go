@@ -3293,6 +3293,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "default",
+                "movie_dir_template",
                 "name",
                 "series_season_template",
                 "series_show_template",
@@ -3302,6 +3303,9 @@ const docTemplate = `{
             "properties": {
                 "default": {
                     "type": "boolean"
+                },
+                "movie_dir_template": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -3324,6 +3328,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "default",
+                "movie_dir_template",
                 "name",
                 "series_season_template",
                 "series_show_template",
@@ -3333,6 +3338,9 @@ const docTemplate = `{
             "properties": {
                 "default": {
                     "type": "boolean"
+                },
+                "movie_dir_template": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -3565,6 +3573,7 @@ const docTemplate = `{
                 "created_at",
                 "default",
                 "id",
+                "movie_dir_template",
                 "name",
                 "series_season_template",
                 "series_show_template",
@@ -3580,6 +3589,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "movie_dir_template": {
                     "type": "string"
                 },
                 "name": {

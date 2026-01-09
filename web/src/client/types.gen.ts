@@ -186,6 +186,7 @@ export type HandlersLoginResponse = {
 
 export type HandlersNameTemplateCreateRequest = {
     default: boolean;
+    movie_dir_template: string;
     name: string;
     series_season_template: string;
     series_show_template: string;
@@ -195,6 +196,7 @@ export type HandlersNameTemplateCreateRequest = {
 
 export type HandlersNameTemplateUpdateRequest = {
     default: boolean;
+    movie_dir_template: string;
     name: string;
     series_season_template: string;
     series_show_template: string;
@@ -274,6 +276,7 @@ export type HandlersNameTemplateSwagger = {
     created_at: string;
     default: boolean;
     id: string;
+    movie_dir_template: string;
     name: string;
     series_season_template: string;
     series_show_template: string;
