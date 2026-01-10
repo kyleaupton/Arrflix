@@ -179,6 +179,15 @@ func (s *TmdbService) GetPersonDetails(ctx context.Context, id int64) (tmdb.Pers
 	}, STATIC_TTL)
 }
 
+func (s *TmdbService) MultiSearch(ctx context.Context, query string, page int) (tmdb.SearchMulti, error) {
+	cacheKey := fmt.Sprintf("tmdb_multi_search_%s_page_%d", query, page)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.SearchMulti, error) {
+		return s.client.GetSearchMulti(query, map[string]string{
+			"page": fmt.Sprintf("%d", page),
+		})
+	}, DYNAMIC_TTL)
+}
+
 // getOrFetchFromCache encapsulates the pattern of:
 // 1) checking API cache
 // 2) calling the provided fetch function on cache miss

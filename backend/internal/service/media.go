@@ -826,3 +826,111 @@ func (s *MediaService) buildFileInfosFromDownloadJobs(ctx context.Context, tmdbI
 
 	return fileInfos, nil
 }
+
+// Search performs a multi-search across movies, series, and people via TMDB
+// and enriches results with library status
+func (s *MediaService) Search(ctx context.Context, query string, limit int, page int) (model.SearchResponse, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if page <= 0 {
+		page = 1
+	}
+
+	tmdbResults, err := s.tmdb.MultiSearch(ctx, query, page)
+	if err != nil {
+		return model.SearchResponse{}, err
+	}
+
+	// Collect TMDB IDs for batch library lookup
+	var movieIDs, seriesIDs []int64
+	for _, r := range tmdbResults.Results {
+		switch r.MediaType {
+		case "movie":
+			movieIDs = append(movieIDs, r.ID)
+		case "tv":
+			seriesIDs = append(seriesIDs, r.ID)
+		}
+	}
+
+	// Batch lookup library status
+	movieInLibrary := make(map[int64]bool)
+	seriesInLibrary := make(map[int64]bool)
+
+	if len(movieIDs) > 0 {
+		inLib, err := s.repo.CheckMediaItemsInLibrary(ctx, movieIDs, "movie")
+		if err == nil {
+			movieInLibrary = inLib
+		}
+	}
+	if len(seriesIDs) > 0 {
+		inLib, err := s.repo.CheckMediaItemsInLibrary(ctx, seriesIDs, "series")
+		if err == nil {
+			seriesInLibrary = inLib
+		}
+	}
+
+	// Transform results
+	results := make([]model.SearchResult, 0, len(tmdbResults.Results))
+	for _, r := range tmdbResults.Results {
+		if len(results) >= limit {
+			break
+		}
+
+		result := model.SearchResult{
+			ID:        r.ID,
+			MediaType: r.MediaType,
+		}
+
+		// Set title based on media type
+		switch r.MediaType {
+		case "movie":
+			result.Title = r.Title
+			if r.PosterPath != "" {
+				result.PosterPath = &r.PosterPath
+			}
+			if r.Overview != "" {
+				result.Overview = &r.Overview
+			}
+			year := parseYear(r.ReleaseDate)
+			if year != nil {
+				y := int(*year)
+				result.Year = &y
+			}
+			result.IsInLibrary = movieInLibrary[r.ID]
+
+		case "tv":
+			result.Title = r.Name
+			if r.PosterPath != "" {
+				result.PosterPath = &r.PosterPath
+			}
+			if r.Overview != "" {
+				result.Overview = &r.Overview
+			}
+			year := parseYear(r.FirstAirDate)
+			if year != nil {
+				y := int(*year)
+				result.Year = &y
+			}
+			result.IsInLibrary = seriesInLibrary[r.ID]
+
+		case "person":
+			result.Title = r.Name
+			if r.ProfilePath != "" {
+				result.PosterPath = &r.ProfilePath
+			}
+			// People don't have overview or library status
+		}
+
+		results = append(results, result)
+	}
+
+	return model.SearchResponse{
+		Results:      results,
+		TotalResults: int(tmdbResults.TotalResults),
+		Query:        query,
+	}, nil
+}

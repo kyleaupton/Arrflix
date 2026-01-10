@@ -197,3 +197,26 @@ func (r *Repository) ListEpisodeAvailabilityForSeries(ctx context.Context, media
 func (r *Repository) DeleteMediaFile(ctx context.Context, id pgtype.UUID) error {
 	return r.Q.DeleteMediaFile(ctx, id)
 }
+
+// CheckMediaItemsInLibrary returns a map of tmdbID -> true for items that exist in library
+func (r *Repository) CheckMediaItemsInLibrary(ctx context.Context, tmdbIDs []int64, typ string) (map[int64]bool, error) {
+	result := make(map[int64]bool)
+	if len(tmdbIDs) == 0 {
+		return result, nil
+	}
+
+	rows, err := r.Q.GetMediaItemsByTmdbIDs(ctx, dbgen.GetMediaItemsByTmdbIDsParams{
+		TmdbIds: tmdbIDs,
+		Type:    typ,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, tmdbID := range rows {
+		if tmdbID != nil {
+			result[*tmdbID] = true
+		}
+	}
+	return result, nil
+}

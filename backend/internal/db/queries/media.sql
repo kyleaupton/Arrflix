@@ -147,6 +147,10 @@ LIMIT sqlc.arg(page_size)::int OFFSET sqlc.arg(offset_val)::int;
 
 -- name: CountMediaItems :one
 SELECT COUNT(*) FROM media_item
-WHERE 
+WHERE
     (sqlc.narg(type_filter)::text IS NULL OR type = sqlc.narg(type_filter)) AND
     (sqlc.narg(search)::text IS NULL OR title ILIKE '%' || sqlc.narg(search) || '%');
+
+-- name: GetMediaItemsByTmdbIDs :many
+SELECT tmdb_id FROM media_item
+WHERE tmdb_id = ANY(sqlc.arg(tmdb_ids)::bigint[]) AND type = sqlc.arg(type);

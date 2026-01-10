@@ -14,7 +14,7 @@ import (
 
 const countMediaItems = `-- name: CountMediaItems :one
 SELECT COUNT(*) FROM media_item
-WHERE 
+WHERE
     ($1::text IS NULL OR type = $1) AND
     ($2::text IS NULL OR title ILIKE '%' || $2 || '%')
 `
@@ -257,6 +257,36 @@ func (q *Queries) GetMediaItemByTmdbIDAndType(ctx context.Context, arg GetMediaI
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const getMediaItemsByTmdbIDs = `-- name: GetMediaItemsByTmdbIDs :many
+SELECT tmdb_id FROM media_item
+WHERE tmdb_id = ANY($1::bigint[]) AND type = $2
+`
+
+type GetMediaItemsByTmdbIDsParams struct {
+	TmdbIds []int64 `json:"tmdb_ids"`
+	Type    string  `json:"type"`
+}
+
+func (q *Queries) GetMediaItemsByTmdbIDs(ctx context.Context, arg GetMediaItemsByTmdbIDsParams) ([]*int64, error) {
+	rows, err := q.db.Query(ctx, getMediaItemsByTmdbIDs, arg.TmdbIds, arg.Type)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*int64
+	for rows.Next() {
+		var tmdb_id *int64
+		if err := rows.Scan(&tmdb_id); err != nil {
+			return nil, err
+		}
+		items = append(items, tmdb_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getSeason = `-- name: GetSeason :one

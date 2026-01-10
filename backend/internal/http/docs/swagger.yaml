@@ -1711,6 +1711,44 @@ definitions:
     - operator
     - rightOperand
     type: object
+  model.SearchResponse:
+    properties:
+      query:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/model.SearchResult'
+        type: array
+      totalResults:
+        type: integer
+    required:
+    - query
+    - results
+    - totalResults
+    type: object
+  model.SearchResult:
+    properties:
+      id:
+        type: integer
+      isInLibrary:
+        type: boolean
+      mediaType:
+        description: '"movie", "tv", "person"'
+        type: string
+      overview:
+        type: string
+      posterPath:
+        type: string
+      title:
+        type: string
+      year:
+        type: integer
+    required:
+    - id
+    - isInLibrary
+    - mediaType
+    - title
+    type: object
   model.SeasonDetail:
     properties:
       airDate:
@@ -3263,6 +3301,32 @@ paths:
       summary: List roles
       tags:
       - users
+  /v1/search:
+    get:
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Max results (default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.SearchResponse'
+      summary: Search TMDB for movies, series, and people
+      tags:
+      - media
   /v1/series/{id}:
     get:
       parameters:

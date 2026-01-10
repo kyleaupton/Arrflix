@@ -17,6 +17,7 @@ func NewMedia(s *service.Services) *Media { return &Media{svc: s} }
 
 func (h *Media) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/library", h.List)
+	v1.GET("/search", h.Search)
 	v1.GET("/movie/:id", h.GetMovie)
 	v1.GET("/series/:id", h.GetSeries)
 	v1.GET("/person/:id", h.GetPerson)
@@ -123,4 +124,38 @@ func (h *Media) GetPerson(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to get person"})
 	}
 	return c.JSON(http.StatusOK, item)
+}
+
+// SearchQueryParams for search query parameter binding
+type SearchQueryParams struct {
+	Q     string `query:"q"`
+	Limit int    `query:"limit"`
+	Page  int    `query:"page"`
+}
+
+// Search TMDB for movies, series, and people
+// @Summary Search TMDB for movies, series, and people
+// @Tags    media
+// @Produce json
+// @Param   q query string true "Search query"
+// @Param   limit query int false "Max results (default 20)"
+// @Param   page query int false "Page number (default 1)"
+// @Success 200 {object} model.SearchResponse
+// @Router  /v1/search [get]
+func (h *Media) Search(c echo.Context) error {
+	var params SearchQueryParams
+	if err := c.Bind(&params); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid params"})
+	}
+
+	if params.Q == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "query parameter 'q' is required"})
+	}
+
+	ctx := c.Request().Context()
+	result, err := h.svc.Media.Search(ctx, params.Q, params.Limit, params.Page)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "search failed"})
+	}
+	return c.JSON(http.StatusOK, result)
 }

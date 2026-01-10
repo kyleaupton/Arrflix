@@ -2159,6 +2159,46 @@
                 }
             }
         },
+        "/v1/search": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "media"
+                ],
+                "summary": "Search TMDB for movies, series, and people",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Max results (default 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.SearchResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/series/{id}": {
             "get": {
                 "produces": [
@@ -5097,6 +5137,61 @@
                 },
                 "rightResolvedValue": {
                     "description": "Resolved value of right operand"
+                }
+            }
+        },
+        "model.SearchResponse": {
+            "type": "object",
+            "required": [
+                "query",
+                "results",
+                "totalResults"
+            ],
+            "properties": {
+                "query": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.SearchResult"
+                    }
+                },
+                "totalResults": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.SearchResult": {
+            "type": "object",
+            "required": [
+                "id",
+                "isInLibrary",
+                "mediaType",
+                "title"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "isInLibrary": {
+                    "type": "boolean"
+                },
+                "mediaType": {
+                    "description": "\"movie\", \"tv\", \"person\"",
+                    "type": "string"
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "posterPath": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },

@@ -762,6 +762,25 @@ export type ModelRuleInfo = {
     rightResolvedValue?: unknown;
 };
 
+export type ModelSearchResponse = {
+    query: string;
+    results: Array<ModelSearchResult>;
+    totalResults: number;
+};
+
+export type ModelSearchResult = {
+    id: number;
+    isInLibrary: boolean;
+    /**
+     * "movie", "tv", "person"
+     */
+    mediaType: string;
+    overview?: string;
+    posterPath?: string;
+    title: string;
+    year?: number;
+};
+
 export type ModelSeasonDetail = {
     airDate?: string;
     episodes: Array<ModelEpisodeAvailability>;
@@ -2492,6 +2511,35 @@ export type GetV1RolesResponses = {
 };
 
 export type GetV1RolesResponse = GetV1RolesResponses[keyof GetV1RolesResponses];
+
+export type GetV1SearchData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Search query
+         */
+        q: string;
+        /**
+         * Max results (default 20)
+         */
+        limit?: number;
+        /**
+         * Page number (default 1)
+         */
+        page?: number;
+    };
+    url: '/v1/search';
+};
+
+export type GetV1SearchResponses = {
+    /**
+     * OK
+     */
+    200: ModelSearchResponse;
+};
+
+export type GetV1SearchResponse = GetV1SearchResponses[keyof GetV1SearchResponses];
 
 export type GetV1SeriesByIdData = {
     body?: never;
