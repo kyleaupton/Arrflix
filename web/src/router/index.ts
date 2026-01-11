@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { client } from '@/client/client.gen'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -91,19 +90,6 @@ const router = createRouter({
   ],
 })
 
-// Check setup status
-async function checkSetupStatus(): Promise<boolean> {
-  try {
-    const response = await client.get<{ initialized: boolean }>({
-      url: '/v1/setup/status',
-    })
-    return (response as any).data.initialized
-  } catch {
-    // If setup check fails, assume initialized (safer default)
-    return true
-  }
-}
-
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
@@ -112,20 +98,7 @@ router.beforeEach(async (to) => {
     await auth.rehydrate()
   }
 
-  // Check if setup is complete
-  const isInitialized = await checkSetupStatus()
-
-  // If not initialized, redirect everything to setup (except setup page itself)
-  if (!isInitialized && to.path !== '/setup') {
-    return { path: '/setup' }
-  }
-
-  // If initialized, block setup page
-  if (isInitialized && to.path === '/setup') {
-    return { path: '/login' }
-  }
-
-  // Public routes allowed
+  // Public routes (login, setup, auth callback)
   if (to.meta.public) {
     return true
   }
