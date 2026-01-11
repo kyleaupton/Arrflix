@@ -132,12 +132,14 @@ async function pgQuery(sql: string, params: unknown[] = []) {
   }
 }
 
-async function runGenApiScript(): Promise<string> {
-  const scriptPath = resolve(repoRoot, "scripts/gen-api-spec-and-client.sh");
-
+async function runCommand(
+  command: string,
+  args: string[],
+  cwd: string
+): Promise<string> {
   return await new Promise<string>((resolvePromise, rejectPromise) => {
-    const child = spawn("bash", [scriptPath], {
-      cwd: repoRoot,
+    const child = spawn(command, args, {
+      cwd,
       stdio: ["ignore", "pipe", "pipe"],
     });
 
@@ -149,31 +151,42 @@ async function runGenApiScript(): Promise<string> {
     child.on("error", rejectPromise);
     child.on("close", (code) => {
       if (code === 0) resolvePromise(out || "Success (no output)");
-      else resolvePromise(`Error (code ${code}):\n${out}\n${err}`);
+      else rejectPromise(new Error(`Command failed (code ${code}):\n${out}\n${err}`));
     });
   });
 }
 
+async function runGenApiScript(): Promise<string> {
+  const backendPath = resolve(repoRoot, "backend");
+  const webPath = resolve(repoRoot, "web");
+  const outputs: string[] = [];
+
+  try {
+    // Run swag init in backend directory
+    const swagOut = await runCommand(
+      "swag",
+      ["init", "-g", "internal/http/http.go", "-o", "internal/http/docs", "--requiredByDefault"],
+      backendPath
+    );
+    outputs.push(`Backend (swag):\n${swagOut}`);
+
+    // Run npm run openapi-ts in web directory
+    const npmOut = await runCommand(
+      "npm",
+      ["run", "openapi-ts"],
+      webPath
+    );
+    outputs.push(`Frontend (npm run openapi-ts):\n${npmOut}`);
+
+    return outputs.join("\n\n");
+  } catch (e: any) {
+    return `Error: ${e?.message ?? String(e)}\n\nPartial output:\n${outputs.join("\n\n")}`;
+  }
+}
+
 async function runSqlcGenerate(): Promise<string> {
   const backendPath = resolve(repoRoot, "backend");
-
-  return await new Promise<string>((resolvePromise, rejectPromise) => {
-    const child = spawn("sqlc", ["generate"], {
-      cwd: backendPath,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-
-    let out = "";
-    let err = "";
-    child.stdout.on("data", (d) => (out += d.toString("utf8")));
-    child.stderr.on("data", (d) => (err += d.toString("utf8")));
-
-    child.on("error", rejectPromise);
-    child.on("close", (code) => {
-      if (code === 0) resolvePromise(out || "Success (no output)");
-      else resolvePromise(`Error (code ${code}):\n${out}\n${err}`);
-    });
-  });
+  return await runCommand("sqlc", ["generate"], backendPath);
 }
 
 const server = new Server(
