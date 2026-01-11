@@ -65,3 +65,4 @@ Arrflix uses a container-based architecture managed by **s6-overlay** for intern
 - [x] **Milestone 3 (Discovery)**: Provider integration and candidate scoring.
 - [wip] **Milestone 4 (Import)**: Hardlink-first import worker implementation.
 - [ ] **Milestone 5 (UI/UX)**: Advanced dashboard and mobile optimization.
+

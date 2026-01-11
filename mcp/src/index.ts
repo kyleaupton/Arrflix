@@ -383,7 +383,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "arrflix_project_brief": {
-        const briefPath = resolve(repoRoot, "docs/PROJECT_BRIEF.md");
+        const briefPath = resolve(repoRoot, "mcp", "src", "PROJECT_BRIEF.md");
         if (!existsSync(briefPath)) {
           return {
             content: [{ type: "text", text: "Project brief not found." }],
