@@ -31,7 +31,9 @@ import {
   type ModelHydratedTitle,
   type ModelLibraryItem,
   type ModelMovieDetail,
+  type ModelMovieRail,
   type ModelSeriesDetail,
+  type ModelSeriesRail,
 } from '@/client/types.gen'
 
 /**
@@ -69,7 +71,7 @@ type PosterSize = keyof typeof POSTER_SIZES
 
 const props = withDefaults(
   defineProps<{
-    item: ModelMovieDetail | ModelSeriesDetail | ModelHydratedTitle | ModelLibraryItem
+    item: ModelMovieDetail | ModelSeriesDetail | ModelHydratedTitle | ModelMovieRail | ModelSeriesRail | ModelLibraryItem
     size?: PosterSize
     to?: { path: string } | string
     clickable?: boolean
