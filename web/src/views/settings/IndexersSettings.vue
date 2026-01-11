@@ -2,14 +2,17 @@
 import { ref } from 'vue'
 import { useQuery, useMutation } from '@tanstack/vue-query'
 import { Plus, Check } from 'lucide-vue-next'
-import { getV1IndexersConfiguredOptions, deleteV1IndexerByIdMutation } from '@/client/@tanstack/vue-query.gen'
+import {
+  getV1IndexersConfiguredOptions,
+  deleteV1IndexerByIdMutation,
+} from '@/client/@tanstack/vue-query.gen'
 import { type ModelIndexerOutput } from '@/client/types.gen'
 import {
   indexerColumns,
   createIndexerActions,
 } from '@/components/tables/configs/indexerTableConfig'
 import DataTable from '@/components/tables/DataTable.vue'
-import AddIndexerModal from '@/components/modals/AddIndexerModal.vue'
+import AddIndexerDialog from '@/components/modals/AddIndexerDialog.vue'
 import EditIndexerDialog from '@/components/modals/EditIndexerDialog.vue'
 import IndexerTestResultsDialog from '@/components/modals/IndexerTestResultsDialog.vue'
 import { useModal } from '@/composables/useModal'
@@ -142,7 +145,7 @@ const handleTestAll = async () => {
 }
 
 const handleAddIndexer = () => {
-  modal.open(AddIndexerModal, {
+  modal.open(AddIndexerDialog, {
     props: {
       class: 'max-w-[90vw] sm:max-w-4xl lg:max-w-6xl',
     },

@@ -132,7 +132,7 @@ const emit = defineEmits<{
   'query-error': [error: Error]
 }>()
 
-const selectedRows = ref<T[]>([])
+// const selectedRows = ref<T[]>([])
 const globalFilter = ref('')
 const sorting = ref<SortingState>([])
 const columnFilters = ref<ColumnFiltersState>([])
@@ -419,6 +419,20 @@ watch(
   },
 )
 
+// Handle row click for single selection mode
+const handleRowClick = (row: any) => {
+  if (props.selectable && props.selectionMode === 'single') {
+    // If clicking an already selected row, deselect it
+    if (row.getIsSelected()) {
+      row.toggleSelected(false)
+    } else {
+      // Deselect all rows first, then select this one
+      table.resetRowSelection()
+      row.toggleSelected(true)
+    }
+  }
+}
+
 // Expose methods for parent components
 defineExpose({
   loadData,
@@ -511,7 +525,7 @@ defineExpose({
             :key="row.id"
             :data-state="row.getIsSelected() && 'selected'"
             :class="cn(selectable && 'cursor-pointer')"
-            @click="selectable && selectionMode === 'single' && row.toggleSelected()"
+            @click="selectable && selectionMode === 'single' && handleRowClick(row)"
           >
             <TableCell
               v-for="cell in row.getVisibleCells()"
@@ -536,7 +550,7 @@ defineExpose({
       class="flex items-center justify-between px-2"
     >
       <div class="flex-1 text-sm text-muted-foreground">
-        {{ table.getFilteredSelectedRowModel().rows.length }} of{' '}
+        {{ table.getFilteredSelectedRowModel().rows.length }} of
         {{ table.getFilteredRowModel().rows.length }} row(s) selected.
       </div>
       <div class="flex items-center space-x-6 lg:space-x-8">
