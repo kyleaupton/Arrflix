@@ -1,6 +1,0 @@
-[submodule "submodules/Sonarr"]
-	path = submodules/Sonarr
-	url = https://github.com/Sonarr/Sonarr.git
-[submodule "submodules/Radarr"]
-	path = submodules/Radarr
-	url = https://github.com/Radarr/Radarr.git
