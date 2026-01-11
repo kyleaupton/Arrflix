@@ -26,7 +26,7 @@ Create a `docker-compose.yml` file with the following configuration:
 ```yml
 services:
   arrflix:
-    image: ghcr.io/kyleaupton/arrflix:0.0.1
+    image: ghcr.io/kyleaupton/arrflix:latest
     environment:
       TMDB_API_KEY: your_api_key_here
     ports:
