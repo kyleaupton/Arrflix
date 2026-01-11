@@ -5,9 +5,6 @@ import { storeToRefs } from 'pinia'
 import type { SidebarProps } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
 import {
-  AudioWaveform,
-  Clock,
-  Bot,
   Command,
   GalleryVerticalEnd,
   Settings2,
@@ -51,23 +48,6 @@ const data = {
     email: user.value?.email ?? 'Unknown Email',
     initials: user.value?.name?.[0] ?? 'U',
   },
-  teams: [
-    {
-      name: 'Acme Inc',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: AudioWaveform,
-      plan: 'Startup',
-    },
-    {
-      name: 'Evil Corp.',
-      logo: Command,
-      plan: 'Free',
-    },
-  ],
   navMain: [
     {
       title: 'Home',
@@ -77,17 +57,12 @@ const data = {
     {
       title: 'Library',
       url: '/library',
-      icon: Bot,
+      icon: GalleryVerticalEnd,
     },
     {
       title: 'Downloads',
       url: '/downloads',
       icon: Download,
-    },
-    {
-      title: 'Requests',
-      url: '/requests',
-      icon: Clock,
     },
     {
       title: 'Users',
@@ -98,32 +73,32 @@ const data = {
       title: 'Settings',
       icon: Settings2,
       url: '/settings',
-      items: [
-        {
-          title: 'General',
-          url: '/settings/general',
-        },
-        {
-          title: 'Policies',
-          url: '/settings/policies',
-        },
-        {
-          title: 'Libraries',
-          url: '/settings/libraries',
-        },
-        {
-          title: 'Indexers',
-          url: '/settings/indexers',
-        },
-        {
-          title: 'Downloaders',
-          url: '/settings/downloaders',
-        },
-        {
-          title: 'Name Templates',
-          url: '/settings/name-templates',
-        },
-      ],
+      // items: [
+      //   {
+      //     title: 'General',
+      //     url: '/settings/general',
+      //   },
+      //   {
+      //     title: 'Policies',
+      //     url: '/settings/policies',
+      //   },
+      //   {
+      //     title: 'Libraries',
+      //     url: '/settings/libraries',
+      //   },
+      //   {
+      //     title: 'Indexers',
+      //     url: '/settings/indexers',
+      //   },
+      //   {
+      //     title: 'Downloaders',
+      //     url: '/settings/downloaders',
+      //   },
+      //   {
+      //     title: 'Name Templates',
+      //     url: '/settings/name-templates',
+      //   },
+      // ],
     },
   ],
 }
@@ -249,7 +224,10 @@ watch(
               </SidebarMenuItem>
             </Collapsible>
             <SidebarMenuItem v-else>
-              <SidebarMenuButton :is-active="isItemActive(item.url)" as-child>
+              <SidebarMenuButton
+                :is-active="isItemActive(item.url) || isSubItemActive(item.url)"
+                as-child
+              >
                 <RouterLink :to="item.url">
                   <component :is="item.icon" v-if="item.icon" />
                   <span>{{ item.title }}</span>
