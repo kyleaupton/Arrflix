@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import {
   type ModelIndexerDefinition,
   type ModelIndexerOutput,
@@ -8,6 +8,12 @@ import {
 } from '@/client/types.gen'
 import { cloneDeep } from '@/utils'
 import ConfigurationStepField from './ConfigurationStepField.vue'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 
 const model = defineModel<ModelIndexerInput | undefined>(undefined)
 
@@ -40,6 +46,14 @@ const handleValueChange = (fieldName: string, value: unknown) => {
     }
   }
 }
+
+const regularFields = computed(() => {
+  return props.selectedIndexer.fields.filter((field) => !field.advanced)
+})
+
+const advancedFields = computed(() => {
+  return props.selectedIndexer.fields.filter((field) => field.advanced)
+})
 </script>
 
 <template>
@@ -53,13 +67,32 @@ const handleValueChange = (fieldName: string, value: unknown) => {
 
     <!-- Configuration Fields -->
     <div class="space-y-6">
+      <!-- Regular Fields -->
       <ConfigurationStepField
-        v-for="field in selectedIndexer.fields"
+        v-for="field in regularFields"
         :key="field.name"
         :field="field as any"
         :selected-indexer="selectedIndexer"
         @value-change="handleValueChange"
       />
+
+      <!-- Advanced Fields -->
+      <Accordion v-if="advancedFields.length > 0" type="single" collapsible class="w-full">
+        <AccordionItem value="advanced">
+          <AccordionTrigger>Advanced Settings</AccordionTrigger>
+          <AccordionContent>
+            <div class="space-y-6 pt-2">
+              <ConfigurationStepField
+                v-for="field in advancedFields"
+                :key="field.name"
+                :field="field as any"
+                :selected-indexer="selectedIndexer"
+                @value-change="handleValueChange"
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   </div>
 </template>
