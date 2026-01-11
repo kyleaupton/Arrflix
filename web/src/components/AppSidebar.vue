@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia'
 import type { SidebarProps } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
 import {
-  Command,
+  Popcorn,
   GalleryVerticalEnd,
   Settings2,
   Home,
@@ -170,9 +170,9 @@ watch(
           <SidebarMenuButton size="lg" as-child>
             <a href="#">
               <div
-                class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
+                class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"
               >
-                <Command class="size-4" />
+                <Popcorn class="size-6" />
               </div>
               <div class="grid flex-1 text-left text-sm leading-tight">
                 <span class="truncate font-medium">Arrflix</span>
