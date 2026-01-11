@@ -38,8 +38,12 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	nameTemplates := handlers.NewNameTemplates(services)
 	policies := handlers.NewPolicies(services)
 	settings := handlers.NewSettings(services)
+	setup := handlers.NewSetup(services)
 	users := handlers.NewUsers(services)
 	version := handlers.NewVersion(services)
+
+	// Apply setup mode middleware globally
+	e.Use(middlewares.SetupMode(services))
 
 	api := e.Group("/api")
 	v1 := api.Group("/v1")
@@ -48,6 +52,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	// Public routes
 	auth.RegisterPublic(v1)
 	health.RegisterPublic(e)
+	setup.RegisterPublic(v1)
 	version.RegisterPublic(v1)
 
 	// Protected routes

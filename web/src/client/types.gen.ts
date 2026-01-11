@@ -239,6 +239,20 @@ export type HandlersSettingsListResponse = {
     [key: string]: unknown;
 };
 
+export type HandlersSetupInitializeRequest = {
+    display_name: string;
+    email: string;
+    password: string;
+};
+
+export type HandlersSetupInitializeResponse = {
+    success: boolean;
+};
+
+export type HandlersSetupStatusResponse = {
+    initialized: boolean;
+};
+
 export type HandlersUserCreateRequest = {
     display_name: string;
     email: string;
@@ -2804,6 +2818,58 @@ export type PatchV1SettingsResponses = {
 };
 
 export type PatchV1SettingsResponse = PatchV1SettingsResponses[keyof PatchV1SettingsResponses];
+
+export type PostV1SetupInitializeData = {
+    /**
+     * Setup request
+     */
+    body: HandlersSetupInitializeRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/setup/initialize';
+};
+
+export type PostV1SetupInitializeErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Already initialized
+     */
+    409: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1SetupInitializeError = PostV1SetupInitializeErrors[keyof PostV1SetupInitializeErrors];
+
+export type PostV1SetupInitializeResponses = {
+    /**
+     * OK
+     */
+    200: HandlersSetupInitializeResponse;
+};
+
+export type PostV1SetupInitializeResponse = PostV1SetupInitializeResponses[keyof PostV1SetupInitializeResponses];
+
+export type GetV1SetupStatusData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/setup/status';
+};
+
+export type GetV1SetupStatusResponses = {
+    /**
+     * OK
+     */
+    200: HandlersSetupStatusResponse;
+};
+
+export type GetV1SetupStatusResponse = GetV1SetupStatusResponses[keyof GetV1SetupStatusResponses];
 
 export type GetV1UpdateData = {
     body?: never;

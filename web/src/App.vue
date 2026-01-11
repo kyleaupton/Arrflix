@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppLayoutHeader from '@/components/AppLayoutHeader.vue'
-import Login from '@/views/Login.vue'
 import DialogContainer from '@/components/DialogContainer.vue'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -12,9 +12,11 @@ import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
 
 const authStore = useAuthStore()
+const route = useRoute()
 const isCheckingAuth = ref(true)
 
 onMounted(async () => {
+  // Rehydrate auth token from localStorage
   if (!authStore.token) {
     await authStore.rehydrate()
   }
@@ -29,8 +31,8 @@ onMounted(async () => {
     <div v-if="isCheckingAuth" class="flex min-h-svh items-center justify-center">
       <div class="text-muted-foreground">Loading...</div>
     </div>
-    <Login v-else-if="!authStore.isAuthenticated" />
-    <SidebarProvider v-else>
+    <router-view v-else-if="route.meta.public" />
+    <SidebarProvider v-else-if="authStore.isAuthenticated">
       <AppSidebar />
       <SidebarInset>
         <AppLayoutHeader />
@@ -39,5 +41,6 @@ onMounted(async () => {
         </div>
       </SidebarInset>
     </SidebarProvider>
+    <router-view v-else />
   </TooltipProvider>
 </template>

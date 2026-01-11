@@ -2483,6 +2483,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/setup/initialize": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "setup"
+                ],
+                "summary": "Initialize system",
+                "parameters": [
+                    {
+                        "description": "Setup request",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SetupInitializeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SetupInitializeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Already initialized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/setup/status": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "setup"
+                ],
+                "summary": "Get setup status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SetupStatusResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/update": {
             "get": {
                 "produces": [
@@ -3534,6 +3604,47 @@ const docTemplate = `{
         "handlers.SettingsListResponse": {
             "type": "object",
             "additionalProperties": {}
+        },
+        "handlers.SetupInitializeRequest": {
+            "type": "object",
+            "required": [
+                "display_name",
+                "email",
+                "password"
+            ],
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.SetupInitializeResponse": {
+            "type": "object",
+            "required": [
+                "success"
+            ],
+            "properties": {
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "handlers.SetupStatusResponse": {
+            "type": "object",
+            "required": [
+                "initialized"
+            ],
+            "properties": {
+                "initialized": {
+                    "type": "boolean"
+                }
+            }
         },
         "handlers.UserCreateRequest": {
             "type": "object",

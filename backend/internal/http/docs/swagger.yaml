@@ -552,6 +552,33 @@ definitions:
   handlers.SettingsListResponse:
     additionalProperties: {}
     type: object
+  handlers.SetupInitializeRequest:
+    properties:
+      display_name:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - display_name
+    - email
+    - password
+    type: object
+  handlers.SetupInitializeResponse:
+    properties:
+      success:
+        type: boolean
+    required:
+    - success
+    type: object
+  handlers.SetupStatusResponse:
+    properties:
+      initialized:
+        type: boolean
+    required:
+    - initialized
+    type: object
   handlers.UserCreateRequest:
     properties:
       display_name:
@@ -3622,6 +3649,51 @@ paths:
       summary: Update a setting
       tags:
       - settings
+  /v1/setup/initialize:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Setup request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SetupInitializeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.SetupInitializeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Already initialized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Initialize system
+      tags:
+      - setup
+  /v1/setup/status:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.SetupStatusResponse'
+      summary: Get setup status
+      tags:
+      - setup
   /v1/update:
     get:
       produces:

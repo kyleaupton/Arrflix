@@ -21,6 +21,7 @@ type Services struct {
 	Policies           *PoliciesService
 	Scanner            *ScannerService
 	Settings           *SettingsService
+	Setup              *SetupService
 	Tmdb               *TmdbService
 	Users              *UsersService
 	Version            *VersionService
@@ -37,6 +38,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 	media := NewMediaService(r, l, tmdb)
 	policies := NewPoliciesService(r, l)
 	policyEngine := policy.NewEngine(r, l)
+	users := NewUsersService(r)
 
 	return &Services{
 		Auth:               NewAuthService(r, cfg),
@@ -52,8 +54,9 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 		Policies:           policies,
 		Scanner:            NewScannerService(r, l, tmdb),
 		Settings:           NewSettingsService(r),
+		Setup:              NewSetupService(r, users),
 		Tmdb:               tmdb,
-		Users:              NewUsersService(r),
+		Users:              users,
 		Version:            NewVersionService(r, l),
 	}
 }
