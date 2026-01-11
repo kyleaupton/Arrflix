@@ -1,10 +1,27 @@
 <script setup lang="ts">
 import { ref, computed, inject } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import { ChevronLeft, ChevronRight, Plus, X, Check } from 'lucide-vue-next'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  X,
+  Check,
+  Settings,
+  TableOfContents,
+} from 'lucide-vue-next'
 import { type ModelIndexerDefinition, type ModelIndexerInput } from '@/client/types.gen'
 import { postV1IndexerMutation } from '@/client/@tanstack/vue-query.gen'
 import { Button } from '@/components/ui/button'
+import {
+  Stepper,
+  StepperItem,
+  StepperTrigger,
+  StepperIndicator,
+  StepperTitle,
+  StepperDescription,
+  StepperSeparator,
+} from '@/components/ui/stepper'
 import SelectIndexerTypeStep from './steps/SelectIndexerTypeStep.vue'
 import ConfigurationStep from './steps/ConfigurationStep.vue'
 import ReviewStep from './steps/ReviewStep.vue'
@@ -33,9 +50,24 @@ const createIndexerMutation = useMutation({
 
 // Computed properties
 const steps = computed(() => [
-  { label: 'Select Type' },
-  { label: 'Configuration' },
-  { label: 'Review' },
+  {
+    step: 1,
+    label: 'Select Indexer',
+    description: 'Choose from available indexers to configure.',
+    icon: TableOfContents,
+  },
+  {
+    step: 2,
+    label: 'Configuration',
+    description: 'Configure the specific settings for the selected indexer.',
+    icon: Settings,
+  },
+  {
+    step: 3,
+    label: 'Review',
+    description: 'Review your indexer configuration before creating.',
+    icon: Check,
+  },
 ])
 
 const isLastStep = computed(() => currentStep.value === steps.value.length - 1)
@@ -129,41 +161,35 @@ const closeModal = () => {
   <BaseDialog title="Add New Indexer">
     <!-- Progress Steps -->
     <div class="mb-6">
-      <div class="flex items-center justify-between">
-        <div v-for="(step, index) in steps" :key="index" class="flex items-center flex-1">
-          <div class="flex items-center flex-1">
-            <!-- Step Circle -->
-            <div
-              class="flex items-center justify-center size-8 rounded-full border-2 transition-colors"
-              :class="
-                index < currentStep
-                  ? 'bg-primary border-primary text-primary-foreground'
-                  : index === currentStep
-                    ? 'bg-primary border-primary text-primary-foreground'
-                    : 'bg-background border-muted-foreground text-muted-foreground'
-              "
-            >
-              <span v-if="index < currentStep" class="text-sm font-semibold">✓</span>
-              <span v-else class="text-sm font-semibold">{{ index + 1 }}</span>
-            </div>
-            <!-- Step Label -->
-            <div class="ml-3 flex-1">
-              <div
-                class="text-sm font-medium"
-                :class="index <= currentStep ? 'text-foreground' : 'text-muted-foreground'"
-              >
-                {{ step.label }}
-              </div>
-            </div>
-          </div>
-          <!-- Connector Line -->
-          <div
-            v-if="index < steps.length - 1"
-            class="flex-1 h-0.5 mx-4 transition-colors"
-            :class="index < currentStep ? 'bg-primary' : 'bg-muted'"
+      <Stepper v-model="currentStep" class="w-full">
+        <StepperItem
+          v-for="item in steps"
+          :key="item.step"
+          :step="item.step"
+          class="relative flex w-full flex-col items-center justify-center"
+        >
+          <StepperTrigger>
+            <StepperIndicator v-slot="{ step }" class="bg-muted">
+              <template v-if="item.icon">
+                <component :is="item.icon" class="w-4 h-4" />
+              </template>
+              <span v-else>{{ step }}</span>
+            </StepperIndicator>
+          </StepperTrigger>
+          <StepperSeparator
+            v-if="item.step !== steps[steps.length - 1]?.step"
+            class="absolute left-[calc(50%+20px)] right-[calc(-50%+10px)] top-5 block h-0.5 shrink-0 rounded-full bg-muted group-data-[state=completed]:bg-primary"
           />
-        </div>
-      </div>
+          <div class="flex flex-col items-center">
+            <StepperTitle>
+              {{ item.label }}
+            </StepperTitle>
+            <StepperDescription>
+              {{ item.description }}
+            </StepperDescription>
+          </div>
+        </StepperItem>
+      </Stepper>
     </div>
 
     <!-- Step Content -->

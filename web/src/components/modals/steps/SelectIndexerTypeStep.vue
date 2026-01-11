@@ -25,9 +25,6 @@ const availableIndexerActions = createAvailableIndexerActions((indexer: ModelInd
 
 <template>
   <div class="select-indexer-step">
-    <h3 class="text-lg font-semibold mb-4">Select Indexer Type</h3>
-    <p class="text-muted-color mb-6">Choose from available indexer types to configure.</p>
-
     <DataTable
       class="h-full"
       ref="dataTableRef"
