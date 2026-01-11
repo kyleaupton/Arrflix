@@ -1,69 +1,84 @@
 # Arrflix
 
-Arrflix is a self-hosted media management platform designed to unify the best parts of Sonarr, Radarr, and Overseerr into a single, transparent, and flexible tool. It helps you manage your movie and series collections with a focus on filesystem integrity and efficient storage usage.
+Arrflix is an **early-stage, self-hosted media management project**.
 
-## Features
+It’s an experiment in simplifying personal media automation — with a focus on being easier to understand, easier to reason about, and less fragile than many existing setups.
 
-- **Unified Management**: Manage both Movies and Series in one interface.
-- **Granular Monitoring**: Monitor at the Series, Season, or individual Episode level.
-- **Filesystem First**: Prioritizes your filesystem as the source of truth.
-- **Efficient Storage**: Uses a hardlink-first strategy for importing downloads to save space.
-- **Indexer Integration**: Bundled Prowlarr for seamless indexer management out of the box.
-- **External Downloader Support**: Integrates with popular downloaders like qBittorrent.
-- **Modular & Secure**: Bring your own downloader and VPN setup for maximum flexibility and privacy.
+This project is **actively evolving** and not yet production-ready.
 
-## Getting Started
+## Project Status
 
-Arrflix is distributed as a Docker container that includes the API, Frontend, and Prowlarr.
+Arrflix is:
 
-### Prerequisites
+- Experimental
+- Opinionated
+- Incomplete
+- Subject to breaking changes
 
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- An external downloader (e.g., qBittorrent) and your preferred VPN solution.
+Documentation and features will change as the project evolves.  
+If you’re looking for something stable and polished today, Arrflix probably isn’t there yet.
 
-### Installation
+If you’re comfortable experimenting or following along with an evolving project, welcome.
 
-1. **Clone the repository**:
+## Quick Start
+
+If you’re interested in trying Arrflix, start with the documentation:
+
+👉 **Introduction & Overview**  
+https://kyleaupton.github.io/Arrflix/guide/introduction.html
+
+From there, you can continue to the **Getting Started** guide for installation instructions.
+
+👉 **Getting Started / Installation**  
+https://kyleaupton.github.io/Arrflix/guide/getting-started.html
+
+## Development Setup
+
+If you’re here to hack on Arrflix, the dev setup is lightweight.
+
+### Requirements
+
+- Docker
+- Docker Compose
+- A TMDB API key
+
+### Local Development
+
+1. Clone the repository:
 
    ```bash
    git clone https://github.com/kyleaupton/Arrflix.git
    cd Arrflix
    ```
 
-2. **Configure environment variables**:
-   Create a `.env` file in the root directory:
+2. Create a `.env` file:
 
    ```env
    TMDB_API_KEY=your_tmdb_api_key_here
-   MEDIA_LIBRARIES=/path/to/your/media
+   MEDIA_LIBRARIES=/path/to/test/media
    ```
 
-3. **Launch Arrflix**:
-
+3. Start the development stack:
    ```bash
-   docker compose up -d arrflix
+   docker compose up
    ```
 
-4. **Access the interface**:
-   Open your browser and navigate to `http://localhost:8484`.
-
-## Downloader & VPN Scope
-
-Arrflix focuses on media management and indexer orchestration. To maintain a lightweight and flexible footprint:
-
-- **Downloaders**: Arrflix integrates with external downloaders via API. While sample services are provided in the `docker-compose.yml` for reference, you are encouraged to use your existing downloader setup.
-- **VPN/Privacy**: Privacy is your responsibility. We recommend running your downloaders behind a VPN (such as Gluetun or a dedicated VPN container). Arrflix does not bundle a VPN client.
-
-## Configuration
-
-For detailed configuration options, including adding indexers and setting up downloaders, please refer to the settings section within the web interface.
+That’s it. The backend, frontend, database, and supporting services run together via Docker Compose.
 
 ## Documentation
 
-- **User Guide**: Coming soon(ish).
-- **Developer Documentation**: See [docs/PROJECT_BRIEF.md](docs/PROJECT_BRIEF.md) for architecture and development setup.
+All project documentation lives here:
+
+👉 https://kyleaupton.github.io/Arrflix/
+
+Expect documentation to lag behind implementation at times — this is normal for the current stage of the project.
+
+## Contributing & Feedback
+
+There’s no strict roadmap yet. The project is still finding its shape.
+
+Feedback and discussions are encouraged, but pull requests may be declined until the project’s core design has stabilized (especially larger ones).
 
 ## License
 
-TODO: figure this out
+License not finalized yet.
