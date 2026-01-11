@@ -1,17 +1,18 @@
 name: Release Edge
 
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - 'docs/**'
-      - 'mcp/**'
-      - 'README.md'
-      - '*.md'
-      - 'CLAUDE.md'
-      - 'notes.ignore.md'
-      - '.github/workflows/edge.yml'
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  #   paths-ignore:
+  #     - 'docs/**'
+  #     - 'mcp/**'
+  #     - 'README.md'
+  #     - '*.md'
+  #     - 'CLAUDE.md'
+  #     - 'notes.ignore.md'
+  #     - '.github/workflows/edge.yml'
 
 permissions:
   packages: write
