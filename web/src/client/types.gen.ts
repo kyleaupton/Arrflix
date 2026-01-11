@@ -430,6 +430,18 @@ export type ModelEvaluationTrace = {
     policies: Array<ModelPolicyEvaluation>;
 };
 
+export type ModelFeed = {
+    hero?: ModelHeroItem;
+    rows: Array<ModelFeedRow>;
+};
+
+export type ModelFeedRow = {
+    id: string;
+    items: Array<ModelHydratedTitle>;
+    subtitle?: string;
+    title: string;
+};
+
 export type ModelFieldDefinition = {
     /**
      * API endpoint for dynamic fields
@@ -506,6 +518,36 @@ export type ModelFileInfo = {
 export type ModelGenre = {
     name: string;
     tmdbId: number;
+};
+
+export type ModelHeroItem = {
+    backdropPath: string;
+    mediaType: string;
+    overview: string;
+    posterPath: string;
+    title: string;
+    tmdbId: number;
+    trailerUrl?: string;
+};
+
+export type ModelHydratedTitle = {
+    backdropPath?: string;
+    genreIds?: Array<number>;
+    isDownloading?: boolean;
+    isInLibrary?: boolean;
+    language?: string;
+    /**
+     * "movie" or "series"
+     */
+    mediaType: ModelMediaType;
+    overview: string;
+    popularity?: number;
+    posterPath: string;
+    releaseDate: string;
+    title: string;
+    tmdbId: number;
+    voteAverage?: number;
+    year?: number;
 };
 
 export type ModelIndexerBatchTestResult = {
@@ -655,6 +697,8 @@ export type ModelLibraryItem = {
     year?: number;
 };
 
+export type ModelMediaType = 'movie' | 'series';
+
 export type ModelMovieDetail = {
     backdropPath?: string;
     credits?: ModelCredits;
@@ -740,14 +784,6 @@ export type ModelPolicyEvaluation = {
 
 export type ModelProtocol = 'unknown' | 'usenet' | 'torrent';
 
-export type ModelRail = {
-    id: string;
-    movies: Array<ModelMovieRail>;
-    series: Array<ModelSeriesRail>;
-    title: string;
-    type: string;
-};
-
 export type ModelRuleInfo = {
     leftOperand: string;
     /**
@@ -813,19 +849,6 @@ export type ModelSeriesDetail = {
     title: string;
     tmdbId: number;
     videos?: Array<ModelVideo>;
-    year?: number;
-};
-
-export type ModelSeriesRail = {
-    genres?: Array<number>;
-    isDownloading: boolean;
-    isInLibrary: boolean;
-    overview: string;
-    posterPath: string;
-    releaseDate: string;
-    tagline?: string;
-    title: string;
-    tmdbId: number;
     year?: number;
 };
 
@@ -1240,7 +1263,7 @@ export type GetV1HomeResponses = {
     /**
      * OK
      */
-    200: Array<ModelRail>;
+    200: ModelFeed;
 };
 
 export type GetV1HomeResponse = GetV1HomeResponses[keyof GetV1HomeResponses];

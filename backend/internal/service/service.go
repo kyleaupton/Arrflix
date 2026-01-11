@@ -12,13 +12,13 @@ type Services struct {
 	Downloaders        *DownloadersService
 	DownloadCandidates *DownloadCandidatesService
 	DownloadJobs       *DownloadJobsService
+	Feed               *FeedService
 	Import             *ImportService
 	Indexer            *IndexerService
 	Libraries          *LibrariesService
 	Media              *MediaService
 	NameTemplates      *NameTemplatesService
 	Policies           *PoliciesService
-	Rails              *RailsService
 	Scanner            *ScannerService
 	Settings           *SettingsService
 	Tmdb               *TmdbService
@@ -42,13 +42,13 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 		Downloaders:        NewDownloadersService(r),
 		DownloadCandidates: NewDownloadCandidatesService(r, l, indexer, media, policyEngine),
 		DownloadJobs:       NewDownloadJobsService(r),
+		Feed:               NewFeedService(r, l, tmdb),
 		Import:             NewImportService(r, l),
 		Indexer:            indexer,
 		Libraries:          NewLibrariesService(r),
 		Media:              media,
 		NameTemplates:      NewNameTemplatesService(r),
 		Policies:           policies,
-		Rails:              NewRailsService(r, tmdb),
 		Scanner:            NewScannerService(r, l, tmdb),
 		Settings:           NewSettingsService(r),
 		Tmdb:               tmdb,

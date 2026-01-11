@@ -1,12 +1,14 @@
 <template>
   <div class="flex flex-col gap-6">
     <div v-if="isLoading" class="space-y-6">
-      <div class="space-y-2">
+      <!-- Hero skeleton -->
+      <Skeleton class="h-80 w-full rounded-lg" />
+      <!-- Rail skeletons -->
+      <div v-for="i in 3" :key="i" class="space-y-2">
         <Skeleton class="h-8 w-64" />
-        <Skeleton class="h-4 w-48" />
-      </div>
-      <div class="flex gap-3 overflow-x-auto pb-4">
-        <Skeleton v-for="i in 5" :key="i" class="h-64 w-44 flex-shrink-0" />
+        <div class="flex gap-3 overflow-x-auto pb-4">
+          <Skeleton v-for="j in 5" :key="j" class="h-64 w-44 flex-shrink-0" />
+        </div>
       </div>
     </div>
 
@@ -16,17 +18,22 @@
     </div>
 
     <div
-      v-else-if="!data || data.length === 0"
+      v-else-if="!data || !data.rows || data.rows.length === 0"
       class="flex flex-col items-center justify-center py-12 text-center"
     >
       <p class="text-muted-foreground">No content available</p>
     </div>
 
     <div v-else class="flex flex-col gap-6">
-      <template v-for="rail in data" :key="rail.id">
-        <RailMovie v-if="rail.type === 'movie'" :rail="rail as ModelRail & { type: 'movie' }" />
-        <RailSeries v-else-if="rail.type === 'series'" :rail="rail as ModelRail & { type: 'series' }" />
-      </template>
+      <!-- Hero Section -->
+      <FeedHero v-if="data.hero" :hero="data.hero" />
+
+      <!-- Feed Rows -->
+      <FeedRow
+        v-for="row in data.rows"
+        :key="row.id"
+        :row="row"
+      />
     </div>
   </div>
 </template>
@@ -34,10 +41,9 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
 import { getV1HomeOptions } from '@/client/@tanstack/vue-query.gen'
-import { type ModelRail } from '@/client/types.gen'
 import { Skeleton } from '@/components/ui/skeleton'
-import RailMovie from '@/components/rails/RailMovie.vue'
-import RailSeries from '@/components/rails/RailSeries.vue'
+import FeedHero from '@/components/feed/FeedHero.vue'
+import FeedRow from '@/components/feed/FeedRow.vue'
 
 const { isLoading, isError, data } = useQuery(getV1HomeOptions())
 </script>

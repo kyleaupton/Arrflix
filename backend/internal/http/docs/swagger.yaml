@@ -951,6 +951,34 @@ definitions:
     - finalPlan
     - policies
     type: object
+  model.Feed:
+    properties:
+      hero:
+        $ref: '#/definitions/model.HeroItem'
+      rows:
+        items:
+          $ref: '#/definitions/model.FeedRow'
+        type: array
+    required:
+    - rows
+    type: object
+  model.FeedRow:
+    properties:
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/model.HydratedTitle'
+        type: array
+      subtitle:
+        type: string
+      title:
+        type: string
+    required:
+    - id
+    - items
+    - title
+    type: object
   model.FieldDefinition:
     properties:
       dynamicSource:
@@ -1074,6 +1102,72 @@ definitions:
         type: integer
     required:
     - name
+    - tmdbId
+    type: object
+  model.HeroItem:
+    properties:
+      backdropPath:
+        type: string
+      mediaType:
+        type: string
+      overview:
+        type: string
+      posterPath:
+        type: string
+      title:
+        type: string
+      tmdbId:
+        type: integer
+      trailerUrl:
+        type: string
+    required:
+    - backdropPath
+    - mediaType
+    - overview
+    - posterPath
+    - title
+    - tmdbId
+    type: object
+  model.HydratedTitle:
+    properties:
+      backdropPath:
+        type: string
+      genreIds:
+        items:
+          type: integer
+        type: array
+      isDownloading:
+        type: boolean
+      isInLibrary:
+        type: boolean
+      language:
+        type: string
+      mediaType:
+        allOf:
+        - $ref: '#/definitions/model.MediaType'
+        description: '"movie" or "series"'
+      overview:
+        type: string
+      popularity:
+        type: number
+      posterPath:
+        type: string
+      releaseDate:
+        type: string
+      title:
+        type: string
+      tmdbId:
+        type: integer
+      voteAverage:
+        type: number
+      year:
+        type: integer
+    required:
+    - mediaType
+    - overview
+    - posterPath
+    - releaseDate
+    - title
     - tmdbId
     type: object
   model.IndexerBatchTestResult:
@@ -1476,6 +1570,14 @@ definitions:
     - title
     - type
     type: object
+  model.MediaType:
+    enum:
+    - movie
+    - series
+    type: string
+    x-enum-varnames:
+    - MediaTypeMovie
+    - MediaTypeSeries
   model.MovieDetail:
     properties:
       backdropPath:
@@ -1671,29 +1773,6 @@ definitions:
     - ProtocolUnknown
     - ProtocolUsenet
     - ProtocolTorrent
-  model.Rail:
-    properties:
-      id:
-        type: string
-      movies:
-        items:
-          $ref: '#/definitions/model.MovieRail'
-        type: array
-      series:
-        items:
-          $ref: '#/definitions/model.SeriesRail'
-        type: array
-      title:
-        type: string
-      type:
-        type: string
-    required:
-    - id
-    - movies
-    - series
-    - title
-    - type
-    type: object
   model.RuleInfo:
     properties:
       leftOperand:
@@ -1831,39 +1910,6 @@ definitions:
     - overview
     - seasons
     - status
-    - title
-    - tmdbId
-    type: object
-  model.SeriesRail:
-    properties:
-      genres:
-        items:
-          type: integer
-        type: array
-      isDownloading:
-        type: boolean
-      isInLibrary:
-        type: boolean
-      overview:
-        type: string
-      posterPath:
-        type: string
-      releaseDate:
-        type: string
-      tagline:
-        type: string
-      title:
-        type: string
-      tmdbId:
-        type: integer
-      year:
-        type: integer
-    required:
-    - isDownloading
-    - isInLibrary
-    - overview
-    - posterPath
-    - releaseDate
     - title
     - tmdbId
     type: object
@@ -2227,12 +2273,10 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/model.Rail'
-            type: array
-      summary: Get rails
+            $ref: '#/definitions/model.Feed'
+      summary: Get home feed
       tags:
-      - home
+      - feed
   /v1/indexer:
     post:
       consumes:

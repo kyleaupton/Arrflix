@@ -511,17 +511,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "home"
+                    "feed"
                 ],
-                "summary": "Get rails",
+                "summary": "Get home feed",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/model.Rail"
-                            }
+                            "$ref": "#/definitions/model.Feed"
                         }
                     }
                 }
@@ -4069,6 +4066,48 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Feed": {
+            "type": "object",
+            "required": [
+                "rows"
+            ],
+            "properties": {
+                "hero": {
+                    "$ref": "#/definitions/model.HeroItem"
+                },
+                "rows": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.FeedRow"
+                    }
+                }
+            }
+        },
+        "model.FeedRow": {
+            "type": "object",
+            "required": [
+                "id",
+                "items",
+                "title"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.HydratedTitle"
+                    }
+                },
+                "subtitle": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "model.FieldDefinition": {
             "type": "object",
             "required": [
@@ -4243,6 +4282,103 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tmdbId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.HeroItem": {
+            "type": "object",
+            "required": [
+                "backdropPath",
+                "mediaType",
+                "overview",
+                "posterPath",
+                "title",
+                "tmdbId"
+            ],
+            "properties": {
+                "backdropPath": {
+                    "type": "string"
+                },
+                "mediaType": {
+                    "type": "string"
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "posterPath": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                },
+                "trailerUrl": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.HydratedTitle": {
+            "type": "object",
+            "required": [
+                "mediaType",
+                "overview",
+                "posterPath",
+                "releaseDate",
+                "title",
+                "tmdbId"
+            ],
+            "properties": {
+                "backdropPath": {
+                    "type": "string"
+                },
+                "genreIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "isDownloading": {
+                    "type": "boolean"
+                },
+                "isInLibrary": {
+                    "type": "boolean"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "mediaType": {
+                    "description": "\"movie\" or \"series\"",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.MediaType"
+                        }
+                    ]
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "popularity": {
+                    "type": "number"
+                },
+                "posterPath": {
+                    "type": "string"
+                },
+                "releaseDate": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                },
+                "voteAverage": {
+                    "type": "number"
+                },
+                "year": {
                     "type": "integer"
                 }
             }
@@ -4810,6 +4946,17 @@ const docTemplate = `{
                 }
             }
         },
+        "model.MediaType": {
+            "type": "string",
+            "enum": [
+                "movie",
+                "series"
+            ],
+            "x-enum-varnames": [
+                "MediaTypeMovie",
+                "MediaTypeSeries"
+            ]
+        },
         "model.MovieDetail": {
             "type": "object",
             "required": [
@@ -5090,39 +5237,6 @@ const docTemplate = `{
                 "ProtocolTorrent"
             ]
         },
-        "model.Rail": {
-            "type": "object",
-            "required": [
-                "id",
-                "movies",
-                "series",
-                "title",
-                "type"
-            ],
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "movies": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.MovieRail"
-                    }
-                },
-                "series": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.SeriesRail"
-                    }
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
         "model.RuleInfo": {
             "type": "object",
             "required": [
@@ -5321,53 +5435,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.Video"
                     }
-                },
-                "year": {
-                    "type": "integer"
-                }
-            }
-        },
-        "model.SeriesRail": {
-            "type": "object",
-            "required": [
-                "isDownloading",
-                "isInLibrary",
-                "overview",
-                "posterPath",
-                "releaseDate",
-                "title",
-                "tmdbId"
-            ],
-            "properties": {
-                "genres": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "isDownloading": {
-                    "type": "boolean"
-                },
-                "isInLibrary": {
-                    "type": "boolean"
-                },
-                "overview": {
-                    "type": "string"
-                },
-                "posterPath": {
-                    "type": "string"
-                },
-                "releaseDate": {
-                    "type": "string"
-                },
-                "tagline": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "tmdbId": {
-                    "type": "integer"
                 },
                 "year": {
                     "type": "integer"

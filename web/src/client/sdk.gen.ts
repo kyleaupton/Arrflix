@@ -203,7 +203,7 @@ export const postV1DownloadersByIdTest = <ThrowOnError extends boolean = false>(
 };
 
 /**
- * Get rails
+ * Get home feed
  */
 export const getV1Home = <ThrowOnError extends boolean = false>(options?: Options<GetV1HomeData, ThrowOnError>) => {
     return (options?.client ?? client).get<GetV1HomeResponses, unknown, ThrowOnError>({

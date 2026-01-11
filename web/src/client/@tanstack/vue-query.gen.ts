@@ -337,7 +337,7 @@ export const postV1DownloadersByIdTestMutation = (options?: Partial<Options<Post
 export const getV1HomeQueryKey = (options?: Options<GetV1HomeData>) => createQueryKey('getV1Home', options);
 
 /**
- * Get rails
+ * Get home feed
  */
 export const getV1HomeOptions = (options?: Options<GetV1HomeData>) => {
     return queryOptions({

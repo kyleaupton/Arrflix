@@ -28,11 +28,10 @@ import { computed, ref } from 'vue'
 import { CheckCircle2, Loader2 } from 'lucide-vue-next'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
+  type ModelHydratedTitle,
   type ModelLibraryItem,
   type ModelMovieDetail,
-  type ModelMovieRail,
   type ModelSeriesDetail,
-  type ModelSeriesRail,
 } from '@/client/types.gen'
 
 /**
@@ -70,7 +69,7 @@ type PosterSize = keyof typeof POSTER_SIZES
 
 const props = withDefaults(
   defineProps<{
-    item: ModelMovieDetail | ModelSeriesDetail | ModelMovieRail | ModelSeriesRail | ModelLibraryItem
+    item: ModelMovieDetail | ModelSeriesDetail | ModelHydratedTitle | ModelLibraryItem
     size?: PosterSize
     to?: { path: string } | string
     clickable?: boolean
@@ -87,7 +86,7 @@ const props = withDefaults(
 
 const isInLibrary = computed(() => {
   if ('files' in props.item && props.item.files) {
-    return props.item.files.some((file) => file.status === 'available')
+    return props.item.files.some((file: any) => file.status === 'available')
   } else if ('isInLibrary' in props.item) {
     return props.item.isInLibrary
   }
