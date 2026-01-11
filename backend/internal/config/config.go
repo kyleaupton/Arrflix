@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/logger"
 )
 
 type Config struct {
@@ -32,7 +32,7 @@ func Load(log *logger.Logger) Config {
 	config := Config{
 		Env:            envOr("APP_ENV", "prod"),
 		Port:           envOr("PORT", "8080"),
-		DatabaseURL:    envOr("DATABASE_URL", "postgres://snaggle:snaggle@127.0.0.1:5432/snaggle?sslmode=disable"),
+		DatabaseURL:    envOr("DATABASE_URL", "postgres://arrflix:arrflixpw@127.0.0.1:5432/arrflix?sslmode=disable"),
 		CORSOrigin:     envOr("SSE_ALLOW_ORIGIN", "*"),
 		JWTSecret:      envOr("JWT_SECRET", "dev-insecure-change-me"),
 		TmdbAPIKey:     envOr("TMDB_API_KEY", ""),

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 )
 
 type SettingsService struct {

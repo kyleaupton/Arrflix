@@ -1,6 +1,6 @@
-# Snaggle
+# Arrflix
 
-Snaggle is a self-hosted media management platform designed to unify the best parts of Sonarr, Radarr, and Overseerr into a single, transparent, and flexible tool. It helps you manage your movie and series collections with a focus on filesystem integrity and efficient storage usage.
+Arrflix is a self-hosted media management platform designed to unify the best parts of Sonarr, Radarr, and Overseerr into a single, transparent, and flexible tool. It helps you manage your movie and series collections with a focus on filesystem integrity and efficient storage usage.
 
 ## Features
 
@@ -14,7 +14,7 @@ Snaggle is a self-hosted media management platform designed to unify the best pa
 
 ## Getting Started
 
-Snaggle is distributed as a Docker container that includes the API, Frontend, and Prowlarr.
+Arrflix is distributed as a Docker container that includes the API, Frontend, and Prowlarr.
 
 ### Prerequisites
 
@@ -27,8 +27,8 @@ Snaggle is distributed as a Docker container that includes the API, Frontend, an
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/kyleaupton/snaggle.git
-   cd snaggle
+   git clone https://github.com/kyleaupton/Arrflix.git
+   cd Arrflix
    ```
 
 2. **Configure environment variables**:
@@ -39,10 +39,10 @@ Snaggle is distributed as a Docker container that includes the API, Frontend, an
    MEDIA_LIBRARIES=/path/to/your/media
    ```
 
-3. **Launch Snaggle**:
+3. **Launch Arrflix**:
 
    ```bash
-   docker compose up -d snaggle
+   docker compose up -d arrflix
    ```
 
 4. **Access the interface**:
@@ -50,10 +50,10 @@ Snaggle is distributed as a Docker container that includes the API, Frontend, an
 
 ## Downloader & VPN Scope
 
-Snaggle focuses on media management and indexer orchestration. To maintain a lightweight and flexible footprint:
+Arrflix focuses on media management and indexer orchestration. To maintain a lightweight and flexible footprint:
 
-- **Downloaders**: Snaggle integrates with external downloaders via API. While sample services are provided in the `docker-compose.yml` for reference, you are encouraged to use your existing downloader setup.
-- **VPN/Privacy**: Privacy is your responsibility. We recommend running your downloaders behind a VPN (such as Gluetun or a dedicated VPN container). Snaggle does not bundle a VPN client.
+- **Downloaders**: Arrflix integrates with external downloaders via API. While sample services are provided in the `docker-compose.yml` for reference, you are encouraged to use your existing downloader setup.
+- **VPN/Privacy**: Privacy is your responsibility. We recommend running your downloaders behind a VPN (such as Gluetun or a dedicated VPN container). Arrflix does not bundle a VPN client.
 
 ## Configuration
 

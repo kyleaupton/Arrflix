@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
-	pw "github.com/kyleaupton/snaggle/backend/internal/password"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	pw "github.com/kyleaupton/Arrflix/internal/password"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 )
 
 type UsersService struct {

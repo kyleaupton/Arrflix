@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyleaupton/snaggle/backend/internal/sse"
-	"github.com/kyleaupton/snaggle/backend/internal/service"
+	"github.com/kyleaupton/Arrflix/internal/service"
+	"github.com/kyleaupton/Arrflix/internal/sse"
 	"github.com/labstack/echo/v4"
 )
 
@@ -118,5 +118,3 @@ func (h *Events) Stream(c echo.Context) error {
 		}
 	}
 }
-
-

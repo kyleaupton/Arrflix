@@ -1,8 +1,8 @@
-# Snaggle Project Brief
+# Arrflix Project Brief
 
 ## Overview
 
-Snaggle is a self-hosted media management platform (Go/Vue 3) designed to unify the functionality of Sonarr, Radarr, and Overseerr. It prioritizes filesystem transparency, flexible monitoring (Series, Season, or Episode level), and a hardlink-first import strategy.
+Arrflix is a self-hosted media management platform (Go/Vue 3) designed to unify the functionality of Sonarr, Radarr, and Overseerr. It prioritizes filesystem transparency, flexible monitoring (Series, Season, or Episode level), and a hardlink-first import strategy.
 
 **Note**: This brief is the primary source of truth for the project's current state. The root `README.md` contains basic user information, but this document should be used for development context.
 
@@ -32,19 +32,17 @@ The project uses a multi-container Docker setup defined in the root `docker-comp
 
 ## Architecture
 
-Snaggle uses a container-based architecture managed by **s6-overlay** for internal process orchestration within the main container.
+Arrflix uses a container-based architecture managed by **s6-overlay** for internal process orchestration within the main container.
 
 ### Services & Containers
 
-- **Main Container (`snaggle`)**:
+- **Main Container (`arrflix`)**:
   - **Backend (Go + Echo)**: REST API and background worker (in-proc). Uses `sqlc` for type-safe database access and `pgx/v5` for Postgres.
   - **Frontend (Vue 3 + Vite)**: Single Page Application with a generated TypeScript client.
   - **Database (Postgres)**: Persistent storage for metadata, jobs, and settings.
   - **Nginx**: Serves the frontend and proxies API requests.
   - **Prowlarr**: Integrated for indexer management and discovery.
   - **s6-overlay**: Manages the lifecycle of the services above, ensuring correct startup order (e.g., Postgres -> Backend).
-- **VPN Container (`vpn`)**: An OpenVPN client container providing a secure network for the downloader.
-- **Downloader Container (`qbittorrent`)**: Configured with `network_mode: service:vpn` to ensure all traffic is tunneled.
 
 ### Persistence & Cache
 

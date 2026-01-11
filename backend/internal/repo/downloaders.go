@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
 )
 
 type DownloaderRepo interface {
@@ -70,4 +70,3 @@ func (r *Repository) UpdateDownloader(ctx context.Context, id pgtype.UUID, name,
 func (r *Repository) DeleteDownloader(ctx context.Context, id pgtype.UUID) error {
 	return r.Q.DeleteDownloader(ctx, id)
 }
-

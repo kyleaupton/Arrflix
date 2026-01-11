@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/kyleaupton/snaggle/backend/internal/downloader"
+	"github.com/kyleaupton/Arrflix/internal/downloader"
 )
 
 // Config represents qBittorrent-specific configuration

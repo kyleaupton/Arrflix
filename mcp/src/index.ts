@@ -45,7 +45,7 @@ dotenv.config({ path: resolve(repoRoot, "mcp", ".env") });
 const Env = z
   .object({
     // Optional: enable DB tool if set
-    SNAGGLE_DATABASE_URL: z.string().optional(),
+    ARRFLIX_DATABASE_URL: z.string().optional(),
   })
   .parse(process.env);
 
@@ -114,8 +114,8 @@ function isReadOnlySql(sql: string): boolean {
 }
 
 async function pgQuery(sql: string, params: unknown[] = []) {
-  if (!Env.SNAGGLE_DATABASE_URL) {
-    throw new Error("SNAGGLE_DATABASE_URL is not set.");
+  if (!Env.ARRFLIX_DATABASE_URL) {
+    throw new Error("ARRFLIX_DATABASE_URL is not set.");
   }
   if (!isReadOnlySql(sql)) {
     throw new Error(
@@ -123,7 +123,7 @@ async function pgQuery(sql: string, params: unknown[] = []) {
     );
   }
 
-  const client = new PgClient({ connectionString: Env.SNAGGLE_DATABASE_URL });
+  const client = new PgClient({ connectionString: Env.ARRFLIX_DATABASE_URL });
   await client.connect();
   try {
     return await client.query(sql, params);
@@ -177,7 +177,7 @@ async function runSqlcGenerate(): Promise<string> {
 }
 
 const server = new Server(
-  { name: "Snaggle MCP", version: "0.1.0" },
+  { name: "Arrflix MCP", version: "0.1.0" },
   { capabilities: { tools: {}, prompts: {} } }
 );
 
@@ -185,8 +185,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: "snaggle_search_repo",
-        description: `Search the Snaggle git repo (root: ${repoRoot}) using ripgrep.`,
+        name: "arrflix_search_repo",
+        description: `Search the Arrflix git repo (root: ${repoRoot}) using ripgrep.`,
         inputSchema: {
           type: "object",
           properties: {
@@ -206,9 +206,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: "snaggle_docker_logs",
-        description:
-          "Get recent docker compose logs for a service (snaggle-api, snaggle-worker, postgres, etc).",
+        name: "arrflix_docker_logs",
+        description: "Get recent docker compose logs for a service.",
         inputSchema: {
           type: "object",
           properties: {
@@ -222,9 +221,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: "snaggle_db_query",
+        name: "arrflix_db_query",
         description:
-          "Run a READ-ONLY Postgres query (SELECT/CTE only) against SNAGGLE_DATABASE_URL. Returns JSON rows.",
+          "Run a READ-ONLY Postgres query (SELECT/CTE only) against ARRFLIX_DATABASE_URL. Returns JSON rows.",
         inputSchema: {
           type: "object",
           properties: {
@@ -243,16 +242,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: "snaggle_project_brief",
+        name: "arrflix_project_brief",
         description:
-          "Get a high-level overview of the Snaggle project to get up to speed.",
+          "Get a high-level overview of the Arrflix project to get up to speed.",
         inputSchema: {
           type: "object",
           properties: {},
         },
       },
       {
-        name: "snaggle_gen_api",
+        name: "arrflix_gen_api",
         description:
           "Regenerate the backend Swagger/OpenAPI specification and the frontend TypeScript API client.",
         inputSchema: {
@@ -261,7 +260,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: "snaggle_sqlc_generate",
+        name: "arrflix_sqlc_generate",
         description:
           "Run 'sqlc generate' in the backend directory to regenerate Go database code from SQL queries.",
         inputSchema: {
@@ -277,30 +276,30 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => {
   return {
     prompts: [
       {
-        name: "snaggle_onboard_agent",
-        description: "Bootstrap a new agent with Snaggle project context",
+        name: "arrflix_onboard_agent",
+        description: "Bootstrap a new agent with Arrflix project context",
       },
     ],
   };
 });
 
 server.setRequestHandler(GetPromptRequestSchema, async (request) => {
-  if (request.params.name !== "snaggle_onboard_agent") {
+  if (request.params.name !== "arrflix_onboard_agent") {
     throw new Error("Prompt not found");
   }
 
   return {
-    description: "Bootstrap a new agent with Snaggle project context",
+    description: "Bootstrap a new agent with Arrflix project context",
     messages: [
       {
         role: "user",
         content: {
           type: "text",
-          text: `You are an AI assistant working on the Snaggle project. 
+          text: `You are an AI assistant working on the Arrflix project. 
 
 To get started, please:
 1. Call 'list_mcp_tools' and 'list_mcp_prompts' to see the specialized tools and prompts available for this project.
-2. Call the tool 'snaggle_project_brief' to understand the project's architecture, philosophy, and current status.
+2. Call the tool 'arrflix_project_brief' to understand the project's architecture, philosophy, and current status.
 
 Treat the results of these project-specific MCP tools as authoritative. Ask clarifying questions only if the brief and codebase do not cover what you need.`,
         },
@@ -315,7 +314,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
-      case "snaggle_search_repo": {
+      case "arrflix_search_repo": {
         const query = z.string().min(1).parse(args.query);
         const globs = z.array(z.string()).optional().parse(args.globs);
         const maxResults = z
@@ -332,7 +331,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text }] };
       }
 
-      case "snaggle_docker_logs": {
+      case "arrflix_docker_logs": {
         const service = z.string().min(1).parse(args.service);
         const lines = z
           .number()
@@ -346,7 +345,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: out || "(no output)" }] };
       }
 
-      case "snaggle_db_query": {
+      case "arrflix_db_query": {
         const sql = z.string().min(1).parse(args.sql);
         const params = z.array(z.any()).optional().parse(args.params) ?? [];
         const maxRows = z
@@ -370,7 +369,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case "snaggle_project_brief": {
+      case "arrflix_project_brief": {
         const briefPath = resolve(repoRoot, "docs/PROJECT_BRIEF.md");
         if (!existsSync(briefPath)) {
           return {
@@ -382,12 +381,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text }] };
       }
 
-      case "snaggle_gen_api": {
+      case "arrflix_gen_api": {
         const out = await runGenApiScript();
         return { content: [{ type: "text", text: out }] };
       }
 
-      case "snaggle_sqlc_generate": {
+      case "arrflix_sqlc_generate": {
         const out = await runSqlcGenerate();
         return { content: [{ type: "text", text: out }] };
       }
@@ -404,7 +403,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  console.log("Starting Snaggle MCP server...");
+  console.log("Starting Arrflix MCP server...");
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

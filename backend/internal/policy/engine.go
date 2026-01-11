@@ -8,10 +8,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 )
 
 // Engine evaluates policies against torrent metadata to produce plans

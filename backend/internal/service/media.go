@@ -9,10 +9,10 @@ import (
 	"time"
 
 	tmdb "github.com/cyruzin/golang-tmdb"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 )
 
 type MediaService struct {
@@ -359,20 +359,20 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 	}
 
 	return model.MovieDetail{
-		TmdbID:        tmdbDetails.ID,
-		Title:         tmdbDetails.Title,
-		Year:          year,
-		Overview:      tmdbDetails.Overview,
-		Tagline:       tmdbDetails.Tagline,
-		Status:        tmdbDetails.Status,
-		ReleaseDate:   tmdbDetails.ReleaseDate,
-		Runtime:       tmdbDetails.Runtime,
-		Genres:        genres,
-		PosterPath:    tmdbDetails.PosterPath,
-		BackdropPath:  tmdbDetails.BackdropPath,
-		Files:         fileInfos,
-		Credits:       credits,
-		Videos:        videos,
+		TmdbID:          tmdbDetails.ID,
+		Title:           tmdbDetails.Title,
+		Year:            year,
+		Overview:        tmdbDetails.Overview,
+		Tagline:         tmdbDetails.Tagline,
+		Status:          tmdbDetails.Status,
+		ReleaseDate:     tmdbDetails.ReleaseDate,
+		Runtime:         tmdbDetails.Runtime,
+		Genres:          genres,
+		PosterPath:      tmdbDetails.PosterPath,
+		BackdropPath:    tmdbDetails.BackdropPath,
+		Files:           fileInfos,
+		Credits:         credits,
+		Videos:          videos,
 		Recommendations: recommendations,
 	}, nil
 }
@@ -777,10 +777,10 @@ func (s *MediaService) buildFileInfosFromDownloadJobs(ctx context.Context, tmdbI
 	}
 
 	activeStatuses := map[string]bool{
-		"created":    true,
-		"enqueued":   true,
+		"created":     true,
+		"enqueued":    true,
 		"downloading": true,
-		"importing":  true,
+		"importing":   true,
 	}
 
 	fileInfos := make([]model.FileInfo, 0)

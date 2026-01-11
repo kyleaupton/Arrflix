@@ -3,9 +3,9 @@ set -euo pipefail
 
 : "${DB_HOST:=localhost}"
 : "${DB_PORT:=5432}"
-: "${DB_USER:=snaggle}"
-: "${DB_NAME:=snaggle}"
-: "${DB_PASSWORD:=snagglepw}"
+: "${DB_USER:=arrflix}"
+: "${DB_NAME:=arrflix}"
+: "${DB_PASSWORD:=arrflixpw}"
 
 echo "[postgres-ready] checking SQL readiness on ${DB_HOST}:${DB_PORT}/${DB_NAME}..."
 

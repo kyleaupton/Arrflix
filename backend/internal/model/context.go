@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyleaupton/snaggle/backend/internal/release"
-	"github.com/kyleaupton/snaggle/backend/internal/template"
+	"github.com/kyleaupton/Arrflix/internal/release"
+	"github.com/kyleaupton/Arrflix/internal/template"
 )
 
 // Phase indicates when a field becomes available

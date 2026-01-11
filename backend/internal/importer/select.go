@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kyleaupton/snaggle/backend/internal/downloader"
+	"github.com/kyleaupton/Arrflix/internal/downloader"
 )
 
 // PickMainMovieFile chooses the "main" file for a movie download.
@@ -69,5 +69,3 @@ func EnsureExt(path, ext string) string {
 	}
 	return path + ext
 }
-
-

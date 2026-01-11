@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
 )
 
 // LibraryQueryParams contains parameters for paginated library queries

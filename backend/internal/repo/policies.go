@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
 )
 
 type PolicyRepo interface {
@@ -117,4 +117,3 @@ func (r *Repository) UpdateAction(ctx context.Context, id pgtype.UUID, actionTyp
 func (r *Repository) DeleteAction(ctx context.Context, id pgtype.UUID) error {
 	return r.Q.DeleteAction(ctx, id)
 }
-

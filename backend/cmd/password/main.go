@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kyleaupton/snaggle/backend/internal/password"
+	"github.com/kyleaupton/Arrflix/internal/password"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/kyleaupton/snaggle/backend
+module github.com/kyleaupton/Arrflix
 
 go 1.24.0
 

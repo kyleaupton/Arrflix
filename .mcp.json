@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "snaggle": {
+    "arrflix": {
       "command": "npx",
       "args": ["-y", "tsx", "./mcp/src/index.ts"]
     },

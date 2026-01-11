@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Snaggle is a self-hosted media management platform that unifies the best parts of Sonarr, Radarr, and Overseerr into a single tool. It manages movie and series collections with a focus on filesystem integrity and efficient storage using a hardlink-first strategy.
+Arrflix is a self-hosted media management platform that unifies the best parts of Sonarr, Radarr, and Overseerr into a single tool. It manages movie and series collections with a focus on filesystem integrity and efficient storage using a hardlink-first strategy.
 
 **Tech Stack:**
+
 - **Backend**: Go (Echo framework, PostgreSQL with pgx/v5, SQLC for type-safe queries)
 - **Frontend**: Vue 3 + TypeScript (Vite, Vue Router, Pinia, TanStack Query)
 - **Database**: PostgreSQL
@@ -19,7 +20,7 @@ Snaggle is a self-hosted media management platform that unifies the best parts o
 
 ```bash
 # Start all services (Postgres, API with hot reload, Vite dev server, Nginx)
-docker compose up -d snaggle
+docker compose up -d arrflix
 
 # Access the app
 # - Main app: http://localhost:8484
@@ -27,6 +28,7 @@ docker compose up -d snaggle
 ```
 
 **Environment Variables**: Create `.env` file with at minimum:
+
 ```
 TMDB_API_KEY=your_api_key_here
 MEDIA_LIBRARIES=/path/to/your/media
@@ -35,6 +37,7 @@ MEDIA_LIBRARIES=/path/to/your/media
 ### Backend Development
 
 **Project Structure:**
+
 - `backend/cmd/api/main.go` - Main API entry point
 - `backend/internal/service/` - Business logic layer (12+ services: Auth, Media, Download, Import, etc.)
 - `backend/internal/repo/` - Data access layer (wraps SQLC-generated code)
@@ -47,6 +50,7 @@ MEDIA_LIBRARIES=/path/to/your/media
 - `backend/internal/jobs/` - Background workers (e.g., download job polling)
 
 **Key Commands:**
+
 ```bash
 cd backend
 
@@ -72,6 +76,7 @@ swag init -g internal/http/http.go -o internal/http/docs --requiredByDefault
 ### Frontend Development
 
 **Project Structure:**
+
 - `web/src/views/` - Route components (Home, Library, Settings, Movie, Series, etc.)
 - `web/src/components/` - Reusable UI components organized by domain:
   - `ui/` - Base UI components (shadcn-vue style)
@@ -83,6 +88,7 @@ swag init -g internal/http/http.go -o internal/http/docs --requiredByDefault
 - `web/src/router/` - Vue Router configuration with auth guards
 
 **Key Commands:**
+
 ```bash
 cd web
 
@@ -123,19 +129,23 @@ When you modify backend API handlers:
 ## Architecture Notes
 
 ### Service Layer Pattern
+
 The backend uses a layered architecture:
+
 1. **HTTP Handlers** (`internal/http/handlers/`) - Handle requests, call services
 2. **Services** (`internal/service/`) - Business logic, orchestrate repos and external APIs
 3. **Repository** (`internal/repo/`) - Data access, wraps SQLC-generated code
 4. **Database** - PostgreSQL accessed via SQLC type-safe queries
 
 All services are initialized in `service.New()` and injected into handlers. Key services include:
+
 - **MediaService**: Manages media metadata, integrates with TMDB
 - **DownloadCandidatesService**: Searches indexers, evaluates quality policies
 - **ImportService**: Hardlinks completed downloads into library
 - **ScannerService**: Scans filesystem for media
 
 ### Download Flow
+
 1. User requests media → searches indexers via **IndexerService** (wraps Prowlarr)
 2. Results filtered by **PolicyEngine** based on quality profiles
 3. User selects candidate → creates **DownloadJob** via **DownloadJobsService**
@@ -143,11 +153,13 @@ All services are initialized in `service.New()` and injected into handlers. Key 
 5. On completion → **ImportService** hardlinks files to library using **NameTemplates**
 
 ### State Management
+
 - **Frontend**: Pinia stores (auth, settings, etc.) + TanStack Query for server state
 - **Backend**: In-memory SSE broker for real-time updates (download progress, scan events)
 - **Authentication**: JWT tokens with auth middleware on protected routes
 
 ### MCP Integration
+
 The project includes a custom MCP server in `mcp/` for development and operations tooling. Configure in `.cursor/mcp.json`.
 
 ## Testing

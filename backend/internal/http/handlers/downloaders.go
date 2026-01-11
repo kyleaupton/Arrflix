@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/kyleaupton/snaggle/backend/internal/downloader"
-	"github.com/kyleaupton/snaggle/backend/internal/service"
+	"github.com/kyleaupton/Arrflix/internal/downloader"
+	"github.com/kyleaupton/Arrflix/internal/service"
 	"github.com/labstack/echo/v4"
 )
 

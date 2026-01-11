@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	_ "github.com/jackc/pgx/v5/pgtype"
-	_ "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
-	_ "github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/service"
+	_ "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	_ "github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/service"
 	"github.com/labstack/echo/v4"
 )
 

@@ -12,12 +12,12 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/policy"
-	"github.com/kyleaupton/snaggle/backend/internal/release"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/policy"
+	"github.com/kyleaupton/Arrflix/internal/release"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 )
 
 var (

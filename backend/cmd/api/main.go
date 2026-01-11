@@ -7,16 +7,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kyleaupton/snaggle/backend/internal/config"
-	"github.com/kyleaupton/snaggle/backend/internal/db"
-	"github.com/kyleaupton/snaggle/backend/internal/downloader"
-	"github.com/kyleaupton/snaggle/backend/internal/downloader/qbittorrent"
-	"github.com/kyleaupton/snaggle/backend/internal/http"
-	"github.com/kyleaupton/snaggle/backend/internal/jobs/downloadjobs"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
-	"github.com/kyleaupton/snaggle/backend/internal/service"
-	"github.com/kyleaupton/snaggle/backend/internal/sse"
+	"github.com/kyleaupton/Arrflix/internal/config"
+	"github.com/kyleaupton/Arrflix/internal/db"
+	"github.com/kyleaupton/Arrflix/internal/downloader"
+	"github.com/kyleaupton/Arrflix/internal/downloader/qbittorrent"
+	"github.com/kyleaupton/Arrflix/internal/http"
+	"github.com/kyleaupton/Arrflix/internal/jobs/downloadjobs"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/repo"
+	"github.com/kyleaupton/Arrflix/internal/service"
+	"github.com/kyleaupton/Arrflix/internal/sse"
 )
 
 func main() {

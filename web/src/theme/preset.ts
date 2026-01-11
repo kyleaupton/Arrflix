@@ -1,8 +1,8 @@
 import { definePreset } from '@primeuix/themes'
 import Aura from '@primeuix/themes/aura'
 
-// Snaggle theme preset based on Aura. Customize tokens here.
-const SnagglePreset = definePreset(Aura, {
+// Arrflix theme preset based on Aura. Customize tokens here.
+const ArrflixPreset = definePreset(Aura, {
   // primitive: {
   //   borderRadius: {
   //     sm: '8px',
@@ -73,4 +73,4 @@ const SnagglePreset = definePreset(Aura, {
   // },
 })
 
-export default SnagglePreset
+export default ArrflixPreset

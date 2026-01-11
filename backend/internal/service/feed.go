@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 
-	"github.com/kyleaupton/snaggle/backend/internal/feed"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	"github.com/kyleaupton/Arrflix/internal/feed"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 )
 
 type FeedService struct {

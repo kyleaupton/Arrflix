@@ -4,17 +4,17 @@ import (
 	"context"
 	"sort"
 
-	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 )
 
 // Composer builds the complete home feed
 type Composer struct {
-	registry       *Registry
-	sources        *TMDBSourceFactory
-	heroStrategy   HeroStrategy
-	repo           *repo.Repository
-	freshness      FreshnessTracker
+	registry     *Registry
+	sources      *TMDBSourceFactory
+	heroStrategy HeroStrategy
+	repo         *repo.Repository
+	freshness    FreshnessTracker
 }
 
 // NewComposer creates a new feed composer

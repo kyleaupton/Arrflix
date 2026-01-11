@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/kyleaupton/snaggle/backend/internal/config"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/policy"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	"github.com/kyleaupton/Arrflix/internal/config"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/policy"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 )
 
 type Services struct {

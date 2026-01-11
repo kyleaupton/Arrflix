@@ -9,15 +9,15 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
-	"github.com/kyleaupton/snaggle/backend/internal/downloader"
-	"github.com/kyleaupton/snaggle/backend/internal/importer"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/mediainfo"
-	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/release"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
-	"github.com/kyleaupton/snaggle/backend/internal/template"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/Arrflix/internal/downloader"
+	"github.com/kyleaupton/Arrflix/internal/importer"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/mediainfo"
+	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/release"
+	"github.com/kyleaupton/Arrflix/internal/repo"
+	"github.com/kyleaupton/Arrflix/internal/template"
 )
 
 type ImportService struct {

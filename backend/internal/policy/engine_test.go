@@ -5,15 +5,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kyleaupton/snaggle/backend/internal"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/release"
+	"github.com/kyleaupton/Arrflix/internal"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/release"
 )
 
 func TestEngine_Evaluate(t *testing.T) {
-	if os.Getenv("SNAGGLE_INTEGRATION") != "1" {
-		t.Skip("skipping integration test (set SNAGGLE_INTEGRATION=1 to enable)")
+	if os.Getenv("ARRFLIX_INTEGRATION") != "1" {
+		t.Skip("skipping integration test (set ARRFLIX_INTEGRATION=1 to enable)")
 	}
 
 	r := internal.GetRepo()

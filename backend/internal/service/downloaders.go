@@ -7,9 +7,9 @@ import (
 	"net/url"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 	qbt "github.com/superturkey650/go-qbittorrent/qbt"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
 )
 
 type DownloadersService struct {
@@ -166,4 +166,3 @@ func (s *DownloadersService) EnqueueDownload(ctx context.Context, downloaderID p
 		return errors.New("unsupported downloader type")
 	}
 }
-

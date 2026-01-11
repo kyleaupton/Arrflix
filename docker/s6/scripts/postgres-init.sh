@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${POSTGRES_DB:=snaggle}"
-: "${POSTGRES_USER:=snaggle}"
-: "${POSTGRES_PASSWORD:=snagglepw}"
+: "${POSTGRES_DB:=arrflix}"
+: "${POSTGRES_USER:=arrflix}"
+: "${POSTGRES_PASSWORD:=arrflixpw}"
 : "${PGDATA:=/var/lib/postgresql/data}"
 : "${TEMP_PORT:=5433}"
 : "${PG_BINDIR:=/usr/lib/postgresql/16/bin}"
@@ -43,8 +43,8 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
   s6-setuidgid postgres psql -v ON_ERROR_STOP=1 -p "${TEMP_PORT}" <<-'EOSQL'
     DO $$
     BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'snaggle') THEN
-        CREATE ROLE snaggle LOGIN PASSWORD 'snagglepw';
+      IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'arrflix') THEN
+        CREATE ROLE arrflix LOGIN PASSWORD 'arrflixpw';
       END IF;
       IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'prowlarr') THEN
         CREATE ROLE prowlarr LOGIN PASSWORD 'prowlarrpw';

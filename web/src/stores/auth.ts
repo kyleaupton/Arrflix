@@ -11,7 +11,7 @@ interface MeResponseMinimal {
   name?: string | null
 }
 
-const AUTH_TOKEN_KEY = 'snaggle.auth.token'
+const AUTH_TOKEN_KEY = 'arrflix.auth.token'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<Nullable<string>>(null)

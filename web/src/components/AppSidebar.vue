@@ -175,7 +175,7 @@ watch(
                 <Command class="size-4" />
               </div>
               <div class="grid flex-1 text-left text-sm leading-tight">
-                <span class="truncate font-medium">Snaggle</span>
+                <span class="truncate font-medium">Arrflix</span>
               </div>
             </a>
           </SidebarMenuButton>

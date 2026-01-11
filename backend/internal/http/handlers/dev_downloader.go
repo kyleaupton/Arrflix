@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/kyleaupton/snaggle/backend/internal/downloader"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	"github.com/kyleaupton/Arrflix/internal/downloader"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 	"github.com/labstack/echo/v4"
 )
 

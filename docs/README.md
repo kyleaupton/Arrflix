@@ -1,4 +1,4 @@
-# Snaggle Docs
+# Arrflix Docs
 
 ## Installation
 
@@ -6,18 +6,18 @@ Target `docker-compose.yml` file (for now):
 
 ```yml
 services:
-  snaggle:
-    image: ghcr.io/kyleaupton/snaggle:0.0.1
+  arrflix:
+    image: ghcr.io/kyleaupton/arrflix:0.0.1
     environment:
       TMDB_API_KEY: ${TMDB_API_KEY}
     ports:
       - "8484:8484"
     volumes:
-      - snaggle_pg_data:/var/lib/postgresql/data
+      - arrflix_pg_data:/var/lib/postgresql/data
     restart: unless-stopped
 
 volumes:
-  snaggle_pg_data:
+  arrflix_pg_data:
 ```
 
 ## Local development
@@ -41,4 +41,4 @@ Set at least `TMDB_API_KEY` in your shell or an `.env` file. Optional: `POSTGRES
 
 - First run will install `web/node_modules` inside the container; it's persisted via the `web_node_modules` volume.
 - Hot reload: Vite serves the SPA; Nginx proxies `/` to Vite and `/api/` to the Go API. No CORS needed.
-- Database data is persisted in the `snaggle_pg_data` volume.
+- Database data is persisted in the `arrflix_pg_data` volume.

@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 )
 
 type NameTemplatesService struct {
@@ -118,4 +118,3 @@ func (s *NameTemplatesService) unsetOtherDefaultsExcluding(ctx context.Context, 
 
 	return nil
 }
-

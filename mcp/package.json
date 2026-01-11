@@ -1,11 +1,11 @@
 {
-  "name": "Snaggle MCP",
+  "name": "Arrflix MCP",
   "version": "0.1.0",
-  "description": "Local MCP tools for Snaggle dev + ops",
+  "description": "Local MCP tools for Arrflix dev + ops",
   "private": true,
   "type": "module",
   "bin": {
-    "Snaggle MCP": "./build/index.js"
+    "Arrflix MCP": "./build/index.js"
   },
   "files": [
     "build"

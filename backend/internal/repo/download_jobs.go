@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
 )
 
 type DownloadJobsRepo interface {
@@ -70,7 +70,7 @@ func (r *Repository) ClaimRunnableDownloadJobs(ctx context.Context, limit int32)
 
 func (r *Repository) SetDownloadJobEnqueued(ctx context.Context, id pgtype.UUID, downloaderExternalID string) (dbgen.DownloadJob, error) {
 	return r.Q.SetDownloadJobEnqueued(ctx, dbgen.SetDownloadJobEnqueuedParams{
-		ID:                 id,
+		ID:                   id,
 		DownloaderExternalID: &downloaderExternalID,
 	})
 }
@@ -107,5 +107,3 @@ func (r *Repository) MarkDownloadJobFailed(ctx context.Context, id pgtype.UUID, 
 		LastError: &lastError,
 	})
 }
-
-

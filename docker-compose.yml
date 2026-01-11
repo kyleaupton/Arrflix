@@ -1,10 +1,10 @@
 services:
-  snaggle:
+  arrflix:
     build:
       context: .
       dockerfile: docker/Dockerfile.dev
-    image: snaggle:dev
-    container_name: snaggle-dev
+    image: arrflix:dev
+    container_name: arrflix-dev
     environment:
       APP_ENV: dev
       TMDB_API_KEY: ${TMDB_API_KEY}

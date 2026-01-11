@@ -2,21 +2,21 @@ package http
 
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/kyleaupton/snaggle/backend/internal/config"
-	"github.com/kyleaupton/snaggle/backend/internal/downloader"
-	"github.com/kyleaupton/snaggle/backend/internal/http/handlers"
-	"github.com/kyleaupton/snaggle/backend/internal/http/middlewares"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
-	"github.com/kyleaupton/snaggle/backend/internal/service"
-	"github.com/kyleaupton/snaggle/backend/internal/sse"
+	"github.com/kyleaupton/Arrflix/internal/config"
+	"github.com/kyleaupton/Arrflix/internal/downloader"
+	"github.com/kyleaupton/Arrflix/internal/http/handlers"
+	"github.com/kyleaupton/Arrflix/internal/http/middlewares"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/repo"
+	"github.com/kyleaupton/Arrflix/internal/service"
+	"github.com/kyleaupton/Arrflix/internal/sse"
 
-	_ "github.com/kyleaupton/snaggle/backend/internal/http/docs"
+	_ "github.com/kyleaupton/Arrflix/internal/http/docs"
 
 	"github.com/labstack/echo/v4"
 )
 
-// @title		Snaggle API
+// @title		Arrflix API
 // @version		0.0.1
 // @BasePath	/api
 func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, services *service.Services, repo *repo.Repository, downloaderManager *downloader.Manager, broker *sse.Broker) *echo.Echo {

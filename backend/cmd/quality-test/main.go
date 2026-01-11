@@ -9,7 +9,7 @@ import (
 	"golift.io/starr"
 	"golift.io/starr/sonarr"
 
-	"github.com/kyleaupton/snaggle/backend/internal/release"
+	"github.com/kyleaupton/Arrflix/internal/release"
 )
 
 // ANSI color codes
@@ -22,7 +22,7 @@ const (
 )
 
 // testTitles contains release titles to test against Sonarr
-// These are used to validate parity between Snaggle and Sonarr's quality parser
+// These are used to validate parity between Arrflix and Sonarr's quality parser
 var testTitles = []string{
 	// SDTV
 	"S07E23 .avi",
@@ -325,7 +325,7 @@ func main() {
 	client := sonarr.New(cfg)
 
 	fmt.Printf("%s╔══════════════════════════════════════════════════════════════════╗%s\n", colorCyan, colorReset)
-	fmt.Printf("%s║           Quality Parser Comparison: Sonarr vs Snaggle           ║%s\n", colorCyan, colorReset)
+	fmt.Printf("%s║           Quality Parser Comparison: Sonarr vs Arrflix           ║%s\n", colorCyan, colorReset)
 	fmt.Printf("%s╚══════════════════════════════════════════════════════════════════╝%s\n\n", colorCyan, colorReset)
 
 	var matches, mismatches, errors int
@@ -344,20 +344,20 @@ func main() {
 			continue
 		}
 
-		// Get Snaggle's parsed quality
-		snaggleQuality := getSnaggleQuality(title)
+		// Get Arrflix's parsed quality
+		arrflixQuality := getArrflixQuality(title)
 
 		// Compare results
-		if sonarrQuality == snaggleQuality {
+		if sonarrQuality == arrflixQuality {
 			matches++
 			fmt.Printf("          %s✓ MATCH: %s%s\n\n", colorGreen, sonarrQuality, colorReset)
 		} else {
 			mismatches++
-			detail := fmt.Sprintf("Title: %s\n          Sonarr:  %s\n          Snaggle: %s", title, sonarrQuality, snaggleQuality)
+			detail := fmt.Sprintf("Title: %s\n          Sonarr:  %s\n          Arrflix: %s", title, sonarrQuality, arrflixQuality)
 			mismatchDetails = append(mismatchDetails, detail)
 			fmt.Printf("          %s✗ MISMATCH%s\n", colorRed, colorReset)
 			fmt.Printf("            Sonarr:  %s\n", sonarrQuality)
-			fmt.Printf("            Snaggle: %s\n\n", snaggleQuality)
+			fmt.Printf("            Arrflix: %s\n\n", arrflixQuality)
 		}
 	}
 
@@ -405,8 +405,8 @@ func getSonarrQuality(ctx context.Context, client *sonarr.Sonarr, title string) 
 	return result.ParsedEpisodeInfo.Quality.Quality.Name, nil
 }
 
-// getSnaggleQuality uses Snaggle's quality parser
-func getSnaggleQuality(title string) string {
+// getArrflixQuality uses Arrflix's quality parser
+func getArrflixQuality(title string) string {
 	result := release.Parse(title)
 	return result.Quality.Full()
 }

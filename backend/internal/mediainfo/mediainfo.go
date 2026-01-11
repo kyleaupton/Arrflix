@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyleaupton/snaggle/backend/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/model"
 	"github.com/rs/zerolog"
 )
 
@@ -58,30 +58,30 @@ type MediaInfoMedia struct {
 }
 
 type MediaInfoTrack struct {
-	Type                        string  `json:"@type"`
-	Format                      string  `json:"Format"`
-	FormatProfile               string  `json:"Format_Profile"`
-	CodecID                     string  `json:"CodecID"`
-	Duration                    string  `json:"Duration"`
-	BitRate                     string  `json:"BitRate"`
-	Width                       string  `json:"Width"`
-	Height                      string  `json:"Height"`
-	BitDepth                    string  `json:"BitDepth"`
-	FrameRate                   string  `json:"FrameRate"`
-	ScanType                    string  `json:"ScanType"`
-	ColorPrimaries              string  `json:"colour_primaries"`
-	TransferCharacteristics     string  `json:"transfer_characteristics"`
-	Channels                    string  `json:"Channels"`
-	ChannelLayout               string  `json:"ChannelLayout"`
-	ChannelPositions            string  `json:"ChannelPositions"`
-	Language                    string  `json:"Language"`
-	FileSize                    string  `json:"FileSize"`
-	StreamCount                 string  `json:"StreamCount"`
-	AudioCount                  string  `json:"AudioCount"`
-	TextCount                   string  `json:"TextCount"`
-	MultiViewCount              string  `json:"MultiView_Count"`
-	HDRFormat                   string  `json:"HDR_Format"`
-	HDRFormatCompatibility      string  `json:"HDR_Format_Compatibility"`
+	Type                           string `json:"@type"`
+	Format                         string `json:"Format"`
+	FormatProfile                  string `json:"Format_Profile"`
+	CodecID                        string `json:"CodecID"`
+	Duration                       string `json:"Duration"`
+	BitRate                        string `json:"BitRate"`
+	Width                          string `json:"Width"`
+	Height                         string `json:"Height"`
+	BitDepth                       string `json:"BitDepth"`
+	FrameRate                      string `json:"FrameRate"`
+	ScanType                       string `json:"ScanType"`
+	ColorPrimaries                 string `json:"colour_primaries"`
+	TransferCharacteristics        string `json:"transfer_characteristics"`
+	Channels                       string `json:"Channels"`
+	ChannelLayout                  string `json:"ChannelLayout"`
+	ChannelPositions               string `json:"ChannelPositions"`
+	Language                       string `json:"Language"`
+	FileSize                       string `json:"FileSize"`
+	StreamCount                    string `json:"StreamCount"`
+	AudioCount                     string `json:"AudioCount"`
+	TextCount                      string `json:"TextCount"`
+	MultiViewCount                 string `json:"MultiView_Count"`
+	HDRFormat                      string `json:"HDR_Format"`
+	HDRFormatCompatibility         string `json:"HDR_Format_Compatibility"`
 	MasteringDisplayColorPrimaries string `json:"MasteringDisplay_ColorPrimaries"`
 }
 

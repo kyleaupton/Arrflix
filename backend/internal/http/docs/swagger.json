@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "title": "Snaggle API",
+        "title": "Arrflix API",
         "contact": {},
         "version": "0.0.1"
     },

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kyleaupton/snaggle/backend/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/model"
 )
 
 // FreshnessTracker tracks when rows were last shown to enforce rotation

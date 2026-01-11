@@ -1,18 +1,18 @@
 services:
-  snaggle-prod:
+  arrflix-prod:
     build:
       context: .
       dockerfile: docker/Dockerfile.prod
-    image: snaggle:prod
-    container_name: snaggle-prod
+    image: arrflix:prod
+    container_name: arrflix-prod
     environment:
       TMDB_API_KEY: ${TMDB_API_KEY}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
     ports:
       - "8484:8484"
     volumes:
-      - snaggle_pg_data:/var/lib/postgresql/data
+      - arrflix_pg_data:/var/lib/postgresql/data
       - ${MEDIA_LIBRARIES}:/data
 
 volumes:
-  snaggle_pg_data:
+  arrflix_pg_data:

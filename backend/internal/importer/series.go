@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/kyleaupton/snaggle/backend/internal/downloader"
+	"github.com/kyleaupton/Arrflix/internal/downloader"
 )
 
 // SeriesInfo contains parsed season and episode numbers.
@@ -28,7 +28,7 @@ func ParseSeriesInfo(filename string) (SeriesInfo, bool) {
 		season, _ := strconv.Atoi(matches[1])
 		ep1, _ := strconv.Atoi(matches[2])
 		info := SeriesInfo{Season: season, Episodes: []int{ep1}}
-		
+
 		// Multi-episode S01E01E02 or S01E01-E02 or S01E01-02
 		if len(matches) >= 4 && matches[3] != "" {
 			ep2, _ := strconv.Atoi(matches[3])
@@ -102,4 +102,3 @@ func MatchFilesToEpisodes(files []downloader.File, targetSeason *int, targetEpis
 
 	return matched
 }
-

@@ -4,7 +4,7 @@ import (
 	"context"
 	"sort"
 
-	"github.com/kyleaupton/snaggle/backend/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/model"
 )
 
 // HeroStrategy defines how to select the hero item for the feed

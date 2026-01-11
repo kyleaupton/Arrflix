@@ -12,10 +12,10 @@ import (
 	"golift.io/starr"
 	"golift.io/starr/prowlarr"
 
-	"github.com/kyleaupton/snaggle/backend/internal/config"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/model"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
+	"github.com/kyleaupton/Arrflix/internal/config"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/repo"
 )
 
 type IndexerService struct {
@@ -53,7 +53,7 @@ func (s *IndexerService) GetSchema(ctx context.Context) ([]any, error) {
 		"x-api-key":    s.prowlarrAPIKey,
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
-		"User-Agent":   "Snaggle/1.0",
+		"User-Agent":   "Arrflix/1.0",
 	})
 	if err != nil {
 		return nil, err
@@ -190,7 +190,7 @@ func (s *IndexerService) Action(ctx context.Context, actionName string, input in
 		"x-api-key":         s.prowlarrAPIKey,
 		"Accept":            "application/json, text/javascript, */*; q=0.01",
 		"Content-Type":      "application/json",
-		"User-Agent":        "Snaggle/1.0",
+		"User-Agent":        "Arrflix/1.0",
 		"X-Prowlarr-Client": "true",
 		"X-Requested-With":  "XMLHttpRequest",
 		"Origin":            s.prowlarrURL,

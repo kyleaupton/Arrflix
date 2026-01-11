@@ -48,7 +48,7 @@ async function handleSubmit(e: Event) {
         >
           <GalleryVerticalEnd class="size-4" />
         </div>
-        Snaggle
+        Arrflix
       </a>
 
       <div :class="cn('flex flex-col gap-6', props.class)">

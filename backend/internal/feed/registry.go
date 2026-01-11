@@ -4,7 +4,7 @@ import (
 	"context"
 	"sort"
 
-	"github.com/kyleaupton/snaggle/backend/internal/model"
+	"github.com/kyleaupton/Arrflix/internal/model"
 )
 
 // Registry holds all available row definitions
@@ -99,12 +99,12 @@ func (r *Registry) registerBuiltinRows() {
 			ContentKind: model.ContentKindMixed,
 			Sources: []model.SourceConfig{
 				{Provider: "tmdb", Endpoint: "discover", Params: map[string]string{
-					"media_type":            "movie",
-					"primary_release_date":  "recent30",
+					"media_type":           "movie",
+					"primary_release_date": "recent30",
 				}},
 				{Provider: "tmdb", Endpoint: "discover", Params: map[string]string{
-					"media_type":      "tv",
-					"first_air_date":  "recent30",
+					"media_type":     "tv",
+					"first_air_date": "recent30",
 				}},
 			},
 			TargetSize: 20,

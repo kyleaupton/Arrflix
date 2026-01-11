@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/kyleaupton/snaggle/backend/internal/service"
+	"github.com/kyleaupton/Arrflix/internal/service"
 	"github.com/labstack/echo/v4"
 )
 
@@ -179,4 +179,3 @@ func (h *NameTemplates) GetDefault(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, template)
 }
-

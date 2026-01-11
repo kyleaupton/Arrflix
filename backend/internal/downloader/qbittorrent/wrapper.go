@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyleaupton/snaggle/backend/internal/downloader"
+	"github.com/kyleaupton/Arrflix/internal/downloader"
 	qbt "github.com/superturkey650/go-qbittorrent/qbt"
 )
 
@@ -466,7 +466,7 @@ func (c *qBittorrentClient) fetchTorrentFile(ctx context.Context, torrentURL str
 		return nil, "", fmt.Errorf("create request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", "Snaggle/1.0")
+	req.Header.Set("User-Agent", "Arrflix/1.0")
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)

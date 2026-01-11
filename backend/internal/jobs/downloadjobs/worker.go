@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"time"
 
-	dbgen "github.com/kyleaupton/snaggle/backend/internal/db/sqlc"
-	"github.com/kyleaupton/snaggle/backend/internal/downloader"
-	"github.com/kyleaupton/snaggle/backend/internal/importer"
-	"github.com/kyleaupton/snaggle/backend/internal/logger"
-	"github.com/kyleaupton/snaggle/backend/internal/repo"
-	"github.com/kyleaupton/snaggle/backend/internal/service"
-	"github.com/kyleaupton/snaggle/backend/internal/sse"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/Arrflix/internal/downloader"
+	"github.com/kyleaupton/Arrflix/internal/importer"
+	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/Arrflix/internal/repo"
+	"github.com/kyleaupton/Arrflix/internal/service"
+	"github.com/kyleaupton/Arrflix/internal/sse"
 )
 
 type Worker struct {
