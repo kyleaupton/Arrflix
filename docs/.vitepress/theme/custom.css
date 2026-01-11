@@ -1,0 +1,168 @@
+/* Using colors from web/src/main.css - oklch neutral theme */
+
+:root {
+  /* Brand colors - matching primary from main.css */
+  --vp-c-brand-1: oklch(0.205 0 0);
+  --vp-c-brand-2: oklch(0.145 0 0);
+  --vp-c-brand-3: oklch(0.269 0 0);
+  
+  /* Text colors - matching foreground */
+  --vp-c-text-1: oklch(0.145 0 0);
+  --vp-c-text-2: oklch(0.556 0 0);
+  --vp-c-text-3: oklch(0.708 0 0);
+  
+  /* Background colors - matching background */
+  --vp-c-bg: oklch(1 0 0);
+  --vp-c-bg-soft: oklch(0.985 0 0);
+  --vp-c-bg-mute: oklch(0.97 0 0);
+  
+  /* Border colors - matching border */
+  --vp-c-border: oklch(0.922 0 0);
+  --vp-c-divider: oklch(0.922 0 0);
+  
+  /* Code block colors */
+  --vp-c-bg-alt: oklch(0.97 0 0);
+  
+  /* Button colors - matching primary */
+  --vp-button-brand-bg: oklch(0.205 0 0);
+  --vp-button-brand-hover-bg: oklch(0.145 0 0);
+  --vp-button-brand-active-bg: oklch(0.269 0 0);
+  --vp-button-brand-text: oklch(0.985 0 0);
+  
+  --vp-button-alt-bg: oklch(1 0 0);
+  --vp-button-alt-hover-bg: oklch(0.985 0 0);
+  --vp-button-alt-active-bg: oklch(0.97 0 0);
+  --vp-button-alt-text: oklch(0.205 0 0);
+  --vp-button-alt-border: oklch(0.922 0 0);
+  
+  /* Input colors - matching input */
+  --vp-input-bg: oklch(1 0 0);
+  --vp-input-border: oklch(0.922 0 0);
+  --vp-input-hover-border: oklch(0.708 0 0);
+  --vp-input-text: oklch(0.145 0 0);
+  
+  /* Home page hero */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, oklch(0.205 0 0) 0%, oklch(0.556 0 0) 100%);
+  
+  /* Navbar */
+  --vp-nav-bg-color: oklch(1 0 0 / 0.7);
+  --vp-nav-logo-height: 24px;
+  
+  /* Sidebar - matching sidebar */
+  --vp-sidebar-bg-color: oklch(0.985 0 0);
+  
+  /* Code */
+  --vp-code-block-bg: oklch(0.97 0 0);
+  --vp-code-block-color: oklch(0.145 0 0);
+  --vp-code-color: oklch(0.145 0 0);
+  --vp-code-bg: oklch(0.97 0 0);
+  
+  /* Tip/Info/Warning/Danger blocks */
+  --vp-c-tip: oklch(0.205 0 0);
+  --vp-c-tip-bg: oklch(0.985 0 0);
+  --vp-c-tip-text: oklch(0.145 0 0);
+  --vp-c-tip-title: oklch(0.205 0 0);
+  --vp-c-tip-border: oklch(0.922 0 0);
+  
+  --vp-c-info: oklch(0.205 0 0);
+  --vp-c-info-bg: oklch(0.985 0 0);
+  --vp-c-info-text: oklch(0.145 0 0);
+  --vp-c-info-title: oklch(0.205 0 0);
+  --vp-c-info-border: oklch(0.922 0 0);
+  
+  --vp-c-warning: oklch(0.205 0 0);
+  --vp-c-warning-bg: oklch(0.985 0 0);
+  --vp-c-warning-text: oklch(0.145 0 0);
+  --vp-c-warning-title: oklch(0.205 0 0);
+  --vp-c-warning-border: oklch(0.922 0 0);
+  
+  --vp-c-danger: oklch(0.205 0 0);
+  --vp-c-danger-bg: oklch(0.985 0 0);
+  --vp-c-danger-text: oklch(0.145 0 0);
+  --vp-c-danger-title: oklch(0.205 0 0);
+  --vp-c-danger-border: oklch(0.922 0 0);
+}
+
+.dark {
+  /* Brand colors - matching primary */
+  --vp-c-brand-1: oklch(0.922 0 0);
+  --vp-c-brand-2: oklch(0.985 0 0);
+  --vp-c-brand-3: oklch(0.708 0 0);
+  
+  /* Text colors - matching foreground */
+  --vp-c-text-1: oklch(0.985 0 0);
+  --vp-c-text-2: oklch(0.708 0 0);
+  --vp-c-text-3: oklch(0.556 0 0);
+  
+  /* Background colors - matching background */
+  --vp-c-bg: oklch(0.145 0 0);
+  --vp-c-bg-soft: oklch(0.205 0 0);
+  --vp-c-bg-mute: oklch(0.269 0 0);
+  
+  /* Border colors - matching border */
+  --vp-c-border: oklch(1 0 0 / 10%);
+  --vp-c-divider: oklch(1 0 0 / 10%);
+  
+  /* Code block colors */
+  --vp-c-bg-alt: oklch(0.205 0 0);
+  
+  /* Button colors - matching primary */
+  --vp-button-brand-bg: oklch(0.922 0 0);
+  --vp-button-brand-hover-bg: oklch(0.985 0 0);
+  --vp-button-brand-active-bg: oklch(0.708 0 0);
+  --vp-button-brand-text: oklch(0.205 0 0);
+  
+  --vp-button-alt-bg: oklch(0.269 0 0);
+  --vp-button-alt-hover-bg: oklch(0.205 0 0);
+  --vp-button-alt-active-bg: oklch(0.145 0 0);
+  --vp-button-alt-text: oklch(0.985 0 0);
+  --vp-button-alt-border: oklch(1 0 0 / 10%);
+  
+  /* Input colors - matching input */
+  --vp-input-bg: oklch(0.205 0 0);
+  --vp-input-border: oklch(1 0 0 / 15%);
+  --vp-input-hover-border: oklch(1 0 0 / 20%);
+  --vp-input-text: oklch(0.985 0 0);
+  
+  /* Home page hero */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, oklch(0.922 0 0) 0%, oklch(0.708 0 0) 100%);
+  
+  /* Navbar */
+  --vp-nav-bg-color: oklch(0.145 0 0 / 0.7);
+  
+  /* Sidebar - matching sidebar */
+  --vp-sidebar-bg-color: oklch(0.205 0 0);
+  
+  /* Code */
+  --vp-code-block-bg: oklch(0.205 0 0);
+  --vp-code-block-color: oklch(0.985 0 0);
+  --vp-code-color: oklch(0.985 0 0);
+  --vp-code-bg: oklch(0.269 0 0);
+  
+  /* Tip/Info/Warning/Danger blocks */
+  --vp-c-tip: oklch(0.922 0 0);
+  --vp-c-tip-bg: oklch(0.205 0 0);
+  --vp-c-tip-text: oklch(0.985 0 0);
+  --vp-c-tip-title: oklch(0.922 0 0);
+  --vp-c-tip-border: oklch(1 0 0 / 10%);
+  
+  --vp-c-info: oklch(0.922 0 0);
+  --vp-c-info-bg: oklch(0.205 0 0);
+  --vp-c-info-text: oklch(0.985 0 0);
+  --vp-c-info-title: oklch(0.922 0 0);
+  --vp-c-info-border: oklch(1 0 0 / 10%);
+  
+  --vp-c-warning: oklch(0.922 0 0);
+  --vp-c-warning-bg: oklch(0.205 0 0);
+  --vp-c-warning-text: oklch(0.985 0 0);
+  --vp-c-warning-title: oklch(0.922 0 0);
+  --vp-c-warning-border: oklch(1 0 0 / 10%);
+  
+  --vp-c-danger: oklch(0.922 0 0);
+  --vp-c-danger-bg: oklch(0.205 0 0);
+  --vp-c-danger-text: oklch(0.985 0 0);
+  --vp-c-danger-title: oklch(0.922 0 0);
+  --vp-c-danger-border: oklch(1 0 0 / 10%);
+}
