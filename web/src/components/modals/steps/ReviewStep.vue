@@ -21,7 +21,10 @@ const configuredFields = computed(() => {
   }
 
   return props.saveData.fields
-    .filter((field) => hasValue(field.value))
+    .filter(
+      // @ts-expect-error field.type && hidden are not typed correctly
+      (field) => hasValue(field.value) && field.type !== 'info' && field.hidden !== 'hidden',
+    )
     .map((field) => {
       const fieldDefinition = props.selectedIndexer?.fields.find((def) => def.name === field.name)
       return {

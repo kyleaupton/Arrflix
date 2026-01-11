@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { InfoIcon } from 'lucide-vue-next'
 import { useMutation } from '@tanstack/vue-query'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +14,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Eye, EyeOff } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import {
   type ModelIndexerDefinition,
   type ModelIndexerOutput,
@@ -273,6 +275,15 @@ onMounted(() => {
           <span v-if="field.advanced" class="text-xs text-muted-foreground">(Advanced)</span>
         </Label>
       </div>
+    </template>
+
+    <!-- Info Fields -->
+    <template v-else-if="field.type === 'info'">
+      <Alert :id="fieldId">
+        <InfoIcon />
+        <AlertTitle>{{ field.label }}</AlertTitle>
+        <AlertDescription v-html="field.value as string" />
+      </Alert>
     </template>
 
     <!-- Fallback for unknown field types -->

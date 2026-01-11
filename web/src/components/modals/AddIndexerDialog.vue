@@ -165,7 +165,7 @@ const closeModal = () => {
         <StepperItem
           v-for="item in steps"
           :key="item.step"
-          :step="item.step"
+          :step="item.step - 1"
           class="relative flex w-full flex-col items-center justify-center"
         >
           <StepperTrigger>
