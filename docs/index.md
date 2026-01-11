@@ -3,23 +3,22 @@
 layout: home
 
 hero:
-  name: "Arrflix Docs"
-  text: "Arrflix Documentation"
-  tagline: My great project tagline
+  name: "Arrflix"
+  text: "Self-hosted media management"
+  tagline: Unify Sonarr, Radarr, and Overseerr in one platform
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: Get Started
+      link: /guide/introduction
     - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: View on GitHub
+      link: https://github.com/kyleaupton/Arrflix
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: Simpler Setup
+    details: Designed to reduce the amount of initial wiring and configuration needed to get started
+  - title: One Place to Look
+    details: Movies and series in a single system instead of being spread across multiple UIs
+  - title: Designed to Be Understood
+    details: The system favors clarity over cleverness
 ---
-
