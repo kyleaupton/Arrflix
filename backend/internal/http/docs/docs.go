@@ -2483,6 +2483,25 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/update": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "version"
+                ],
+                "summary": "Check for updates",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateInfo"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/users": {
             "get": {
                 "produces": [
@@ -2712,6 +2731,25 @@ const docTemplate = `{
                         "description": "No Content",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/version": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "version"
+                ],
+                "summary": "Get version information",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/versioninfo.BuildInfo"
                         }
                     }
                 }
@@ -5479,6 +5517,108 @@ const docTemplate = `{
                 },
                 "type": {
                     "description": "\"Trailer\", \"Teaser\", \"Clip\", etc.",
+                    "type": "string"
+                }
+            }
+        },
+        "service.CurrentVersionInfo": {
+            "type": "object",
+            "required": [
+                "version"
+            ],
+            "properties": {
+                "commit": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.LatestVersionInfo": {
+            "type": "object",
+            "required": [
+                "tag",
+                "url",
+                "version"
+            ],
+            "properties": {
+                "commit": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "publishedAt": {
+                    "type": "string"
+                },
+                "ref": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.UpdateInfo": {
+            "type": "object",
+            "required": [
+                "current",
+                "status"
+            ],
+            "properties": {
+                "current": {
+                    "$ref": "#/definitions/service.CurrentVersionInfo"
+                },
+                "latest": {
+                    "$ref": "#/definitions/service.LatestVersionInfo"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/service.UpdateStatus"
+                }
+            }
+        },
+        "service.UpdateStatus": {
+            "type": "string",
+            "enum": [
+                "up_to_date",
+                "update_available",
+                "unknown"
+            ],
+            "x-enum-varnames": [
+                "StatusUpToDate",
+                "StatusUpdateAvailable",
+                "StatusUnknown"
+            ]
+        },
+        "versioninfo.BuildInfo": {
+            "type": "object",
+            "required": [
+                "version"
+            ],
+            "properties": {
+                "buildDate": {
+                    "type": "string"
+                },
+                "commit": {
+                    "type": "string"
+                },
+                "components": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "version": {
                     "type": "string"
                 }
             }

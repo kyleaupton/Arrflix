@@ -4,6 +4,8 @@ import { defineConfig } from "vitepress";
 export default defineConfig({
   title: "Arrflix Docs",
   description: "Self-hosted media management platform",
+  // https://vitepress.dev/guide/deploy#setting-a-public-base-path
+  base: "/Arrflix/",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [{ text: "Home", link: "/" }],

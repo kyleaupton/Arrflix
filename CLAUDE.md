@@ -12,7 +12,7 @@ Arrflix is a self-hosted media management platform that unifies the best parts o
 - **Frontend**: Vue 3 + TypeScript (Vite, Vue Router, Pinia, TanStack Query)
 - **Database**: PostgreSQL
 - **API**: RESTful with auto-generated OpenAPI/Swagger docs
-- **Deployment**: Docker with supervisord orchestrating services
+- **Deployment**: Docker with s6-overlay process manager
 
 ## Development Setup
 
@@ -181,3 +181,32 @@ cd backend && go run cmd/quality-test/main.go
 # Generate password hash for user creation
 cd backend && go run cmd/password/main.go
 ```
+
+## Version and Update System
+
+Arrflix includes a built-in version tracking and update check system:
+
+**Build Metadata:**
+- Version information is injected at Docker build time via build args
+- Environment variables: `ARRFLIX_VERSION`, `ARRFLIX_COMMIT`, `ARRFLIX_BUILD_DATE`, `PROWLARR_VERSION`
+- Dev builds default to version `dev` with no update checks
+- Edge builds (from main branch) compare commit SHAs
+- Stable releases use semantic versioning and compare against GitHub releases
+
+**API Endpoints:**
+- `GET /api/v1/version` - Returns current build information
+- `GET /api/v1/update` - Checks GitHub for available updates (cached 15 minutes)
+
+**Implementation:**
+- `backend/internal/versioninfo/` - Reads environment variables
+- `backend/internal/github/` - GitHub API client
+- `backend/internal/semver/` - Semantic version comparison
+- `backend/internal/service/version.go` - Update check logic with caching
+- `web/src/components/settings/VersionCard.vue` - UI component
+
+**Update Logic:**
+- Dev builds: Always show status "unknown"
+- Edge builds: Compare commit SHA with GitHub main HEAD
+- Stable releases: Compare semver with latest GitHub release, show release notes
+- Prereleases: Always show status "unknown"
+- GitHub API responses cached for 15 minutes using existing `api_cache` table

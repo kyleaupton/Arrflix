@@ -39,6 +39,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	policies := handlers.NewPolicies(services)
 	settings := handlers.NewSettings(services)
 	users := handlers.NewUsers(services)
+	version := handlers.NewVersion(services)
 
 	api := e.Group("/api")
 	v1 := api.Group("/v1")
@@ -47,6 +48,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	// Public routes
 	auth.RegisterPublic(v1)
 	health.RegisterPublic(e)
+	version.RegisterPublic(v1)
 
 	// Protected routes
 	auth.RegisterProtected(protected)

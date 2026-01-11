@@ -875,6 +875,39 @@ export type ModelVideo = {
     type: string;
 };
 
+export type ServiceCurrentVersionInfo = {
+    commit?: string;
+    version: string;
+};
+
+export type ServiceLatestVersionInfo = {
+    commit?: string;
+    notes?: string;
+    publishedAt?: string;
+    ref?: string;
+    tag: string;
+    url: string;
+    version: string;
+};
+
+export type ServiceUpdateInfo = {
+    current: ServiceCurrentVersionInfo;
+    latest?: ServiceLatestVersionInfo;
+    reason?: string;
+    status: ServiceUpdateStatus;
+};
+
+export type ServiceUpdateStatus = 'up_to_date' | 'update_available' | 'unknown';
+
+export type VersioninfoBuildInfo = {
+    buildDate?: string;
+    commit?: string;
+    components?: {
+        [key: string]: string;
+    };
+    version: string;
+};
+
 export type GetHealthData = {
     body?: never;
     path?: never;
@@ -2772,6 +2805,22 @@ export type PatchV1SettingsResponses = {
 
 export type PatchV1SettingsResponse = PatchV1SettingsResponses[keyof PatchV1SettingsResponses];
 
+export type GetV1UpdateData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/update';
+};
+
+export type GetV1UpdateResponses = {
+    /**
+     * OK
+     */
+    200: ServiceUpdateInfo;
+};
+
+export type GetV1UpdateResponse = GetV1UpdateResponses[keyof GetV1UpdateResponses];
+
 export type GetV1UsersData = {
     body?: never;
     path?: never;
@@ -2942,3 +2991,19 @@ export type PutV1UsersByIdRoleResponses = {
 };
 
 export type PutV1UsersByIdRoleResponse = PutV1UsersByIdRoleResponses[keyof PutV1UsersByIdRoleResponses];
+
+export type GetV1VersionData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/version';
+};
+
+export type GetV1VersionResponses = {
+    /**
+     * OK
+     */
+    200: VersioninfoBuildInfo;
+};
+
+export type GetV1VersionResponse = GetV1VersionResponses[keyof GetV1VersionResponses];
