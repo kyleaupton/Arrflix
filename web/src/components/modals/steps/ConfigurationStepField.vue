@@ -267,11 +267,7 @@ onMounted(() => {
     <!-- Checkbox Fields -->
     <template v-else-if="field.type === 'checkbox'">
       <div class="flex items-center gap-2">
-        <Checkbox
-          :id="fieldId"
-          :checked="model as boolean"
-          @update:checked="(checked: boolean) => (model = checked)"
-        />
+        <Checkbox v-model="model as boolean" :id="fieldId" />
         <Label :for="fieldId" class="cursor-pointer flex items-center gap-1">
           {{ field.label }}
           <span v-if="field.advanced" class="text-xs text-muted-foreground">(Advanced)</span>
