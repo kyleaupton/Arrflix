@@ -1,4 +1,4 @@
-name: Edge (main -> edge image)
+name: Release Edge
 
 on:
   push:

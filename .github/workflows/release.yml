@@ -1,4 +1,4 @@
-name: Release (tag -> image + GH Release)
+name: Release
 
 on:
   push:
