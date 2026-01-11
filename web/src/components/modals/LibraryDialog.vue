@@ -146,11 +146,11 @@ const isLoading = computed(
       </div>
       <div class="flex items-center justify-between">
         <Label for="library-enabled">Enabled</Label>
-        <Switch id="library-enabled" v-model:checked="libraryForm.enabled" />
+        <Switch id="library-enabled" v-model="libraryForm.enabled" />
       </div>
       <div class="flex items-center justify-between">
         <Label for="library-default">Default</Label>
-        <Switch id="library-default" v-model:checked="libraryForm.default" />
+        <Switch id="library-default" v-model="libraryForm.default" />
       </div>
     </div>
     <template #footer>
@@ -159,4 +159,3 @@ const isLoading = computed(
     </template>
   </BaseDialog>
 </template>
-

@@ -114,9 +114,7 @@ const handleSave = async () => {
       if (props.user.roles) {
         try {
           const rolesArray =
-            typeof props.user.roles === 'string'
-              ? JSON.parse(props.user.roles)
-              : props.user.roles
+            typeof props.user.roles === 'string' ? JSON.parse(props.user.roles) : props.user.roles
           if (Array.isArray(rolesArray) && rolesArray.length > 0) {
             currentRole = rolesArray[0].name || 'user'
           }
@@ -188,9 +186,7 @@ const isLoading = computed(
           id="user-password"
           v-model="userForm.password"
           type="password"
-          :placeholder="
-            user ? 'Leave blank to keep current password' : 'Minimum 8 characters'
-          "
+          :placeholder="user ? 'Leave blank to keep current password' : 'Minimum 8 characters'"
         />
       </div>
       <div class="flex flex-col gap-2">
@@ -208,7 +204,7 @@ const isLoading = computed(
       </div>
       <div class="flex items-center justify-between">
         <Label for="user-active">Active</Label>
-        <Switch id="user-active" v-model:checked="userForm.is_active" />
+        <Switch id="user-active" v-model="userForm.is_active" />
       </div>
     </div>
     <template #footer>

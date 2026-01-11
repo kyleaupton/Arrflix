@@ -205,14 +205,14 @@ const isLoading = computed(
           placeholder="Type { to insert a variable"
         />
         <p class="text-xs text-muted-foreground">
-          Type <code class="px-1 py-0.5 rounded bg-muted font-mono">{</code> to insert a
-          variable. Right-click on a variable to wrap it with a function.
+          Type <code class="px-1 py-0.5 rounded bg-muted font-mono">{</code> to insert a variable.
+          Right-click on a variable to wrap it with a function.
         </p>
       </div>
 
       <div class="flex items-center justify-between">
         <Label for="template-default">Default</Label>
-        <Switch id="template-default" v-model:checked="templateForm.default" />
+        <Switch id="template-default" v-model="templateForm.default" />
       </div>
     </div>
 

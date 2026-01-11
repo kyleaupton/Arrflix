@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { ref, inject, watch, computed } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
-import {
-  postV1PoliciesMutation,
-  putV1PoliciesByIdMutation,
-} from '@/client/@tanstack/vue-query.gen'
+import { postV1PoliciesMutation, putV1PoliciesByIdMutation } from '@/client/@tanstack/vue-query.gen'
 import { type DbgenPolicy } from '@/client/types.gen'
 import BaseDialog from './BaseDialog.vue'
 import { Button } from '@/components/ui/button'
@@ -81,7 +78,9 @@ const handleCancel = () => {
   dialogRef.value.close()
 }
 
-const isLoading = computed(() => createPolicyMutation.isPending.value || updatePolicyMutation.isPending.value)
+const isLoading = computed(
+  () => createPolicyMutation.isPending.value || updatePolicyMutation.isPending.value,
+)
 </script>
 
 <template>
@@ -97,17 +96,14 @@ const isLoading = computed(() => createPolicyMutation.isPending.value || updateP
       </div>
       <div class="flex flex-col gap-2">
         <Label for="policy-priority">Priority</Label>
-        <Input
-          id="policy-priority"
-          type="number"
-          v-model.number="policyForm.priority"
-          :min="0"
-        />
-        <span class="text-xs text-muted-foreground">Higher priority policies are evaluated first</span>
+        <Input id="policy-priority" type="number" v-model.number="policyForm.priority" :min="0" />
+        <span class="text-xs text-muted-foreground"
+          >Higher priority policies are evaluated first</span
+        >
       </div>
       <div class="flex items-center justify-between">
         <Label for="policy-enabled">Enabled</Label>
-        <Switch id="policy-enabled" v-model:checked="policyForm.enabled" />
+        <Switch id="policy-enabled" v-model="policyForm.enabled" />
       </div>
     </div>
     <template #footer>
@@ -116,4 +112,3 @@ const isLoading = computed(() => createPolicyMutation.isPending.value || updateP
     </template>
   </BaseDialog>
 </template>
-

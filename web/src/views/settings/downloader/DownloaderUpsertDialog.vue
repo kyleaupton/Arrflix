@@ -275,12 +275,12 @@ const protocolOptions = [
 
       <div class="flex items-center justify-between">
         <Label for="downloader-enabled">Enabled</Label>
-        <Switch id="downloader-enabled" v-model:checked="downloaderForm.enabled" />
+        <Switch id="downloader-enabled" v-model="downloaderForm.enabled" />
       </div>
 
       <div class="flex items-center justify-between">
         <Label for="downloader-default">Default</Label>
-        <Switch id="downloader-default" v-model:checked="downloaderForm.default" />
+        <Switch id="downloader-default" v-model="downloaderForm.default" />
       </div>
     </div>
 
