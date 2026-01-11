@@ -43,7 +43,7 @@ const handleValueChange = (fieldName: string, value: unknown) => {
 </script>
 
 <template>
-  <div class="configuration-step h-full overflow-y-auto">
+  <div class="configuration-step h-full">
     <div class="space-y-1 mb-6">
       <h3 class="text-lg font-semibold">Configuration</h3>
       <p class="text-sm text-muted-foreground">

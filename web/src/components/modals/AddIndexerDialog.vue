@@ -193,9 +193,9 @@ const closeModal = () => {
     </div>
 
     <!-- Step Content -->
-    <div class="max-h-[calc(100vh*0.6)] overflow-y-auto">
+    <div class="max-h-[calc(100vh*0.6)]">
       <!-- Step 1: Select Indexer Type -->
-      <div v-if="currentStep === 0" class="step-1 h-full overflow-hidden">
+      <div v-if="currentStep === 0" class="step-1 h-full">
         <SelectIndexerTypeStep
           ref="selectStepRef"
           :selected-indexer="selectedIndexerType"
@@ -204,7 +204,7 @@ const closeModal = () => {
       </div>
 
       <!-- Step 2: Configuration -->
-      <div v-if="currentStep === 1 && selectedIndexerType" class="step-2 overflow-hidden">
+      <div v-if="currentStep === 1 && selectedIndexerType" class="step-2">
         <ConfigurationStep v-model="saveData" :selected-indexer="selectedIndexerType" />
       </div>
 
