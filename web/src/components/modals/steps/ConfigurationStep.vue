@@ -5,6 +5,8 @@ import {
   type ModelIndexerOutput,
   type ModelIndexerInput,
   type ModelProtocol,
+  type ModelIndexerField,
+  type ModelFieldOutput,
 } from '@/client/types.gen'
 import { cloneDeep } from '@/utils'
 import ConfigurationStepField from './ConfigurationStepField.vue'
@@ -23,7 +25,6 @@ const props = defineProps<{
 
 onMounted(() => {
   const copy = cloneDeep(props.selectedIndexer)
-
   model.value = {
     enable: copy.enable,
     redirect: copy.redirect,
@@ -47,12 +48,25 @@ const handleValueChange = (fieldName: string, value: unknown) => {
   }
 }
 
+// Create a computed that merges field definitions with their current values
+const getFieldWithValue = (fieldDef: ModelIndexerField | ModelFieldOutput) => {
+  const modelField = model.value?.fields.find((f) => f.name === fieldDef.name)
+  return {
+    ...fieldDef,
+    value: modelField?.value ?? fieldDef.value,
+  }
+}
+
 const regularFields = computed(() => {
-  return props.selectedIndexer.fields.filter((field) => !field.advanced)
+  return props.selectedIndexer.fields
+    .filter((field) => !field.advanced)
+    .map((field) => getFieldWithValue(field))
 })
 
 const advancedFields = computed(() => {
-  return props.selectedIndexer.fields.filter((field) => field.advanced)
+  return props.selectedIndexer.fields
+    .filter((field) => field.advanced)
+    .map((field) => getFieldWithValue(field))
 })
 </script>
 
