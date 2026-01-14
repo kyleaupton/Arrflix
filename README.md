@@ -81,4 +81,10 @@ Feedback and discussions are encouraged, but pull requests may be declined until
 
 ## License
 
-License not finalized yet.
+GPL-3.0
+
+## Third-Party Software
+
+This project may deploy third-party services via Docker, including Prowlarr,
+which is licensed under GPL-3.0. Each service is distributed under its own
+license.
