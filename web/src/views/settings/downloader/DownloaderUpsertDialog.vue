@@ -7,7 +7,11 @@ import {
   putV1DownloadersByIdMutation,
 } from '@/client/@tanstack/vue-query.gen'
 import { client } from '@/client/client.gen'
-import { type DbgenDownloader } from '@/client/types.gen'
+import {
+  type DbgenDownloader,
+  type HandlersDownloaderCreateRequest,
+  type HandlersDownloaderUpdateRequest,
+} from '@/client/types.gen'
 import BaseDialog from '@/components/modals/BaseDialog.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -95,36 +99,33 @@ const handleSaveDownloader = async () => {
   }
 
   try {
+    // @ts-expect-error: fix this type error, the backend type is `*string` so it should be optional
+    const body: HandlersDownloaderCreateRequest | HandlersDownloaderUpdateRequest = {
+      name: downloaderForm.value.name,
+      type: downloaderForm.value.type,
+      protocol: downloaderForm.value.protocol,
+      url: downloaderForm.value.url,
+      username: downloaderForm.value.username || '',
+      config_json: downloaderForm.value.config_json,
+      enabled: downloaderForm.value.enabled,
+      default: downloaderForm.value.default,
+    }
+
+    if (downloaderForm.value.password !== '') {
+      body.password = downloaderForm.value.password
+    }
+
     if (props.downloader?.id) {
       await updateDownloaderMutation.mutateAsync({
         path: { id: props.downloader.id },
-        body: {
-          name: downloaderForm.value.name,
-          type: downloaderForm.value.type,
-          protocol: downloaderForm.value.protocol,
-          url: downloaderForm.value.url,
-          username: downloaderForm.value.username || '',
-          password: downloaderForm.value.password || '',
-          config_json: downloaderForm.value.config_json,
-          enabled: downloaderForm.value.enabled,
-          default: downloaderForm.value.default,
-        },
+        body,
       })
     } else {
       await createDownloaderMutation.mutateAsync({
-        body: {
-          name: downloaderForm.value.name,
-          type: downloaderForm.value.type,
-          protocol: downloaderForm.value.protocol,
-          url: downloaderForm.value.url,
-          username: downloaderForm.value.username || '',
-          password: downloaderForm.value.password || '',
-          config_json: downloaderForm.value.config_json,
-          enabled: downloaderForm.value.enabled,
-          default: downloaderForm.value.default,
-        },
+        body,
       })
     }
+
     downloaderError.value = null
     dialogRef.value.close({ saved: true })
   } catch (err) {

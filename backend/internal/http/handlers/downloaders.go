@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
 	"github.com/kyleaupton/Arrflix/internal/downloader"
 	"github.com/kyleaupton/Arrflix/internal/service"
 	"github.com/labstack/echo/v4"
@@ -70,6 +71,35 @@ type DownloaderTestRequest struct {
 	ConfigJSON map[string]interface{} `json:"config_json"`
 }
 
+// downloaderToMap converts a dbgen.Downloader to a map with decoded config_json
+func downloaderToMap(dl dbgen.Downloader) map[string]interface{} {
+	// Decode config_json from []byte to map[string]interface{}
+	var configJSON map[string]interface{}
+	if len(dl.ConfigJson) > 0 {
+		if err := json.Unmarshal(dl.ConfigJson, &configJSON); err != nil {
+			// If unmarshal fails, use empty map
+			configJSON = make(map[string]interface{})
+		}
+	} else {
+		configJSON = make(map[string]interface{})
+	}
+
+	return map[string]interface{}{
+		"id":          dl.ID,
+		"name":        dl.Name,
+		"type":        dl.Type,
+		"protocol":    dl.Protocol,
+		"url":         dl.Url,
+		"username":    dl.Username,
+		"password":    dl.Password,
+		"config_json": configJSON,
+		"enabled":     dl.Enabled,
+		"default":     dl.Default,
+		"created_at":  dl.CreatedAt,
+		"updated_at":  dl.UpdatedAt,
+	}
+}
+
 // List downloaders
 // @Summary List downloaders
 // @Tags    downloaders
@@ -96,21 +126,8 @@ func (h *Downloaders) List(c echo.Context) error {
 		dlID := dl.ID.String()
 		isInitialized := initializedIDs[dlID] && dl.Enabled
 
-		downloaderMap := map[string]interface{}{
-			"id":          dl.ID,
-			"name":        dl.Name,
-			"type":        dl.Type,
-			"protocol":    dl.Protocol,
-			"url":         dl.Url,
-			"username":    dl.Username,
-			"password":    dl.Password,
-			"config_json": dl.ConfigJson,
-			"enabled":     dl.Enabled,
-			"default":     dl.Default,
-			"created_at":  dl.CreatedAt,
-			"updated_at":  dl.UpdatedAt,
-			"initialized": isInitialized,
-		}
+		downloaderMap := downloaderToMap(dl)
+		downloaderMap["initialized"] = isInitialized
 		result = append(result, downloaderMap)
 	}
 
@@ -145,7 +162,7 @@ func (h *Downloaders) Create(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusCreated, downloader)
+	return c.JSON(http.StatusCreated, downloaderToMap(downloader))
 }
 
 // Get downloader
@@ -164,7 +181,7 @@ func (h *Downloaders) Get(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "not found"})
 	}
-	return c.JSON(http.StatusOK, downloader)
+	return c.JSON(http.StatusOK, downloaderToMap(downloader))
 }
 
 // Update downloader
@@ -187,7 +204,14 @@ func (h *Downloaders) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
 	}
 	ctx := c.Request().Context()
-	downloader, err := h.svc.Downloaders.Update(ctx, id, req.Name, req.Type, req.Protocol, req.URL, req.Username, req.Password, req.ConfigJSON, req.Enabled, req.Default)
+
+	// Normalize password: if nil or empty string, set to nil to preserve existing password
+	var password *string
+	if req.Password != nil && *req.Password != "" {
+		password = req.Password
+	}
+
+	downloader, err := h.svc.Downloaders.Update(ctx, id, req.Name, req.Type, req.Protocol, req.URL, req.Username, password, req.ConfigJSON, req.Enabled, req.Default)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -198,7 +222,7 @@ func (h *Downloaders) Update(c echo.Context) error {
 		// This allows the user to retry initialization later
 	}
 
-	return c.JSON(http.StatusOK, downloader)
+	return c.JSON(http.StatusOK, downloaderToMap(downloader))
 }
 
 // Delete downloader
@@ -239,7 +263,7 @@ func (h *Downloaders) GetDefault(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "not found"})
 	}
-	return c.JSON(http.StatusOK, downloader)
+	return c.JSON(http.StatusOK, downloaderToMap(downloader))
 }
 
 // Test downloader connection

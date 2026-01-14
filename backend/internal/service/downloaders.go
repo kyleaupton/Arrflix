@@ -113,7 +113,17 @@ func (s *DownloadersService) Update(ctx context.Context, id pgtype.UUID, name, d
 		}
 	}
 
-	return s.repo.UpdateDownloader(ctx, id, name, downloaderType, protocol, downloaderURL, username, password, configJSONBytes, enabled, isDefault)
+	// If password is nil, fetch existing downloader to preserve its password
+	var passwordToUse *string = password
+	if password == nil {
+		existing, err := s.repo.GetDownloader(ctx, id)
+		if err != nil {
+			return dbgen.Downloader{}, errors.New("failed to fetch existing downloader: " + err.Error())
+		}
+		passwordToUse = existing.Password
+	}
+
+	return s.repo.UpdateDownloader(ctx, id, name, downloaderType, protocol, downloaderURL, username, passwordToUse, configJSONBytes, enabled, isDefault)
 }
 
 func (s *DownloadersService) Delete(ctx context.Context, id pgtype.UUID) error {
