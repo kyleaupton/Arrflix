@@ -52,7 +52,7 @@ jobs:
   # Deployment job
   deploy:
     environment:
-      name: Documentation
+      name: docs
       url: ${{ steps.deployment.outputs.page_url }}
     needs: build
     runs-on: ubuntu-latest
