@@ -1,11 +1,11 @@
 {
-  "name": "Arrflix MCP",
+  "name": "arrflix-mcp",
   "version": "0.1.0",
   "description": "Local MCP tools for Arrflix dev + ops",
   "private": true,
   "type": "module",
   "bin": {
-    "Arrflix MCP": "./build/index.js"
+    "arrflix-mcp": "./build/index.js"
   },
   "files": [
     "build"

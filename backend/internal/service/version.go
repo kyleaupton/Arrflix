@@ -4,16 +4,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/kyleaupton/Arrflix/internal/github"
-	"github.com/kyleaupton/Arrflix/internal/logger"
-	"github.com/kyleaupton/Arrflix/internal/repo"
-	"github.com/kyleaupton/Arrflix/internal/semver"
-	"github.com/kyleaupton/Arrflix/internal/versioninfo"
+	"github.com/kyleaupton/arrflix/internal/github"
+	"github.com/kyleaupton/arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/repo"
+	"github.com/kyleaupton/arrflix/internal/semver"
+	"github.com/kyleaupton/arrflix/internal/versioninfo"
 )
 
 const (
 	GitHubOwner = "kyleaupton"
-	GitHubRepo  = "Arrflix"
+	GitHubRepo  = "arrflix"
 	UpdateTTL   = 15 * time.Minute
 )
 

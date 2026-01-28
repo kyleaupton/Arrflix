@@ -1,10 +1,10 @@
 package internal
 
 import (
-	"github.com/kyleaupton/Arrflix/internal/config"
-	"github.com/kyleaupton/Arrflix/internal/db"
-	"github.com/kyleaupton/Arrflix/internal/logger"
-	"github.com/kyleaupton/Arrflix/internal/repo"
+	"github.com/kyleaupton/arrflix/internal/config"
+	"github.com/kyleaupton/arrflix/internal/db"
+	"github.com/kyleaupton/arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/repo"
 )
 
 func GetRepo() *repo.Repository {

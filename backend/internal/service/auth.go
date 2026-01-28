@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	pw "github.com/kyleaupton/Arrflix/internal/password"
-	"github.com/kyleaupton/Arrflix/internal/repo"
+	pw "github.com/kyleaupton/arrflix/internal/password"
+	"github.com/kyleaupton/arrflix/internal/repo"
 )
 
 type AuthService struct {

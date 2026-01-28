@@ -4,7 +4,7 @@ import (
 	"context"
 	"sort"
 
-	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/arrflix/internal/model"
 )
 
 // HeroStrategy defines how to select the hero item for the feed

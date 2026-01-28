@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
-	"github.com/kyleaupton/Arrflix/internal/downloader"
-	"github.com/kyleaupton/Arrflix/internal/service"
+	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/arrflix/internal/downloader"
+	"github.com/kyleaupton/arrflix/internal/service"
 	"github.com/labstack/echo/v4"
 )
 

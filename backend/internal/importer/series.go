@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/kyleaupton/Arrflix/internal/downloader"
+	"github.com/kyleaupton/arrflix/internal/downloader"
 )
 
 // SeriesInfo contains parsed season and episode numbers.

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	tmdb "github.com/cyruzin/golang-tmdb"
-	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/arrflix/internal/model"
 )
 
 // TMDBClient defines the interface for TMDB operations needed by the feed

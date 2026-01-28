@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyleaupton/Arrflix/internal/service"
-	"github.com/kyleaupton/Arrflix/internal/sse"
+	"github.com/kyleaupton/arrflix/internal/service"
+	"github.com/kyleaupton/arrflix/internal/sse"
 	"github.com/labstack/echo/v4"
 )
 

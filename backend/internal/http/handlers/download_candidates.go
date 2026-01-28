@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
-	"github.com/kyleaupton/Arrflix/internal/model"
-	"github.com/kyleaupton/Arrflix/internal/service"
+	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/arrflix/internal/model"
+	"github.com/kyleaupton/arrflix/internal/service"
 	"github.com/labstack/echo/v4"
 )
 

@@ -12,10 +12,10 @@ import (
 	"golift.io/starr"
 	"golift.io/starr/prowlarr"
 
-	"github.com/kyleaupton/Arrflix/internal/config"
-	"github.com/kyleaupton/Arrflix/internal/logger"
-	"github.com/kyleaupton/Arrflix/internal/model"
-	"github.com/kyleaupton/Arrflix/internal/repo"
+	"github.com/kyleaupton/arrflix/internal/config"
+	"github.com/kyleaupton/arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/model"
+	"github.com/kyleaupton/arrflix/internal/repo"
 )
 
 type IndexerService struct {

@@ -2,16 +2,16 @@ package http
 
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/kyleaupton/Arrflix/internal/config"
-	"github.com/kyleaupton/Arrflix/internal/downloader"
-	"github.com/kyleaupton/Arrflix/internal/http/handlers"
-	"github.com/kyleaupton/Arrflix/internal/http/middlewares"
-	"github.com/kyleaupton/Arrflix/internal/logger"
-	"github.com/kyleaupton/Arrflix/internal/repo"
-	"github.com/kyleaupton/Arrflix/internal/service"
-	"github.com/kyleaupton/Arrflix/internal/sse"
+	"github.com/kyleaupton/arrflix/internal/config"
+	"github.com/kyleaupton/arrflix/internal/downloader"
+	"github.com/kyleaupton/arrflix/internal/http/handlers"
+	"github.com/kyleaupton/arrflix/internal/http/middlewares"
+	"github.com/kyleaupton/arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/repo"
+	"github.com/kyleaupton/arrflix/internal/service"
+	"github.com/kyleaupton/arrflix/internal/sse"
 
-	_ "github.com/kyleaupton/Arrflix/internal/http/docs"
+	_ "github.com/kyleaupton/arrflix/internal/http/docs"
 
 	"github.com/labstack/echo/v4"
 )

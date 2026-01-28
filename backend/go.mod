@@ -1,4 +1,4 @@
-module github.com/kyleaupton/Arrflix
+module github.com/kyleaupton/arrflix
 
 go 1.24.0
 

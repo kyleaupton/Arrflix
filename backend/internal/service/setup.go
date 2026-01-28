@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
-	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
-	pw "github.com/kyleaupton/Arrflix/internal/password"
-	"github.com/kyleaupton/Arrflix/internal/repo"
+	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
+	pw "github.com/kyleaupton/arrflix/internal/password"
+	"github.com/kyleaupton/arrflix/internal/repo"
 )
 
 var (

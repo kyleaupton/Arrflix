@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kyleaupton/Arrflix/internal/service"
+	"github.com/kyleaupton/arrflix/internal/service"
 	"github.com/labstack/echo/v4"
 	"golift.io/starr/prowlarr"
 )

@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/kyleaupton/Arrflix/internal/service"
+	"github.com/kyleaupton/arrflix/internal/service"
 	"github.com/labstack/echo/v4"
 )
 

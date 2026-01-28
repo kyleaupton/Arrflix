@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kyleaupton/Arrflix/internal"
-	"github.com/kyleaupton/Arrflix/internal/logger"
-	"github.com/kyleaupton/Arrflix/internal/model"
-	"github.com/kyleaupton/Arrflix/internal/release"
+	"github.com/kyleaupton/arrflix/internal"
+	"github.com/kyleaupton/arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/model"
+	"github.com/kyleaupton/arrflix/internal/release"
 )
 
 func TestEngine_Evaluate(t *testing.T) {

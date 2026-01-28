@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
 )
 
 type CacheEntry struct {

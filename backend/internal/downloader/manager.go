@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/kyleaupton/Arrflix/internal/logger"
-	"github.com/kyleaupton/Arrflix/internal/repo"
+	"github.com/kyleaupton/arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/repo"
 )
 
 // Manager manages downloader client instances

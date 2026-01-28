@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyleaupton/Arrflix/internal/model"
+	"github.com/kyleaupton/arrflix/internal/model"
 	"github.com/rs/zerolog"
 )
 

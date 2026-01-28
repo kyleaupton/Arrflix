@@ -3,7 +3,7 @@ package template
 import (
 	"testing"
 
-	"github.com/kyleaupton/Arrflix/internal/release"
+	"github.com/kyleaupton/arrflix/internal/release"
 )
 
 func TestRender(t *testing.T) {

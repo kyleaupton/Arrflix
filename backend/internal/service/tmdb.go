@@ -7,9 +7,9 @@ import (
 	"time"
 
 	tmdb "github.com/cyruzin/golang-tmdb"
-	"github.com/kyleaupton/Arrflix/internal/config"
-	"github.com/kyleaupton/Arrflix/internal/logger"
-	"github.com/kyleaupton/Arrflix/internal/repo"
+	"github.com/kyleaupton/arrflix/internal/config"
+	"github.com/kyleaupton/arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/repo"
 )
 
 // TTL for static data (7 days)

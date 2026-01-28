@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kyleaupton/Arrflix/internal/downloader"
+	"github.com/kyleaupton/arrflix/internal/downloader"
 )
 
 // PickMainMovieFile chooses the "main" file for a movie download.

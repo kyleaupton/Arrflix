@@ -7,8 +7,8 @@ import (
 	"net/url"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
-	"github.com/kyleaupton/Arrflix/internal/repo"
+	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/arrflix/internal/repo"
 	qbt "github.com/superturkey650/go-qbittorrent/qbt"
 )
 

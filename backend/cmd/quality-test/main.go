@@ -9,7 +9,7 @@ import (
 	"golift.io/starr"
 	"golift.io/starr/sonarr"
 
-	"github.com/kyleaupton/Arrflix/internal/release"
+	"github.com/kyleaupton/arrflix/internal/release"
 )
 
 // ANSI color codes

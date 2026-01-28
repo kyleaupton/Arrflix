@@ -5,7 +5,7 @@ export default defineConfig({
   title: "Arrflix Docs",
   description: "Self-hosted media management platform",
   // https://vitepress.dev/guide/deploy#setting-a-public-base-path
-  base: "/Arrflix/",
+  base: "/arrflix/",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [{ text: "Home", link: "/" }],
@@ -22,7 +22,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: "github", link: "https://github.com/kyleaupton/Arrflix" },
+      { icon: "github", link: "https://github.com/kyleaupton/arrflix" },
     ],
   },
 });

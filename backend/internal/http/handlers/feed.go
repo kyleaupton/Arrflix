@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	_ "github.com/kyleaupton/Arrflix/internal/model"
-	"github.com/kyleaupton/Arrflix/internal/service"
+	_ "github.com/kyleaupton/arrflix/internal/model"
+	"github.com/kyleaupton/arrflix/internal/service"
 	"github.com/labstack/echo/v4"
 )
 

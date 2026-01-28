@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/kyleaupton/Arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/logger"
 )
 
 type Config struct {

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyleaupton/Arrflix/internal/release"
-	"github.com/kyleaupton/Arrflix/internal/template"
+	"github.com/kyleaupton/arrflix/internal/release"
+	"github.com/kyleaupton/arrflix/internal/template"
 )
 
 // Phase indicates when a field becomes available

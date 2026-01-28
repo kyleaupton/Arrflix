@@ -12,7 +12,7 @@ hero:
       link: /guide/introduction
     - theme: alt
       text: View on GitHub
-      link: https://github.com/kyleaupton/Arrflix
+      link: https://github.com/kyleaupton/arrflix
 
 features:
   - title: Simpler Setup

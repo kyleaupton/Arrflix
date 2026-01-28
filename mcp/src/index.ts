@@ -190,7 +190,7 @@ async function runSqlcGenerate(): Promise<string> {
 }
 
 const server = new Server(
-  { name: "Arrflix MCP", version: "0.1.0" },
+  { name: "arrflix-mcp", version: "0.1.0" },
   { capabilities: { tools: {}, prompts: {} } }
 );
 
@@ -416,7 +416,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  console.log("Starting Arrflix MCP server...");
+  console.log("Starting arrflix-mcp server...");
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

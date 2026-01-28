@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyleaupton/Arrflix/internal/downloader"
+	"github.com/kyleaupton/arrflix/internal/downloader"
 	qbt "github.com/superturkey650/go-qbittorrent/qbt"
 )
 

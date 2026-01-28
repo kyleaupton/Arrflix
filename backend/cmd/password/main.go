@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kyleaupton/Arrflix/internal/password"
+	"github.com/kyleaupton/arrflix/internal/password"
 )
 
 func main() {

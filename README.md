@@ -25,12 +25,12 @@ If you’re comfortable experimenting or following along with an evolving projec
 If you’re interested in trying Arrflix, start with the documentation:
 
 👉 **Introduction & Overview**  
-https://kyleaupton.github.io/Arrflix/guide/introduction.html
+https://kyleaupton.github.io/arrflix/guide/introduction.html
 
 From there, you can continue to the **Getting Started** guide for installation instructions.
 
 👉 **Getting Started / Installation**  
-https://kyleaupton.github.io/Arrflix/guide/getting-started.html
+https://kyleaupton.github.io/arrflix/guide/getting-started.html
 
 ## Development Setup
 
@@ -47,8 +47,8 @@ If you’re here to hack on Arrflix, the dev setup is lightweight.
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/kyleaupton/Arrflix.git
-   cd Arrflix
+   git clone https://github.com/kyleaupton/arrflix.git
+   cd arrflix
    ```
 
 2. Create a `.env` file:
@@ -69,7 +69,7 @@ That’s it. The backend, frontend, database, and supporting services run togeth
 
 All project documentation lives here:
 
-👉 https://kyleaupton.github.io/Arrflix/
+👉 https://kyleaupton.github.io/arrflix/
 
 Expect documentation to lag behind implementation at times — this is normal for the current stage of the project.
 

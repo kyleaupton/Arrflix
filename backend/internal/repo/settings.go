@@ -3,7 +3,7 @@ package repo
 import (
 	"context"
 
-	dbgen "github.com/kyleaupton/Arrflix/internal/db/sqlc"
+	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
 )
 
 type SettingsRepo interface {

@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 
-	"github.com/kyleaupton/Arrflix/internal/feed"
-	"github.com/kyleaupton/Arrflix/internal/logger"
-	"github.com/kyleaupton/Arrflix/internal/model"
-	"github.com/kyleaupton/Arrflix/internal/repo"
+	"github.com/kyleaupton/arrflix/internal/feed"
+	"github.com/kyleaupton/arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/model"
+	"github.com/kyleaupton/arrflix/internal/repo"
 )
 
 type FeedService struct {

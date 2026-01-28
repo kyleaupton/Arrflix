@@ -4,8 +4,8 @@ import (
 	"context"
 	"sort"
 
-	"github.com/kyleaupton/Arrflix/internal/model"
-	"github.com/kyleaupton/Arrflix/internal/repo"
+	"github.com/kyleaupton/arrflix/internal/model"
+	"github.com/kyleaupton/arrflix/internal/repo"
 )
 
 // Composer builds the complete home feed
