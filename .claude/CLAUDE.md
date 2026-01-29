@@ -65,9 +65,11 @@ go test ./...
 
 # Database: Generate SQLC code after modifying queries or schema
 # (Do this after adding/modifying files in internal/db/queries/ or internal/db/migrations/)
+# Use MCP tool: arrflix_sqlc_generate
 sqlc generate
 
 # API Documentation: Regenerate Swagger docs after handler changes
+# Use MCP tool: arrflix_gen_api (runs both swag init AND openapi-ts)
 swag init -g internal/http/http.go -o internal/http/docs --requiredByDefault
 ```
 
@@ -108,6 +110,7 @@ npm run lint
 npm run format
 
 # Regenerate API client after backend OpenAPI changes
+# Use MCP tool: arrflix_gen_api (regenerates both spec and client)
 npm run openapi-ts
 ```
 
@@ -115,8 +118,9 @@ npm run openapi-ts
 
 ### Full API Spec & Client Regeneration
 
-When you modify backend API handlers:
+When you modify backend API handlers, use the MCP tool `arrflix_gen_api` to regenerate both the OpenAPI spec and TypeScript client in one step.
 
+Manual equivalent:
 ```bash
 # From project root
 ./scripts/gen-api-spec-and-client.sh
@@ -160,7 +164,16 @@ All services are initialized in `service.New()` and injected into handlers. Key 
 
 ### MCP Integration
 
-The project includes a custom MCP server in `mcp/` for development and operations tooling. Configure in `.cursor/mcp.json`.
+The project includes a custom MCP server in `mcp/` for development and operations tooling. **Use these tools instead of manual commands when available:**
+
+| Tool | Purpose |
+|------|---------|
+| `arrflix_sqlc_generate` | Regenerate Go database code after modifying SQL queries or migrations |
+| `arrflix_gen_api` | Regenerate OpenAPI spec AND TypeScript client after handler changes |
+| `arrflix_db_query` | Run read-only SQL queries against the database |
+| `arrflix_docker_logs` | Get recent logs from a docker compose service |
+| `arrflix_search_repo` | Search the codebase using ripgrep |
+| `arrflix_project_brief` | Get a high-level overview of the project |
 
 ## Testing
 
