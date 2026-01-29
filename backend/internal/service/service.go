@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/kyleaupton/arrflix/internal/config"
+	prowlarradapter "github.com/kyleaupton/arrflix/internal/indexer/prowlarr"
 	"github.com/kyleaupton/arrflix/internal/logger"
 	"github.com/kyleaupton/arrflix/internal/policy"
 	"github.com/kyleaupton/arrflix/internal/repo"
@@ -36,6 +37,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 
 	tmdb := NewTmdbService(r, l)
 	indexer := NewIndexerService(r, l, c)
+	indexerSource := prowlarradapter.New(indexer.Client(), l)
 	media := NewMediaService(r, l, tmdb)
 	policies := NewPoliciesService(r, l)
 	policyEngine := policy.NewEngine(r, l)
@@ -44,7 +46,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 	return &Services{
 		Auth:               NewAuthService(r, cfg),
 		Downloaders:        NewDownloadersService(r),
-		DownloadCandidates: NewDownloadCandidatesService(r, l, indexer, media, policyEngine),
+		DownloadCandidates: NewDownloadCandidatesService(r, l, indexerSource, media, policyEngine),
 		DownloadJobs:       NewDownloadJobsService(r),
 		Feed:               NewFeedService(r, l, tmdb),
 		Import:             NewImportService(r, l),

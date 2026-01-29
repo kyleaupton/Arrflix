@@ -26,6 +26,11 @@ type IndexerService struct {
 	prowlarr       *prowlarr.Prowlarr
 }
 
+// Client returns the underlying Prowlarr client for use by the indexer adapter.
+func (s *IndexerService) Client() *prowlarr.Prowlarr {
+	return s.prowlarr
+}
+
 func NewIndexerService(r *repo.Repository, l *logger.Logger, c *config.Config) *IndexerService {
 	url := fmt.Sprintf("http://localhost:%s", c.ProwlarrPort)
 	cfg := starr.New(c.ProwlarrAPIKey, url, 60*time.Second)
@@ -163,16 +168,6 @@ func (s *IndexerService) ToggleIndexer(ctx context.Context, indexerID int64) (*p
 
 	s.logger.Info().Int64("indexerID", indexerID).Bool("enabled", result.Enable).Msg("Successfully toggled indexer")
 	return result, nil
-}
-
-// Search performs a search query against Prowlarr
-func (s *IndexerService) Search(ctx context.Context, input prowlarr.SearchInput) ([]*prowlarr.Search, error) {
-	results, err := s.prowlarr.SearchContext(ctx, input)
-	if err != nil {
-		s.logger.Error().Err(err).Str("query", input.Query).Msg("Failed to search Prowlarr")
-		return nil, err
-	}
-	return results, nil
 }
 
 func (s *IndexerService) Action(ctx context.Context, actionName string, input interface{}) (any, error) {

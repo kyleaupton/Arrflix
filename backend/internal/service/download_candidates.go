@@ -8,11 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"golift.io/starr/prowlarr"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/arrflix/internal/indexer"
 	"github.com/kyleaupton/arrflix/internal/logger"
 	"github.com/kyleaupton/arrflix/internal/model"
 	"github.com/kyleaupton/arrflix/internal/policy"
@@ -29,7 +28,7 @@ const cacheTTL = 5 * time.Minute
 
 // cachedSearchResult stores a search result with its expiration time
 type cachedSearchResult struct {
-	result    *prowlarr.Search
+	result    indexer.SearchResult
 	expiresAt time.Time
 }
 
@@ -37,7 +36,7 @@ type cachedSearchResult struct {
 type DownloadCandidatesService struct {
 	repo         *repo.Repository
 	logger       *logger.Logger
-	indexer      *IndexerService
+	source       indexer.IndexerSource
 	media        *MediaService
 	policyEngine *policy.Engine
 	cache        map[string]*cachedSearchResult
@@ -45,11 +44,11 @@ type DownloadCandidatesService struct {
 }
 
 // NewDownloadCandidatesService creates a new download candidates service
-func NewDownloadCandidatesService(r *repo.Repository, l *logger.Logger, indexer *IndexerService, media *MediaService, engine *policy.Engine) *DownloadCandidatesService {
+func NewDownloadCandidatesService(r *repo.Repository, l *logger.Logger, source indexer.IndexerSource, media *MediaService, engine *policy.Engine) *DownloadCandidatesService {
 	return &DownloadCandidatesService{
 		repo:         r,
 		logger:       l,
-		indexer:      indexer,
+		source:       source,
 		media:        media,
 		policyEngine: engine,
 		cache:        make(map[string]*cachedSearchResult),
@@ -77,14 +76,13 @@ func (s *DownloadCandidatesService) SearchDownloadCandidates(ctx context.Context
 		query = fmt.Sprintf("%s %s", movie.Title, year)
 	}
 
-	// Search Prowlarr
-	searchInput := prowlarr.SearchInput{
-		Query: query,
-		Type:  "search",
-		Limit: 100,
+	searchQuery := indexer.SearchQuery{
+		Query:     query,
+		MediaType: indexer.MediaTypeMovie,
+		Limit:     100,
 	}
 
-	return s.searchAndCache(ctx, query, searchInput)
+	return s.searchAndCache(ctx, searchQuery)
 }
 
 // SearchSeriesDownloadCandidates searches for download candidates for a series, season, or episode
@@ -103,20 +101,22 @@ func (s *DownloadCandidatesService) SearchSeriesDownloadCandidates(ctx context.C
 		}
 	}
 
-	searchInput := prowlarr.SearchInput{
-		Query: query,
-		Type:  "tvsearch",
-		Limit: 100,
+	searchQuery := indexer.SearchQuery{
+		Query:     query,
+		MediaType: indexer.MediaTypeSeries,
+		Season:    season,
+		Episode:   episode,
+		Limit:     100,
 	}
 
-	return s.searchAndCache(ctx, query, searchInput)
+	return s.searchAndCache(ctx, searchQuery)
 }
 
-func (s *DownloadCandidatesService) searchAndCache(ctx context.Context, query string, searchInput prowlarr.SearchInput) ([]model.DownloadCandidate, error) {
-	results, err := s.indexer.Search(ctx, searchInput)
+func (s *DownloadCandidatesService) searchAndCache(ctx context.Context, query indexer.SearchQuery) ([]model.DownloadCandidate, error) {
+	results, err := s.source.Search(ctx, query)
 	if err != nil {
-		s.logger.Error().Err(err).Str("query", query).Msg("Failed to search Prowlarr")
-		return nil, fmt.Errorf("failed to search Prowlarr: %w", err)
+		s.logger.Error().Err(err).Str("query", query.Query).Msg("Failed to search indexer")
+		return nil, fmt.Errorf("failed to search indexer: %w", err)
 	}
 
 	// Clear expired entries from cache
@@ -134,8 +134,8 @@ func (s *DownloadCandidatesService) searchAndCache(ctx context.Context, query st
 		}
 		s.cacheMu.Unlock()
 
-		// Transform to DownloadCandidate
-		candidate := s.searchResultToCandidate(result)
+		// Transform to DownloadCandidate for API response
+		candidate := searchResultToCandidate(result)
 		candidates = append(candidates, candidate)
 	}
 
@@ -162,10 +162,8 @@ func (s *DownloadCandidatesService) EvaluateCandidate(ctx context.Context, movie
 		return model.EvaluationTrace{}, ErrCandidateExpired
 	}
 
-	result := cached.result
-
 	// Transform to DownloadCandidate
-	candidate := s.searchResultToCandidate(result)
+	candidate := searchResultToCandidate(cached.result)
 
 	// Build evaluation context with media info
 	evalCtx := s.buildMovieEvaluationContext(ctx, candidate, movieID)
@@ -204,7 +202,7 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 		return model.EvaluationTrace{}, dbgen.DownloadJob{}, ErrCandidateExpired
 	}
 
-	candidate := s.searchResultToCandidate(cached.result)
+	candidate := searchResultToCandidate(cached.result)
 
 	// Build evaluation context with media info
 	evalCtx := s.buildMovieEvaluationContext(ctx, candidate, movieID)
@@ -303,7 +301,7 @@ func (s *DownloadCandidatesService) EnqueueSeriesCandidate(ctx context.Context, 
 		return model.EvaluationTrace{}, dbgen.DownloadJob{}, ErrCandidateExpired
 	}
 
-	candidate := s.searchResultToCandidate(cached.result)
+	candidate := searchResultToCandidate(cached.result)
 
 	// Build evaluation context with media info
 	evalCtx := s.buildSeriesEvaluationContext(ctx, candidate, seriesID, seasonNumber, episodeNumber)
@@ -404,30 +402,30 @@ func (s *DownloadCandidatesService) EnqueueSeriesCandidate(ctx context.Context, 
 	return trace, job, nil
 }
 
-// searchResultToCandidate converts a prowlarr.Search result to a model.DownloadCandidate
-func (s *DownloadCandidatesService) searchResultToCandidate(result *prowlarr.Search) model.DownloadCandidate {
-	// Extract categories
-	categories := make([]string, 0, len(result.Categories))
-	for _, cat := range result.Categories {
-		if cat != nil && cat.Name != "" {
-			categories = append(categories, cat.Name)
-		}
+// searchResultToCandidate converts an indexer.SearchResult to a model.DownloadCandidate
+func searchResultToCandidate(result indexer.SearchResult) model.DownloadCandidate {
+	// Handle optional pointer fields
+	var seeders, peers int
+	if result.Seeders != nil {
+		seeders = *result.Seeders
+	}
+	if result.Leechers != nil {
+		peers = *result.Leechers
 	}
 
 	return model.DownloadCandidate{
-		Protocol:    string(result.Protocol),
-		Filename:    result.FileName,
+		Protocol:    result.Protocol,
 		Link:        result.DownloadURL,
-		Indexer:     result.Indexer,
+		Indexer:     result.IndexerName,
 		IndexerID:   result.IndexerID,
 		GUID:        result.GUID,
-		Peers:       result.Leechers,
-		Seeders:     result.Seeders,
+		Peers:       peers,
+		Seeders:     seeders,
 		Age:         result.Age,
 		AgeHours:    result.AgeHours,
 		Size:        result.Size,
 		Grabs:       result.Grabs,
-		Categories:  categories,
+		Categories:  result.Categories,
 		PublishDate: result.PublishDate,
 		Title:       result.Title,
 	}
