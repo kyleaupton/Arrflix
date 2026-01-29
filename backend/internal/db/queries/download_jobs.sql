@@ -1,7 +1,7 @@
--- Download jobs (removed season_id)
+-- Download jobs (refactored: 6 states, no import states)
 
 -- name: CreateDownloadJob :one
-insert into download_job (
+INSERT INTO download_job (
   status,
   protocol,
   media_type,
@@ -13,10 +13,9 @@ insert into download_job (
   candidate_link,
   downloader_id,
   library_id,
-  name_template_id,
-  predicted_dest_path
+  name_template_id
 )
-values (
+VALUES (
   'created',
   sqlc.arg(protocol),
   sqlc.arg(media_type),
@@ -28,127 +27,176 @@ values (
   sqlc.arg(candidate_link),
   sqlc.arg(downloader_id),
   sqlc.arg(library_id),
-  sqlc.arg(name_template_id),
-  sqlc.arg(predicted_dest_path)
+  sqlc.arg(name_template_id)
 )
-on conflict (indexer_id, guid) do update
-set updated_at = now()
-returning *;
+ON CONFLICT (indexer_id, guid) DO UPDATE
+SET updated_at = now()
+RETURNING *;
 
 -- name: GetDownloadJob :one
-select * from download_job
-where id = $1;
+SELECT * FROM download_job
+WHERE id = $1;
 
 -- name: GetDownloadJobByCandidate :one
-select * from download_job
-where indexer_id = $1 and guid = $2;
+SELECT * FROM download_job
+WHERE indexer_id = $1 AND guid = $2;
 
 -- name: ListDownloadJobsByMediaItem :many
-select * from download_job
-where media_item_id = $1
-order by created_at desc;
+SELECT * FROM download_job
+WHERE media_item_id = $1
+ORDER BY created_at DESC;
 
 -- name: ListDownloadJobs :many
-select * from download_job
-order by created_at desc;
+SELECT * FROM download_job
+ORDER BY created_at DESC;
 
 -- name: ListDownloadJobsByTmdbMovieID :many
-select j.*
-from download_job j
-join media_item mi on mi.id = j.media_item_id
-where mi.type = 'movie' and mi.tmdb_id = $1
-order by j.created_at desc;
+SELECT j.*
+FROM download_job j
+JOIN media_item mi ON mi.id = j.media_item_id
+WHERE mi.type = 'movie' AND mi.tmdb_id = $1
+ORDER BY j.created_at DESC;
 
 -- name: ListDownloadJobsByTmdbSeriesID :many
-select j.*,
+SELECT j.*,
        ms.season_number,
        me.episode_number
-from download_job j
-join media_item mi on mi.id = j.media_item_id
-left join media_episode me on me.id = j.episode_id
-left join media_season ms on ms.id = me.season_id
-where mi.type = 'series' and mi.tmdb_id = $1
-order by j.created_at desc;
+FROM download_job j
+JOIN media_item mi ON mi.id = j.media_item_id
+LEFT JOIN media_episode me ON me.id = j.episode_id
+LEFT JOIN media_season ms ON ms.id = me.season_id
+WHERE mi.type = 'series' AND mi.tmdb_id = $1
+ORDER BY j.created_at DESC;
 
 -- name: CancelDownloadJob :one
-update download_job
-set status = 'cancelled',
+UPDATE download_job
+SET status = 'cancelled',
     updated_at = now()
-where id = $1
-returning *;
+WHERE id = $1
+  AND status NOT IN ('completed', 'failed', 'cancelled')
+RETURNING *;
 
 -- name: SetDownloadJobEnqueued :one
-update download_job
-set status = 'enqueued',
+UPDATE download_job
+SET status = 'enqueued',
     downloader_external_id = sqlc.arg(downloader_external_id),
+    attempt_count = attempt_count + 1,
     updated_at = now()
-where id = sqlc.arg(id)
-returning *;
+WHERE id = sqlc.arg(id)
+RETURNING *;
 
 -- name: SetDownloadJobDownloadSnapshot :one
-update download_job
-set status = sqlc.arg(status),
+UPDATE download_job
+SET status = sqlc.arg(status),
     downloader_status = sqlc.arg(downloader_status),
     progress = sqlc.arg(progress),
-    download_save_path = sqlc.arg(download_save_path),
-    download_content_path = sqlc.arg(download_content_path),
+    save_path = sqlc.arg(save_path),
+    content_path = sqlc.arg(content_path),
     updated_at = now()
-where id = sqlc.arg(id)
-returning *;
+WHERE id = sqlc.arg(id)
+RETURNING *;
 
--- name: SetDownloadJobImporting :one
-update download_job
-set status = 'importing',
-    import_source_path = sqlc.arg(import_source_path),
+-- name: SetDownloadJobCompleted :one
+UPDATE download_job
+SET status = 'completed',
+    save_path = sqlc.arg(save_path),
+    content_path = sqlc.arg(content_path),
     updated_at = now()
-where id = sqlc.arg(id)
-returning *;
+WHERE id = sqlc.arg(id)
+RETURNING *;
 
--- name: SetDownloadJobImported :one
-update download_job
-set status = 'imported',
-    import_source_path = sqlc.arg(import_source_path),
-    import_dest_path = sqlc.arg(import_dest_path),
-    import_method = sqlc.arg(import_method),
-    primary_media_file_id = sqlc.arg(primary_media_file_id),
-    updated_at = now()
-where id = sqlc.arg(id)
-returning *;
-
--- name: BumpDownloadJobRetry :one
-update download_job
-set attempt_count = attempt_count + 1,
+-- name: ScheduleDownloadJobRetry :one
+UPDATE download_job
+SET attempt_count = attempt_count + 1,
     last_error = sqlc.arg(last_error),
+    error_category = sqlc.arg(error_category),
     next_run_at = sqlc.arg(next_run_at),
     updated_at = now()
-where id = sqlc.arg(id)
-returning *;
+WHERE id = sqlc.arg(id)
+RETURNING *;
 
 -- name: MarkDownloadJobFailed :one
-update download_job
-set status = 'failed',
+UPDATE download_job
+SET status = 'failed',
     last_error = sqlc.arg(last_error),
+    error_category = sqlc.arg(error_category),
     updated_at = now()
-where id = sqlc.arg(id)
-returning *;
+WHERE id = sqlc.arg(id)
+RETURNING *;
 
 -- name: ClaimRunnableDownloadJobs :many
-with cte as (
-  select id
-  from download_job
-  where status in ('created','enqueued','downloading','completed','importing')
-    and next_run_at <= now()
-  order by next_run_at asc
-  for update skip locked
-  limit $1
+-- Claims jobs that are ready to be processed (created, enqueued, or downloading)
+-- Uses FOR UPDATE SKIP LOCKED to prevent duplicate processing
+WITH cte AS (
+  SELECT id
+  FROM download_job
+  WHERE status IN ('created', 'enqueued', 'downloading')
+    AND next_run_at <= now()
+  ORDER BY next_run_at ASC
+  FOR UPDATE SKIP LOCKED
+  LIMIT $1
 )
-update download_job j
-set updated_at = now()
-from cte
-where j.id = cte.id
-returning j.*;
+UPDATE download_job j
+SET updated_at = now()
+FROM cte
+WHERE j.id = cte.id
+RETURNING j.*;
 
--- name: LinkDownloadJobMediaFile :exec
-insert into download_job_media_file (download_job_id, media_file_id)
-values (sqlc.arg(download_job_id), sqlc.arg(media_file_id))
-on conflict (download_job_id, media_file_id) do nothing;
+-- name: GetDownloadJobWithImportSummary :one
+-- Returns download job with computed import status summary
+SELECT
+  dj.*,
+  COUNT(it.id)::int AS total_import_tasks,
+  COUNT(it.id) FILTER (WHERE it.status = 'pending')::int AS pending_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'in_progress')::int AS active_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'completed')::int AS completed_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'failed')::int AS failed_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'cancelled')::int AS cancelled_imports,
+  CASE
+    WHEN dj.status != 'completed' THEN 'download_pending'
+    WHEN COUNT(it.id) = 0 THEN 'awaiting_import'
+    WHEN COUNT(it.id) FILTER (WHERE it.status IN ('pending', 'in_progress')) > 0 THEN 'importing'
+    WHEN COUNT(it.id) FILTER (WHERE it.status = 'failed') > 0
+         AND COUNT(it.id) FILTER (WHERE it.status = 'completed') > 0 THEN 'partial_failure'
+    WHEN COUNT(it.id) FILTER (WHERE it.status = 'failed') = COUNT(it.id) THEN 'import_failed'
+    WHEN COUNT(it.id) = COUNT(it.id) FILTER (WHERE it.status = 'completed') THEN 'fully_imported'
+    ELSE 'unknown'
+  END AS import_status
+FROM download_job dj
+LEFT JOIN import_task it ON it.download_job_id = dj.id
+  AND it.previous_task_id IS NULL  -- Only count "root" tasks, not reimports
+WHERE dj.id = $1
+GROUP BY dj.id;
+
+-- name: GetDownloadJobTimeline :many
+-- Combined event log for a download job (download events + related import events)
+SELECT
+  'download' AS source,
+  e.id,
+  e.event_type,
+  e.old_status,
+  e.new_status,
+  e.message,
+  e.metadata,
+  e.created_at,
+  NULL::uuid AS import_task_id
+FROM download_job_event e
+WHERE e.download_job_id = $1
+
+UNION ALL
+
+SELECT
+  'import' AS source,
+  ie.id,
+  ie.event_type,
+  ie.old_status,
+  ie.new_status,
+  ie.message,
+  ie.metadata,
+  ie.created_at,
+  ie.import_task_id
+FROM import_task_event ie
+JOIN import_task it ON it.id = ie.import_task_id
+WHERE it.download_job_id = $1
+
+ORDER BY created_at ASC;

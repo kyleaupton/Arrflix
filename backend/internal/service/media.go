@@ -578,11 +578,11 @@ func (s *MediaService) buildFileInfosFromDownloadJobsForSeries(ctx context.Conte
 		return nil, err
 	}
 
+	// Only include active downloads (import is now a separate subsystem)
 	activeStatuses := map[string]bool{
 		"created":     true,
 		"enqueued":    true,
 		"downloading": true,
-		"importing":   true,
 	}
 
 	fileInfos := make([]model.FileInfo, 0)
@@ -591,36 +591,17 @@ func (s *MediaService) buildFileInfosFromDownloadJobsForSeries(ctx context.Conte
 			continue
 		}
 
-		// Map job status to file status
-		var fileStatus string
-		switch job.Status {
-		case "created", "enqueued", "downloading":
-			fileStatus = "downloading"
-		case "importing":
-			fileStatus = "importing"
-		default:
-			continue
-		}
-
 		jobID := job.ID.String()
 		libID := job.LibraryID.String()
 
-		// Use predicted_dest_path if available, otherwise fall back to import_dest_path
-		var path string
-		if job.PredictedDestPath != nil && *job.PredictedDestPath != "" {
-			path = *job.PredictedDestPath
-		} else if job.ImportDestPath != nil && *job.ImportDestPath != "" {
-			path = *job.ImportDestPath
-		} else {
-			// Skip jobs without any path information
-			continue
-		}
+		// Use candidate title as path placeholder since actual path is determined at import time
+		path := job.CandidateTitle
 
 		fileInfos = append(fileInfos, model.FileInfo{
 			ID:            "", // No media_file exists yet
 			LibraryID:     libID,
 			Path:          path,
-			Status:        fileStatus,
+			Status:        "downloading",
 			SeasonNumber:  job.SeasonNumber,
 			EpisodeNumber: job.EpisodeNumber,
 			DownloadJobID: &jobID,
@@ -786,11 +767,11 @@ func (s *MediaService) buildFileInfosFromDownloadJobs(ctx context.Context, tmdbI
 		return nil, err
 	}
 
+	// Only include active downloads (import is now a separate subsystem)
 	activeStatuses := map[string]bool{
 		"created":     true,
 		"enqueued":    true,
 		"downloading": true,
-		"importing":   true,
 	}
 
 	fileInfos := make([]model.FileInfo, 0)
@@ -799,36 +780,17 @@ func (s *MediaService) buildFileInfosFromDownloadJobs(ctx context.Context, tmdbI
 			continue
 		}
 
-		// Map job status to file status
-		var fileStatus string
-		switch job.Status {
-		case "created", "enqueued", "downloading":
-			fileStatus = "downloading"
-		case "importing":
-			fileStatus = "importing"
-		default:
-			continue
-		}
-
 		jobID := job.ID.String()
 		libID := job.LibraryID.String()
 
-		// Use predicted_dest_path if available, otherwise fall back to import_dest_path
-		var path string
-		if job.PredictedDestPath != nil && *job.PredictedDestPath != "" {
-			path = *job.PredictedDestPath
-		} else if job.ImportDestPath != nil && *job.ImportDestPath != "" {
-			path = *job.ImportDestPath
-		} else {
-			// Skip jobs without any path information
-			continue
-		}
+		// Use candidate title as path placeholder since actual path is determined at import time
+		path := job.CandidateTitle
 
 		fileInfos = append(fileInfos, model.FileInfo{
 			ID:            "", // No media_file exists yet
 			LibraryID:     libID,
 			Path:          path,
-			Status:        fileStatus,
+			Status:        "downloading",
 			DownloadJobID: &jobID,
 			Progress:      job.Progress,
 		})

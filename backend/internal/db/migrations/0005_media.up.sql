@@ -73,10 +73,11 @@ CREATE INDEX IF NOT EXISTS idx_media_file_state_exists ON media_file_state (file
 CREATE INDEX IF NOT EXISTS idx_media_file_state_verified ON media_file_state (last_verified_at);
 
 -- Import history (successes and failures)
+-- Note: import_task_id FK is added in 0008 after import_task table is created
 CREATE TABLE IF NOT EXISTS media_file_import (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   media_file_id UUID REFERENCES media_file(id) ON DELETE SET NULL,
-  download_job_id UUID,  -- FK added after download_job table is created
+  import_task_id UUID,  -- FK added after import_task table is created in 0008
   method TEXT NOT NULL CHECK (method IN ('hardlink','copy','scan','manual_match')),
   source_path TEXT,
   dest_path TEXT NOT NULL,
@@ -86,7 +87,7 @@ CREATE TABLE IF NOT EXISTS media_file_import (
 );
 
 CREATE INDEX IF NOT EXISTS idx_media_file_import_media_file ON media_file_import (media_file_id);
-CREATE INDEX IF NOT EXISTS idx_media_file_import_download_job ON media_file_import (download_job_id);
+CREATE INDEX IF NOT EXISTS idx_media_file_import_task ON media_file_import (import_task_id);
 CREATE INDEX IF NOT EXISTS idx_media_file_import_attempted ON media_file_import (attempted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_media_file_import_success ON media_file_import (success);
 

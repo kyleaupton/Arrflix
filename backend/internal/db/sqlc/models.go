@@ -191,36 +191,37 @@ type DownloadJob struct {
 	ID                   pgtype.UUID `json:"id"`
 	Status               string      `json:"status"`
 	Protocol             string      `json:"protocol"`
-	MediaType            string      `json:"media_type"`
-	MediaItemID          pgtype.UUID `json:"media_item_id"`
-	EpisodeID            pgtype.UUID `json:"episode_id"`
 	IndexerID            int64       `json:"indexer_id"`
 	Guid                 string      `json:"guid"`
 	CandidateTitle       string      `json:"candidate_title"`
 	CandidateLink        string      `json:"candidate_link"`
-	DownloaderID         pgtype.UUID `json:"downloader_id"`
+	MediaType            string      `json:"media_type"`
+	MediaItemID          pgtype.UUID `json:"media_item_id"`
+	EpisodeID            pgtype.UUID `json:"episode_id"`
 	LibraryID            pgtype.UUID `json:"library_id"`
 	NameTemplateID       pgtype.UUID `json:"name_template_id"`
+	DownloaderID         pgtype.UUID `json:"downloader_id"`
 	DownloaderExternalID *string     `json:"downloader_external_id"`
-	DownloadSavePath     *string     `json:"download_save_path"`
-	DownloadContentPath  *string     `json:"download_content_path"`
-	ImportSourcePath     *string     `json:"import_source_path"`
-	ImportDestPath       *string     `json:"import_dest_path"`
-	ImportMethod         *string     `json:"import_method"`
-	PrimaryMediaFileID   pgtype.UUID `json:"primary_media_file_id"`
-	PredictedDestPath    *string     `json:"predicted_dest_path"`
 	DownloaderStatus     *string     `json:"downloader_status"`
 	Progress             *float64    `json:"progress"`
+	SavePath             *string     `json:"save_path"`
+	ContentPath          *string     `json:"content_path"`
 	AttemptCount         int32       `json:"attempt_count"`
 	NextRunAt            time.Time   `json:"next_run_at"`
 	LastError            *string     `json:"last_error"`
+	ErrorCategory        *string     `json:"error_category"`
 	CreatedAt            time.Time   `json:"created_at"`
 	UpdatedAt            time.Time   `json:"updated_at"`
 }
 
-type DownloadJobMediaFile struct {
+type DownloadJobEvent struct {
+	ID            pgtype.UUID `json:"id"`
 	DownloadJobID pgtype.UUID `json:"download_job_id"`
-	MediaFileID   pgtype.UUID `json:"media_file_id"`
+	EventType     string      `json:"event_type"`
+	OldStatus     *string     `json:"old_status"`
+	NewStatus     *string     `json:"new_status"`
+	Message       *string     `json:"message"`
+	Metadata      []byte      `json:"metadata"`
 	CreatedAt     time.Time   `json:"created_at"`
 }
 
@@ -237,6 +238,40 @@ type Downloader struct {
 	Default    bool        `json:"default"`
 	CreatedAt  time.Time   `json:"created_at"`
 	UpdatedAt  time.Time   `json:"updated_at"`
+}
+
+type ImportTask struct {
+	ID             pgtype.UUID `json:"id"`
+	Status         string      `json:"status"`
+	DownloadJobID  pgtype.UUID `json:"download_job_id"`
+	SourcePath     string      `json:"source_path"`
+	PreviousTaskID pgtype.UUID `json:"previous_task_id"`
+	MediaType      string      `json:"media_type"`
+	MediaItemID    pgtype.UUID `json:"media_item_id"`
+	EpisodeID      pgtype.UUID `json:"episode_id"`
+	LibraryID      pgtype.UUID `json:"library_id"`
+	NameTemplateID pgtype.UUID `json:"name_template_id"`
+	DestPath       *string     `json:"dest_path"`
+	ImportMethod   *string     `json:"import_method"`
+	MediaFileID    pgtype.UUID `json:"media_file_id"`
+	AttemptCount   int32       `json:"attempt_count"`
+	MaxAttempts    int32       `json:"max_attempts"`
+	NextRunAt      time.Time   `json:"next_run_at"`
+	LastError      *string     `json:"last_error"`
+	ErrorCategory  *string     `json:"error_category"`
+	CreatedAt      time.Time   `json:"created_at"`
+	UpdatedAt      time.Time   `json:"updated_at"`
+}
+
+type ImportTaskEvent struct {
+	ID           pgtype.UUID `json:"id"`
+	ImportTaskID pgtype.UUID `json:"import_task_id"`
+	EventType    string      `json:"event_type"`
+	OldStatus    *string     `json:"old_status"`
+	NewStatus    *string     `json:"new_status"`
+	Message      *string     `json:"message"`
+	Metadata     []byte      `json:"metadata"`
+	CreatedAt    time.Time   `json:"created_at"`
 }
 
 type Library struct {
@@ -271,15 +306,15 @@ type MediaFile struct {
 }
 
 type MediaFileImport struct {
-	ID            pgtype.UUID `json:"id"`
-	MediaFileID   pgtype.UUID `json:"media_file_id"`
-	DownloadJobID pgtype.UUID `json:"download_job_id"`
-	Method        string      `json:"method"`
-	SourcePath    *string     `json:"source_path"`
-	DestPath      string      `json:"dest_path"`
-	AttemptedAt   time.Time   `json:"attempted_at"`
-	Success       bool        `json:"success"`
-	ErrorMessage  *string     `json:"error_message"`
+	ID           pgtype.UUID `json:"id"`
+	MediaFileID  pgtype.UUID `json:"media_file_id"`
+	ImportTaskID pgtype.UUID `json:"import_task_id"`
+	Method       string      `json:"method"`
+	SourcePath   *string     `json:"source_path"`
+	DestPath     string      `json:"dest_path"`
+	AttemptedAt  time.Time   `json:"attempted_at"`
+	Success      bool        `json:"success"`
+	ErrorMessage *string     `json:"error_message"`
 }
 
 type MediaFileState struct {

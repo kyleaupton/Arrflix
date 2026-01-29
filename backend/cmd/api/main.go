@@ -12,7 +12,8 @@ import (
 	"github.com/kyleaupton/arrflix/internal/downloader"
 	"github.com/kyleaupton/arrflix/internal/downloader/qbittorrent"
 	"github.com/kyleaupton/arrflix/internal/http"
-	"github.com/kyleaupton/arrflix/internal/jobs/downloadjobs"
+	downloadworker "github.com/kyleaupton/arrflix/internal/jobs/download"
+	importworker "github.com/kyleaupton/arrflix/internal/jobs/import"
 	"github.com/kyleaupton/arrflix/internal/logger"
 	"github.com/kyleaupton/arrflix/internal/repo"
 	"github.com/kyleaupton/arrflix/internal/service"
@@ -68,10 +69,12 @@ func main() {
 		}
 	}()
 
-	// Download job worker
+	// Download and import workers
 	workerCtx, workerCancel := context.WithCancel(context.Background())
-	jobWorker := downloadjobs.New(repo, downloaderManager, services.Import, logg, broker)
-	go jobWorker.Run(workerCtx)
+	dlWorker := downloadworker.New(repo, downloaderManager, logg, broker)
+	impWorker := importworker.New(repo, logg, broker)
+	go dlWorker.Run(workerCtx)
+	go impWorker.Run(workerCtx)
 
 	// Graceful shutdown
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

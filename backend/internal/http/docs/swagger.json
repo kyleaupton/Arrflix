@@ -169,7 +169,7 @@
                 "tags": [
                     "download-jobs"
                 ],
-                "summary": "Get download job",
+                "summary": "Get download job with import status summary",
                 "parameters": [
                     {
                         "type": "string",
@@ -183,7 +183,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dbgen.DownloadJob"
+                            "$ref": "#/definitions/dbgen.GetDownloadJobWithImportSummaryRow"
                         }
                     },
                     "400": {
@@ -232,6 +232,95 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/download-jobs/{id}/import-tasks": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-jobs"
+                ],
+                "summary": "List import tasks for download job",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job ID (uuid)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.ImportTask"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/download-jobs/{id}/timeline": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-jobs"
+                ],
+                "summary": "Get download job timeline",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job ID (uuid)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.GetDownloadJobTimelineRow"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -511,6 +600,296 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/model.Feed"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/import-tasks": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-tasks"
+                ],
+                "summary": "List import tasks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Page size",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Page offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.ImportTask"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/import-tasks/counts": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-tasks"
+                ],
+                "summary": "Get import task counts by status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.CountImportTasksByStatusRow"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/import-tasks/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-tasks"
+                ],
+                "summary": "Get import task details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Task ID (uuid)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.GetImportTaskWithDetailsRow"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/import-tasks/{id}/cancel": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-tasks"
+                ],
+                "summary": "Cancel import task",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Task ID (uuid)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.ImportTask"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/import-tasks/{id}/history": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-tasks"
+                ],
+                "summary": "Get import task reimport history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Task ID (uuid)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.GetImportTaskHistoryRow"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/import-tasks/{id}/reimport": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-tasks"
+                ],
+                "summary": "Reimport a file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Task ID (uuid)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dbgen.ImportTask"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/import-tasks/{id}/timeline": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "import-tasks"
+                ],
+                "summary": "Get import task timeline",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Task ID (uuid)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.ImportTaskEvent"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -2419,6 +2798,46 @@
                 }
             }
         },
+        "/v1/series/{id}/download-jobs": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "download-jobs"
+                ],
+                "summary": "List series download jobs",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Series ID (TMDB ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbgen.ListDownloadJobsByTmdbSeriesIDRow"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/settings": {
             "get": {
                 "produces": [
@@ -3064,24 +3483,48 @@
                 }
             }
         },
+        "dbgen.CountImportTasksByStatusRow": {
+            "type": "object",
+            "required": [
+                "cancelled",
+                "completed",
+                "failed",
+                "in_progress",
+                "pending"
+            ],
+            "properties": {
+                "cancelled": {
+                    "type": "integer"
+                },
+                "completed": {
+                    "type": "integer"
+                },
+                "failed": {
+                    "type": "integer"
+                },
+                "in_progress": {
+                    "type": "integer"
+                },
+                "pending": {
+                    "type": "integer"
+                }
+            }
+        },
         "dbgen.DownloadJob": {
             "type": "object",
             "required": [
                 "attempt_count",
                 "candidate_link",
                 "candidate_title",
+                "content_path",
                 "created_at",
-                "download_content_path",
-                "download_save_path",
                 "downloader_external_id",
                 "downloader_id",
                 "downloader_status",
                 "episode_id",
+                "error_category",
                 "guid",
                 "id",
-                "import_dest_path",
-                "import_method",
-                "import_source_path",
                 "indexer_id",
                 "last_error",
                 "library_id",
@@ -3089,10 +3532,9 @@
                 "media_type",
                 "name_template_id",
                 "next_run_at",
-                "predicted_dest_path",
-                "primary_media_file_id",
                 "progress",
                 "protocol",
+                "save_path",
                 "status",
                 "updated_at"
             ],
@@ -3106,13 +3548,10 @@
                 "candidate_title": {
                     "type": "string"
                 },
+                "content_path": {
+                    "type": "string"
+                },
                 "created_at": {
-                    "type": "string"
-                },
-                "download_content_path": {
-                    "type": "string"
-                },
-                "download_save_path": {
                     "type": "string"
                 },
                 "downloader_external_id": {
@@ -3127,19 +3566,13 @@
                 "episode_id": {
                     "type": "string"
                 },
+                "error_category": {
+                    "type": "string"
+                },
                 "guid": {
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                },
-                "import_dest_path": {
-                    "type": "string"
-                },
-                "import_method": {
-                    "type": "string"
-                },
-                "import_source_path": {
                     "type": "string"
                 },
                 "indexer_id": {
@@ -3163,16 +3596,13 @@
                 "next_run_at": {
                     "type": "string"
                 },
-                "predicted_dest_path": {
-                    "type": "string"
-                },
-                "primary_media_file_id": {
-                    "type": "string"
-                },
                 "progress": {
                     "type": "number"
                 },
                 "protocol": {
+                    "type": "string"
+                },
+                "save_path": {
                     "type": "string"
                 },
                 "status": {
@@ -3237,6 +3667,653 @@
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dbgen.GetDownloadJobTimelineRow": {
+            "type": "object",
+            "required": [
+                "created_at",
+                "event_type",
+                "id",
+                "import_task_id",
+                "message",
+                "metadata",
+                "new_status",
+                "old_status",
+                "source"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "import_task_id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "new_status": {
+                    "type": "string"
+                },
+                "old_status": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "dbgen.GetDownloadJobWithImportSummaryRow": {
+            "type": "object",
+            "required": [
+                "active_imports",
+                "attempt_count",
+                "cancelled_imports",
+                "candidate_link",
+                "candidate_title",
+                "completed_imports",
+                "content_path",
+                "created_at",
+                "downloader_external_id",
+                "downloader_id",
+                "downloader_status",
+                "episode_id",
+                "error_category",
+                "failed_imports",
+                "guid",
+                "id",
+                "import_status",
+                "indexer_id",
+                "last_error",
+                "library_id",
+                "media_item_id",
+                "media_type",
+                "name_template_id",
+                "next_run_at",
+                "pending_imports",
+                "progress",
+                "protocol",
+                "save_path",
+                "status",
+                "total_import_tasks",
+                "updated_at"
+            ],
+            "properties": {
+                "active_imports": {
+                    "type": "integer"
+                },
+                "attempt_count": {
+                    "type": "integer"
+                },
+                "cancelled_imports": {
+                    "type": "integer"
+                },
+                "candidate_link": {
+                    "type": "string"
+                },
+                "candidate_title": {
+                    "type": "string"
+                },
+                "completed_imports": {
+                    "type": "integer"
+                },
+                "content_path": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "downloader_external_id": {
+                    "type": "string"
+                },
+                "downloader_id": {
+                    "type": "string"
+                },
+                "downloader_status": {
+                    "type": "string"
+                },
+                "episode_id": {
+                    "type": "string"
+                },
+                "error_category": {
+                    "type": "string"
+                },
+                "failed_imports": {
+                    "type": "integer"
+                },
+                "guid": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "import_status": {
+                    "type": "string"
+                },
+                "indexer_id": {
+                    "type": "integer"
+                },
+                "last_error": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "string"
+                },
+                "media_item_id": {
+                    "type": "string"
+                },
+                "media_type": {
+                    "type": "string"
+                },
+                "name_template_id": {
+                    "type": "string"
+                },
+                "next_run_at": {
+                    "type": "string"
+                },
+                "pending_imports": {
+                    "type": "integer"
+                },
+                "progress": {
+                    "type": "number"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "save_path": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_import_tasks": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dbgen.GetImportTaskHistoryRow": {
+            "type": "object",
+            "required": [
+                "attempt_count",
+                "chain_depth",
+                "created_at",
+                "dest_path",
+                "download_job_id",
+                "episode_id",
+                "error_category",
+                "id",
+                "import_method",
+                "last_error",
+                "library_id",
+                "max_attempts",
+                "media_file_id",
+                "media_item_id",
+                "media_type",
+                "name_template_id",
+                "next_run_at",
+                "previous_task_id",
+                "source_path",
+                "status",
+                "updated_at"
+            ],
+            "properties": {
+                "attempt_count": {
+                    "type": "integer"
+                },
+                "chain_depth": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "dest_path": {
+                    "type": "string"
+                },
+                "download_job_id": {
+                    "type": "string"
+                },
+                "episode_id": {
+                    "type": "string"
+                },
+                "error_category": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "import_method": {
+                    "type": "string"
+                },
+                "last_error": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "string"
+                },
+                "max_attempts": {
+                    "type": "integer"
+                },
+                "media_file_id": {
+                    "type": "string"
+                },
+                "media_item_id": {
+                    "type": "string"
+                },
+                "media_type": {
+                    "type": "string"
+                },
+                "name_template_id": {
+                    "type": "string"
+                },
+                "next_run_at": {
+                    "type": "string"
+                },
+                "previous_task_id": {
+                    "type": "string"
+                },
+                "source_path": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dbgen.GetImportTaskWithDetailsRow": {
+            "type": "object",
+            "required": [
+                "attempt_count",
+                "candidate_title",
+                "created_at",
+                "dest_path",
+                "download_job_id",
+                "episode_id",
+                "episode_number",
+                "episode_title",
+                "error_category",
+                "id",
+                "import_method",
+                "last_error",
+                "library_id",
+                "library_name",
+                "library_root_path",
+                "max_attempts",
+                "media_file_id",
+                "media_item_id",
+                "media_item_type",
+                "media_title",
+                "media_type",
+                "media_year",
+                "movie_dir_template",
+                "name_template",
+                "name_template_id",
+                "next_run_at",
+                "previous_task_id",
+                "season_number",
+                "series_season_template",
+                "series_show_template",
+                "source_path",
+                "status",
+                "updated_at"
+            ],
+            "properties": {
+                "attempt_count": {
+                    "type": "integer"
+                },
+                "candidate_title": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "dest_path": {
+                    "type": "string"
+                },
+                "download_job_id": {
+                    "type": "string"
+                },
+                "episode_id": {
+                    "type": "string"
+                },
+                "episode_number": {
+                    "type": "integer"
+                },
+                "episode_title": {
+                    "type": "string"
+                },
+                "error_category": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "import_method": {
+                    "type": "string"
+                },
+                "last_error": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "string"
+                },
+                "library_name": {
+                    "type": "string"
+                },
+                "library_root_path": {
+                    "type": "string"
+                },
+                "max_attempts": {
+                    "type": "integer"
+                },
+                "media_file_id": {
+                    "type": "string"
+                },
+                "media_item_id": {
+                    "type": "string"
+                },
+                "media_item_type": {
+                    "type": "string"
+                },
+                "media_title": {
+                    "type": "string"
+                },
+                "media_type": {
+                    "type": "string"
+                },
+                "media_year": {
+                    "type": "integer"
+                },
+                "movie_dir_template": {
+                    "type": "string"
+                },
+                "name_template": {
+                    "type": "string"
+                },
+                "name_template_id": {
+                    "type": "string"
+                },
+                "next_run_at": {
+                    "type": "string"
+                },
+                "previous_task_id": {
+                    "type": "string"
+                },
+                "season_number": {
+                    "type": "integer"
+                },
+                "series_season_template": {
+                    "type": "string"
+                },
+                "series_show_template": {
+                    "type": "string"
+                },
+                "source_path": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dbgen.ImportTask": {
+            "type": "object",
+            "required": [
+                "attempt_count",
+                "created_at",
+                "dest_path",
+                "download_job_id",
+                "episode_id",
+                "error_category",
+                "id",
+                "import_method",
+                "last_error",
+                "library_id",
+                "max_attempts",
+                "media_file_id",
+                "media_item_id",
+                "media_type",
+                "name_template_id",
+                "next_run_at",
+                "previous_task_id",
+                "source_path",
+                "status",
+                "updated_at"
+            ],
+            "properties": {
+                "attempt_count": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "dest_path": {
+                    "type": "string"
+                },
+                "download_job_id": {
+                    "type": "string"
+                },
+                "episode_id": {
+                    "type": "string"
+                },
+                "error_category": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "import_method": {
+                    "type": "string"
+                },
+                "last_error": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "string"
+                },
+                "max_attempts": {
+                    "type": "integer"
+                },
+                "media_file_id": {
+                    "type": "string"
+                },
+                "media_item_id": {
+                    "type": "string"
+                },
+                "media_type": {
+                    "type": "string"
+                },
+                "name_template_id": {
+                    "type": "string"
+                },
+                "next_run_at": {
+                    "type": "string"
+                },
+                "previous_task_id": {
+                    "type": "string"
+                },
+                "source_path": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dbgen.ImportTaskEvent": {
+            "type": "object",
+            "required": [
+                "created_at",
+                "event_type",
+                "id",
+                "import_task_id",
+                "message",
+                "metadata",
+                "new_status",
+                "old_status"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "import_task_id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "new_status": {
+                    "type": "string"
+                },
+                "old_status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dbgen.ListDownloadJobsByTmdbSeriesIDRow": {
+            "type": "object",
+            "required": [
+                "attempt_count",
+                "candidate_link",
+                "candidate_title",
+                "content_path",
+                "created_at",
+                "downloader_external_id",
+                "downloader_id",
+                "downloader_status",
+                "episode_id",
+                "episode_number",
+                "error_category",
+                "guid",
+                "id",
+                "indexer_id",
+                "last_error",
+                "library_id",
+                "media_item_id",
+                "media_type",
+                "name_template_id",
+                "next_run_at",
+                "progress",
+                "protocol",
+                "save_path",
+                "season_number",
+                "status",
+                "updated_at"
+            ],
+            "properties": {
+                "attempt_count": {
+                    "type": "integer"
+                },
+                "candidate_link": {
+                    "type": "string"
+                },
+                "candidate_title": {
+                    "type": "string"
+                },
+                "content_path": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "downloader_external_id": {
+                    "type": "string"
+                },
+                "downloader_id": {
+                    "type": "string"
+                },
+                "downloader_status": {
+                    "type": "string"
+                },
+                "episode_id": {
+                    "type": "string"
+                },
+                "episode_number": {
+                    "type": "integer"
+                },
+                "error_category": {
+                    "type": "string"
+                },
+                "guid": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "indexer_id": {
+                    "type": "integer"
+                },
+                "last_error": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "string"
+                },
+                "media_item_id": {
+                    "type": "string"
+                },
+                "media_type": {
+                    "type": "string"
+                },
+                "name_template_id": {
+                    "type": "string"
+                },
+                "next_run_at": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "number"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "save_path": {
+                    "type": "string"
+                },
+                "season_number": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }

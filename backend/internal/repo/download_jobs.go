@@ -2,15 +2,19 @@ package repo
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
+	apperrors "github.com/kyleaupton/arrflix/internal/errors"
 )
 
 type DownloadJobsRepo interface {
 	CreateDownloadJob(ctx context.Context, arg dbgen.CreateDownloadJobParams) (dbgen.DownloadJob, error)
 	GetDownloadJob(ctx context.Context, id pgtype.UUID) (dbgen.DownloadJob, error)
 	GetDownloadJobByCandidate(ctx context.Context, indexerID int64, guid string) (dbgen.DownloadJob, error)
+	GetDownloadJobWithImportSummary(ctx context.Context, id pgtype.UUID) (dbgen.GetDownloadJobWithImportSummaryRow, error)
+	GetDownloadJobTimeline(ctx context.Context, downloadJobID pgtype.UUID) ([]dbgen.GetDownloadJobTimelineRow, error)
 	ListDownloadJobsByMediaItem(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.DownloadJob, error)
 	ListDownloadJobsByTmdbMovieID(ctx context.Context, tmdbMovieID int64) ([]dbgen.DownloadJob, error)
 	ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbSeriesID int64) ([]dbgen.ListDownloadJobsByTmdbSeriesIDRow, error)
@@ -21,12 +25,14 @@ type DownloadJobsRepo interface {
 
 	SetDownloadJobEnqueued(ctx context.Context, id pgtype.UUID, downloaderExternalID string) (dbgen.DownloadJob, error)
 	SetDownloadJobDownloadSnapshot(ctx context.Context, arg dbgen.SetDownloadJobDownloadSnapshotParams) (dbgen.DownloadJob, error)
-	SetDownloadJobImporting(ctx context.Context, id pgtype.UUID, importSourcePath string) (dbgen.DownloadJob, error)
-	SetDownloadJobImported(ctx context.Context, arg dbgen.SetDownloadJobImportedParams) (dbgen.DownloadJob, error)
-	LinkDownloadJobMediaFile(ctx context.Context, downloadJobID, mediaFileID pgtype.UUID) error
+	SetDownloadJobCompleted(ctx context.Context, id pgtype.UUID, savePath, contentPath string) (dbgen.DownloadJob, error)
 
-	BumpDownloadJobRetry(ctx context.Context, arg dbgen.BumpDownloadJobRetryParams) (dbgen.DownloadJob, error)
-	MarkDownloadJobFailed(ctx context.Context, id pgtype.UUID, lastError string) (dbgen.DownloadJob, error)
+	ScheduleDownloadJobRetry(ctx context.Context, id pgtype.UUID, lastError string, category apperrors.Category, nextRunAt time.Time) (dbgen.DownloadJob, error)
+	MarkDownloadJobFailed(ctx context.Context, id pgtype.UUID, lastError string, category apperrors.Category) (dbgen.DownloadJob, error)
+
+	// Event logging
+	CreateDownloadJobEvent(ctx context.Context, arg dbgen.CreateDownloadJobEventParams) (dbgen.DownloadJobEvent, error)
+	ListDownloadJobEvents(ctx context.Context, downloadJobID pgtype.UUID) ([]dbgen.DownloadJobEvent, error)
 }
 
 func (r *Repository) CreateDownloadJob(ctx context.Context, arg dbgen.CreateDownloadJobParams) (dbgen.DownloadJob, error) {
@@ -42,6 +48,14 @@ func (r *Repository) GetDownloadJobByCandidate(ctx context.Context, indexerID in
 		IndexerID: indexerID,
 		Guid:      guid,
 	})
+}
+
+func (r *Repository) GetDownloadJobWithImportSummary(ctx context.Context, id pgtype.UUID) (dbgen.GetDownloadJobWithImportSummaryRow, error) {
+	return r.Q.GetDownloadJobWithImportSummary(ctx, id)
+}
+
+func (r *Repository) GetDownloadJobTimeline(ctx context.Context, downloadJobID pgtype.UUID) ([]dbgen.GetDownloadJobTimelineRow, error) {
+	return r.Q.GetDownloadJobTimeline(ctx, downloadJobID)
 }
 
 func (r *Repository) ListDownloadJobsByMediaItem(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.DownloadJob, error) {
@@ -79,31 +93,37 @@ func (r *Repository) SetDownloadJobDownloadSnapshot(ctx context.Context, arg dbg
 	return r.Q.SetDownloadJobDownloadSnapshot(ctx, arg)
 }
 
-func (r *Repository) SetDownloadJobImporting(ctx context.Context, id pgtype.UUID, importSourcePath string) (dbgen.DownloadJob, error) {
-	return r.Q.SetDownloadJobImporting(ctx, dbgen.SetDownloadJobImportingParams{
-		ID:               id,
-		ImportSourcePath: &importSourcePath,
+func (r *Repository) SetDownloadJobCompleted(ctx context.Context, id pgtype.UUID, savePath, contentPath string) (dbgen.DownloadJob, error) {
+	return r.Q.SetDownloadJobCompleted(ctx, dbgen.SetDownloadJobCompletedParams{
+		ID:          id,
+		SavePath:    &savePath,
+		ContentPath: &contentPath,
 	})
 }
 
-func (r *Repository) SetDownloadJobImported(ctx context.Context, arg dbgen.SetDownloadJobImportedParams) (dbgen.DownloadJob, error) {
-	return r.Q.SetDownloadJobImported(ctx, arg)
-}
-
-func (r *Repository) LinkDownloadJobMediaFile(ctx context.Context, downloadJobID, mediaFileID pgtype.UUID) error {
-	return r.Q.LinkDownloadJobMediaFile(ctx, dbgen.LinkDownloadJobMediaFileParams{
-		DownloadJobID: downloadJobID,
-		MediaFileID:   mediaFileID,
+func (r *Repository) ScheduleDownloadJobRetry(ctx context.Context, id pgtype.UUID, lastError string, category apperrors.Category, nextRunAt time.Time) (dbgen.DownloadJob, error) {
+	cat := string(category)
+	return r.Q.ScheduleDownloadJobRetry(ctx, dbgen.ScheduleDownloadJobRetryParams{
+		ID:            id,
+		LastError:     &lastError,
+		ErrorCategory: &cat,
+		NextRunAt:     nextRunAt,
 	})
 }
 
-func (r *Repository) BumpDownloadJobRetry(ctx context.Context, arg dbgen.BumpDownloadJobRetryParams) (dbgen.DownloadJob, error) {
-	return r.Q.BumpDownloadJobRetry(ctx, arg)
-}
-
-func (r *Repository) MarkDownloadJobFailed(ctx context.Context, id pgtype.UUID, lastError string) (dbgen.DownloadJob, error) {
+func (r *Repository) MarkDownloadJobFailed(ctx context.Context, id pgtype.UUID, lastError string, category apperrors.Category) (dbgen.DownloadJob, error) {
+	cat := string(category)
 	return r.Q.MarkDownloadJobFailed(ctx, dbgen.MarkDownloadJobFailedParams{
-		ID:        id,
-		LastError: &lastError,
+		ID:            id,
+		LastError:     &lastError,
+		ErrorCategory: &cat,
 	})
+}
+
+func (r *Repository) CreateDownloadJobEvent(ctx context.Context, arg dbgen.CreateDownloadJobEventParams) (dbgen.DownloadJobEvent, error) {
+	return r.Q.CreateDownloadJobEvent(ctx, arg)
+}
+
+func (r *Repository) ListDownloadJobEvents(ctx context.Context, downloadJobID pgtype.UUID) ([]dbgen.DownloadJobEvent, error) {
+	return r.Q.ListDownloadJobEvents(ctx, downloadJobID)
 }

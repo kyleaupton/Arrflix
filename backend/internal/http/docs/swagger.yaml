@@ -25,6 +25,25 @@ definitions:
     - updated_at
     - value
     type: object
+  dbgen.CountImportTasksByStatusRow:
+    properties:
+      cancelled:
+        type: integer
+      completed:
+        type: integer
+      failed:
+        type: integer
+      in_progress:
+        type: integer
+      pending:
+        type: integer
+    required:
+    - cancelled
+    - completed
+    - failed
+    - in_progress
+    - pending
+    type: object
   dbgen.DownloadJob:
     properties:
       attempt_count:
@@ -33,11 +52,9 @@ definitions:
         type: string
       candidate_title:
         type: string
+      content_path:
+        type: string
       created_at:
-        type: string
-      download_content_path:
-        type: string
-      download_save_path:
         type: string
       downloader_external_id:
         type: string
@@ -47,15 +64,11 @@ definitions:
         type: string
       episode_id:
         type: string
+      error_category:
+        type: string
       guid:
         type: string
       id:
-        type: string
-      import_dest_path:
-        type: string
-      import_method:
-        type: string
-      import_source_path:
         type: string
       indexer_id:
         type: integer
@@ -71,13 +84,11 @@ definitions:
         type: string
       next_run_at:
         type: string
-      predicted_dest_path:
-        type: string
-      primary_media_file_id:
-        type: string
       progress:
         type: number
       protocol:
+        type: string
+      save_path:
         type: string
       status:
         type: string
@@ -87,18 +98,15 @@ definitions:
     - attempt_count
     - candidate_link
     - candidate_title
+    - content_path
     - created_at
-    - download_content_path
-    - download_save_path
     - downloader_external_id
     - downloader_id
     - downloader_status
     - episode_id
+    - error_category
     - guid
     - id
-    - import_dest_path
-    - import_method
-    - import_source_path
     - indexer_id
     - last_error
     - library_id
@@ -106,10 +114,9 @@ definitions:
     - media_type
     - name_template_id
     - next_run_at
-    - predicted_dest_path
-    - primary_media_file_id
     - progress
     - protocol
+    - save_path
     - status
     - updated_at
     type: object
@@ -154,6 +161,482 @@ definitions:
     - updated_at
     - url
     - username
+    type: object
+  dbgen.GetDownloadJobTimelineRow:
+    properties:
+      created_at:
+        type: string
+      event_type:
+        type: string
+      id:
+        type: string
+      import_task_id:
+        type: string
+      message:
+        type: string
+      metadata:
+        items:
+          type: integer
+        type: array
+      new_status:
+        type: string
+      old_status:
+        type: string
+      source:
+        type: string
+    required:
+    - created_at
+    - event_type
+    - id
+    - import_task_id
+    - message
+    - metadata
+    - new_status
+    - old_status
+    - source
+    type: object
+  dbgen.GetDownloadJobWithImportSummaryRow:
+    properties:
+      active_imports:
+        type: integer
+      attempt_count:
+        type: integer
+      cancelled_imports:
+        type: integer
+      candidate_link:
+        type: string
+      candidate_title:
+        type: string
+      completed_imports:
+        type: integer
+      content_path:
+        type: string
+      created_at:
+        type: string
+      downloader_external_id:
+        type: string
+      downloader_id:
+        type: string
+      downloader_status:
+        type: string
+      episode_id:
+        type: string
+      error_category:
+        type: string
+      failed_imports:
+        type: integer
+      guid:
+        type: string
+      id:
+        type: string
+      import_status:
+        type: string
+      indexer_id:
+        type: integer
+      last_error:
+        type: string
+      library_id:
+        type: string
+      media_item_id:
+        type: string
+      media_type:
+        type: string
+      name_template_id:
+        type: string
+      next_run_at:
+        type: string
+      pending_imports:
+        type: integer
+      progress:
+        type: number
+      protocol:
+        type: string
+      save_path:
+        type: string
+      status:
+        type: string
+      total_import_tasks:
+        type: integer
+      updated_at:
+        type: string
+    required:
+    - active_imports
+    - attempt_count
+    - cancelled_imports
+    - candidate_link
+    - candidate_title
+    - completed_imports
+    - content_path
+    - created_at
+    - downloader_external_id
+    - downloader_id
+    - downloader_status
+    - episode_id
+    - error_category
+    - failed_imports
+    - guid
+    - id
+    - import_status
+    - indexer_id
+    - last_error
+    - library_id
+    - media_item_id
+    - media_type
+    - name_template_id
+    - next_run_at
+    - pending_imports
+    - progress
+    - protocol
+    - save_path
+    - status
+    - total_import_tasks
+    - updated_at
+    type: object
+  dbgen.GetImportTaskHistoryRow:
+    properties:
+      attempt_count:
+        type: integer
+      chain_depth:
+        type: integer
+      created_at:
+        type: string
+      dest_path:
+        type: string
+      download_job_id:
+        type: string
+      episode_id:
+        type: string
+      error_category:
+        type: string
+      id:
+        type: string
+      import_method:
+        type: string
+      last_error:
+        type: string
+      library_id:
+        type: string
+      max_attempts:
+        type: integer
+      media_file_id:
+        type: string
+      media_item_id:
+        type: string
+      media_type:
+        type: string
+      name_template_id:
+        type: string
+      next_run_at:
+        type: string
+      previous_task_id:
+        type: string
+      source_path:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - attempt_count
+    - chain_depth
+    - created_at
+    - dest_path
+    - download_job_id
+    - episode_id
+    - error_category
+    - id
+    - import_method
+    - last_error
+    - library_id
+    - max_attempts
+    - media_file_id
+    - media_item_id
+    - media_type
+    - name_template_id
+    - next_run_at
+    - previous_task_id
+    - source_path
+    - status
+    - updated_at
+    type: object
+  dbgen.GetImportTaskWithDetailsRow:
+    properties:
+      attempt_count:
+        type: integer
+      candidate_title:
+        type: string
+      created_at:
+        type: string
+      dest_path:
+        type: string
+      download_job_id:
+        type: string
+      episode_id:
+        type: string
+      episode_number:
+        type: integer
+      episode_title:
+        type: string
+      error_category:
+        type: string
+      id:
+        type: string
+      import_method:
+        type: string
+      last_error:
+        type: string
+      library_id:
+        type: string
+      library_name:
+        type: string
+      library_root_path:
+        type: string
+      max_attempts:
+        type: integer
+      media_file_id:
+        type: string
+      media_item_id:
+        type: string
+      media_item_type:
+        type: string
+      media_title:
+        type: string
+      media_type:
+        type: string
+      media_year:
+        type: integer
+      movie_dir_template:
+        type: string
+      name_template:
+        type: string
+      name_template_id:
+        type: string
+      next_run_at:
+        type: string
+      previous_task_id:
+        type: string
+      season_number:
+        type: integer
+      series_season_template:
+        type: string
+      series_show_template:
+        type: string
+      source_path:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - attempt_count
+    - candidate_title
+    - created_at
+    - dest_path
+    - download_job_id
+    - episode_id
+    - episode_number
+    - episode_title
+    - error_category
+    - id
+    - import_method
+    - last_error
+    - library_id
+    - library_name
+    - library_root_path
+    - max_attempts
+    - media_file_id
+    - media_item_id
+    - media_item_type
+    - media_title
+    - media_type
+    - media_year
+    - movie_dir_template
+    - name_template
+    - name_template_id
+    - next_run_at
+    - previous_task_id
+    - season_number
+    - series_season_template
+    - series_show_template
+    - source_path
+    - status
+    - updated_at
+    type: object
+  dbgen.ImportTask:
+    properties:
+      attempt_count:
+        type: integer
+      created_at:
+        type: string
+      dest_path:
+        type: string
+      download_job_id:
+        type: string
+      episode_id:
+        type: string
+      error_category:
+        type: string
+      id:
+        type: string
+      import_method:
+        type: string
+      last_error:
+        type: string
+      library_id:
+        type: string
+      max_attempts:
+        type: integer
+      media_file_id:
+        type: string
+      media_item_id:
+        type: string
+      media_type:
+        type: string
+      name_template_id:
+        type: string
+      next_run_at:
+        type: string
+      previous_task_id:
+        type: string
+      source_path:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - attempt_count
+    - created_at
+    - dest_path
+    - download_job_id
+    - episode_id
+    - error_category
+    - id
+    - import_method
+    - last_error
+    - library_id
+    - max_attempts
+    - media_file_id
+    - media_item_id
+    - media_type
+    - name_template_id
+    - next_run_at
+    - previous_task_id
+    - source_path
+    - status
+    - updated_at
+    type: object
+  dbgen.ImportTaskEvent:
+    properties:
+      created_at:
+        type: string
+      event_type:
+        type: string
+      id:
+        type: string
+      import_task_id:
+        type: string
+      message:
+        type: string
+      metadata:
+        items:
+          type: integer
+        type: array
+      new_status:
+        type: string
+      old_status:
+        type: string
+    required:
+    - created_at
+    - event_type
+    - id
+    - import_task_id
+    - message
+    - metadata
+    - new_status
+    - old_status
+    type: object
+  dbgen.ListDownloadJobsByTmdbSeriesIDRow:
+    properties:
+      attempt_count:
+        type: integer
+      candidate_link:
+        type: string
+      candidate_title:
+        type: string
+      content_path:
+        type: string
+      created_at:
+        type: string
+      downloader_external_id:
+        type: string
+      downloader_id:
+        type: string
+      downloader_status:
+        type: string
+      episode_id:
+        type: string
+      episode_number:
+        type: integer
+      error_category:
+        type: string
+      guid:
+        type: string
+      id:
+        type: string
+      indexer_id:
+        type: integer
+      last_error:
+        type: string
+      library_id:
+        type: string
+      media_item_id:
+        type: string
+      media_type:
+        type: string
+      name_template_id:
+        type: string
+      next_run_at:
+        type: string
+      progress:
+        type: number
+      protocol:
+        type: string
+      save_path:
+        type: string
+      season_number:
+        type: integer
+      status:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - attempt_count
+    - candidate_link
+    - candidate_title
+    - content_path
+    - created_at
+    - downloader_external_id
+    - downloader_id
+    - downloader_status
+    - episode_id
+    - episode_number
+    - error_category
+    - guid
+    - id
+    - indexer_id
+    - last_error
+    - library_id
+    - media_item_id
+    - media_type
+    - name_template_id
+    - next_run_at
+    - progress
+    - protocol
+    - save_path
+    - season_number
+    - status
+    - updated_at
     type: object
   dbgen.Policy:
     properties:
@@ -2250,7 +2733,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dbgen.DownloadJob'
+            $ref: '#/definitions/dbgen.GetDownloadJobWithImportSummaryRow'
         "400":
           description: Bad Request
           schema:
@@ -2263,7 +2746,65 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Get download job
+      summary: Get download job with import status summary
+      tags:
+      - download-jobs
+  /v1/download-jobs/{id}/import-tasks:
+    get:
+      parameters:
+      - description: Job ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.ImportTask'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List import tasks for download job
+      tags:
+      - download-jobs
+  /v1/download-jobs/{id}/timeline:
+    get:
+      parameters:
+      - description: Job ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.GetDownloadJobTimelineRow'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get download job timeline
       tags:
       - download-jobs
   /v1/downloaders:
@@ -2443,6 +2984,195 @@ paths:
       summary: Get home feed
       tags:
       - feed
+  /v1/import-tasks:
+    get:
+      parameters:
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - default: 50
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.ImportTask'
+            type: array
+      summary: List import tasks
+      tags:
+      - import-tasks
+  /v1/import-tasks/{id}:
+    get:
+      parameters:
+      - description: Task ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.GetImportTaskWithDetailsRow'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get import task details
+      tags:
+      - import-tasks
+  /v1/import-tasks/{id}/cancel:
+    post:
+      parameters:
+      - description: Task ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.ImportTask'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Cancel import task
+      tags:
+      - import-tasks
+  /v1/import-tasks/{id}/history:
+    get:
+      parameters:
+      - description: Task ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.GetImportTaskHistoryRow'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get import task reimport history
+      tags:
+      - import-tasks
+  /v1/import-tasks/{id}/reimport:
+    post:
+      parameters:
+      - description: Task ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.ImportTask'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reimport a file
+      tags:
+      - import-tasks
+  /v1/import-tasks/{id}/timeline:
+    get:
+      parameters:
+      - description: Task ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.ImportTaskEvent'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get import task timeline
+      tags:
+      - import-tasks
+  /v1/import-tasks/counts:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dbgen.CountImportTasksByStatusRow'
+      summary: Get import task counts by status
+      tags:
+      - import-tasks
   /v1/indexer:
     post:
       consumes:
@@ -3683,6 +4413,32 @@ paths:
       summary: Get download candidates for a series
       tags:
       - download-candidates
+  /v1/series/{id}/download-jobs:
+    get:
+      parameters:
+      - description: Series ID (TMDB ID)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dbgen.ListDownloadJobsByTmdbSeriesIDRow'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List series download jobs
+      tags:
+      - download-jobs
   /v1/settings:
     get:
       produces:

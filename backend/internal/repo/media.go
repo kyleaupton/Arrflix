@@ -70,7 +70,7 @@ type MediaRepo interface {
 	CreateMediaFileImport(ctx context.Context, arg dbgen.CreateMediaFileImportParams) (dbgen.MediaFileImport, error)
 	GetMediaFileImport(ctx context.Context, id pgtype.UUID) (dbgen.MediaFileImport, error)
 	ListImportsForMediaFile(ctx context.Context, mediaFileID pgtype.UUID) ([]dbgen.MediaFileImport, error)
-	ListImportsForDownloadJob(ctx context.Context, downloadJobID pgtype.UUID) ([]dbgen.MediaFileImport, error)
+	ListImportsForImportTask(ctx context.Context, importTaskID pgtype.UUID) ([]dbgen.MediaFileImport, error)
 	ListRecentImports(ctx context.Context, limit int32) ([]dbgen.MediaFileImport, error)
 	ListFailedImports(ctx context.Context, limit int32) ([]dbgen.MediaFileImport, error)
 
@@ -321,8 +321,8 @@ func (r *Repository) ListImportsForMediaFile(ctx context.Context, mediaFileID pg
 	return r.Q.ListImportsForMediaFile(ctx, mediaFileID)
 }
 
-func (r *Repository) ListImportsForDownloadJob(ctx context.Context, downloadJobID pgtype.UUID) ([]dbgen.MediaFileImport, error) {
-	return r.Q.ListImportsForDownloadJob(ctx, downloadJobID)
+func (r *Repository) ListImportsForImportTask(ctx context.Context, importTaskID pgtype.UUID) ([]dbgen.MediaFileImport, error) {
+	return r.Q.ListImportsForImportTask(ctx, importTaskID)
 }
 
 func (r *Repository) ListRecentImports(ctx context.Context, limit int32) ([]dbgen.MediaFileImport, error) {

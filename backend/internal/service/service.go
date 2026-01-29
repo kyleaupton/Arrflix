@@ -15,6 +15,7 @@ type Services struct {
 	DownloadJobs       *DownloadJobsService
 	Feed               *FeedService
 	Import             *ImportService
+	ImportTasks        *ImportTasksService
 	Indexer            *IndexerService
 	Libraries          *LibrariesService
 	Media              *MediaService
@@ -50,6 +51,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 		DownloadJobs:       NewDownloadJobsService(r),
 		Feed:               NewFeedService(r, l, tmdb),
 		Import:             NewImportService(r, l),
+		ImportTasks:        NewImportTasksService(r),
 		Indexer:            indexer,
 		Libraries:          NewLibrariesService(r),
 		Media:              media,

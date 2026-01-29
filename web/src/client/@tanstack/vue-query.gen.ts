@@ -3,8 +3,8 @@
 import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { deleteV1DownloadersById, deleteV1DownloadJobsById, deleteV1IndexerById, deleteV1LibrariesById, deleteV1NameTemplatesById, deleteV1PoliciesById, deleteV1PoliciesByIdActionsByActionId, deleteV1PoliciesByIdRule, deleteV1UsersById, getHealth, getV1AuthProfile, getV1Downloaders, getV1DownloadersById, getV1DownloadersDefaultByProtocol, getV1DownloadJobs, getV1DownloadJobsById, getV1Home, getV1IndexersById, getV1IndexersConfigured, getV1IndexersSchema, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1MovieByIdCandidates, getV1MovieByIdDownloadJobs, getV1NameTemplates, getV1NameTemplatesById, getV1NameTemplatesDefaultByType, getV1PersonById, getV1Policies, getV1PoliciesById, getV1PoliciesByIdActions, getV1PoliciesByIdActionsByActionId, getV1PoliciesByIdRule, getV1PoliciesFields, getV1Roles, getV1Search, getV1SeriesById, getV1SeriesByIdCandidates, getV1Settings, getV1SetupStatus, getV1UnmatchedFiles, getV1UnmatchedFilesById, getV1Update, getV1Users, getV1UsersById, getV1Version, type Options, patchV1Settings, postV1AuthLogin, postV1Downloaders, postV1DownloadersByIdTest, postV1DownloadersTest, postV1Indexer, postV1IndexerActionByName, postV1IndexerByIdTest, postV1IndexersTestall, postV1IndexerTest, postV1Libraries, postV1LibrariesByIdScan, postV1MovieByIdCandidateDownload, postV1MovieByIdCandidatePreview, postV1NameTemplates, postV1Policies, postV1PoliciesByIdActions, postV1PoliciesByIdRule, postV1PoliciesEvaluate, postV1SeriesByIdCandidateDownload, postV1SeriesByIdCandidatePreview, postV1SetupInitialize, postV1UnmatchedFilesByIdDismiss, postV1UnmatchedFilesByIdMatch, postV1UnmatchedFilesByIdRefresh, postV1Users, putV1AuthProfile, putV1AuthProfilePassword, putV1DownloadersById, putV1IndexerByIdToggle, putV1LibrariesById, putV1NameTemplatesById, putV1PoliciesById, putV1PoliciesByIdActionsByActionId, putV1PoliciesByIdRule, putV1UsersById, putV1UsersByIdPassword, putV1UsersByIdRole } from '../sdk.gen';
-import type { DeleteV1DownloadersByIdData, DeleteV1DownloadersByIdResponse, DeleteV1DownloadJobsByIdData, DeleteV1DownloadJobsByIdError, DeleteV1DownloadJobsByIdResponse, DeleteV1IndexerByIdData, DeleteV1IndexerByIdError, DeleteV1IndexerByIdResponse, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponse, DeleteV1PoliciesByIdActionsByActionIdData, DeleteV1PoliciesByIdActionsByActionIdResponse, DeleteV1PoliciesByIdData, DeleteV1PoliciesByIdResponse, DeleteV1PoliciesByIdRuleData, DeleteV1PoliciesByIdRuleResponse, DeleteV1UsersByIdData, DeleteV1UsersByIdResponse, GetHealthData, GetV1AuthProfileData, GetV1DownloadersByIdData, GetV1DownloadersData, GetV1DownloadersDefaultByProtocolData, GetV1DownloadJobsByIdData, GetV1DownloadJobsData, GetV1HomeData, GetV1IndexersByIdData, GetV1IndexersConfiguredData, GetV1IndexersSchemaData, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1LibraryResponse, GetV1MovieByIdCandidatesData, GetV1MovieByIdData, GetV1MovieByIdDownloadJobsData, GetV1NameTemplatesByIdData, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1PersonByIdData, GetV1PoliciesByIdActionsByActionIdData, GetV1PoliciesByIdActionsData, GetV1PoliciesByIdData, GetV1PoliciesByIdRuleData, GetV1PoliciesData, GetV1PoliciesFieldsData, GetV1RolesData, GetV1SearchData, GetV1SearchResponse, GetV1SeriesByIdCandidatesData, GetV1SeriesByIdData, GetV1SettingsData, GetV1SetupStatusData, GetV1UnmatchedFilesByIdData, GetV1UnmatchedFilesData, GetV1UnmatchedFilesResponse, GetV1UpdateData, GetV1UsersByIdData, GetV1UsersData, GetV1VersionData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1DownloadersByIdTestData, PostV1DownloadersByIdTestError, PostV1DownloadersByIdTestResponse, PostV1DownloadersData, PostV1DownloadersError, PostV1DownloadersResponse, PostV1DownloadersTestData, PostV1DownloadersTestError, PostV1DownloadersTestResponse, PostV1IndexerActionByNameData, PostV1IndexerActionByNameError, PostV1IndexerByIdTestData, PostV1IndexerByIdTestError, PostV1IndexerByIdTestResponse, PostV1IndexerData, PostV1IndexerError, PostV1IndexerResponse, PostV1IndexersTestallData, PostV1IndexersTestallError, PostV1IndexersTestallResponse, PostV1IndexerTestData, PostV1IndexerTestError, PostV1IndexerTestResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PostV1MovieByIdCandidateDownloadData, PostV1MovieByIdCandidateDownloadError, PostV1MovieByIdCandidateDownloadResponse, PostV1MovieByIdCandidatePreviewData, PostV1MovieByIdCandidatePreviewError, PostV1MovieByIdCandidatePreviewResponse, PostV1NameTemplatesData, PostV1NameTemplatesError, PostV1NameTemplatesResponse, PostV1PoliciesByIdActionsData, PostV1PoliciesByIdActionsError, PostV1PoliciesByIdActionsResponse, PostV1PoliciesByIdRuleData, PostV1PoliciesByIdRuleError, PostV1PoliciesByIdRuleResponse, PostV1PoliciesData, PostV1PoliciesError, PostV1PoliciesEvaluateData, PostV1PoliciesEvaluateError, PostV1PoliciesEvaluateResponse, PostV1PoliciesResponse, PostV1SeriesByIdCandidateDownloadData, PostV1SeriesByIdCandidateDownloadError, PostV1SeriesByIdCandidateDownloadResponse, PostV1SeriesByIdCandidatePreviewData, PostV1SeriesByIdCandidatePreviewError, PostV1SeriesByIdCandidatePreviewResponse, PostV1SetupInitializeData, PostV1SetupInitializeError, PostV1SetupInitializeResponse, PostV1UnmatchedFilesByIdDismissData, PostV1UnmatchedFilesByIdDismissError, PostV1UnmatchedFilesByIdDismissResponse, PostV1UnmatchedFilesByIdMatchData, PostV1UnmatchedFilesByIdMatchError, PostV1UnmatchedFilesByIdMatchResponse, PostV1UnmatchedFilesByIdRefreshData, PostV1UnmatchedFilesByIdRefreshError, PostV1UnmatchedFilesByIdRefreshResponse, PostV1UsersData, PostV1UsersError, PostV1UsersResponse, PutV1AuthProfileData, PutV1AuthProfilePasswordData, PutV1AuthProfilePasswordResponse, PutV1AuthProfileResponse, PutV1DownloadersByIdData, PutV1DownloadersByIdError, PutV1DownloadersByIdResponse, PutV1IndexerByIdToggleData, PutV1IndexerByIdToggleError, PutV1IndexerByIdToggleResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdError, PutV1NameTemplatesByIdResponse, PutV1PoliciesByIdActionsByActionIdData, PutV1PoliciesByIdActionsByActionIdError, PutV1PoliciesByIdActionsByActionIdResponse, PutV1PoliciesByIdData, PutV1PoliciesByIdError, PutV1PoliciesByIdResponse, PutV1PoliciesByIdRuleData, PutV1PoliciesByIdRuleError, PutV1PoliciesByIdRuleResponse, PutV1UsersByIdData, PutV1UsersByIdError, PutV1UsersByIdPasswordData, PutV1UsersByIdPasswordResponse, PutV1UsersByIdResponse, PutV1UsersByIdRoleData, PutV1UsersByIdRoleResponse } from '../types.gen';
+import { deleteV1DownloadersById, deleteV1DownloadJobsById, deleteV1IndexerById, deleteV1LibrariesById, deleteV1NameTemplatesById, deleteV1PoliciesById, deleteV1PoliciesByIdActionsByActionId, deleteV1PoliciesByIdRule, deleteV1UsersById, getHealth, getV1AuthProfile, getV1Downloaders, getV1DownloadersById, getV1DownloadersDefaultByProtocol, getV1DownloadJobs, getV1DownloadJobsById, getV1DownloadJobsByIdImportTasks, getV1DownloadJobsByIdTimeline, getV1Home, getV1ImportTasks, getV1ImportTasksById, getV1ImportTasksByIdHistory, getV1ImportTasksByIdTimeline, getV1ImportTasksCounts, getV1IndexersById, getV1IndexersConfigured, getV1IndexersSchema, getV1Libraries, getV1LibrariesById, getV1Library, getV1MovieById, getV1MovieByIdCandidates, getV1MovieByIdDownloadJobs, getV1NameTemplates, getV1NameTemplatesById, getV1NameTemplatesDefaultByType, getV1PersonById, getV1Policies, getV1PoliciesById, getV1PoliciesByIdActions, getV1PoliciesByIdActionsByActionId, getV1PoliciesByIdRule, getV1PoliciesFields, getV1Roles, getV1Search, getV1SeriesById, getV1SeriesByIdCandidates, getV1SeriesByIdDownloadJobs, getV1Settings, getV1SetupStatus, getV1UnmatchedFiles, getV1UnmatchedFilesById, getV1Update, getV1Users, getV1UsersById, getV1Version, type Options, patchV1Settings, postV1AuthLogin, postV1Downloaders, postV1DownloadersByIdTest, postV1DownloadersTest, postV1ImportTasksByIdCancel, postV1ImportTasksByIdReimport, postV1Indexer, postV1IndexerActionByName, postV1IndexerByIdTest, postV1IndexersTestall, postV1IndexerTest, postV1Libraries, postV1LibrariesByIdScan, postV1MovieByIdCandidateDownload, postV1MovieByIdCandidatePreview, postV1NameTemplates, postV1Policies, postV1PoliciesByIdActions, postV1PoliciesByIdRule, postV1PoliciesEvaluate, postV1SeriesByIdCandidateDownload, postV1SeriesByIdCandidatePreview, postV1SetupInitialize, postV1UnmatchedFilesByIdDismiss, postV1UnmatchedFilesByIdMatch, postV1UnmatchedFilesByIdRefresh, postV1Users, putV1AuthProfile, putV1AuthProfilePassword, putV1DownloadersById, putV1IndexerByIdToggle, putV1LibrariesById, putV1NameTemplatesById, putV1PoliciesById, putV1PoliciesByIdActionsByActionId, putV1PoliciesByIdRule, putV1UsersById, putV1UsersByIdPassword, putV1UsersByIdRole } from '../sdk.gen';
+import type { DeleteV1DownloadersByIdData, DeleteV1DownloadersByIdResponse, DeleteV1DownloadJobsByIdData, DeleteV1DownloadJobsByIdError, DeleteV1DownloadJobsByIdResponse, DeleteV1IndexerByIdData, DeleteV1IndexerByIdError, DeleteV1IndexerByIdResponse, DeleteV1LibrariesByIdData, DeleteV1LibrariesByIdResponse, DeleteV1NameTemplatesByIdData, DeleteV1NameTemplatesByIdResponse, DeleteV1PoliciesByIdActionsByActionIdData, DeleteV1PoliciesByIdActionsByActionIdResponse, DeleteV1PoliciesByIdData, DeleteV1PoliciesByIdResponse, DeleteV1PoliciesByIdRuleData, DeleteV1PoliciesByIdRuleResponse, DeleteV1UsersByIdData, DeleteV1UsersByIdResponse, GetHealthData, GetV1AuthProfileData, GetV1DownloadersByIdData, GetV1DownloadersData, GetV1DownloadersDefaultByProtocolData, GetV1DownloadJobsByIdData, GetV1DownloadJobsByIdImportTasksData, GetV1DownloadJobsByIdTimelineData, GetV1DownloadJobsData, GetV1HomeData, GetV1ImportTasksByIdData, GetV1ImportTasksByIdHistoryData, GetV1ImportTasksByIdTimelineData, GetV1ImportTasksCountsData, GetV1ImportTasksData, GetV1ImportTasksResponse, GetV1IndexersByIdData, GetV1IndexersConfiguredData, GetV1IndexersSchemaData, GetV1LibrariesByIdData, GetV1LibrariesData, GetV1LibraryData, GetV1LibraryResponse, GetV1MovieByIdCandidatesData, GetV1MovieByIdData, GetV1MovieByIdDownloadJobsData, GetV1NameTemplatesByIdData, GetV1NameTemplatesData, GetV1NameTemplatesDefaultByTypeData, GetV1PersonByIdData, GetV1PoliciesByIdActionsByActionIdData, GetV1PoliciesByIdActionsData, GetV1PoliciesByIdData, GetV1PoliciesByIdRuleData, GetV1PoliciesData, GetV1PoliciesFieldsData, GetV1RolesData, GetV1SearchData, GetV1SearchResponse, GetV1SeriesByIdCandidatesData, GetV1SeriesByIdData, GetV1SeriesByIdDownloadJobsData, GetV1SettingsData, GetV1SetupStatusData, GetV1UnmatchedFilesByIdData, GetV1UnmatchedFilesData, GetV1UnmatchedFilesResponse, GetV1UpdateData, GetV1UsersByIdData, GetV1UsersData, GetV1VersionData, PatchV1SettingsData, PatchV1SettingsError, PatchV1SettingsResponse, PostV1AuthLoginData, PostV1AuthLoginResponse, PostV1DownloadersByIdTestData, PostV1DownloadersByIdTestError, PostV1DownloadersByIdTestResponse, PostV1DownloadersData, PostV1DownloadersError, PostV1DownloadersResponse, PostV1DownloadersTestData, PostV1DownloadersTestError, PostV1DownloadersTestResponse, PostV1ImportTasksByIdCancelData, PostV1ImportTasksByIdCancelError, PostV1ImportTasksByIdCancelResponse, PostV1ImportTasksByIdReimportData, PostV1ImportTasksByIdReimportError, PostV1ImportTasksByIdReimportResponse, PostV1IndexerActionByNameData, PostV1IndexerActionByNameError, PostV1IndexerByIdTestData, PostV1IndexerByIdTestError, PostV1IndexerByIdTestResponse, PostV1IndexerData, PostV1IndexerError, PostV1IndexerResponse, PostV1IndexersTestallData, PostV1IndexersTestallError, PostV1IndexersTestallResponse, PostV1IndexerTestData, PostV1IndexerTestError, PostV1IndexerTestResponse, PostV1LibrariesByIdScanData, PostV1LibrariesByIdScanResponse, PostV1LibrariesData, PostV1LibrariesError, PostV1LibrariesResponse, PostV1MovieByIdCandidateDownloadData, PostV1MovieByIdCandidateDownloadError, PostV1MovieByIdCandidateDownloadResponse, PostV1MovieByIdCandidatePreviewData, PostV1MovieByIdCandidatePreviewError, PostV1MovieByIdCandidatePreviewResponse, PostV1NameTemplatesData, PostV1NameTemplatesError, PostV1NameTemplatesResponse, PostV1PoliciesByIdActionsData, PostV1PoliciesByIdActionsError, PostV1PoliciesByIdActionsResponse, PostV1PoliciesByIdRuleData, PostV1PoliciesByIdRuleError, PostV1PoliciesByIdRuleResponse, PostV1PoliciesData, PostV1PoliciesError, PostV1PoliciesEvaluateData, PostV1PoliciesEvaluateError, PostV1PoliciesEvaluateResponse, PostV1PoliciesResponse, PostV1SeriesByIdCandidateDownloadData, PostV1SeriesByIdCandidateDownloadError, PostV1SeriesByIdCandidateDownloadResponse, PostV1SeriesByIdCandidatePreviewData, PostV1SeriesByIdCandidatePreviewError, PostV1SeriesByIdCandidatePreviewResponse, PostV1SetupInitializeData, PostV1SetupInitializeError, PostV1SetupInitializeResponse, PostV1UnmatchedFilesByIdDismissData, PostV1UnmatchedFilesByIdDismissError, PostV1UnmatchedFilesByIdDismissResponse, PostV1UnmatchedFilesByIdMatchData, PostV1UnmatchedFilesByIdMatchError, PostV1UnmatchedFilesByIdMatchResponse, PostV1UnmatchedFilesByIdRefreshData, PostV1UnmatchedFilesByIdRefreshError, PostV1UnmatchedFilesByIdRefreshResponse, PostV1UsersData, PostV1UsersError, PostV1UsersResponse, PutV1AuthProfileData, PutV1AuthProfilePasswordData, PutV1AuthProfilePasswordResponse, PutV1AuthProfileResponse, PutV1DownloadersByIdData, PutV1DownloadersByIdError, PutV1DownloadersByIdResponse, PutV1IndexerByIdToggleData, PutV1IndexerByIdToggleError, PutV1IndexerByIdToggleResponse, PutV1LibrariesByIdData, PutV1LibrariesByIdError, PutV1LibrariesByIdResponse, PutV1NameTemplatesByIdData, PutV1NameTemplatesByIdError, PutV1NameTemplatesByIdResponse, PutV1PoliciesByIdActionsByActionIdData, PutV1PoliciesByIdActionsByActionIdError, PutV1PoliciesByIdActionsByActionIdResponse, PutV1PoliciesByIdData, PutV1PoliciesByIdError, PutV1PoliciesByIdResponse, PutV1PoliciesByIdRuleData, PutV1PoliciesByIdRuleError, PutV1PoliciesByIdRuleResponse, PutV1UsersByIdData, PutV1UsersByIdError, PutV1UsersByIdPasswordData, PutV1UsersByIdPasswordResponse, PutV1UsersByIdResponse, PutV1UsersByIdRoleData, PutV1UsersByIdRoleResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -172,7 +172,7 @@ export const deleteV1DownloadJobsByIdMutation = (options?: Partial<Options<Delet
 export const getV1DownloadJobsByIdQueryKey = (options: Options<GetV1DownloadJobsByIdData>) => createQueryKey('getV1DownloadJobsById', options);
 
 /**
- * Get download job
+ * Get download job with import status summary
  */
 export const getV1DownloadJobsByIdOptions = (options: Options<GetV1DownloadJobsByIdData>) => {
     return queryOptions({
@@ -186,6 +186,46 @@ export const getV1DownloadJobsByIdOptions = (options: Options<GetV1DownloadJobsB
             return data;
         },
         queryKey: getV1DownloadJobsByIdQueryKey(options)
+    });
+};
+
+export const getV1DownloadJobsByIdImportTasksQueryKey = (options: Options<GetV1DownloadJobsByIdImportTasksData>) => createQueryKey('getV1DownloadJobsByIdImportTasks', options);
+
+/**
+ * List import tasks for download job
+ */
+export const getV1DownloadJobsByIdImportTasksOptions = (options: Options<GetV1DownloadJobsByIdImportTasksData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1DownloadJobsByIdImportTasks({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1DownloadJobsByIdImportTasksQueryKey(options)
+    });
+};
+
+export const getV1DownloadJobsByIdTimelineQueryKey = (options: Options<GetV1DownloadJobsByIdTimelineData>) => createQueryKey('getV1DownloadJobsByIdTimeline', options);
+
+/**
+ * Get download job timeline
+ */
+export const getV1DownloadJobsByIdTimelineOptions = (options: Options<GetV1DownloadJobsByIdTimelineData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1DownloadJobsByIdTimeline({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1DownloadJobsByIdTimelineQueryKey(options)
     });
 };
 
@@ -351,6 +391,200 @@ export const getV1HomeOptions = (options?: Options<GetV1HomeData>) => {
             return data;
         },
         queryKey: getV1HomeQueryKey(options)
+    });
+};
+
+export const getV1ImportTasksQueryKey = (options?: Options<GetV1ImportTasksData>) => createQueryKey('getV1ImportTasks', options);
+
+/**
+ * List import tasks
+ */
+export const getV1ImportTasksOptions = (options?: Options<GetV1ImportTasksData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1ImportTasks({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1ImportTasksQueryKey(options)
+    });
+};
+
+const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>>(queryKey: QueryKey<Options>, page: K) => {
+    const params = {
+        ...queryKey[0]
+    };
+    if (page.body) {
+        params.body = {
+            ...queryKey[0].body as any,
+            ...page.body as any
+        };
+    }
+    if (page.headers) {
+        params.headers = {
+            ...queryKey[0].headers,
+            ...page.headers
+        };
+    }
+    if (page.path) {
+        params.path = {
+            ...queryKey[0].path as any,
+            ...page.path as any
+        };
+    }
+    if (page.query) {
+        params.query = {
+            ...queryKey[0].query as any,
+            ...page.query as any
+        };
+    }
+    return params as unknown as typeof page;
+};
+
+export const getV1ImportTasksInfiniteQueryKey = (options?: Options<GetV1ImportTasksData>): QueryKey<Options<GetV1ImportTasksData>> => createQueryKey('getV1ImportTasks', options, true);
+
+/**
+ * List import tasks
+ */
+export const getV1ImportTasksInfiniteOptions = (options?: Options<GetV1ImportTasksData>) => {
+    return infiniteQueryOptions<GetV1ImportTasksResponse, DefaultError, InfiniteData<GetV1ImportTasksResponse>, QueryKey<Options<GetV1ImportTasksData>>, number | Pick<QueryKey<Options<GetV1ImportTasksData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<GetV1ImportTasksData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    offset: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await getV1ImportTasks({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1ImportTasksInfiniteQueryKey(options)
+    });
+};
+
+export const getV1ImportTasksCountsQueryKey = (options?: Options<GetV1ImportTasksCountsData>) => createQueryKey('getV1ImportTasksCounts', options);
+
+/**
+ * Get import task counts by status
+ */
+export const getV1ImportTasksCountsOptions = (options?: Options<GetV1ImportTasksCountsData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1ImportTasksCounts({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1ImportTasksCountsQueryKey(options)
+    });
+};
+
+export const getV1ImportTasksByIdQueryKey = (options: Options<GetV1ImportTasksByIdData>) => createQueryKey('getV1ImportTasksById', options);
+
+/**
+ * Get import task details
+ */
+export const getV1ImportTasksByIdOptions = (options: Options<GetV1ImportTasksByIdData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1ImportTasksById({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1ImportTasksByIdQueryKey(options)
+    });
+};
+
+/**
+ * Cancel import task
+ */
+export const postV1ImportTasksByIdCancelMutation = (options?: Partial<Options<PostV1ImportTasksByIdCancelData>>): UseMutationOptions<PostV1ImportTasksByIdCancelResponse, PostV1ImportTasksByIdCancelError, Options<PostV1ImportTasksByIdCancelData>> => {
+    const mutationOptions: UseMutationOptions<PostV1ImportTasksByIdCancelResponse, PostV1ImportTasksByIdCancelError, Options<PostV1ImportTasksByIdCancelData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postV1ImportTasksByIdCancel({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getV1ImportTasksByIdHistoryQueryKey = (options: Options<GetV1ImportTasksByIdHistoryData>) => createQueryKey('getV1ImportTasksByIdHistory', options);
+
+/**
+ * Get import task reimport history
+ */
+export const getV1ImportTasksByIdHistoryOptions = (options: Options<GetV1ImportTasksByIdHistoryData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1ImportTasksByIdHistory({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1ImportTasksByIdHistoryQueryKey(options)
+    });
+};
+
+/**
+ * Reimport a file
+ */
+export const postV1ImportTasksByIdReimportMutation = (options?: Partial<Options<PostV1ImportTasksByIdReimportData>>): UseMutationOptions<PostV1ImportTasksByIdReimportResponse, PostV1ImportTasksByIdReimportError, Options<PostV1ImportTasksByIdReimportData>> => {
+    const mutationOptions: UseMutationOptions<PostV1ImportTasksByIdReimportResponse, PostV1ImportTasksByIdReimportError, Options<PostV1ImportTasksByIdReimportData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postV1ImportTasksByIdReimport({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getV1ImportTasksByIdTimelineQueryKey = (options: Options<GetV1ImportTasksByIdTimelineData>) => createQueryKey('getV1ImportTasksByIdTimeline', options);
+
+/**
+ * Get import task timeline
+ */
+export const getV1ImportTasksByIdTimelineOptions = (options: Options<GetV1ImportTasksByIdTimelineData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1ImportTasksByIdTimeline({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1ImportTasksByIdTimelineQueryKey(options)
     });
 };
 
@@ -659,37 +893,6 @@ export const getV1LibraryOptions = (options?: Options<GetV1LibraryData>) => {
         },
         queryKey: getV1LibraryQueryKey(options)
     });
-};
-
-const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>>(queryKey: QueryKey<Options>, page: K) => {
-    const params = {
-        ...queryKey[0]
-    };
-    if (page.body) {
-        params.body = {
-            ...queryKey[0].body as any,
-            ...page.body as any
-        };
-    }
-    if (page.headers) {
-        params.headers = {
-            ...queryKey[0].headers,
-            ...page.headers
-        };
-    }
-    if (page.path) {
-        params.path = {
-            ...queryKey[0].path as any,
-            ...page.path as any
-        };
-    }
-    if (page.query) {
-        params.query = {
-            ...queryKey[0].query as any,
-            ...page.query as any
-        };
-    }
-    return params as unknown as typeof page;
 };
 
 export const getV1LibraryInfiniteQueryKey = (options?: Options<GetV1LibraryData>): QueryKey<Options<GetV1LibraryData>> => createQueryKey('getV1Library', options, true);
@@ -1376,6 +1579,26 @@ export const getV1SeriesByIdCandidatesOptions = (options: Options<GetV1SeriesByI
             return data;
         },
         queryKey: getV1SeriesByIdCandidatesQueryKey(options)
+    });
+};
+
+export const getV1SeriesByIdDownloadJobsQueryKey = (options: Options<GetV1SeriesByIdDownloadJobsData>) => createQueryKey('getV1SeriesByIdDownloadJobs', options);
+
+/**
+ * List series download jobs
+ */
+export const getV1SeriesByIdDownloadJobsOptions = (options: Options<GetV1SeriesByIdDownloadJobsData>) => {
+    return queryOptions({
+        queryFn: async ({ queryKey, signal }) => {
+            const { data } = await getV1SeriesByIdDownloadJobs({
+                ...options,
+                ...queryKey[0],
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getV1SeriesByIdDownloadJobsQueryKey(options)
     });
 };
 

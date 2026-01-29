@@ -14,22 +14,27 @@ export type DbgenAction = {
     value: string;
 };
 
+export type DbgenCountImportTasksByStatusRow = {
+    cancelled: number;
+    completed: number;
+    failed: number;
+    in_progress: number;
+    pending: number;
+};
+
 export type DbgenDownloadJob = {
     attempt_count: number;
     candidate_link: string;
     candidate_title: string;
+    content_path: string;
     created_at: string;
-    download_content_path: string;
-    download_save_path: string;
     downloader_external_id: string;
     downloader_id: string;
     downloader_status: string;
     episode_id: string;
+    error_category: string;
     guid: string;
     id: string;
-    import_dest_path: string;
-    import_method: string;
-    import_source_path: string;
     indexer_id: number;
     last_error: string;
     library_id: string;
@@ -37,10 +42,9 @@ export type DbgenDownloadJob = {
     media_type: string;
     name_template_id: string;
     next_run_at: string;
-    predicted_dest_path: string;
-    primary_media_file_id: string;
     progress: number;
     protocol: string;
+    save_path: string;
     status: string;
     updated_at: string;
 };
@@ -58,6 +62,175 @@ export type DbgenDownloader = {
     updated_at: string;
     url: string;
     username: string;
+};
+
+export type DbgenGetDownloadJobTimelineRow = {
+    created_at: string;
+    event_type: string;
+    id: string;
+    import_task_id: string;
+    message: string;
+    metadata: Array<number>;
+    new_status: string;
+    old_status: string;
+    source: string;
+};
+
+export type DbgenGetDownloadJobWithImportSummaryRow = {
+    active_imports: number;
+    attempt_count: number;
+    cancelled_imports: number;
+    candidate_link: string;
+    candidate_title: string;
+    completed_imports: number;
+    content_path: string;
+    created_at: string;
+    downloader_external_id: string;
+    downloader_id: string;
+    downloader_status: string;
+    episode_id: string;
+    error_category: string;
+    failed_imports: number;
+    guid: string;
+    id: string;
+    import_status: string;
+    indexer_id: number;
+    last_error: string;
+    library_id: string;
+    media_item_id: string;
+    media_type: string;
+    name_template_id: string;
+    next_run_at: string;
+    pending_imports: number;
+    progress: number;
+    protocol: string;
+    save_path: string;
+    status: string;
+    total_import_tasks: number;
+    updated_at: string;
+};
+
+export type DbgenGetImportTaskHistoryRow = {
+    attempt_count: number;
+    chain_depth: number;
+    created_at: string;
+    dest_path: string;
+    download_job_id: string;
+    episode_id: string;
+    error_category: string;
+    id: string;
+    import_method: string;
+    last_error: string;
+    library_id: string;
+    max_attempts: number;
+    media_file_id: string;
+    media_item_id: string;
+    media_type: string;
+    name_template_id: string;
+    next_run_at: string;
+    previous_task_id: string;
+    source_path: string;
+    status: string;
+    updated_at: string;
+};
+
+export type DbgenGetImportTaskWithDetailsRow = {
+    attempt_count: number;
+    candidate_title: string;
+    created_at: string;
+    dest_path: string;
+    download_job_id: string;
+    episode_id: string;
+    episode_number: number;
+    episode_title: string;
+    error_category: string;
+    id: string;
+    import_method: string;
+    last_error: string;
+    library_id: string;
+    library_name: string;
+    library_root_path: string;
+    max_attempts: number;
+    media_file_id: string;
+    media_item_id: string;
+    media_item_type: string;
+    media_title: string;
+    media_type: string;
+    media_year: number;
+    movie_dir_template: string;
+    name_template: string;
+    name_template_id: string;
+    next_run_at: string;
+    previous_task_id: string;
+    season_number: number;
+    series_season_template: string;
+    series_show_template: string;
+    source_path: string;
+    status: string;
+    updated_at: string;
+};
+
+export type DbgenImportTask = {
+    attempt_count: number;
+    created_at: string;
+    dest_path: string;
+    download_job_id: string;
+    episode_id: string;
+    error_category: string;
+    id: string;
+    import_method: string;
+    last_error: string;
+    library_id: string;
+    max_attempts: number;
+    media_file_id: string;
+    media_item_id: string;
+    media_type: string;
+    name_template_id: string;
+    next_run_at: string;
+    previous_task_id: string;
+    source_path: string;
+    status: string;
+    updated_at: string;
+};
+
+export type DbgenImportTaskEvent = {
+    created_at: string;
+    event_type: string;
+    id: string;
+    import_task_id: string;
+    message: string;
+    metadata: Array<number>;
+    new_status: string;
+    old_status: string;
+};
+
+export type DbgenListDownloadJobsByTmdbSeriesIdRow = {
+    attempt_count: number;
+    candidate_link: string;
+    candidate_title: string;
+    content_path: string;
+    created_at: string;
+    downloader_external_id: string;
+    downloader_id: string;
+    downloader_status: string;
+    episode_id: string;
+    episode_number: number;
+    error_category: string;
+    guid: string;
+    id: string;
+    indexer_id: number;
+    last_error: string;
+    library_id: string;
+    media_item_id: string;
+    media_type: string;
+    name_template_id: string;
+    next_run_at: string;
+    progress: number;
+    protocol: string;
+    save_path: string;
+    season_number: number;
+    status: string;
+    updated_at: string;
 };
 
 export type DbgenPolicy = {
@@ -1125,10 +1298,80 @@ export type GetV1DownloadJobsByIdResponses = {
     /**
      * OK
      */
-    200: DbgenDownloadJob;
+    200: DbgenGetDownloadJobWithImportSummaryRow;
 };
 
 export type GetV1DownloadJobsByIdResponse = GetV1DownloadJobsByIdResponses[keyof GetV1DownloadJobsByIdResponses];
+
+export type GetV1DownloadJobsByIdImportTasksData = {
+    body?: never;
+    path: {
+        /**
+         * Job ID (uuid)
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/download-jobs/{id}/import-tasks';
+};
+
+export type GetV1DownloadJobsByIdImportTasksErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1DownloadJobsByIdImportTasksError = GetV1DownloadJobsByIdImportTasksErrors[keyof GetV1DownloadJobsByIdImportTasksErrors];
+
+export type GetV1DownloadJobsByIdImportTasksResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenImportTask>;
+};
+
+export type GetV1DownloadJobsByIdImportTasksResponse = GetV1DownloadJobsByIdImportTasksResponses[keyof GetV1DownloadJobsByIdImportTasksResponses];
+
+export type GetV1DownloadJobsByIdTimelineData = {
+    body?: never;
+    path: {
+        /**
+         * Job ID (uuid)
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/download-jobs/{id}/timeline';
+};
+
+export type GetV1DownloadJobsByIdTimelineErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1DownloadJobsByIdTimelineError = GetV1DownloadJobsByIdTimelineErrors[keyof GetV1DownloadJobsByIdTimelineErrors];
+
+export type GetV1DownloadJobsByIdTimelineResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenGetDownloadJobTimelineRow>;
+};
+
+export type GetV1DownloadJobsByIdTimelineResponse = GetV1DownloadJobsByIdTimelineResponses[keyof GetV1DownloadJobsByIdTimelineResponses];
 
 export type GetV1DownloadersData = {
     body?: never;
@@ -1347,6 +1590,235 @@ export type GetV1HomeResponses = {
 };
 
 export type GetV1HomeResponse = GetV1HomeResponses[keyof GetV1HomeResponses];
+
+export type GetV1ImportTasksData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Filter by status
+         */
+        status?: string;
+        /**
+         * Page size
+         */
+        limit?: number;
+        /**
+         * Page offset
+         */
+        offset?: number;
+    };
+    url: '/v1/import-tasks';
+};
+
+export type GetV1ImportTasksResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenImportTask>;
+};
+
+export type GetV1ImportTasksResponse = GetV1ImportTasksResponses[keyof GetV1ImportTasksResponses];
+
+export type GetV1ImportTasksCountsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/import-tasks/counts';
+};
+
+export type GetV1ImportTasksCountsResponses = {
+    /**
+     * OK
+     */
+    200: DbgenCountImportTasksByStatusRow;
+};
+
+export type GetV1ImportTasksCountsResponse = GetV1ImportTasksCountsResponses[keyof GetV1ImportTasksCountsResponses];
+
+export type GetV1ImportTasksByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Task ID (uuid)
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/import-tasks/{id}';
+};
+
+export type GetV1ImportTasksByIdErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1ImportTasksByIdError = GetV1ImportTasksByIdErrors[keyof GetV1ImportTasksByIdErrors];
+
+export type GetV1ImportTasksByIdResponses = {
+    /**
+     * OK
+     */
+    200: DbgenGetImportTaskWithDetailsRow;
+};
+
+export type GetV1ImportTasksByIdResponse = GetV1ImportTasksByIdResponses[keyof GetV1ImportTasksByIdResponses];
+
+export type PostV1ImportTasksByIdCancelData = {
+    body?: never;
+    path: {
+        /**
+         * Task ID (uuid)
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/import-tasks/{id}/cancel';
+};
+
+export type PostV1ImportTasksByIdCancelErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1ImportTasksByIdCancelError = PostV1ImportTasksByIdCancelErrors[keyof PostV1ImportTasksByIdCancelErrors];
+
+export type PostV1ImportTasksByIdCancelResponses = {
+    /**
+     * OK
+     */
+    200: DbgenImportTask;
+};
+
+export type PostV1ImportTasksByIdCancelResponse = PostV1ImportTasksByIdCancelResponses[keyof PostV1ImportTasksByIdCancelResponses];
+
+export type GetV1ImportTasksByIdHistoryData = {
+    body?: never;
+    path: {
+        /**
+         * Task ID (uuid)
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/import-tasks/{id}/history';
+};
+
+export type GetV1ImportTasksByIdHistoryErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1ImportTasksByIdHistoryError = GetV1ImportTasksByIdHistoryErrors[keyof GetV1ImportTasksByIdHistoryErrors];
+
+export type GetV1ImportTasksByIdHistoryResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenGetImportTaskHistoryRow>;
+};
+
+export type GetV1ImportTasksByIdHistoryResponse = GetV1ImportTasksByIdHistoryResponses[keyof GetV1ImportTasksByIdHistoryResponses];
+
+export type PostV1ImportTasksByIdReimportData = {
+    body?: never;
+    path: {
+        /**
+         * Task ID (uuid)
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/import-tasks/{id}/reimport';
+};
+
+export type PostV1ImportTasksByIdReimportErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1ImportTasksByIdReimportError = PostV1ImportTasksByIdReimportErrors[keyof PostV1ImportTasksByIdReimportErrors];
+
+export type PostV1ImportTasksByIdReimportResponses = {
+    /**
+     * OK
+     */
+    200: DbgenImportTask;
+};
+
+export type PostV1ImportTasksByIdReimportResponse = PostV1ImportTasksByIdReimportResponses[keyof PostV1ImportTasksByIdReimportResponses];
+
+export type GetV1ImportTasksByIdTimelineData = {
+    body?: never;
+    path: {
+        /**
+         * Task ID (uuid)
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/import-tasks/{id}/timeline';
+};
+
+export type GetV1ImportTasksByIdTimelineErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1ImportTasksByIdTimelineError = GetV1ImportTasksByIdTimelineErrors[keyof GetV1ImportTasksByIdTimelineErrors];
+
+export type GetV1ImportTasksByIdTimelineResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenImportTaskEvent>;
+};
+
+export type GetV1ImportTasksByIdTimelineResponse = GetV1ImportTasksByIdTimelineResponses[keyof GetV1ImportTasksByIdTimelineResponses];
 
 export type PostV1IndexerData = {
     /**
@@ -2805,6 +3277,38 @@ export type GetV1SeriesByIdCandidatesResponses = {
 };
 
 export type GetV1SeriesByIdCandidatesResponse = GetV1SeriesByIdCandidatesResponses[keyof GetV1SeriesByIdCandidatesResponses];
+
+export type GetV1SeriesByIdDownloadJobsData = {
+    body?: never;
+    path: {
+        /**
+         * Series ID (TMDB ID)
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/v1/series/{id}/download-jobs';
+};
+
+export type GetV1SeriesByIdDownloadJobsErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1SeriesByIdDownloadJobsError = GetV1SeriesByIdDownloadJobsErrors[keyof GetV1SeriesByIdDownloadJobsErrors];
+
+export type GetV1SeriesByIdDownloadJobsResponses = {
+    /**
+     * OK
+     */
+    200: Array<DbgenListDownloadJobsByTmdbSeriesIdRow>;
+};
+
+export type GetV1SeriesByIdDownloadJobsResponse = GetV1SeriesByIdDownloadJobsResponses[keyof GetV1SeriesByIdDownloadJobsResponses];
 
 export type GetV1SettingsData = {
     body?: never;

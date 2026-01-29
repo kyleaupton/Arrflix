@@ -216,8 +216,8 @@ limit sqlc.arg(limit_val);
 -- Media File Import queries
 
 -- name: CreateMediaFileImport :one
-insert into media_file_import (media_file_id, download_job_id, method, source_path, dest_path, success, error_message)
-values (sqlc.arg(media_file_id), sqlc.arg(download_job_id), sqlc.arg(method), sqlc.arg(source_path), sqlc.arg(dest_path), sqlc.arg(success), sqlc.arg(error_message))
+insert into media_file_import (media_file_id, import_task_id, method, source_path, dest_path, success, error_message)
+values (sqlc.arg(media_file_id), sqlc.arg(import_task_id), sqlc.arg(method), sqlc.arg(source_path), sqlc.arg(dest_path), sqlc.arg(success), sqlc.arg(error_message))
 returning *;
 
 -- name: GetMediaFileImport :one
@@ -228,9 +228,9 @@ select * from media_file_import
 where media_file_id = $1
 order by attempted_at desc;
 
--- name: ListImportsForDownloadJob :many
+-- name: ListImportsForImportTask :many
 select * from media_file_import
-where download_job_id = $1
+where import_task_id = $1
 order by attempted_at desc;
 
 -- name: ListRecentImports :many

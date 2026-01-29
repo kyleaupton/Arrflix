@@ -78,26 +78,26 @@ func (q *Queries) CreateMediaFile(ctx context.Context, arg CreateMediaFileParams
 
 const createMediaFileImport = `-- name: CreateMediaFileImport :one
 
-insert into media_file_import (media_file_id, download_job_id, method, source_path, dest_path, success, error_message)
+insert into media_file_import (media_file_id, import_task_id, method, source_path, dest_path, success, error_message)
 values ($1, $2, $3, $4, $5, $6, $7)
-returning id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message
+returning id, media_file_id, import_task_id, method, source_path, dest_path, attempted_at, success, error_message
 `
 
 type CreateMediaFileImportParams struct {
-	MediaFileID   pgtype.UUID `json:"media_file_id"`
-	DownloadJobID pgtype.UUID `json:"download_job_id"`
-	Method        string      `json:"method"`
-	SourcePath    *string     `json:"source_path"`
-	DestPath      string      `json:"dest_path"`
-	Success       bool        `json:"success"`
-	ErrorMessage  *string     `json:"error_message"`
+	MediaFileID  pgtype.UUID `json:"media_file_id"`
+	ImportTaskID pgtype.UUID `json:"import_task_id"`
+	Method       string      `json:"method"`
+	SourcePath   *string     `json:"source_path"`
+	DestPath     string      `json:"dest_path"`
+	Success      bool        `json:"success"`
+	ErrorMessage *string     `json:"error_message"`
 }
 
 // Media File Import queries
 func (q *Queries) CreateMediaFileImport(ctx context.Context, arg CreateMediaFileImportParams) (MediaFileImport, error) {
 	row := q.db.QueryRow(ctx, createMediaFileImport,
 		arg.MediaFileID,
-		arg.DownloadJobID,
+		arg.ImportTaskID,
 		arg.Method,
 		arg.SourcePath,
 		arg.DestPath,
@@ -108,7 +108,7 @@ func (q *Queries) CreateMediaFileImport(ctx context.Context, arg CreateMediaFile
 	err := row.Scan(
 		&i.ID,
 		&i.MediaFileID,
-		&i.DownloadJobID,
+		&i.ImportTaskID,
 		&i.Method,
 		&i.SourcePath,
 		&i.DestPath,
@@ -366,7 +366,7 @@ func (q *Queries) GetMediaFileByLibraryAndPath(ctx context.Context, arg GetMedia
 }
 
 const getMediaFileImport = `-- name: GetMediaFileImport :one
-select id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import where id = $1
+select id, media_file_id, import_task_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import where id = $1
 `
 
 func (q *Queries) GetMediaFileImport(ctx context.Context, id pgtype.UUID) (MediaFileImport, error) {
@@ -375,7 +375,7 @@ func (q *Queries) GetMediaFileImport(ctx context.Context, id pgtype.UUID) (Media
 	err := row.Scan(
 		&i.ID,
 		&i.MediaFileID,
-		&i.DownloadJobID,
+		&i.ImportTaskID,
 		&i.Method,
 		&i.SourcePath,
 		&i.DestPath,
@@ -680,7 +680,7 @@ func (q *Queries) ListEpisodesForSeason(ctx context.Context, seasonID pgtype.UUI
 }
 
 const listFailedImports = `-- name: ListFailedImports :many
-select id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
+select id, media_file_id, import_task_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
 where success = false
 order by attempted_at desc
 limit $1
@@ -698,7 +698,7 @@ func (q *Queries) ListFailedImports(ctx context.Context, limitVal int32) ([]Medi
 		if err := rows.Scan(
 			&i.ID,
 			&i.MediaFileID,
-			&i.DownloadJobID,
+			&i.ImportTaskID,
 			&i.Method,
 			&i.SourcePath,
 			&i.DestPath,
@@ -772,14 +772,14 @@ func (q *Queries) ListFilesNeedingVerification(ctx context.Context, arg ListFile
 	return items, nil
 }
 
-const listImportsForDownloadJob = `-- name: ListImportsForDownloadJob :many
-select id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
-where download_job_id = $1
+const listImportsForImportTask = `-- name: ListImportsForImportTask :many
+select id, media_file_id, import_task_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
+where import_task_id = $1
 order by attempted_at desc
 `
 
-func (q *Queries) ListImportsForDownloadJob(ctx context.Context, downloadJobID pgtype.UUID) ([]MediaFileImport, error) {
-	rows, err := q.db.Query(ctx, listImportsForDownloadJob, downloadJobID)
+func (q *Queries) ListImportsForImportTask(ctx context.Context, importTaskID pgtype.UUID) ([]MediaFileImport, error) {
+	rows, err := q.db.Query(ctx, listImportsForImportTask, importTaskID)
 	if err != nil {
 		return nil, err
 	}
@@ -790,7 +790,7 @@ func (q *Queries) ListImportsForDownloadJob(ctx context.Context, downloadJobID p
 		if err := rows.Scan(
 			&i.ID,
 			&i.MediaFileID,
-			&i.DownloadJobID,
+			&i.ImportTaskID,
 			&i.Method,
 			&i.SourcePath,
 			&i.DestPath,
@@ -809,7 +809,7 @@ func (q *Queries) ListImportsForDownloadJob(ctx context.Context, downloadJobID p
 }
 
 const listImportsForMediaFile = `-- name: ListImportsForMediaFile :many
-select id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
+select id, media_file_id, import_task_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
 where media_file_id = $1
 order by attempted_at desc
 `
@@ -826,7 +826,7 @@ func (q *Queries) ListImportsForMediaFile(ctx context.Context, mediaFileID pgtyp
 		if err := rows.Scan(
 			&i.ID,
 			&i.MediaFileID,
-			&i.DownloadJobID,
+			&i.ImportTaskID,
 			&i.Method,
 			&i.SourcePath,
 			&i.DestPath,
@@ -1060,7 +1060,7 @@ func (q *Queries) ListMissingFiles(ctx context.Context) ([]ListMissingFilesRow, 
 }
 
 const listRecentImports = `-- name: ListRecentImports :many
-select id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
+select id, media_file_id, import_task_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
 order by attempted_at desc
 limit $1
 `
@@ -1077,7 +1077,7 @@ func (q *Queries) ListRecentImports(ctx context.Context, limitVal int32) ([]Medi
 		if err := rows.Scan(
 			&i.ID,
 			&i.MediaFileID,
-			&i.DownloadJobID,
+			&i.ImportTaskID,
 			&i.Method,
 			&i.SourcePath,
 			&i.DestPath,

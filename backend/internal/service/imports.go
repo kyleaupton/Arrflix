@@ -77,10 +77,7 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 	var rel string
 	ext := filepath.Ext(sourcePath)
 
-	// Use predicted_dest_path if available and replace .{ext} with actual extension
-	if job.PredictedDestPath != nil && *job.PredictedDestPath != "" && strings.Contains(*job.PredictedDestPath, ".{ext}") {
-		rel = strings.Replace(*job.PredictedDestPath, ".{ext}", ext, 1)
-	} else {
+	{
 		// Fallback to calculating from template (existing logic)
 		if nt.Type == "series" {
 			showPart, err := template.Render(coalesce(nt.SeriesShowTemplate, ""), templateData)
@@ -142,14 +139,14 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 			if _, err := s.repo.UpsertMediaFileState(ctx, mf.ID, true, nil); err != nil {
 				s.log.Warn().Err(err).Msg("Failed to create media file state")
 			}
-			// Record import history
+			// Record import history (note: no import_task_id when called from manual import)
 			if _, err := s.repo.CreateMediaFileImport(ctx, dbgen.CreateMediaFileImportParams{
-				MediaFileID:   mf.ID,
-				DownloadJobID: job.ID,
-				Method:        "hardlink",
-				SourcePath:    &sourcePath,
-				DestPath:      dest,
-				Success:       true,
+				MediaFileID:  mf.ID,
+				ImportTaskID: pgtype.UUID{Valid: false},
+				Method:       "hardlink",
+				SourcePath:   &sourcePath,
+				DestPath:     dest,
+				Success:      true,
 			}); err != nil {
 				s.log.Warn().Err(err).Msg("Failed to record import history")
 			}
@@ -333,20 +330,16 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 			s.log.Warn().Err(err).Msg("Failed to create media file state")
 		}
 
-		// Record import history
+		// Record import history (note: no import_task_id when called from manual import)
 		if _, err := s.repo.CreateMediaFileImport(ctx, dbgen.CreateMediaFileImportParams{
-			MediaFileID:   mf.ID,
-			DownloadJobID: job.ID,
-			Method:        method,
-			SourcePath:    &sourcePath,
-			DestPath:      dest,
-			Success:       true,
+			MediaFileID:  mf.ID,
+			ImportTaskID: pgtype.UUID{Valid: false},
+			Method:       method,
+			SourcePath:   &sourcePath,
+			DestPath:     dest,
+			Success:      true,
 		}); err != nil {
 			s.log.Warn().Err(err).Msg("Failed to record import history")
-		}
-
-		if err := s.repo.LinkDownloadJobMediaFile(ctx, job.ID, mf.ID); err != nil {
-			s.log.Warn().Err(err).Msg("Failed to link download job to media file")
 		}
 
 		s.log.Info().Str("path", destRel).Str("method", method).Msg("Successfully imported episode")

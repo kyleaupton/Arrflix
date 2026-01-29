@@ -249,30 +249,18 @@ func (s *DownloadCandidatesService) EnqueueCandidate(ctx context.Context, movieI
 		}
 	}
 
-	// Calculate predicted destination path
-	predictedPath, err := s.calculatePredictedDestPath(ctx, mi.ID, libraryID, nameTemplateID, candidate.Title, nil, nil)
-	if err != nil {
-		s.logger.Debug().Err(err).Msg("Failed to calculate predicted dest path, continuing without it")
-	}
-
-	var predictedPathPtr *string
-	if predictedPath != "" {
-		predictedPathPtr = &predictedPath
-	}
-
 	job, err := s.repo.CreateDownloadJob(ctx, dbgen.CreateDownloadJobParams{
-		Protocol:          candidate.Protocol,
-		MediaType:         "movie",
-		MediaItemID:       mi.ID,
-		EpisodeID:         pgtype.UUID{},
-		IndexerID:         indexerID,
-		Guid:              guid,
-		CandidateTitle:    candidate.Title,
-		CandidateLink:     candidate.Link,
-		DownloaderID:      downloaderID,
-		LibraryID:         libraryID,
-		NameTemplateID:    nameTemplateID,
-		PredictedDestPath: predictedPathPtr,
+		Protocol:       candidate.Protocol,
+		MediaType:      "movie",
+		MediaItemID:    mi.ID,
+		EpisodeID:      pgtype.UUID{},
+		IndexerID:      indexerID,
+		Guid:           guid,
+		CandidateTitle: candidate.Title,
+		CandidateLink:  candidate.Link,
+		DownloaderID:   downloaderID,
+		LibraryID:      libraryID,
+		NameTemplateID: nameTemplateID,
 	})
 	if err != nil {
 		return trace, dbgen.DownloadJob{}, fmt.Errorf("create download job: %w", err)
@@ -373,27 +361,18 @@ func (s *DownloadCandidatesService) EnqueueSeriesCandidate(ctx context.Context, 
 		}
 	}
 
-	// Calculate predicted destination path
-	// TODO: update calculatePredictedDestPath to handle season/episode
-	predictedPath, _ := s.calculatePredictedDestPath(ctx, mi.ID, libraryID, nameTemplateID, candidate.Title, seasonNumber, episodeNumber)
-	var predictedPathPtr *string
-	if predictedPath != "" {
-		predictedPathPtr = &predictedPath
-	}
-
 	job, err := s.repo.CreateDownloadJob(ctx, dbgen.CreateDownloadJobParams{
-		Protocol:          candidate.Protocol,
-		MediaType:         "series",
-		MediaItemID:       mi.ID,
-		EpisodeID:         episodeID,
-		IndexerID:         indexerID,
-		Guid:              guid,
-		CandidateTitle:    candidate.Title,
-		CandidateLink:     candidate.Link,
-		DownloaderID:      downloaderID,
-		LibraryID:         libraryID,
-		NameTemplateID:    nameTemplateID,
-		PredictedDestPath: predictedPathPtr,
+		Protocol:       candidate.Protocol,
+		MediaType:      "series",
+		MediaItemID:    mi.ID,
+		EpisodeID:      episodeID,
+		IndexerID:      indexerID,
+		Guid:           guid,
+		CandidateTitle: candidate.Title,
+		CandidateLink:  candidate.Link,
+		DownloaderID:   downloaderID,
+		LibraryID:      libraryID,
+		NameTemplateID: nameTemplateID,
 	})
 	if err != nil {
 		return trace, dbgen.DownloadJob{}, fmt.Errorf("create download job: %w", err)
@@ -447,12 +426,6 @@ func (s *DownloadCandidatesService) cleanExpiredCache() {
 			delete(s.cache, key)
 		}
 	}
-}
-
-// calculatePredictedDestPath calculates the predicted destination path for a download job
-// Returns path with .{ext} placeholder that will be replaced at import time
-func (s *DownloadCandidatesService) calculatePredictedDestPath(ctx context.Context, mediaItemID pgtype.UUID, libraryID pgtype.UUID, nameTemplateID pgtype.UUID, candidateTitle string, seasonNumber *int, episodeNumber *int) (string, error) {
-	return "", nil
 }
 
 // buildMovieEvaluationContext creates an EvaluationContext for a movie candidate
