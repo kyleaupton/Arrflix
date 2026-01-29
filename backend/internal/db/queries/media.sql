@@ -16,6 +16,15 @@ where tmdb_id = $1 and type = $2;
 select * from media_item
 where tmdb_id = $1;
 
+-- name: UpsertMediaItem :one
+insert into media_item (type, title, year, tmdb_id)
+values (sqlc.arg(type), sqlc.arg(title), sqlc.arg(year), sqlc.arg(tmdb_id))
+on conflict (type, tmdb_id)
+do update set title = excluded.title,
+              year = excluded.year,
+              updated_at = now()
+returning *;
+
 -- name: CreateMediaItem :one
 insert into media_item (type, title, year, tmdb_id)
 values (sqlc.arg(type), sqlc.arg(title), sqlc.arg(year), sqlc.arg(tmdb_id))
@@ -80,14 +89,17 @@ do update set title = excluded.title,
               tvdb_id = excluded.tvdb_id
 returning *;
 
--- Files
+-- Files (removed season_id and status)
+
+-- name: GetMediaFile :one
+select * from media_file where id = $1;
 
 -- name: GetMediaFileByLibraryAndPath :one
 select * from media_file where library_id = $1 and path = $2;
 
 -- name: CreateMediaFile :one
-insert into media_file (library_id, media_item_id, season_id, episode_id, path, status)
-values (sqlc.arg(library_id), sqlc.arg(media_item_id), sqlc.arg(season_id), sqlc.arg(episode_id), sqlc.arg(path), coalesce(sqlc.arg(status), 'available'))
+insert into media_file (library_id, media_item_id, episode_id, path)
+values (sqlc.arg(library_id), sqlc.arg(media_item_id), sqlc.arg(episode_id), sqlc.arg(path))
 returning *;
 
 -- name: DeleteMediaFile :exec
@@ -98,18 +110,21 @@ select
   mf.id,
   mf.library_id,
   mf.media_item_id,
-  mf.season_id,
   mf.episode_id,
   mf.path,
-  mf.status,
-  mf.added_at,
+  mf.created_at,
+  ms.id as season_id,
   ms.season_number,
-  me.episode_number
+  me.episode_number,
+  mfs.file_exists,
+  mfs.file_size,
+  mfs.last_verified_at
 from media_file mf
-left join media_season ms on mf.season_id = ms.id
 left join media_episode me on mf.episode_id = me.id
+left join media_season ms on me.season_id = ms.id
+left join media_file_state mfs on mf.id = mfs.media_file_id
 where mf.media_item_id = $1
-order by mf.added_at desc;
+order by mf.created_at desc;
 
 -- name: ListEpisodeAvailabilityForSeries :many
 select
@@ -120,11 +135,12 @@ select
   me.air_date,
   mf.id as file_id,
   mf.library_id,
-  mf.status
+  mfs.file_exists
 from media_episode me
 join media_season ms on me.season_id = ms.id
 join media_item mi on ms.media_item_id = mi.id
 left join media_file mf on mf.episode_id = me.id
+left join media_file_state mfs on mf.id = mfs.media_file_id
 where mi.id = $1
 order by ms.season_number, me.episode_number;
 
@@ -132,10 +148,10 @@ order by ms.season_number, me.episode_number;
 
 -- name: ListMediaItemsPaginated :many
 SELECT * FROM media_item
-WHERE 
+WHERE
     (sqlc.narg(type_filter)::text IS NULL OR type = sqlc.narg(type_filter)) AND
     (sqlc.narg(search)::text IS NULL OR title ILIKE '%' || sqlc.narg(search) || '%')
-ORDER BY 
+ORDER BY
     CASE WHEN sqlc.arg(sort_by)::text = 'title' AND sqlc.arg(sort_dir)::text = 'asc' THEN title END ASC,
     CASE WHEN sqlc.arg(sort_by)::text = 'title' AND sqlc.arg(sort_dir)::text = 'desc' THEN title END DESC,
     CASE WHEN sqlc.arg(sort_by)::text = 'year' AND sqlc.arg(sort_dir)::text = 'asc' THEN year END ASC NULLS LAST,
@@ -154,3 +170,147 @@ WHERE
 -- name: GetMediaItemsByTmdbIDs :many
 SELECT tmdb_id FROM media_item
 WHERE tmdb_id = ANY(sqlc.arg(tmdb_ids)::bigint[]) AND type = sqlc.arg(type);
+
+-- Media File State queries
+
+-- name: CreateMediaFileState :one
+insert into media_file_state (media_file_id, file_exists, file_size, last_verified_at)
+values (sqlc.arg(media_file_id), sqlc.arg(file_exists), sqlc.arg(file_size), now())
+returning *;
+
+-- name: UpsertMediaFileState :one
+insert into media_file_state (media_file_id, file_exists, file_size, last_verified_at)
+values (sqlc.arg(media_file_id), sqlc.arg(file_exists), sqlc.arg(file_size), now())
+on conflict (media_file_id)
+do update set file_exists = excluded.file_exists,
+              file_size = excluded.file_size,
+              last_verified_at = now()
+returning *;
+
+-- name: GetMediaFileState :one
+select * from media_file_state where media_file_id = $1;
+
+-- name: UpdateMediaFileState :one
+update media_file_state
+set file_exists = sqlc.arg(file_exists),
+    file_size = sqlc.arg(file_size),
+    last_verified_at = now()
+where media_file_id = sqlc.arg(media_file_id)
+returning *;
+
+-- name: ListMissingFiles :many
+select mf.*, mfs.file_size, mfs.last_verified_at
+from media_file mf
+join media_file_state mfs on mf.id = mfs.media_file_id
+where mfs.file_exists = false
+order by mfs.last_verified_at desc;
+
+-- name: ListFilesNeedingVerification :many
+select mf.*, mfs.file_exists, mfs.file_size, mfs.last_verified_at
+from media_file mf
+join media_file_state mfs on mf.id = mfs.media_file_id
+where mfs.last_verified_at < sqlc.arg(before_time)
+order by mfs.last_verified_at asc
+limit sqlc.arg(limit_val);
+
+-- Media File Import queries
+
+-- name: CreateMediaFileImport :one
+insert into media_file_import (media_file_id, download_job_id, method, source_path, dest_path, success, error_message)
+values (sqlc.arg(media_file_id), sqlc.arg(download_job_id), sqlc.arg(method), sqlc.arg(source_path), sqlc.arg(dest_path), sqlc.arg(success), sqlc.arg(error_message))
+returning *;
+
+-- name: GetMediaFileImport :one
+select * from media_file_import where id = $1;
+
+-- name: ListImportsForMediaFile :many
+select * from media_file_import
+where media_file_id = $1
+order by attempted_at desc;
+
+-- name: ListImportsForDownloadJob :many
+select * from media_file_import
+where download_job_id = $1
+order by attempted_at desc;
+
+-- name: ListRecentImports :many
+select * from media_file_import
+order by attempted_at desc
+limit sqlc.arg(limit_val);
+
+-- name: ListFailedImports :many
+select * from media_file_import
+where success = false
+order by attempted_at desc
+limit sqlc.arg(limit_val);
+
+-- Unmatched File queries
+
+-- name: CreateUnmatchedFile :one
+insert into unmatched_file (library_id, path, file_size, suggested_matches)
+values (sqlc.arg(library_id), sqlc.arg(path), sqlc.arg(file_size), sqlc.arg(suggested_matches))
+returning *;
+
+-- name: UpsertUnmatchedFile :one
+insert into unmatched_file (library_id, path, file_size, suggested_matches)
+values (sqlc.arg(library_id), sqlc.arg(path), sqlc.arg(file_size), sqlc.arg(suggested_matches))
+on conflict (library_id, path)
+do update set file_size = excluded.file_size,
+              suggested_matches = excluded.suggested_matches,
+              discovered_at = now()
+returning *;
+
+-- name: GetUnmatchedFile :one
+select * from unmatched_file where id = $1;
+
+-- name: GetUnmatchedFileByPath :one
+select * from unmatched_file where library_id = $1 and path = $2;
+
+-- name: ListUnmatchedFiles :many
+select * from unmatched_file
+where resolved_at is null
+order by discovered_at desc;
+
+-- name: ListUnmatchedFilesForLibrary :many
+select * from unmatched_file
+where library_id = $1 and resolved_at is null
+order by discovered_at desc;
+
+-- name: ListUnmatchedFilesPaginated :many
+select * from unmatched_file
+where resolved_at is null
+  and (sqlc.narg(library_id)::uuid is null or library_id = sqlc.narg(library_id))
+order by discovered_at desc
+limit sqlc.arg(page_size)::int offset sqlc.arg(offset_val)::int;
+
+-- name: CountUnmatchedFiles :one
+select count(*) from unmatched_file
+where resolved_at is null
+  and (sqlc.narg(library_id)::uuid is null or library_id = sqlc.narg(library_id));
+
+-- name: ResolveUnmatchedFile :one
+update unmatched_file
+set resolved_at = now(),
+    resolved_media_file_id = sqlc.arg(resolved_media_file_id)
+where id = sqlc.arg(id)
+returning *;
+
+-- name: DismissUnmatchedFile :one
+update unmatched_file
+set resolved_at = now()
+where id = sqlc.arg(id)
+returning *;
+
+-- name: UpdateUnmatchedFileSuggestions :one
+update unmatched_file
+set suggested_matches = sqlc.arg(suggested_matches)
+where id = sqlc.arg(id)
+returning *;
+
+-- name: DeleteUnmatchedFile :exec
+delete from unmatched_file where id = $1;
+
+-- name: DeleteResolvedUnmatchedFilesOlderThan :exec
+delete from unmatched_file
+where resolved_at is not null
+  and resolved_at < sqlc.arg(before_time);

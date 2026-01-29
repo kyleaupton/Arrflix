@@ -41,7 +41,6 @@ export type DbgenDownloadJob = {
     primary_media_file_id: string;
     progress: number;
     protocol: string;
-    season_id: string;
     status: string;
     updated_at: string;
 };
@@ -253,6 +252,13 @@ export type HandlersSetupStatusResponse = {
     initialized: boolean;
 };
 
+export type HandlersUnmatchedFileMatchRequest = {
+    episode?: number;
+    season?: number;
+    tmdbId: number;
+    type: string;
+};
+
 export type HandlersUserCreateRequest = {
     display_name: string;
     email: string;
@@ -297,6 +303,22 @@ export type HandlersNameTemplateSwagger = {
     template: string;
     type: string;
     updated_at: string;
+};
+
+export type HandlersUnmatchedFileSwagger = {
+    discoveredAt: string;
+    fileSize?: number;
+    id: string;
+    libraryId: string;
+    path: string;
+    suggestedMatches?: Array<ServiceSuggestedMatch>;
+};
+
+export type HandlersUnmatchedFilesListResponse = {
+    items: Array<HandlersUnmatchedFileSwagger>;
+    page: number;
+    pageSize: number;
+    totalCount: number;
 };
 
 export type HandlersUserSwagger = {
@@ -902,6 +924,17 @@ export type ServiceLatestVersionInfo = {
     tag: string;
     url: string;
     version: string;
+};
+
+export type ServiceSuggestedMatch = {
+    score: number;
+    title: string;
+    tmdbId: number;
+    /**
+     * movie or series
+     */
+    type: string;
+    year?: number;
 };
 
 export type ServiceUpdateInfo = {
@@ -2870,6 +2903,174 @@ export type GetV1SetupStatusResponses = {
 };
 
 export type GetV1SetupStatusResponse = GetV1SetupStatusResponses[keyof GetV1SetupStatusResponses];
+
+export type GetV1UnmatchedFilesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Filter by library ID
+         */
+        libraryId?: string;
+        /**
+         * Page number (default 1)
+         */
+        page?: number;
+        /**
+         * Page size (default 20)
+         */
+        pageSize?: number;
+    };
+    url: '/v1/unmatched-files';
+};
+
+export type GetV1UnmatchedFilesResponses = {
+    /**
+     * OK
+     */
+    200: HandlersUnmatchedFilesListResponse;
+};
+
+export type GetV1UnmatchedFilesResponse = GetV1UnmatchedFilesResponses[keyof GetV1UnmatchedFilesResponses];
+
+export type GetV1UnmatchedFilesByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Unmatched file ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/unmatched-files/{id}';
+};
+
+export type GetV1UnmatchedFilesByIdErrors = {
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type GetV1UnmatchedFilesByIdError = GetV1UnmatchedFilesByIdErrors[keyof GetV1UnmatchedFilesByIdErrors];
+
+export type GetV1UnmatchedFilesByIdResponses = {
+    /**
+     * OK
+     */
+    200: HandlersUnmatchedFileSwagger;
+};
+
+export type GetV1UnmatchedFilesByIdResponse = GetV1UnmatchedFilesByIdResponses[keyof GetV1UnmatchedFilesByIdResponses];
+
+export type PostV1UnmatchedFilesByIdDismissData = {
+    body?: never;
+    path: {
+        /**
+         * Unmatched file ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/unmatched-files/{id}/dismiss';
+};
+
+export type PostV1UnmatchedFilesByIdDismissErrors = {
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1UnmatchedFilesByIdDismissError = PostV1UnmatchedFilesByIdDismissErrors[keyof PostV1UnmatchedFilesByIdDismissErrors];
+
+export type PostV1UnmatchedFilesByIdDismissResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type PostV1UnmatchedFilesByIdDismissResponse = PostV1UnmatchedFilesByIdDismissResponses[keyof PostV1UnmatchedFilesByIdDismissResponses];
+
+export type PostV1UnmatchedFilesByIdMatchData = {
+    /**
+     * Match request
+     */
+    body: HandlersUnmatchedFileMatchRequest;
+    path: {
+        /**
+         * Unmatched file ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/unmatched-files/{id}/match';
+};
+
+export type PostV1UnmatchedFilesByIdMatchErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1UnmatchedFilesByIdMatchError = PostV1UnmatchedFilesByIdMatchErrors[keyof PostV1UnmatchedFilesByIdMatchErrors];
+
+export type PostV1UnmatchedFilesByIdMatchResponses = {
+    /**
+     * OK
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type PostV1UnmatchedFilesByIdMatchResponse = PostV1UnmatchedFilesByIdMatchResponses[keyof PostV1UnmatchedFilesByIdMatchResponses];
+
+export type PostV1UnmatchedFilesByIdRefreshData = {
+    body?: never;
+    path: {
+        /**
+         * Unmatched file ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/unmatched-files/{id}/refresh';
+};
+
+export type PostV1UnmatchedFilesByIdRefreshErrors = {
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1UnmatchedFilesByIdRefreshError = PostV1UnmatchedFilesByIdRefreshErrors[keyof PostV1UnmatchedFilesByIdRefreshErrors];
+
+export type PostV1UnmatchedFilesByIdRefreshResponses = {
+    /**
+     * OK
+     */
+    200: HandlersUnmatchedFileSwagger;
+};
+
+export type PostV1UnmatchedFilesByIdRefreshResponse = PostV1UnmatchedFilesByIdRefreshResponses[keyof PostV1UnmatchedFilesByIdRefreshResponses];
 
 export type GetV1UpdateData = {
     body?: never;

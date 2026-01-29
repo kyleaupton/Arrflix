@@ -79,8 +79,6 @@ definitions:
         type: number
       protocol:
         type: string
-      season_id:
-        type: string
       status:
         type: string
       updated_at:
@@ -112,7 +110,6 @@ definitions:
     - primary_media_file_id
     - progress
     - protocol
-    - season_id
     - status
     - updated_at
     type: object
@@ -579,6 +576,20 @@ definitions:
     required:
     - initialized
     type: object
+  handlers.UnmatchedFileMatchRequest:
+    properties:
+      episode:
+        type: integer
+      season:
+        type: integer
+      tmdbId:
+        type: integer
+      type:
+        type: string
+    required:
+    - tmdbId
+    - type
+    type: object
   handlers.UserCreateRequest:
     properties:
       display_name:
@@ -686,6 +697,46 @@ definitions:
     - template
     - type
     - updated_at
+    type: object
+  handlers.unmatchedFileSwagger:
+    properties:
+      discoveredAt:
+        type: string
+      fileSize:
+        type: integer
+      id:
+        type: string
+      libraryId:
+        type: string
+      path:
+        type: string
+      suggestedMatches:
+        items:
+          $ref: '#/definitions/service.SuggestedMatch'
+        type: array
+    required:
+    - discoveredAt
+    - id
+    - libraryId
+    - path
+    type: object
+  handlers.unmatchedFilesListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/handlers.unmatchedFileSwagger'
+        type: array
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      totalCount:
+        type: integer
+    required:
+    - items
+    - page
+    - pageSize
+    - totalCount
     type: object
   handlers.userSwagger:
     properties:
@@ -2000,6 +2051,25 @@ definitions:
     - tag
     - url
     - version
+    type: object
+  service.SuggestedMatch:
+    properties:
+      score:
+        type: integer
+      title:
+        type: string
+      tmdbId:
+        type: integer
+      type:
+        description: movie or series
+        type: string
+      year:
+        type: integer
+    required:
+    - score
+    - title
+    - tmdbId
+    - type
     type: object
   service.UpdateInfo:
     properties:
@@ -3694,6 +3764,144 @@ paths:
       summary: Get setup status
       tags:
       - setup
+  /v1/unmatched-files:
+    get:
+      description: List files that couldn't be auto-matched to media items
+      parameters:
+      - description: Filter by library ID
+        in: query
+        name: libraryId
+        type: string
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Page size (default 20)
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.unmatchedFilesListResponse'
+      summary: List unmatched files
+      tags:
+      - unmatched-files
+  /v1/unmatched-files/{id}:
+    get:
+      parameters:
+      - description: Unmatched file ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.unmatchedFileSwagger'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get unmatched file details
+      tags:
+      - unmatched-files
+  /v1/unmatched-files/{id}/dismiss:
+    post:
+      description: Mark an unmatched file as dismissed (resolved without matching)
+      parameters:
+      - description: Unmatched file ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Dismiss unmatched file
+      tags:
+      - unmatched-files
+  /v1/unmatched-files/{id}/match:
+    post:
+      consumes:
+      - application/json
+      description: Manually match an unmatched file to a specific media item
+      parameters:
+      - description: Unmatched file ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Match request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UnmatchedFileMatchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Match unmatched file to media item
+      tags:
+      - unmatched-files
+  /v1/unmatched-files/{id}/refresh:
+    post:
+      description: Regenerate match suggestions for an unmatched file
+      parameters:
+      - description: Unmatched file ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.unmatchedFileSwagger'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh match suggestions
+      tags:
+      - unmatched-files
   /v1/update:
     get:
       produces:

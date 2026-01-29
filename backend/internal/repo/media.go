@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
@@ -17,6 +18,13 @@ type LibraryQueryParams struct {
 	Offset     int32
 }
 
+// UnmatchedFilesQueryParams contains parameters for paginated unmatched files queries
+type UnmatchedFilesQueryParams struct {
+	LibraryID *pgtype.UUID
+	PageSize  int32
+	Offset    int32
+}
+
 type MediaRepo interface {
 	// Media items
 	ListMediaItems(ctx context.Context) ([]dbgen.MediaItem, error)
@@ -26,6 +34,7 @@ type MediaRepo interface {
 	GetMediaItemByTmdbID(ctx context.Context, tmdbID int64) (dbgen.MediaItem, error)
 	GetMediaItemByTmdbIDAndType(ctx context.Context, tmdbID int64, typ string) (dbgen.MediaItem, error)
 	CreateMediaItem(ctx context.Context, typ, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error)
+	UpsertMediaItem(ctx context.Context, typ, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error)
 	UpdateMediaItem(ctx context.Context, id pgtype.UUID, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error)
 	DeleteMediaItem(ctx context.Context, id pgtype.UUID) error
 
@@ -41,12 +50,44 @@ type MediaRepo interface {
 	GetEpisodeByNumber(ctx context.Context, seasonID pgtype.UUID, episodeNumber int32) (dbgen.MediaEpisode, error)
 	UpsertEpisode(ctx context.Context, seasonID pgtype.UUID, episodeNumber int32, title *string, airDate pgtype.Date, tmdbID *int64, tvdbID *int64) (dbgen.MediaEpisode, error)
 
-	// Files
+	// Files (removed season_id and status)
+	GetMediaFile(ctx context.Context, id pgtype.UUID) (dbgen.MediaFile, error)
 	GetMediaFileByLibraryAndPath(ctx context.Context, libraryID pgtype.UUID, path string) (dbgen.MediaFile, error)
-	CreateMediaFile(ctx context.Context, libraryID, mediaItemID pgtype.UUID, seasonID, episodeID *pgtype.UUID, path string, status *string) (dbgen.MediaFile, error)
+	CreateMediaFile(ctx context.Context, libraryID, mediaItemID pgtype.UUID, episodeID *pgtype.UUID, path string) (dbgen.MediaFile, error)
 	ListMediaFilesForItem(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.ListMediaFilesForItemRow, error)
 	ListEpisodeAvailabilityForSeries(ctx context.Context, mediaItemID pgtype.UUID) ([]dbgen.ListEpisodeAvailabilityForSeriesRow, error)
 	DeleteMediaFile(ctx context.Context, id pgtype.UUID) error
+
+	// File state
+	CreateMediaFileState(ctx context.Context, mediaFileID pgtype.UUID, fileExists bool, fileSize *int64) (dbgen.MediaFileState, error)
+	UpsertMediaFileState(ctx context.Context, mediaFileID pgtype.UUID, fileExists bool, fileSize *int64) (dbgen.MediaFileState, error)
+	GetMediaFileState(ctx context.Context, mediaFileID pgtype.UUID) (dbgen.MediaFileState, error)
+	UpdateMediaFileState(ctx context.Context, mediaFileID pgtype.UUID, fileExists bool, fileSize *int64) (dbgen.MediaFileState, error)
+	ListMissingFiles(ctx context.Context) ([]dbgen.ListMissingFilesRow, error)
+	ListFilesNeedingVerification(ctx context.Context, beforeTime time.Time, limit int32) ([]dbgen.ListFilesNeedingVerificationRow, error)
+
+	// File imports
+	CreateMediaFileImport(ctx context.Context, arg dbgen.CreateMediaFileImportParams) (dbgen.MediaFileImport, error)
+	GetMediaFileImport(ctx context.Context, id pgtype.UUID) (dbgen.MediaFileImport, error)
+	ListImportsForMediaFile(ctx context.Context, mediaFileID pgtype.UUID) ([]dbgen.MediaFileImport, error)
+	ListImportsForDownloadJob(ctx context.Context, downloadJobID pgtype.UUID) ([]dbgen.MediaFileImport, error)
+	ListRecentImports(ctx context.Context, limit int32) ([]dbgen.MediaFileImport, error)
+	ListFailedImports(ctx context.Context, limit int32) ([]dbgen.MediaFileImport, error)
+
+	// Unmatched files
+	CreateUnmatchedFile(ctx context.Context, libraryID pgtype.UUID, path string, fileSize *int64, suggestedMatches []byte) (dbgen.UnmatchedFile, error)
+	UpsertUnmatchedFile(ctx context.Context, libraryID pgtype.UUID, path string, fileSize *int64, suggestedMatches []byte) (dbgen.UnmatchedFile, error)
+	GetUnmatchedFile(ctx context.Context, id pgtype.UUID) (dbgen.UnmatchedFile, error)
+	GetUnmatchedFileByPath(ctx context.Context, libraryID pgtype.UUID, path string) (dbgen.UnmatchedFile, error)
+	ListUnmatchedFiles(ctx context.Context) ([]dbgen.UnmatchedFile, error)
+	ListUnmatchedFilesForLibrary(ctx context.Context, libraryID pgtype.UUID) ([]dbgen.UnmatchedFile, error)
+	ListUnmatchedFilesPaginated(ctx context.Context, params UnmatchedFilesQueryParams) ([]dbgen.UnmatchedFile, error)
+	CountUnmatchedFiles(ctx context.Context, libraryID *pgtype.UUID) (int64, error)
+	ResolveUnmatchedFile(ctx context.Context, id pgtype.UUID, resolvedMediaFileID pgtype.UUID) (dbgen.UnmatchedFile, error)
+	DismissUnmatchedFile(ctx context.Context, id pgtype.UUID) (dbgen.UnmatchedFile, error)
+	UpdateUnmatchedFileSuggestions(ctx context.Context, id pgtype.UUID, suggestedMatches []byte) (dbgen.UnmatchedFile, error)
+	DeleteUnmatchedFile(ctx context.Context, id pgtype.UUID) error
+	DeleteResolvedUnmatchedFilesOlderThan(ctx context.Context, beforeTime time.Time) error
 }
 
 func (r *Repository) ListMediaItems(ctx context.Context) ([]dbgen.MediaItem, error) {
@@ -88,6 +129,15 @@ func (r *Repository) GetMediaItemByTmdbIDAndType(ctx context.Context, tmdbID int
 
 func (r *Repository) CreateMediaItem(ctx context.Context, typ, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error) {
 	return r.Q.CreateMediaItem(ctx, dbgen.CreateMediaItemParams{
+		Type:   typ,
+		Title:  title,
+		Year:   year,
+		TmdbID: tmdbID,
+	})
+}
+
+func (r *Repository) UpsertMediaItem(ctx context.Context, typ, title string, year *int32, tmdbID *int64) (dbgen.MediaItem, error) {
+	return r.Q.UpsertMediaItem(ctx, dbgen.UpsertMediaItemParams{
 		Type:   typ,
 		Title:  title,
 		Year:   year,
@@ -157,6 +207,10 @@ func (r *Repository) UpsertEpisode(ctx context.Context, seasonID pgtype.UUID, ep
 	})
 }
 
+func (r *Repository) GetMediaFile(ctx context.Context, id pgtype.UUID) (dbgen.MediaFile, error) {
+	return r.Q.GetMediaFile(ctx, id)
+}
+
 func (r *Repository) GetMediaFileByLibraryAndPath(ctx context.Context, libraryID pgtype.UUID, path string) (dbgen.MediaFile, error) {
 	return r.Q.GetMediaFileByLibraryAndPath(ctx, dbgen.GetMediaFileByLibraryAndPathParams{
 		LibraryID: libraryID,
@@ -164,25 +218,16 @@ func (r *Repository) GetMediaFileByLibraryAndPath(ctx context.Context, libraryID
 	})
 }
 
-func (r *Repository) CreateMediaFile(ctx context.Context, libraryID, mediaItemID pgtype.UUID, seasonID, episodeID *pgtype.UUID, path string, status *string) (dbgen.MediaFile, error) {
-	var season, episode pgtype.UUID
-	if seasonID != nil {
-		season = *seasonID
-	} // else zero value => NULL
+func (r *Repository) CreateMediaFile(ctx context.Context, libraryID, mediaItemID pgtype.UUID, episodeID *pgtype.UUID, path string) (dbgen.MediaFile, error) {
+	var episode pgtype.UUID
 	if episodeID != nil {
 		episode = *episodeID
-	}
-	var st *string
-	if status != nil {
-		st = status
 	}
 	return r.Q.CreateMediaFile(ctx, dbgen.CreateMediaFileParams{
 		LibraryID:   libraryID,
 		MediaItemID: mediaItemID,
-		SeasonID:    season,
 		EpisodeID:   episode,
 		Path:        path,
-		Status:      st,
 	})
 }
 
@@ -219,4 +264,156 @@ func (r *Repository) CheckMediaItemsInLibrary(ctx context.Context, tmdbIDs []int
 		}
 	}
 	return result, nil
+}
+
+// Media File State methods
+
+func (r *Repository) CreateMediaFileState(ctx context.Context, mediaFileID pgtype.UUID, fileExists bool, fileSize *int64) (dbgen.MediaFileState, error) {
+	return r.Q.CreateMediaFileState(ctx, dbgen.CreateMediaFileStateParams{
+		MediaFileID: mediaFileID,
+		FileExists:  fileExists,
+		FileSize:    fileSize,
+	})
+}
+
+func (r *Repository) UpsertMediaFileState(ctx context.Context, mediaFileID pgtype.UUID, fileExists bool, fileSize *int64) (dbgen.MediaFileState, error) {
+	return r.Q.UpsertMediaFileState(ctx, dbgen.UpsertMediaFileStateParams{
+		MediaFileID: mediaFileID,
+		FileExists:  fileExists,
+		FileSize:    fileSize,
+	})
+}
+
+func (r *Repository) GetMediaFileState(ctx context.Context, mediaFileID pgtype.UUID) (dbgen.MediaFileState, error) {
+	return r.Q.GetMediaFileState(ctx, mediaFileID)
+}
+
+func (r *Repository) UpdateMediaFileState(ctx context.Context, mediaFileID pgtype.UUID, fileExists bool, fileSize *int64) (dbgen.MediaFileState, error) {
+	return r.Q.UpdateMediaFileState(ctx, dbgen.UpdateMediaFileStateParams{
+		MediaFileID: mediaFileID,
+		FileExists:  fileExists,
+		FileSize:    fileSize,
+	})
+}
+
+func (r *Repository) ListMissingFiles(ctx context.Context) ([]dbgen.ListMissingFilesRow, error) {
+	return r.Q.ListMissingFiles(ctx)
+}
+
+func (r *Repository) ListFilesNeedingVerification(ctx context.Context, beforeTime time.Time, limit int32) ([]dbgen.ListFilesNeedingVerificationRow, error) {
+	return r.Q.ListFilesNeedingVerification(ctx, dbgen.ListFilesNeedingVerificationParams{
+		BeforeTime: beforeTime,
+		LimitVal:   limit,
+	})
+}
+
+// Media File Import methods
+
+func (r *Repository) CreateMediaFileImport(ctx context.Context, arg dbgen.CreateMediaFileImportParams) (dbgen.MediaFileImport, error) {
+	return r.Q.CreateMediaFileImport(ctx, arg)
+}
+
+func (r *Repository) GetMediaFileImport(ctx context.Context, id pgtype.UUID) (dbgen.MediaFileImport, error) {
+	return r.Q.GetMediaFileImport(ctx, id)
+}
+
+func (r *Repository) ListImportsForMediaFile(ctx context.Context, mediaFileID pgtype.UUID) ([]dbgen.MediaFileImport, error) {
+	return r.Q.ListImportsForMediaFile(ctx, mediaFileID)
+}
+
+func (r *Repository) ListImportsForDownloadJob(ctx context.Context, downloadJobID pgtype.UUID) ([]dbgen.MediaFileImport, error) {
+	return r.Q.ListImportsForDownloadJob(ctx, downloadJobID)
+}
+
+func (r *Repository) ListRecentImports(ctx context.Context, limit int32) ([]dbgen.MediaFileImport, error) {
+	return r.Q.ListRecentImports(ctx, limit)
+}
+
+func (r *Repository) ListFailedImports(ctx context.Context, limit int32) ([]dbgen.MediaFileImport, error) {
+	return r.Q.ListFailedImports(ctx, limit)
+}
+
+// Unmatched File methods
+
+func (r *Repository) CreateUnmatchedFile(ctx context.Context, libraryID pgtype.UUID, path string, fileSize *int64, suggestedMatches []byte) (dbgen.UnmatchedFile, error) {
+	return r.Q.CreateUnmatchedFile(ctx, dbgen.CreateUnmatchedFileParams{
+		LibraryID:        libraryID,
+		Path:             path,
+		FileSize:         fileSize,
+		SuggestedMatches: suggestedMatches,
+	})
+}
+
+func (r *Repository) UpsertUnmatchedFile(ctx context.Context, libraryID pgtype.UUID, path string, fileSize *int64, suggestedMatches []byte) (dbgen.UnmatchedFile, error) {
+	return r.Q.UpsertUnmatchedFile(ctx, dbgen.UpsertUnmatchedFileParams{
+		LibraryID:        libraryID,
+		Path:             path,
+		FileSize:         fileSize,
+		SuggestedMatches: suggestedMatches,
+	})
+}
+
+func (r *Repository) GetUnmatchedFile(ctx context.Context, id pgtype.UUID) (dbgen.UnmatchedFile, error) {
+	return r.Q.GetUnmatchedFile(ctx, id)
+}
+
+func (r *Repository) GetUnmatchedFileByPath(ctx context.Context, libraryID pgtype.UUID, path string) (dbgen.UnmatchedFile, error) {
+	return r.Q.GetUnmatchedFileByPath(ctx, dbgen.GetUnmatchedFileByPathParams{
+		LibraryID: libraryID,
+		Path:      path,
+	})
+}
+
+func (r *Repository) ListUnmatchedFiles(ctx context.Context) ([]dbgen.UnmatchedFile, error) {
+	return r.Q.ListUnmatchedFiles(ctx)
+}
+
+func (r *Repository) ListUnmatchedFilesForLibrary(ctx context.Context, libraryID pgtype.UUID) ([]dbgen.UnmatchedFile, error) {
+	return r.Q.ListUnmatchedFilesForLibrary(ctx, libraryID)
+}
+
+func (r *Repository) ListUnmatchedFilesPaginated(ctx context.Context, params UnmatchedFilesQueryParams) ([]dbgen.UnmatchedFile, error) {
+	var libID pgtype.UUID
+	if params.LibraryID != nil {
+		libID = *params.LibraryID
+	}
+	return r.Q.ListUnmatchedFilesPaginated(ctx, dbgen.ListUnmatchedFilesPaginatedParams{
+		LibraryID: libID,
+		PageSize:  params.PageSize,
+		OffsetVal: params.Offset,
+	})
+}
+
+func (r *Repository) CountUnmatchedFiles(ctx context.Context, libraryID *pgtype.UUID) (int64, error) {
+	var libID pgtype.UUID
+	if libraryID != nil {
+		libID = *libraryID
+	}
+	return r.Q.CountUnmatchedFiles(ctx, libID)
+}
+
+func (r *Repository) ResolveUnmatchedFile(ctx context.Context, id pgtype.UUID, resolvedMediaFileID pgtype.UUID) (dbgen.UnmatchedFile, error) {
+	return r.Q.ResolveUnmatchedFile(ctx, dbgen.ResolveUnmatchedFileParams{
+		ID:                  id,
+		ResolvedMediaFileID: resolvedMediaFileID,
+	})
+}
+
+func (r *Repository) DismissUnmatchedFile(ctx context.Context, id pgtype.UUID) (dbgen.UnmatchedFile, error) {
+	return r.Q.DismissUnmatchedFile(ctx, id)
+}
+
+func (r *Repository) UpdateUnmatchedFileSuggestions(ctx context.Context, id pgtype.UUID, suggestedMatches []byte) (dbgen.UnmatchedFile, error) {
+	return r.Q.UpdateUnmatchedFileSuggestions(ctx, dbgen.UpdateUnmatchedFileSuggestionsParams{
+		ID:               id,
+		SuggestedMatches: suggestedMatches,
+	})
+}
+
+func (r *Repository) DeleteUnmatchedFile(ctx context.Context, id pgtype.UUID) error {
+	return r.Q.DeleteUnmatchedFile(ctx, id)
+}
+
+func (r *Repository) DeleteResolvedUnmatchedFilesOlderThan(ctx context.Context, beforeTime time.Time) error {
+	return r.Q.DeleteResolvedUnmatchedFilesOlderThan(ctx, pgtype.Timestamptz{Time: beforeTime, Valid: true})
 }

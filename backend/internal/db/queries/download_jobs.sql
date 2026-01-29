@@ -1,4 +1,4 @@
--- Download jobs
+-- Download jobs (removed season_id)
 
 -- name: CreateDownloadJob :one
 insert into download_job (
@@ -6,7 +6,6 @@ insert into download_job (
   protocol,
   media_type,
   media_item_id,
-  season_id,
   episode_id,
   indexer_id,
   guid,
@@ -22,7 +21,6 @@ values (
   sqlc.arg(protocol),
   sqlc.arg(media_type),
   sqlc.arg(media_item_id),
-  sqlc.arg(season_id),
   sqlc.arg(episode_id),
   sqlc.arg(indexer_id),
   sqlc.arg(guid),
@@ -62,13 +60,13 @@ where mi.type = 'movie' and mi.tmdb_id = $1
 order by j.created_at desc;
 
 -- name: ListDownloadJobsByTmdbSeriesID :many
-select j.*, 
-       ms.season_number, 
+select j.*,
+       ms.season_number,
        me.episode_number
 from download_job j
 join media_item mi on mi.id = j.media_item_id
-left join media_season ms on ms.id = j.season_id
 left join media_episode me on me.id = j.episode_id
+left join media_season ms on ms.id = me.season_id
 where mi.type = 'series' and mi.tmdb_id = $1
 order by j.created_at desc;
 
@@ -154,5 +152,3 @@ returning j.*;
 insert into download_job_media_file (download_job_id, media_file_id)
 values (sqlc.arg(download_job_id), sqlc.arg(media_file_id))
 on conflict (download_job_id, media_file_id) do nothing;
-
-

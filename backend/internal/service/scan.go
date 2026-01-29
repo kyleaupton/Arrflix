@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
 	"github.com/kyleaupton/arrflix/internal/identity"
 	"github.com/kyleaupton/arrflix/internal/logger"
 	"github.com/kyleaupton/arrflix/internal/repo"
@@ -143,7 +144,6 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 		}
 
 		var mediaItemId pgtype.UUID
-		var seasonId *pgtype.UUID
 		var episodeId *pgtype.UUID
 
 		if err == pgx.ErrNoRows {
@@ -217,7 +217,6 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 				if err != nil {
 					return nil
 				}
-				seasonId = &seasonRow.ID
 
 				if identity.Episode != nil {
 					// grab the episode details from tmdb
@@ -239,8 +238,33 @@ func (s *ScannerService) StartScan(ctx context.Context, libraryID pgtype.UUID) (
 			mediaItemId = mediaItem.ID
 		}
 
-		// create media_file
-		s.repo.CreateMediaFile(ctx, library.ID, mediaItemId, seasonId, episodeId, relPath, nil)
+		// create media_file (removed seasonId - derived from episode)
+		mf, err := s.repo.CreateMediaFile(ctx, library.ID, mediaItemId, episodeId, relPath)
+		if err != nil {
+			s.logger.Error().Err(err).Str("path", relPath).Msg("Failed to create media file")
+			return nil
+		}
+
+		// Create file state for the new file
+		info, _ := d.Info()
+		var fileSize *int64
+		if info != nil {
+			size := info.Size()
+			fileSize = &size
+		}
+		if _, err := s.repo.UpsertMediaFileState(ctx, mf.ID, true, fileSize); err != nil {
+			s.logger.Warn().Err(err).Msg("Failed to create media file state")
+		}
+
+		// Record import history (method: scan)
+		if _, err := s.repo.CreateMediaFileImport(ctx, dbgen.CreateMediaFileImportParams{
+			MediaFileID: mf.ID,
+			Method:      "scan",
+			DestPath:    path,
+			Success:     true,
+		}); err != nil {
+			s.logger.Warn().Err(err).Msg("Failed to record import history")
+		}
 
 		return nil
 	})

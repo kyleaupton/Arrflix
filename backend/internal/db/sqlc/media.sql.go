@@ -31,40 +31,116 @@ func (q *Queries) CountMediaItems(ctx context.Context, arg CountMediaItemsParams
 	return count, err
 }
 
+const countUnmatchedFiles = `-- name: CountUnmatchedFiles :one
+select count(*) from unmatched_file
+where resolved_at is null
+  and ($1::uuid is null or library_id = $1)
+`
+
+func (q *Queries) CountUnmatchedFiles(ctx context.Context, libraryID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countUnmatchedFiles, libraryID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createMediaFile = `-- name: CreateMediaFile :one
-insert into media_file (library_id, media_item_id, season_id, episode_id, path, status)
-values ($1, $2, $3, $4, $5, coalesce($6, 'available'))
-returning id, library_id, media_item_id, season_id, episode_id, path, status, added_at
+insert into media_file (library_id, media_item_id, episode_id, path)
+values ($1, $2, $3, $4)
+returning id, library_id, media_item_id, episode_id, path, created_at
 `
 
 type CreateMediaFileParams struct {
 	LibraryID   pgtype.UUID `json:"library_id"`
 	MediaItemID pgtype.UUID `json:"media_item_id"`
-	SeasonID    pgtype.UUID `json:"season_id"`
 	EpisodeID   pgtype.UUID `json:"episode_id"`
 	Path        string      `json:"path"`
-	Status      interface{} `json:"status"`
 }
 
 func (q *Queries) CreateMediaFile(ctx context.Context, arg CreateMediaFileParams) (MediaFile, error) {
 	row := q.db.QueryRow(ctx, createMediaFile,
 		arg.LibraryID,
 		arg.MediaItemID,
-		arg.SeasonID,
 		arg.EpisodeID,
 		arg.Path,
-		arg.Status,
 	)
 	var i MediaFile
 	err := row.Scan(
 		&i.ID,
 		&i.LibraryID,
 		&i.MediaItemID,
-		&i.SeasonID,
 		&i.EpisodeID,
 		&i.Path,
-		&i.Status,
-		&i.AddedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createMediaFileImport = `-- name: CreateMediaFileImport :one
+
+insert into media_file_import (media_file_id, download_job_id, method, source_path, dest_path, success, error_message)
+values ($1, $2, $3, $4, $5, $6, $7)
+returning id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message
+`
+
+type CreateMediaFileImportParams struct {
+	MediaFileID   pgtype.UUID `json:"media_file_id"`
+	DownloadJobID pgtype.UUID `json:"download_job_id"`
+	Method        string      `json:"method"`
+	SourcePath    *string     `json:"source_path"`
+	DestPath      string      `json:"dest_path"`
+	Success       bool        `json:"success"`
+	ErrorMessage  *string     `json:"error_message"`
+}
+
+// Media File Import queries
+func (q *Queries) CreateMediaFileImport(ctx context.Context, arg CreateMediaFileImportParams) (MediaFileImport, error) {
+	row := q.db.QueryRow(ctx, createMediaFileImport,
+		arg.MediaFileID,
+		arg.DownloadJobID,
+		arg.Method,
+		arg.SourcePath,
+		arg.DestPath,
+		arg.Success,
+		arg.ErrorMessage,
+	)
+	var i MediaFileImport
+	err := row.Scan(
+		&i.ID,
+		&i.MediaFileID,
+		&i.DownloadJobID,
+		&i.Method,
+		&i.SourcePath,
+		&i.DestPath,
+		&i.AttemptedAt,
+		&i.Success,
+		&i.ErrorMessage,
+	)
+	return i, err
+}
+
+const createMediaFileState = `-- name: CreateMediaFileState :one
+
+insert into media_file_state (media_file_id, file_exists, file_size, last_verified_at)
+values ($1, $2, $3, now())
+returning media_file_id, file_exists, file_size, last_verified_at
+`
+
+type CreateMediaFileStateParams struct {
+	MediaFileID pgtype.UUID `json:"media_file_id"`
+	FileExists  bool        `json:"file_exists"`
+	FileSize    *int64      `json:"file_size"`
+}
+
+// Media File State queries
+func (q *Queries) CreateMediaFileState(ctx context.Context, arg CreateMediaFileStateParams) (MediaFileState, error) {
+	row := q.db.QueryRow(ctx, createMediaFileState, arg.MediaFileID, arg.FileExists, arg.FileSize)
+	var i MediaFileState
+	err := row.Scan(
+		&i.MediaFileID,
+		&i.FileExists,
+		&i.FileSize,
+		&i.LastVerifiedAt,
 	)
 	return i, err
 }
@@ -102,6 +178,42 @@ func (q *Queries) CreateMediaItem(ctx context.Context, arg CreateMediaItemParams
 	return i, err
 }
 
+const createUnmatchedFile = `-- name: CreateUnmatchedFile :one
+
+insert into unmatched_file (library_id, path, file_size, suggested_matches)
+values ($1, $2, $3, $4)
+returning id, library_id, path, file_size, discovered_at, suggested_matches, resolved_at, resolved_media_file_id
+`
+
+type CreateUnmatchedFileParams struct {
+	LibraryID        pgtype.UUID `json:"library_id"`
+	Path             string      `json:"path"`
+	FileSize         *int64      `json:"file_size"`
+	SuggestedMatches []byte      `json:"suggested_matches"`
+}
+
+// Unmatched File queries
+func (q *Queries) CreateUnmatchedFile(ctx context.Context, arg CreateUnmatchedFileParams) (UnmatchedFile, error) {
+	row := q.db.QueryRow(ctx, createUnmatchedFile,
+		arg.LibraryID,
+		arg.Path,
+		arg.FileSize,
+		arg.SuggestedMatches,
+	)
+	var i UnmatchedFile
+	err := row.Scan(
+		&i.ID,
+		&i.LibraryID,
+		&i.Path,
+		&i.FileSize,
+		&i.DiscoveredAt,
+		&i.SuggestedMatches,
+		&i.ResolvedAt,
+		&i.ResolvedMediaFileID,
+	)
+	return i, err
+}
+
 const deleteMediaFile = `-- name: DeleteMediaFile :exec
 delete from media_file where id = $1
 `
@@ -118,6 +230,49 @@ delete from media_item where id = $1
 func (q *Queries) DeleteMediaItem(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deleteMediaItem, id)
 	return err
+}
+
+const deleteResolvedUnmatchedFilesOlderThan = `-- name: DeleteResolvedUnmatchedFilesOlderThan :exec
+delete from unmatched_file
+where resolved_at is not null
+  and resolved_at < $1
+`
+
+func (q *Queries) DeleteResolvedUnmatchedFilesOlderThan(ctx context.Context, beforeTime pgtype.Timestamptz) error {
+	_, err := q.db.Exec(ctx, deleteResolvedUnmatchedFilesOlderThan, beforeTime)
+	return err
+}
+
+const deleteUnmatchedFile = `-- name: DeleteUnmatchedFile :exec
+delete from unmatched_file where id = $1
+`
+
+func (q *Queries) DeleteUnmatchedFile(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUnmatchedFile, id)
+	return err
+}
+
+const dismissUnmatchedFile = `-- name: DismissUnmatchedFile :one
+update unmatched_file
+set resolved_at = now()
+where id = $1
+returning id, library_id, path, file_size, discovered_at, suggested_matches, resolved_at, resolved_media_file_id
+`
+
+func (q *Queries) DismissUnmatchedFile(ctx context.Context, id pgtype.UUID) (UnmatchedFile, error) {
+	row := q.db.QueryRow(ctx, dismissUnmatchedFile, id)
+	var i UnmatchedFile
+	err := row.Scan(
+		&i.ID,
+		&i.LibraryID,
+		&i.Path,
+		&i.FileSize,
+		&i.DiscoveredAt,
+		&i.SuggestedMatches,
+		&i.ResolvedAt,
+		&i.ResolvedMediaFileID,
+	)
+	return i, err
 }
 
 const getEpisode = `-- name: GetEpisode :one
@@ -167,9 +322,28 @@ func (q *Queries) GetEpisodeByNumber(ctx context.Context, arg GetEpisodeByNumber
 	return i, err
 }
 
-const getMediaFileByLibraryAndPath = `-- name: GetMediaFileByLibraryAndPath :one
+const getMediaFile = `-- name: GetMediaFile :one
 
-select id, library_id, media_item_id, season_id, episode_id, path, status, added_at from media_file where library_id = $1 and path = $2
+select id, library_id, media_item_id, episode_id, path, created_at from media_file where id = $1
+`
+
+// Files (removed season_id and status)
+func (q *Queries) GetMediaFile(ctx context.Context, id pgtype.UUID) (MediaFile, error) {
+	row := q.db.QueryRow(ctx, getMediaFile, id)
+	var i MediaFile
+	err := row.Scan(
+		&i.ID,
+		&i.LibraryID,
+		&i.MediaItemID,
+		&i.EpisodeID,
+		&i.Path,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getMediaFileByLibraryAndPath = `-- name: GetMediaFileByLibraryAndPath :one
+select id, library_id, media_item_id, episode_id, path, created_at from media_file where library_id = $1 and path = $2
 `
 
 type GetMediaFileByLibraryAndPathParams struct {
@@ -177,7 +351,6 @@ type GetMediaFileByLibraryAndPathParams struct {
 	Path      string      `json:"path"`
 }
 
-// Files
 func (q *Queries) GetMediaFileByLibraryAndPath(ctx context.Context, arg GetMediaFileByLibraryAndPathParams) (MediaFile, error) {
 	row := q.db.QueryRow(ctx, getMediaFileByLibraryAndPath, arg.LibraryID, arg.Path)
 	var i MediaFile
@@ -185,11 +358,46 @@ func (q *Queries) GetMediaFileByLibraryAndPath(ctx context.Context, arg GetMedia
 		&i.ID,
 		&i.LibraryID,
 		&i.MediaItemID,
-		&i.SeasonID,
 		&i.EpisodeID,
 		&i.Path,
-		&i.Status,
-		&i.AddedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getMediaFileImport = `-- name: GetMediaFileImport :one
+select id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import where id = $1
+`
+
+func (q *Queries) GetMediaFileImport(ctx context.Context, id pgtype.UUID) (MediaFileImport, error) {
+	row := q.db.QueryRow(ctx, getMediaFileImport, id)
+	var i MediaFileImport
+	err := row.Scan(
+		&i.ID,
+		&i.MediaFileID,
+		&i.DownloadJobID,
+		&i.Method,
+		&i.SourcePath,
+		&i.DestPath,
+		&i.AttemptedAt,
+		&i.Success,
+		&i.ErrorMessage,
+	)
+	return i, err
+}
+
+const getMediaFileState = `-- name: GetMediaFileState :one
+select media_file_id, file_exists, file_size, last_verified_at from media_file_state where media_file_id = $1
+`
+
+func (q *Queries) GetMediaFileState(ctx context.Context, mediaFileID pgtype.UUID) (MediaFileState, error) {
+	row := q.db.QueryRow(ctx, getMediaFileState, mediaFileID)
+	var i MediaFileState
+	err := row.Scan(
+		&i.MediaFileID,
+		&i.FileExists,
+		&i.FileSize,
+		&i.LastVerifiedAt,
 	)
 	return i, err
 }
@@ -330,6 +538,51 @@ func (q *Queries) GetSeasonByNumber(ctx context.Context, arg GetSeasonByNumberPa
 	return i, err
 }
 
+const getUnmatchedFile = `-- name: GetUnmatchedFile :one
+select id, library_id, path, file_size, discovered_at, suggested_matches, resolved_at, resolved_media_file_id from unmatched_file where id = $1
+`
+
+func (q *Queries) GetUnmatchedFile(ctx context.Context, id pgtype.UUID) (UnmatchedFile, error) {
+	row := q.db.QueryRow(ctx, getUnmatchedFile, id)
+	var i UnmatchedFile
+	err := row.Scan(
+		&i.ID,
+		&i.LibraryID,
+		&i.Path,
+		&i.FileSize,
+		&i.DiscoveredAt,
+		&i.SuggestedMatches,
+		&i.ResolvedAt,
+		&i.ResolvedMediaFileID,
+	)
+	return i, err
+}
+
+const getUnmatchedFileByPath = `-- name: GetUnmatchedFileByPath :one
+select id, library_id, path, file_size, discovered_at, suggested_matches, resolved_at, resolved_media_file_id from unmatched_file where library_id = $1 and path = $2
+`
+
+type GetUnmatchedFileByPathParams struct {
+	LibraryID pgtype.UUID `json:"library_id"`
+	Path      string      `json:"path"`
+}
+
+func (q *Queries) GetUnmatchedFileByPath(ctx context.Context, arg GetUnmatchedFileByPathParams) (UnmatchedFile, error) {
+	row := q.db.QueryRow(ctx, getUnmatchedFileByPath, arg.LibraryID, arg.Path)
+	var i UnmatchedFile
+	err := row.Scan(
+		&i.ID,
+		&i.LibraryID,
+		&i.Path,
+		&i.FileSize,
+		&i.DiscoveredAt,
+		&i.SuggestedMatches,
+		&i.ResolvedAt,
+		&i.ResolvedMediaFileID,
+	)
+	return i, err
+}
+
 const listEpisodeAvailabilityForSeries = `-- name: ListEpisodeAvailabilityForSeries :many
 select
   ms.season_number,
@@ -339,11 +592,12 @@ select
   me.air_date,
   mf.id as file_id,
   mf.library_id,
-  mf.status
+  mfs.file_exists
 from media_episode me
 join media_season ms on me.season_id = ms.id
 join media_item mi on ms.media_item_id = mi.id
 left join media_file mf on mf.episode_id = me.id
+left join media_file_state mfs on mf.id = mfs.media_file_id
 where mi.id = $1
 order by ms.season_number, me.episode_number
 `
@@ -356,7 +610,7 @@ type ListEpisodeAvailabilityForSeriesRow struct {
 	AirDate       pgtype.Date `json:"air_date"`
 	FileID        pgtype.UUID `json:"file_id"`
 	LibraryID     pgtype.UUID `json:"library_id"`
-	Status        *string     `json:"status"`
+	FileExists    *bool       `json:"file_exists"`
 }
 
 func (q *Queries) ListEpisodeAvailabilityForSeries(ctx context.Context, id pgtype.UUID) ([]ListEpisodeAvailabilityForSeriesRow, error) {
@@ -376,7 +630,7 @@ func (q *Queries) ListEpisodeAvailabilityForSeries(ctx context.Context, id pgtyp
 			&i.AirDate,
 			&i.FileID,
 			&i.LibraryID,
-			&i.Status,
+			&i.FileExists,
 		); err != nil {
 			return nil, err
 		}
@@ -425,36 +679,206 @@ func (q *Queries) ListEpisodesForSeason(ctx context.Context, seasonID pgtype.UUI
 	return items, nil
 }
 
+const listFailedImports = `-- name: ListFailedImports :many
+select id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
+where success = false
+order by attempted_at desc
+limit $1
+`
+
+func (q *Queries) ListFailedImports(ctx context.Context, limitVal int32) ([]MediaFileImport, error) {
+	rows, err := q.db.Query(ctx, listFailedImports, limitVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MediaFileImport
+	for rows.Next() {
+		var i MediaFileImport
+		if err := rows.Scan(
+			&i.ID,
+			&i.MediaFileID,
+			&i.DownloadJobID,
+			&i.Method,
+			&i.SourcePath,
+			&i.DestPath,
+			&i.AttemptedAt,
+			&i.Success,
+			&i.ErrorMessage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listFilesNeedingVerification = `-- name: ListFilesNeedingVerification :many
+select mf.id, mf.library_id, mf.media_item_id, mf.episode_id, mf.path, mf.created_at, mfs.file_exists, mfs.file_size, mfs.last_verified_at
+from media_file mf
+join media_file_state mfs on mf.id = mfs.media_file_id
+where mfs.last_verified_at < $1
+order by mfs.last_verified_at asc
+limit $2
+`
+
+type ListFilesNeedingVerificationParams struct {
+	BeforeTime time.Time `json:"before_time"`
+	LimitVal   int32     `json:"limit_val"`
+}
+
+type ListFilesNeedingVerificationRow struct {
+	ID             pgtype.UUID `json:"id"`
+	LibraryID      pgtype.UUID `json:"library_id"`
+	MediaItemID    pgtype.UUID `json:"media_item_id"`
+	EpisodeID      pgtype.UUID `json:"episode_id"`
+	Path           string      `json:"path"`
+	CreatedAt      time.Time   `json:"created_at"`
+	FileExists     bool        `json:"file_exists"`
+	FileSize       *int64      `json:"file_size"`
+	LastVerifiedAt time.Time   `json:"last_verified_at"`
+}
+
+func (q *Queries) ListFilesNeedingVerification(ctx context.Context, arg ListFilesNeedingVerificationParams) ([]ListFilesNeedingVerificationRow, error) {
+	rows, err := q.db.Query(ctx, listFilesNeedingVerification, arg.BeforeTime, arg.LimitVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListFilesNeedingVerificationRow
+	for rows.Next() {
+		var i ListFilesNeedingVerificationRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.LibraryID,
+			&i.MediaItemID,
+			&i.EpisodeID,
+			&i.Path,
+			&i.CreatedAt,
+			&i.FileExists,
+			&i.FileSize,
+			&i.LastVerifiedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listImportsForDownloadJob = `-- name: ListImportsForDownloadJob :many
+select id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
+where download_job_id = $1
+order by attempted_at desc
+`
+
+func (q *Queries) ListImportsForDownloadJob(ctx context.Context, downloadJobID pgtype.UUID) ([]MediaFileImport, error) {
+	rows, err := q.db.Query(ctx, listImportsForDownloadJob, downloadJobID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MediaFileImport
+	for rows.Next() {
+		var i MediaFileImport
+		if err := rows.Scan(
+			&i.ID,
+			&i.MediaFileID,
+			&i.DownloadJobID,
+			&i.Method,
+			&i.SourcePath,
+			&i.DestPath,
+			&i.AttemptedAt,
+			&i.Success,
+			&i.ErrorMessage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listImportsForMediaFile = `-- name: ListImportsForMediaFile :many
+select id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
+where media_file_id = $1
+order by attempted_at desc
+`
+
+func (q *Queries) ListImportsForMediaFile(ctx context.Context, mediaFileID pgtype.UUID) ([]MediaFileImport, error) {
+	rows, err := q.db.Query(ctx, listImportsForMediaFile, mediaFileID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MediaFileImport
+	for rows.Next() {
+		var i MediaFileImport
+		if err := rows.Scan(
+			&i.ID,
+			&i.MediaFileID,
+			&i.DownloadJobID,
+			&i.Method,
+			&i.SourcePath,
+			&i.DestPath,
+			&i.AttemptedAt,
+			&i.Success,
+			&i.ErrorMessage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMediaFilesForItem = `-- name: ListMediaFilesForItem :many
 select
   mf.id,
   mf.library_id,
   mf.media_item_id,
-  mf.season_id,
   mf.episode_id,
   mf.path,
-  mf.status,
-  mf.added_at,
+  mf.created_at,
+  ms.id as season_id,
   ms.season_number,
-  me.episode_number
+  me.episode_number,
+  mfs.file_exists,
+  mfs.file_size,
+  mfs.last_verified_at
 from media_file mf
-left join media_season ms on mf.season_id = ms.id
 left join media_episode me on mf.episode_id = me.id
+left join media_season ms on me.season_id = ms.id
+left join media_file_state mfs on mf.id = mfs.media_file_id
 where mf.media_item_id = $1
-order by mf.added_at desc
+order by mf.created_at desc
 `
 
 type ListMediaFilesForItemRow struct {
-	ID            pgtype.UUID `json:"id"`
-	LibraryID     pgtype.UUID `json:"library_id"`
-	MediaItemID   pgtype.UUID `json:"media_item_id"`
-	SeasonID      pgtype.UUID `json:"season_id"`
-	EpisodeID     pgtype.UUID `json:"episode_id"`
-	Path          string      `json:"path"`
-	Status        string      `json:"status"`
-	AddedAt       time.Time   `json:"added_at"`
-	SeasonNumber  *int32      `json:"season_number"`
-	EpisodeNumber *int32      `json:"episode_number"`
+	ID             pgtype.UUID        `json:"id"`
+	LibraryID      pgtype.UUID        `json:"library_id"`
+	MediaItemID    pgtype.UUID        `json:"media_item_id"`
+	EpisodeID      pgtype.UUID        `json:"episode_id"`
+	Path           string             `json:"path"`
+	CreatedAt      time.Time          `json:"created_at"`
+	SeasonID       pgtype.UUID        `json:"season_id"`
+	SeasonNumber   *int32             `json:"season_number"`
+	EpisodeNumber  *int32             `json:"episode_number"`
+	FileExists     *bool              `json:"file_exists"`
+	FileSize       *int64             `json:"file_size"`
+	LastVerifiedAt pgtype.Timestamptz `json:"last_verified_at"`
 }
 
 func (q *Queries) ListMediaFilesForItem(ctx context.Context, mediaItemID pgtype.UUID) ([]ListMediaFilesForItemRow, error) {
@@ -470,13 +894,15 @@ func (q *Queries) ListMediaFilesForItem(ctx context.Context, mediaItemID pgtype.
 			&i.ID,
 			&i.LibraryID,
 			&i.MediaItemID,
-			&i.SeasonID,
 			&i.EpisodeID,
 			&i.Path,
-			&i.Status,
-			&i.AddedAt,
+			&i.CreatedAt,
+			&i.SeasonID,
 			&i.SeasonNumber,
 			&i.EpisodeNumber,
+			&i.FileExists,
+			&i.FileSize,
+			&i.LastVerifiedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -526,10 +952,10 @@ func (q *Queries) ListMediaItems(ctx context.Context) ([]MediaItem, error) {
 const listMediaItemsPaginated = `-- name: ListMediaItemsPaginated :many
 
 SELECT id, type, title, year, tmdb_id, created_at, updated_at FROM media_item
-WHERE 
+WHERE
     ($1::text IS NULL OR type = $1) AND
     ($2::text IS NULL OR title ILIKE '%' || $2 || '%')
-ORDER BY 
+ORDER BY
     CASE WHEN $3::text = 'title' AND $4::text = 'asc' THEN title END ASC,
     CASE WHEN $3::text = 'title' AND $4::text = 'desc' THEN title END DESC,
     CASE WHEN $3::text = 'year' AND $4::text = 'asc' THEN year END ASC NULLS LAST,
@@ -585,6 +1011,90 @@ func (q *Queries) ListMediaItemsPaginated(ctx context.Context, arg ListMediaItem
 	return items, nil
 }
 
+const listMissingFiles = `-- name: ListMissingFiles :many
+select mf.id, mf.library_id, mf.media_item_id, mf.episode_id, mf.path, mf.created_at, mfs.file_size, mfs.last_verified_at
+from media_file mf
+join media_file_state mfs on mf.id = mfs.media_file_id
+where mfs.file_exists = false
+order by mfs.last_verified_at desc
+`
+
+type ListMissingFilesRow struct {
+	ID             pgtype.UUID `json:"id"`
+	LibraryID      pgtype.UUID `json:"library_id"`
+	MediaItemID    pgtype.UUID `json:"media_item_id"`
+	EpisodeID      pgtype.UUID `json:"episode_id"`
+	Path           string      `json:"path"`
+	CreatedAt      time.Time   `json:"created_at"`
+	FileSize       *int64      `json:"file_size"`
+	LastVerifiedAt time.Time   `json:"last_verified_at"`
+}
+
+func (q *Queries) ListMissingFiles(ctx context.Context) ([]ListMissingFilesRow, error) {
+	rows, err := q.db.Query(ctx, listMissingFiles)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListMissingFilesRow
+	for rows.Next() {
+		var i ListMissingFilesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.LibraryID,
+			&i.MediaItemID,
+			&i.EpisodeID,
+			&i.Path,
+			&i.CreatedAt,
+			&i.FileSize,
+			&i.LastVerifiedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listRecentImports = `-- name: ListRecentImports :many
+select id, media_file_id, download_job_id, method, source_path, dest_path, attempted_at, success, error_message from media_file_import
+order by attempted_at desc
+limit $1
+`
+
+func (q *Queries) ListRecentImports(ctx context.Context, limitVal int32) ([]MediaFileImport, error) {
+	rows, err := q.db.Query(ctx, listRecentImports, limitVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MediaFileImport
+	for rows.Next() {
+		var i MediaFileImport
+		if err := rows.Scan(
+			&i.ID,
+			&i.MediaFileID,
+			&i.DownloadJobID,
+			&i.Method,
+			&i.SourcePath,
+			&i.DestPath,
+			&i.AttemptedAt,
+			&i.Success,
+			&i.ErrorMessage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSeasonsForMedia = `-- name: ListSeasonsForMedia :many
 
 select id, media_item_id, season_number, air_date, created_at from media_season
@@ -617,6 +1127,175 @@ func (q *Queries) ListSeasonsForMedia(ctx context.Context, mediaItemID pgtype.UU
 		return nil, err
 	}
 	return items, nil
+}
+
+const listUnmatchedFiles = `-- name: ListUnmatchedFiles :many
+select id, library_id, path, file_size, discovered_at, suggested_matches, resolved_at, resolved_media_file_id from unmatched_file
+where resolved_at is null
+order by discovered_at desc
+`
+
+func (q *Queries) ListUnmatchedFiles(ctx context.Context) ([]UnmatchedFile, error) {
+	rows, err := q.db.Query(ctx, listUnmatchedFiles)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UnmatchedFile
+	for rows.Next() {
+		var i UnmatchedFile
+		if err := rows.Scan(
+			&i.ID,
+			&i.LibraryID,
+			&i.Path,
+			&i.FileSize,
+			&i.DiscoveredAt,
+			&i.SuggestedMatches,
+			&i.ResolvedAt,
+			&i.ResolvedMediaFileID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUnmatchedFilesForLibrary = `-- name: ListUnmatchedFilesForLibrary :many
+select id, library_id, path, file_size, discovered_at, suggested_matches, resolved_at, resolved_media_file_id from unmatched_file
+where library_id = $1 and resolved_at is null
+order by discovered_at desc
+`
+
+func (q *Queries) ListUnmatchedFilesForLibrary(ctx context.Context, libraryID pgtype.UUID) ([]UnmatchedFile, error) {
+	rows, err := q.db.Query(ctx, listUnmatchedFilesForLibrary, libraryID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UnmatchedFile
+	for rows.Next() {
+		var i UnmatchedFile
+		if err := rows.Scan(
+			&i.ID,
+			&i.LibraryID,
+			&i.Path,
+			&i.FileSize,
+			&i.DiscoveredAt,
+			&i.SuggestedMatches,
+			&i.ResolvedAt,
+			&i.ResolvedMediaFileID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUnmatchedFilesPaginated = `-- name: ListUnmatchedFilesPaginated :many
+select id, library_id, path, file_size, discovered_at, suggested_matches, resolved_at, resolved_media_file_id from unmatched_file
+where resolved_at is null
+  and ($1::uuid is null or library_id = $1)
+order by discovered_at desc
+limit $3::int offset $2::int
+`
+
+type ListUnmatchedFilesPaginatedParams struct {
+	LibraryID pgtype.UUID `json:"library_id"`
+	OffsetVal int32       `json:"offset_val"`
+	PageSize  int32       `json:"page_size"`
+}
+
+func (q *Queries) ListUnmatchedFilesPaginated(ctx context.Context, arg ListUnmatchedFilesPaginatedParams) ([]UnmatchedFile, error) {
+	rows, err := q.db.Query(ctx, listUnmatchedFilesPaginated, arg.LibraryID, arg.OffsetVal, arg.PageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UnmatchedFile
+	for rows.Next() {
+		var i UnmatchedFile
+		if err := rows.Scan(
+			&i.ID,
+			&i.LibraryID,
+			&i.Path,
+			&i.FileSize,
+			&i.DiscoveredAt,
+			&i.SuggestedMatches,
+			&i.ResolvedAt,
+			&i.ResolvedMediaFileID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const resolveUnmatchedFile = `-- name: ResolveUnmatchedFile :one
+update unmatched_file
+set resolved_at = now(),
+    resolved_media_file_id = $1
+where id = $2
+returning id, library_id, path, file_size, discovered_at, suggested_matches, resolved_at, resolved_media_file_id
+`
+
+type ResolveUnmatchedFileParams struct {
+	ResolvedMediaFileID pgtype.UUID `json:"resolved_media_file_id"`
+	ID                  pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) ResolveUnmatchedFile(ctx context.Context, arg ResolveUnmatchedFileParams) (UnmatchedFile, error) {
+	row := q.db.QueryRow(ctx, resolveUnmatchedFile, arg.ResolvedMediaFileID, arg.ID)
+	var i UnmatchedFile
+	err := row.Scan(
+		&i.ID,
+		&i.LibraryID,
+		&i.Path,
+		&i.FileSize,
+		&i.DiscoveredAt,
+		&i.SuggestedMatches,
+		&i.ResolvedAt,
+		&i.ResolvedMediaFileID,
+	)
+	return i, err
+}
+
+const updateMediaFileState = `-- name: UpdateMediaFileState :one
+update media_file_state
+set file_exists = $1,
+    file_size = $2,
+    last_verified_at = now()
+where media_file_id = $3
+returning media_file_id, file_exists, file_size, last_verified_at
+`
+
+type UpdateMediaFileStateParams struct {
+	FileExists  bool        `json:"file_exists"`
+	FileSize    *int64      `json:"file_size"`
+	MediaFileID pgtype.UUID `json:"media_file_id"`
+}
+
+func (q *Queries) UpdateMediaFileState(ctx context.Context, arg UpdateMediaFileStateParams) (MediaFileState, error) {
+	row := q.db.QueryRow(ctx, updateMediaFileState, arg.FileExists, arg.FileSize, arg.MediaFileID)
+	var i MediaFileState
+	err := row.Scan(
+		&i.MediaFileID,
+		&i.FileExists,
+		&i.FileSize,
+		&i.LastVerifiedAt,
+	)
+	return i, err
 }
 
 const updateMediaItem = `-- name: UpdateMediaItem :one
@@ -652,6 +1331,34 @@ func (q *Queries) UpdateMediaItem(ctx context.Context, arg UpdateMediaItemParams
 		&i.TmdbID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateUnmatchedFileSuggestions = `-- name: UpdateUnmatchedFileSuggestions :one
+update unmatched_file
+set suggested_matches = $1
+where id = $2
+returning id, library_id, path, file_size, discovered_at, suggested_matches, resolved_at, resolved_media_file_id
+`
+
+type UpdateUnmatchedFileSuggestionsParams struct {
+	SuggestedMatches []byte      `json:"suggested_matches"`
+	ID               pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateUnmatchedFileSuggestions(ctx context.Context, arg UpdateUnmatchedFileSuggestionsParams) (UnmatchedFile, error) {
+	row := q.db.QueryRow(ctx, updateUnmatchedFileSuggestions, arg.SuggestedMatches, arg.ID)
+	var i UnmatchedFile
+	err := row.Scan(
+		&i.ID,
+		&i.LibraryID,
+		&i.Path,
+		&i.FileSize,
+		&i.DiscoveredAt,
+		&i.SuggestedMatches,
+		&i.ResolvedAt,
+		&i.ResolvedMediaFileID,
 	)
 	return i, err
 }
@@ -699,6 +1406,71 @@ func (q *Queries) UpsertEpisode(ctx context.Context, arg UpsertEpisodeParams) (M
 	return i, err
 }
 
+const upsertMediaFileState = `-- name: UpsertMediaFileState :one
+insert into media_file_state (media_file_id, file_exists, file_size, last_verified_at)
+values ($1, $2, $3, now())
+on conflict (media_file_id)
+do update set file_exists = excluded.file_exists,
+              file_size = excluded.file_size,
+              last_verified_at = now()
+returning media_file_id, file_exists, file_size, last_verified_at
+`
+
+type UpsertMediaFileStateParams struct {
+	MediaFileID pgtype.UUID `json:"media_file_id"`
+	FileExists  bool        `json:"file_exists"`
+	FileSize    *int64      `json:"file_size"`
+}
+
+func (q *Queries) UpsertMediaFileState(ctx context.Context, arg UpsertMediaFileStateParams) (MediaFileState, error) {
+	row := q.db.QueryRow(ctx, upsertMediaFileState, arg.MediaFileID, arg.FileExists, arg.FileSize)
+	var i MediaFileState
+	err := row.Scan(
+		&i.MediaFileID,
+		&i.FileExists,
+		&i.FileSize,
+		&i.LastVerifiedAt,
+	)
+	return i, err
+}
+
+const upsertMediaItem = `-- name: UpsertMediaItem :one
+insert into media_item (type, title, year, tmdb_id)
+values ($1, $2, $3, $4)
+on conflict (type, tmdb_id)
+do update set title = excluded.title,
+              year = excluded.year,
+              updated_at = now()
+returning id, type, title, year, tmdb_id, created_at, updated_at
+`
+
+type UpsertMediaItemParams struct {
+	Type   string `json:"type"`
+	Title  string `json:"title"`
+	Year   *int32 `json:"year"`
+	TmdbID *int64 `json:"tmdb_id"`
+}
+
+func (q *Queries) UpsertMediaItem(ctx context.Context, arg UpsertMediaItemParams) (MediaItem, error) {
+	row := q.db.QueryRow(ctx, upsertMediaItem,
+		arg.Type,
+		arg.Title,
+		arg.Year,
+		arg.TmdbID,
+	)
+	var i MediaItem
+	err := row.Scan(
+		&i.ID,
+		&i.Type,
+		&i.Title,
+		&i.Year,
+		&i.TmdbID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const upsertSeason = `-- name: UpsertSeason :one
 insert into media_season (media_item_id, season_number, air_date)
 values ($1, $2, $3)
@@ -722,6 +1494,44 @@ func (q *Queries) UpsertSeason(ctx context.Context, arg UpsertSeasonParams) (Med
 		&i.SeasonNumber,
 		&i.AirDate,
 		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const upsertUnmatchedFile = `-- name: UpsertUnmatchedFile :one
+insert into unmatched_file (library_id, path, file_size, suggested_matches)
+values ($1, $2, $3, $4)
+on conflict (library_id, path)
+do update set file_size = excluded.file_size,
+              suggested_matches = excluded.suggested_matches,
+              discovered_at = now()
+returning id, library_id, path, file_size, discovered_at, suggested_matches, resolved_at, resolved_media_file_id
+`
+
+type UpsertUnmatchedFileParams struct {
+	LibraryID        pgtype.UUID `json:"library_id"`
+	Path             string      `json:"path"`
+	FileSize         *int64      `json:"file_size"`
+	SuggestedMatches []byte      `json:"suggested_matches"`
+}
+
+func (q *Queries) UpsertUnmatchedFile(ctx context.Context, arg UpsertUnmatchedFileParams) (UnmatchedFile, error) {
+	row := q.db.QueryRow(ctx, upsertUnmatchedFile,
+		arg.LibraryID,
+		arg.Path,
+		arg.FileSize,
+		arg.SuggestedMatches,
+	)
+	var i UnmatchedFile
+	err := row.Scan(
+		&i.ID,
+		&i.LibraryID,
+		&i.Path,
+		&i.FileSize,
+		&i.DiscoveredAt,
+		&i.SuggestedMatches,
+		&i.ResolvedAt,
+		&i.ResolvedMediaFileID,
 	)
 	return i, err
 }

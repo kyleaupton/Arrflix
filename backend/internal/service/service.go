@@ -23,6 +23,7 @@ type Services struct {
 	Settings           *SettingsService
 	Setup              *SetupService
 	Tmdb               *TmdbService
+	UnmatchedFiles     *UnmatchedFilesService
 	Users              *UsersService
 	Version            *VersionService
 }
@@ -56,6 +57,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 		Settings:           NewSettingsService(r),
 		Setup:              NewSetupService(r, users),
 		Tmdb:               tmdb,
+		UnmatchedFiles:     NewUnmatchedFilesService(r, l, tmdb),
 		Users:              users,
 		Version:            NewVersionService(r, l),
 	}

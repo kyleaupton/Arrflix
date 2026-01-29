@@ -2553,6 +2553,216 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/unmatched-files": {
+            "get": {
+                "description": "List files that couldn't be auto-matched to media items",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unmatched-files"
+                ],
+                "summary": "List unmatched files",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by library ID",
+                        "name": "libraryId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default 20)",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.unmatchedFilesListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/unmatched-files/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unmatched-files"
+                ],
+                "summary": "Get unmatched file details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unmatched file ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.unmatchedFileSwagger"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/unmatched-files/{id}/dismiss": {
+            "post": {
+                "description": "Mark an unmatched file as dismissed (resolved without matching)",
+                "tags": [
+                    "unmatched-files"
+                ],
+                "summary": "Dismiss unmatched file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unmatched file ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/unmatched-files/{id}/match": {
+            "post": {
+                "description": "Manually match an unmatched file to a specific media item",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unmatched-files"
+                ],
+                "summary": "Match unmatched file to media item",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unmatched file ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Match request",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UnmatchedFileMatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/unmatched-files/{id}/refresh": {
+            "post": {
+                "description": "Regenerate match suggestions for an unmatched file",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unmatched-files"
+                ],
+                "summary": "Refresh match suggestions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unmatched file ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.unmatchedFileSwagger"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/update": {
             "get": {
                 "produces": [
@@ -2891,7 +3101,6 @@ const docTemplate = `{
                 "primary_media_file_id",
                 "progress",
                 "protocol",
-                "season_id",
                 "status",
                 "updated_at"
             ],
@@ -2972,9 +3181,6 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "protocol": {
-                    "type": "string"
-                },
-                "season_id": {
                     "type": "string"
                 },
                 "status": {
@@ -3646,6 +3852,27 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UnmatchedFileMatchRequest": {
+            "type": "object",
+            "required": [
+                "tmdbId",
+                "type"
+            ],
+            "properties": {
+                "episode": {
+                    "type": "integer"
+                },
+                "season": {
+                    "type": "integer"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UserCreateRequest": {
             "type": "object",
             "required": [
@@ -3797,6 +4024,64 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.unmatchedFileSwagger": {
+            "type": "object",
+            "required": [
+                "discoveredAt",
+                "id",
+                "libraryId",
+                "path"
+            ],
+            "properties": {
+                "discoveredAt": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "libraryId": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "suggestedMatches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.SuggestedMatch"
+                    }
+                }
+            }
+        },
+        "handlers.unmatchedFilesListResponse": {
+            "type": "object",
+            "required": [
+                "items",
+                "page",
+                "pageSize",
+                "totalCount"
+            ],
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.unmatchedFileSwagger"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "totalCount": {
+                    "type": "integer"
                 }
             }
         },
@@ -5674,6 +5959,33 @@ const docTemplate = `{
                 },
                 "version": {
                     "type": "string"
+                }
+            }
+        },
+        "service.SuggestedMatch": {
+            "type": "object",
+            "required": [
+                "score",
+                "title",
+                "tmdbId",
+                "type"
+            ],
+            "properties": {
+                "score": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tmdbId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "movie or series",
+                    "type": "string"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },

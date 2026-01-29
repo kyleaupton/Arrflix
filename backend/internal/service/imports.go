@@ -134,9 +134,24 @@ func (s *ImportService) ImportMovieFile(ctx context.Context, job dbgen.DownloadJ
 	mf, err := s.repo.GetMediaFileByLibraryAndPath(ctx, lib.ID, destRel)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			mf, err = s.repo.CreateMediaFile(ctx, lib.ID, mediaItem.ID, (*pgtype.UUID)(nil), (*pgtype.UUID)(nil), destRel, nil)
+			mf, err = s.repo.CreateMediaFile(ctx, lib.ID, mediaItem.ID, nil, destRel)
 			if err != nil {
 				return ImportResult{}, fmt.Errorf("create media file: %w", err)
+			}
+			// Create file state for the new file
+			if _, err := s.repo.UpsertMediaFileState(ctx, mf.ID, true, nil); err != nil {
+				s.log.Warn().Err(err).Msg("Failed to create media file state")
+			}
+			// Record import history
+			if _, err := s.repo.CreateMediaFileImport(ctx, dbgen.CreateMediaFileImportParams{
+				MediaFileID:   mf.ID,
+				DownloadJobID: job.ID,
+				Method:        "hardlink",
+				SourcePath:    &sourcePath,
+				DestPath:      dest,
+				Success:       true,
+			}); err != nil {
+				s.log.Warn().Err(err).Msg("Failed to record import history")
 			}
 		} else {
 			return ImportResult{}, fmt.Errorf("get media file: %w", err)
@@ -181,21 +196,20 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 		return nil, fmt.Errorf("list downloader files: %w", err)
 	}
 
+	// Derive target season and episode from episode_id (season is derived from episode)
 	var targetSeason *int
-	if job.SeasonID.Valid {
-		season, err := s.repo.GetSeason(ctx, job.SeasonID)
-		if err == nil {
-			sNum := int(season.SeasonNumber)
-			targetSeason = &sNum
-		}
-	}
-
 	var targetEpisode *int
 	if job.EpisodeID.Valid {
 		episode, err := s.repo.GetEpisode(ctx, job.EpisodeID)
 		if err == nil {
 			eNum := int(episode.EpisodeNumber)
 			targetEpisode = &eNum
+			// Derive season from episode
+			season, err := s.repo.GetSeason(ctx, episode.SeasonID)
+			if err == nil {
+				sNum := int(season.SeasonNumber)
+				targetSeason = &sNum
+			}
 		}
 	}
 
@@ -308,10 +322,27 @@ func (s *ImportService) ImportSeriesJob(ctx context.Context, job dbgen.DownloadJ
 			continue
 		}
 
-		mf, err := s.repo.CreateMediaFile(ctx, lib.ID, mediaItem.ID, &season.ID, &episode.ID, destRel, nil)
+		mf, err := s.repo.CreateMediaFile(ctx, lib.ID, mediaItem.ID, &episode.ID, destRel)
 		if err != nil {
 			s.log.Error().Err(err).Str("path", destRel).Msg("Failed to create media file record")
 			continue
+		}
+
+		// Create file state for the new file
+		if _, err := s.repo.UpsertMediaFileState(ctx, mf.ID, true, nil); err != nil {
+			s.log.Warn().Err(err).Msg("Failed to create media file state")
+		}
+
+		// Record import history
+		if _, err := s.repo.CreateMediaFileImport(ctx, dbgen.CreateMediaFileImportParams{
+			MediaFileID:   mf.ID,
+			DownloadJobID: job.ID,
+			Method:        method,
+			SourcePath:    &sourcePath,
+			DestPath:      dest,
+			Success:       true,
+		}); err != nil {
+			s.log.Warn().Err(err).Msg("Failed to record import history")
 		}
 
 		if err := s.repo.LinkDownloadJobMediaFile(ctx, job.ID, mf.ID); err != nil {

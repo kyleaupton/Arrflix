@@ -193,7 +193,6 @@ type DownloadJob struct {
 	Protocol             string      `json:"protocol"`
 	MediaType            string      `json:"media_type"`
 	MediaItemID          pgtype.UUID `json:"media_item_id"`
-	SeasonID             pgtype.UUID `json:"season_id"`
 	EpisodeID            pgtype.UUID `json:"episode_id"`
 	IndexerID            int64       `json:"indexer_id"`
 	Guid                 string      `json:"guid"`
@@ -209,6 +208,7 @@ type DownloadJob struct {
 	ImportDestPath       *string     `json:"import_dest_path"`
 	ImportMethod         *string     `json:"import_method"`
 	PrimaryMediaFileID   pgtype.UUID `json:"primary_media_file_id"`
+	PredictedDestPath    *string     `json:"predicted_dest_path"`
 	DownloaderStatus     *string     `json:"downloader_status"`
 	Progress             *float64    `json:"progress"`
 	AttemptCount         int32       `json:"attempt_count"`
@@ -216,7 +216,6 @@ type DownloadJob struct {
 	LastError            *string     `json:"last_error"`
 	CreatedAt            time.Time   `json:"created_at"`
 	UpdatedAt            time.Time   `json:"updated_at"`
-	PredictedDestPath    *string     `json:"predicted_dest_path"`
 }
 
 type DownloadJobMediaFile struct {
@@ -266,11 +265,28 @@ type MediaFile struct {
 	ID          pgtype.UUID `json:"id"`
 	LibraryID   pgtype.UUID `json:"library_id"`
 	MediaItemID pgtype.UUID `json:"media_item_id"`
-	SeasonID    pgtype.UUID `json:"season_id"`
 	EpisodeID   pgtype.UUID `json:"episode_id"`
 	Path        string      `json:"path"`
-	Status      string      `json:"status"`
-	AddedAt     time.Time   `json:"added_at"`
+	CreatedAt   time.Time   `json:"created_at"`
+}
+
+type MediaFileImport struct {
+	ID            pgtype.UUID `json:"id"`
+	MediaFileID   pgtype.UUID `json:"media_file_id"`
+	DownloadJobID pgtype.UUID `json:"download_job_id"`
+	Method        string      `json:"method"`
+	SourcePath    *string     `json:"source_path"`
+	DestPath      string      `json:"dest_path"`
+	AttemptedAt   time.Time   `json:"attempted_at"`
+	Success       bool        `json:"success"`
+	ErrorMessage  *string     `json:"error_message"`
+}
+
+type MediaFileState struct {
+	MediaFileID    pgtype.UUID `json:"media_file_id"`
+	FileExists     bool        `json:"file_exists"`
+	FileSize       *int64      `json:"file_size"`
+	LastVerifiedAt time.Time   `json:"last_verified_at"`
 }
 
 type MediaItem struct {
@@ -296,12 +312,12 @@ type NameTemplate struct {
 	Name                 string      `json:"name"`
 	Type                 string      `json:"type"`
 	Template             string      `json:"template"`
+	MovieDirTemplate     *string     `json:"movie_dir_template"`
 	SeriesShowTemplate   *string     `json:"series_show_template"`
 	SeriesSeasonTemplate *string     `json:"series_season_template"`
 	Default              bool        `json:"default"`
 	CreatedAt            time.Time   `json:"created_at"`
 	UpdatedAt            time.Time   `json:"updated_at"`
-	MovieDirTemplate     *string     `json:"movie_dir_template"`
 }
 
 type Permission struct {
@@ -349,14 +365,15 @@ type Rule struct {
 	UpdatedAt    time.Time   `json:"updated_at"`
 }
 
-type ServiceInstance struct {
-	ID        pgtype.UUID `json:"id"`
-	Name      string      `json:"name"`
-	Type      string      `json:"type"`
-	Enabled   bool        `json:"enabled"`
-	Config    []byte      `json:"config"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
+type UnmatchedFile struct {
+	ID                  pgtype.UUID        `json:"id"`
+	LibraryID           pgtype.UUID        `json:"library_id"`
+	Path                string             `json:"path"`
+	FileSize            *int64             `json:"file_size"`
+	DiscoveredAt        time.Time          `json:"discovered_at"`
+	SuggestedMatches    []byte             `json:"suggested_matches"`
+	ResolvedAt          pgtype.Timestamptz `json:"resolved_at"`
+	ResolvedMediaFileID pgtype.UUID        `json:"resolved_media_file_id"`
 }
 
 type UserIdentity struct {

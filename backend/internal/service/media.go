@@ -674,11 +674,16 @@ func buildFileInfos(files []dbgen.ListMediaFilesForItemRow) []model.FileInfo {
 		if f.EpisodeNumber != nil {
 			episodeNum = f.EpisodeNumber
 		}
+		// Derive status from file_exists field
+		status := "available"
+		if f.FileExists != nil && !*f.FileExists {
+			status = "missing"
+		}
 		fileInfos = append(fileInfos, model.FileInfo{
 			ID:            f.ID.String(),
 			LibraryID:     libID,
 			Path:          f.Path,
-			Status:        f.Status,
+			Status:        status,
 			SeasonNumber:  seasonNum,
 			EpisodeNumber: episodeNum,
 		})
@@ -704,17 +709,22 @@ func buildFileInfoAndAvailability(files []dbgen.ListMediaFilesForItemRow) ([]mod
 		if f.EpisodeNumber != nil {
 			episodeNum = f.EpisodeNumber
 		}
+		// Derive status from file_exists field
+		status := "available"
+		if f.FileExists != nil && !*f.FileExists {
+			status = "missing"
+		}
 		fileInfos = append(fileInfos, model.FileInfo{
 			ID:            f.ID.String(),
 			LibraryID:     libID,
 			Path:          f.Path,
-			Status:        f.Status,
+			Status:        status,
 			SeasonNumber:  seasonNum,
 			EpisodeNumber: episodeNum,
 		})
 		entry := libAgg[libID]
 		entry.count++
-		entry.status = append(entry.status, f.Status)
+		entry.status = append(entry.status, status)
 		libAgg[libID] = entry
 	}
 

@@ -14,7 +14,7 @@ import (
 const createNameTemplate = `-- name: CreateNameTemplate :one
 insert into name_template (name, type, template, series_show_template, series_season_template, movie_dir_template, "default")
 values ($1, $2, $3, $4, $5, $6, $7)
-returning id, name, type, template, series_show_template, series_season_template, "default", created_at, updated_at, movie_dir_template
+returning id, name, type, template, movie_dir_template, series_show_template, series_season_template, "default", created_at, updated_at
 `
 
 type CreateNameTemplateParams struct {
@@ -43,12 +43,12 @@ func (q *Queries) CreateNameTemplate(ctx context.Context, arg CreateNameTemplate
 		&i.Name,
 		&i.Type,
 		&i.Template,
+		&i.MovieDirTemplate,
 		&i.SeriesShowTemplate,
 		&i.SeriesSeasonTemplate,
 		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.MovieDirTemplate,
 	)
 	return i, err
 }
@@ -63,7 +63,7 @@ func (q *Queries) DeleteNameTemplate(ctx context.Context, id pgtype.UUID) error 
 }
 
 const getDefaultNameTemplate = `-- name: GetDefaultNameTemplate :one
-select id, name, type, template, series_show_template, series_season_template, "default", created_at, updated_at, movie_dir_template from name_template
+select id, name, type, template, movie_dir_template, series_show_template, series_season_template, "default", created_at, updated_at from name_template
 where type = $1 and "default" = true
 `
 
@@ -75,18 +75,18 @@ func (q *Queries) GetDefaultNameTemplate(ctx context.Context, type_ string) (Nam
 		&i.Name,
 		&i.Type,
 		&i.Template,
+		&i.MovieDirTemplate,
 		&i.SeriesShowTemplate,
 		&i.SeriesSeasonTemplate,
 		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.MovieDirTemplate,
 	)
 	return i, err
 }
 
 const getNameTemplate = `-- name: GetNameTemplate :one
-select id, name, type, template, series_show_template, series_season_template, "default", created_at, updated_at, movie_dir_template from name_template
+select id, name, type, template, movie_dir_template, series_show_template, series_season_template, "default", created_at, updated_at from name_template
 where id = $1
 `
 
@@ -98,18 +98,18 @@ func (q *Queries) GetNameTemplate(ctx context.Context, id pgtype.UUID) (NameTemp
 		&i.Name,
 		&i.Type,
 		&i.Template,
+		&i.MovieDirTemplate,
 		&i.SeriesShowTemplate,
 		&i.SeriesSeasonTemplate,
 		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.MovieDirTemplate,
 	)
 	return i, err
 }
 
 const listNameTemplates = `-- name: ListNameTemplates :many
-select id, name, type, template, series_show_template, series_season_template, "default", created_at, updated_at, movie_dir_template from name_template
+select id, name, type, template, movie_dir_template, series_show_template, series_season_template, "default", created_at, updated_at from name_template
 order by name asc
 `
 
@@ -127,12 +127,12 @@ func (q *Queries) ListNameTemplates(ctx context.Context) ([]NameTemplate, error)
 			&i.Name,
 			&i.Type,
 			&i.Template,
+			&i.MovieDirTemplate,
 			&i.SeriesShowTemplate,
 			&i.SeriesSeasonTemplate,
 			&i.Default,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.MovieDirTemplate,
 		); err != nil {
 			return nil, err
 		}
@@ -155,7 +155,7 @@ set name = $1,
     "default" = $7,
     updated_at = now()
 where id = $8
-returning id, name, type, template, series_show_template, series_season_template, "default", created_at, updated_at, movie_dir_template
+returning id, name, type, template, movie_dir_template, series_show_template, series_season_template, "default", created_at, updated_at
 `
 
 type UpdateNameTemplateParams struct {
@@ -186,12 +186,12 @@ func (q *Queries) UpdateNameTemplate(ctx context.Context, arg UpdateNameTemplate
 		&i.Name,
 		&i.Type,
 		&i.Template,
+		&i.MovieDirTemplate,
 		&i.SeriesShowTemplate,
 		&i.SeriesSeasonTemplate,
 		&i.Default,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.MovieDirTemplate,
 	)
 	return i, err
 }

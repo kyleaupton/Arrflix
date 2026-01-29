@@ -39,6 +39,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	policies := handlers.NewPolicies(services)
 	settings := handlers.NewSettings(services)
 	setup := handlers.NewSetup(services)
+	unmatchedFiles := handlers.NewUnmatchedFiles(services)
 	users := handlers.NewUsers(services)
 	version := handlers.NewVersion(services)
 
@@ -68,6 +69,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	nameTemplates.RegisterProtected(protected)
 	policies.RegisterProtected(protected)
 	settings.RegisterProtected(protected)
+	unmatchedFiles.RegisterProtected(protected)
 	users.RegisterProtected(protected)
 
 	// Dev-only routes
