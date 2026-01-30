@@ -376,7 +376,8 @@ SELECT
   COUNT(it.id) FILTER (WHERE it.status = 'failed')::int AS failed_imports,
   COUNT(it.id) FILTER (WHERE it.status = 'cancelled')::int AS cancelled_imports,
   CASE
-    WHEN dj.status != 'completed' THEN 'download_pending'
+    WHEN dj.status NOT IN ('completed', 'failed', 'cancelled') THEN 'download_pending'
+    WHEN dj.status IN ('failed', 'cancelled') THEN 'download_' || dj.status
     WHEN COUNT(it.id) = 0 THEN 'awaiting_import'
     WHEN COUNT(it.id) FILTER (WHERE it.status IN ('pending', 'in_progress')) > 0 THEN 'importing'
     WHEN COUNT(it.id) FILTER (WHERE it.status = 'failed') > 0
@@ -387,7 +388,10 @@ SELECT
   END AS import_status
 FROM download_job dj
 LEFT JOIN import_task it ON it.download_job_id = dj.id
-  AND it.previous_task_id IS NULL  -- Only count "root" tasks, not reimports
+  AND NOT EXISTS (
+    SELECT 1 FROM import_task child
+    WHERE child.previous_task_id = it.id
+  )
 WHERE dj.id = $1
 GROUP BY dj.id
 `
@@ -427,6 +431,7 @@ type GetDownloadJobWithImportSummaryRow struct {
 }
 
 // Returns download job with computed import status summary
+// Counts "leaf" tasks (most recent in each reimport chain) to show current state
 func (q *Queries) GetDownloadJobWithImportSummary(ctx context.Context, id pgtype.UUID) (GetDownloadJobWithImportSummaryRow, error) {
 	row := q.db.QueryRow(ctx, getDownloadJobWithImportSummary, id)
 	var i GetDownloadJobWithImportSummaryRow
@@ -697,6 +702,124 @@ func (q *Queries) ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbID *in
 			&i.UpdatedAt,
 			&i.SeasonNumber,
 			&i.EpisodeNumber,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDownloadJobsWithImportSummary = `-- name: ListDownloadJobsWithImportSummary :many
+SELECT
+  dj.id, dj.status, dj.protocol, dj.indexer_id, dj.guid, dj.candidate_title, dj.candidate_link, dj.media_type, dj.media_item_id, dj.episode_id, dj.library_id, dj.name_template_id, dj.downloader_id, dj.downloader_external_id, dj.downloader_status, dj.progress, dj.save_path, dj.content_path, dj.attempt_count, dj.next_run_at, dj.last_error, dj.error_category, dj.created_at, dj.updated_at,
+  COUNT(it.id)::int AS total_import_tasks,
+  COUNT(it.id) FILTER (WHERE it.status = 'pending')::int AS pending_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'in_progress')::int AS active_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'completed')::int AS completed_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'failed')::int AS failed_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'cancelled')::int AS cancelled_imports,
+  CASE
+    WHEN dj.status NOT IN ('completed', 'failed', 'cancelled') THEN 'download_pending'
+    WHEN dj.status IN ('failed', 'cancelled') THEN 'download_' || dj.status
+    WHEN COUNT(it.id) = 0 THEN 'awaiting_import'
+    WHEN COUNT(it.id) FILTER (WHERE it.status IN ('pending', 'in_progress')) > 0 THEN 'importing'
+    WHEN COUNT(it.id) FILTER (WHERE it.status = 'failed') > 0
+         AND COUNT(it.id) FILTER (WHERE it.status = 'completed') > 0 THEN 'partial_failure'
+    WHEN COUNT(it.id) FILTER (WHERE it.status = 'failed') = COUNT(it.id) THEN 'import_failed'
+    WHEN COUNT(it.id) = COUNT(it.id) FILTER (WHERE it.status = 'completed') THEN 'fully_imported'
+    ELSE 'unknown'
+  END AS import_status
+FROM download_job dj
+LEFT JOIN import_task it ON it.download_job_id = dj.id
+  AND NOT EXISTS (
+    SELECT 1 FROM import_task child
+    WHERE child.previous_task_id = it.id
+  )
+GROUP BY dj.id
+ORDER BY dj.updated_at DESC
+`
+
+type ListDownloadJobsWithImportSummaryRow struct {
+	ID                   pgtype.UUID `json:"id"`
+	Status               string      `json:"status"`
+	Protocol             string      `json:"protocol"`
+	IndexerID            int64       `json:"indexer_id"`
+	Guid                 string      `json:"guid"`
+	CandidateTitle       string      `json:"candidate_title"`
+	CandidateLink        string      `json:"candidate_link"`
+	MediaType            string      `json:"media_type"`
+	MediaItemID          pgtype.UUID `json:"media_item_id"`
+	EpisodeID            pgtype.UUID `json:"episode_id"`
+	LibraryID            pgtype.UUID `json:"library_id"`
+	NameTemplateID       pgtype.UUID `json:"name_template_id"`
+	DownloaderID         pgtype.UUID `json:"downloader_id"`
+	DownloaderExternalID *string     `json:"downloader_external_id"`
+	DownloaderStatus     *string     `json:"downloader_status"`
+	Progress             *float64    `json:"progress"`
+	SavePath             *string     `json:"save_path"`
+	ContentPath          *string     `json:"content_path"`
+	AttemptCount         int32       `json:"attempt_count"`
+	NextRunAt            time.Time   `json:"next_run_at"`
+	LastError            *string     `json:"last_error"`
+	ErrorCategory        *string     `json:"error_category"`
+	CreatedAt            time.Time   `json:"created_at"`
+	UpdatedAt            time.Time   `json:"updated_at"`
+	TotalImportTasks     int32       `json:"total_import_tasks"`
+	PendingImports       int32       `json:"pending_imports"`
+	ActiveImports        int32       `json:"active_imports"`
+	CompletedImports     int32       `json:"completed_imports"`
+	FailedImports        int32       `json:"failed_imports"`
+	CancelledImports     int32       `json:"cancelled_imports"`
+	ImportStatus         string      `json:"import_status"`
+}
+
+// Returns all download jobs with computed import status summary
+// Counts "leaf" tasks (most recent in each reimport chain) to show current state
+func (q *Queries) ListDownloadJobsWithImportSummary(ctx context.Context) ([]ListDownloadJobsWithImportSummaryRow, error) {
+	rows, err := q.db.Query(ctx, listDownloadJobsWithImportSummary)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListDownloadJobsWithImportSummaryRow
+	for rows.Next() {
+		var i ListDownloadJobsWithImportSummaryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Status,
+			&i.Protocol,
+			&i.IndexerID,
+			&i.Guid,
+			&i.CandidateTitle,
+			&i.CandidateLink,
+			&i.MediaType,
+			&i.MediaItemID,
+			&i.EpisodeID,
+			&i.LibraryID,
+			&i.NameTemplateID,
+			&i.DownloaderID,
+			&i.DownloaderExternalID,
+			&i.DownloaderStatus,
+			&i.Progress,
+			&i.SavePath,
+			&i.ContentPath,
+			&i.AttemptCount,
+			&i.NextRunAt,
+			&i.LastError,
+			&i.ErrorCategory,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.TotalImportTasks,
+			&i.PendingImports,
+			&i.ActiveImports,
+			&i.CompletedImports,
+			&i.FailedImports,
+			&i.CancelledImports,
+			&i.ImportStatus,
 		); err != nil {
 			return nil, err
 		}

@@ -638,6 +638,103 @@ definitions:
     - status
     - updated_at
     type: object
+  dbgen.ListDownloadJobsWithImportSummaryRow:
+    properties:
+      active_imports:
+        type: integer
+      attempt_count:
+        type: integer
+      cancelled_imports:
+        type: integer
+      candidate_link:
+        type: string
+      candidate_title:
+        type: string
+      completed_imports:
+        type: integer
+      content_path:
+        type: string
+      created_at:
+        type: string
+      downloader_external_id:
+        type: string
+      downloader_id:
+        type: string
+      downloader_status:
+        type: string
+      episode_id:
+        type: string
+      error_category:
+        type: string
+      failed_imports:
+        type: integer
+      guid:
+        type: string
+      id:
+        type: string
+      import_status:
+        type: string
+      indexer_id:
+        type: integer
+      last_error:
+        type: string
+      library_id:
+        type: string
+      media_item_id:
+        type: string
+      media_type:
+        type: string
+      name_template_id:
+        type: string
+      next_run_at:
+        type: string
+      pending_imports:
+        type: integer
+      progress:
+        type: number
+      protocol:
+        type: string
+      save_path:
+        type: string
+      status:
+        type: string
+      total_import_tasks:
+        type: integer
+      updated_at:
+        type: string
+    required:
+    - active_imports
+    - attempt_count
+    - cancelled_imports
+    - candidate_link
+    - candidate_title
+    - completed_imports
+    - content_path
+    - created_at
+    - downloader_external_id
+    - downloader_id
+    - downloader_status
+    - episode_id
+    - error_category
+    - failed_imports
+    - guid
+    - id
+    - import_status
+    - indexer_id
+    - last_error
+    - library_id
+    - media_item_id
+    - media_type
+    - name_template_id
+    - next_run_at
+    - pending_imports
+    - progress
+    - protocol
+    - save_path
+    - status
+    - total_import_tasks
+    - updated_at
+    type: object
   dbgen.Policy:
     properties:
       created_at:
@@ -2535,6 +2632,18 @@ definitions:
     - url
     - version
     type: object
+  service.ReimportResult:
+    properties:
+      created_tasks:
+        items:
+          $ref: '#/definitions/dbgen.ImportTask'
+        type: array
+      skipped_count:
+        type: integer
+    required:
+    - created_tasks
+    - skipped_count
+    type: object
   service.SuggestedMatch:
     properties:
       score:
@@ -2691,9 +2800,9 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dbgen.DownloadJob'
+              $ref: '#/definitions/dbgen.ListDownloadJobsWithImportSummaryRow'
             type: array
-      summary: List download jobs
+      summary: List download jobs with import status summary
       tags:
       - download-jobs
   /v1/download-jobs/{id}:
@@ -2773,6 +2882,40 @@ paths:
               type: string
             type: object
       summary: List import tasks for download job
+      tags:
+      - download-jobs
+  /v1/download-jobs/{id}/reimport:
+    post:
+      parameters:
+      - description: Job ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Reimport all tasks, not just failed ones
+        in: query
+        name: all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.ReimportResult'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reimport failed import tasks
       tags:
       - download-jobs
   /v1/download-jobs/{id}/timeline:

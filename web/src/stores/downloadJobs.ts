@@ -1,24 +1,38 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { DbgenDownloadJob } from '@/client/types.gen'
-import { getV1DownloadJobs, deleteV1DownloadJobsById } from '@/client/sdk.gen'
+import type {
+  DbgenListDownloadJobsWithImportSummaryRow,
+  DbgenImportTask,
+} from '@/client/types.gen'
+import {
+  getV1DownloadJobs,
+  deleteV1DownloadJobsById,
+  postV1DownloadJobsByIdReimport,
+  getV1DownloadJobsByIdImportTasks,
+} from '@/client/sdk.gen'
 import { useEventsStore } from '@/stores/events'
 
-type DownloadJob = DbgenDownloadJob & {
-  // Backend nullable fields can come through as null; tolerate at runtime
-  progress?: number | null
-  last_error?: string | null
-  import_dest_path?: string | null
-}
+export type DownloadJob = DbgenListDownloadJobsWithImportSummaryRow
 
 export const useDownloadJobsStore = defineStore('downloadJobs', () => {
   const jobsById = ref<Record<string, DownloadJob>>({})
   const isLoading = ref(false)
 
+  // Drawer state
+  const selectedJobId = ref<string | null>(null)
+  const isDetailDrawerOpen = ref(false)
+  const drawerImportTasks = ref<DbgenImportTask[]>([])
+  const isLoadingImportTasks = ref(false)
+
   const jobsSorted = computed(() => {
     return Object.values(jobsById.value).sort((a, b) => {
       return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
     })
+  })
+
+  const selectedJob = computed(() => {
+    if (!selectedJobId.value) return null
+    return jobsById.value[selectedJobId.value] ?? null
   })
 
   function upsert(job: DownloadJob) {
@@ -69,8 +83,51 @@ export const useDownloadJobsStore = defineStore('downloadJobs', () => {
   }
 
   function isJobActive(job: DownloadJob): boolean {
-    const activeStatuses = ['created', 'enqueued', 'downloading', 'importing']
-    return activeStatuses.includes(job.status)
+    const activeStatuses = ['download_pending']
+    return activeStatuses.includes(job.import_status)
+  }
+
+  // Drawer methods
+  function openDetailDrawer(jobId: string) {
+    selectedJobId.value = jobId
+    isDetailDrawerOpen.value = true
+    loadImportTasks(jobId)
+  }
+
+  function closeDetailDrawer() {
+    isDetailDrawerOpen.value = false
+    selectedJobId.value = null
+    drawerImportTasks.value = []
+  }
+
+  async function loadImportTasks(jobId: string) {
+    isLoadingImportTasks.value = true
+    try {
+      const res = await getV1DownloadJobsByIdImportTasks({
+        throwOnError: true,
+        path: { id: jobId },
+      })
+      drawerImportTasks.value = res.data ?? []
+    } catch {
+      drawerImportTasks.value = []
+    } finally {
+      isLoadingImportTasks.value = false
+    }
+  }
+
+  async function reimportFailed(jobId: string, all: boolean = false) {
+    const res = await postV1DownloadJobsByIdReimport({
+      throwOnError: true,
+      path: { id: jobId },
+      query: { all },
+    })
+    // Reload import tasks if drawer is open
+    if (isDetailDrawerOpen.value && selectedJobId.value === jobId) {
+      await loadImportTasks(jobId)
+    }
+    // Refresh the job list to get updated import_status
+    await refresh()
+    return res.data
   }
 
   return {
@@ -82,5 +139,15 @@ export const useDownloadJobsStore = defineStore('downloadJobs', () => {
     cancelJob,
     getJobById,
     isJobActive,
+    // Drawer
+    selectedJobId,
+    selectedJob,
+    isDetailDrawerOpen,
+    drawerImportTasks,
+    isLoadingImportTasks,
+    openDetailDrawer,
+    closeDetailDrawer,
+    loadImportTasks,
+    reimportFailed,
   }
 })

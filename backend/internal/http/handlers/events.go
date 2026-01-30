@@ -83,7 +83,7 @@ func (h *Events) Stream(c echo.Context) error {
 
 	// Initial snapshot (convenience for consumers like downloads page)
 	if typeAllowed("download_jobs_snapshot") {
-		jobs, err := h.svc.DownloadJobs.List(ctx)
+		jobs, err := h.svc.DownloadJobs.ListWithImportSummary(ctx)
 		if err == nil {
 			if b, err := json.Marshal(jobs); err == nil {
 				_ = writeEvent("download_jobs_snapshot", "", b)

@@ -45,7 +45,10 @@ onMounted(async () => {
   <TooltipProvider>
     <Toaster position="top-center" />
     <DialogContainer />
-    <div v-if="isCheckingAuth || isCheckingSetup" class="flex min-h-svh items-center justify-center">
+    <div
+      v-if="isCheckingAuth || isCheckingSetup"
+      class="flex min-h-svh items-center justify-center"
+    >
       <div class="text-muted-foreground">Loading...</div>
     </div>
     <router-view v-else-if="route.meta.public" />

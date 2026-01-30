@@ -19,6 +19,7 @@ type DownloadJobsRepo interface {
 	ListDownloadJobsByTmdbMovieID(ctx context.Context, tmdbMovieID int64) ([]dbgen.DownloadJob, error)
 	ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbSeriesID int64) ([]dbgen.ListDownloadJobsByTmdbSeriesIDRow, error)
 	ListDownloadJobs(ctx context.Context) ([]dbgen.DownloadJob, error)
+	ListDownloadJobsWithImportSummary(ctx context.Context) ([]dbgen.ListDownloadJobsWithImportSummaryRow, error)
 	CancelDownloadJob(ctx context.Context, id pgtype.UUID) (dbgen.DownloadJob, error)
 
 	ClaimRunnableDownloadJobs(ctx context.Context, limit int32) ([]dbgen.DownloadJob, error)
@@ -72,6 +73,10 @@ func (r *Repository) ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbSer
 
 func (r *Repository) ListDownloadJobs(ctx context.Context) ([]dbgen.DownloadJob, error) {
 	return r.Q.ListDownloadJobs(ctx)
+}
+
+func (r *Repository) ListDownloadJobsWithImportSummary(ctx context.Context) ([]dbgen.ListDownloadJobsWithImportSummaryRow, error) {
+	return r.Q.ListDownloadJobsWithImportSummary(ctx)
 }
 
 func (r *Repository) CancelDownloadJob(ctx context.Context, id pgtype.UUID) (dbgen.DownloadJob, error) {

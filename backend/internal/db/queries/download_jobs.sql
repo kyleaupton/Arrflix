@@ -144,6 +144,7 @@ RETURNING j.*;
 
 -- name: GetDownloadJobWithImportSummary :one
 -- Returns download job with computed import status summary
+-- Counts "leaf" tasks (most recent in each reimport chain) to show current state
 SELECT
   dj.*,
   COUNT(it.id)::int AS total_import_tasks,
@@ -153,7 +154,8 @@ SELECT
   COUNT(it.id) FILTER (WHERE it.status = 'failed')::int AS failed_imports,
   COUNT(it.id) FILTER (WHERE it.status = 'cancelled')::int AS cancelled_imports,
   CASE
-    WHEN dj.status != 'completed' THEN 'download_pending'
+    WHEN dj.status NOT IN ('completed', 'failed', 'cancelled') THEN 'download_pending'
+    WHEN dj.status IN ('failed', 'cancelled') THEN 'download_' || dj.status
     WHEN COUNT(it.id) = 0 THEN 'awaiting_import'
     WHEN COUNT(it.id) FILTER (WHERE it.status IN ('pending', 'in_progress')) > 0 THEN 'importing'
     WHEN COUNT(it.id) FILTER (WHERE it.status = 'failed') > 0
@@ -164,7 +166,10 @@ SELECT
   END AS import_status
 FROM download_job dj
 LEFT JOIN import_task it ON it.download_job_id = dj.id
-  AND it.previous_task_id IS NULL  -- Only count "root" tasks, not reimports
+  AND NOT EXISTS (
+    SELECT 1 FROM import_task child
+    WHERE child.previous_task_id = it.id
+  )
 WHERE dj.id = $1
 GROUP BY dj.id;
 
@@ -200,3 +205,34 @@ JOIN import_task it ON it.id = ie.import_task_id
 WHERE it.download_job_id = $1
 
 ORDER BY created_at ASC;
+
+-- name: ListDownloadJobsWithImportSummary :many
+-- Returns all download jobs with computed import status summary
+-- Counts "leaf" tasks (most recent in each reimport chain) to show current state
+SELECT
+  dj.*,
+  COUNT(it.id)::int AS total_import_tasks,
+  COUNT(it.id) FILTER (WHERE it.status = 'pending')::int AS pending_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'in_progress')::int AS active_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'completed')::int AS completed_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'failed')::int AS failed_imports,
+  COUNT(it.id) FILTER (WHERE it.status = 'cancelled')::int AS cancelled_imports,
+  CASE
+    WHEN dj.status NOT IN ('completed', 'failed', 'cancelled') THEN 'download_pending'
+    WHEN dj.status IN ('failed', 'cancelled') THEN 'download_' || dj.status
+    WHEN COUNT(it.id) = 0 THEN 'awaiting_import'
+    WHEN COUNT(it.id) FILTER (WHERE it.status IN ('pending', 'in_progress')) > 0 THEN 'importing'
+    WHEN COUNT(it.id) FILTER (WHERE it.status = 'failed') > 0
+         AND COUNT(it.id) FILTER (WHERE it.status = 'completed') > 0 THEN 'partial_failure'
+    WHEN COUNT(it.id) FILTER (WHERE it.status = 'failed') = COUNT(it.id) THEN 'import_failed'
+    WHEN COUNT(it.id) = COUNT(it.id) FILTER (WHERE it.status = 'completed') THEN 'fully_imported'
+    ELSE 'unknown'
+  END AS import_status
+FROM download_job dj
+LEFT JOIN import_task it ON it.download_job_id = dj.id
+  AND NOT EXISTS (
+    SELECT 1 FROM import_task child
+    WHERE child.previous_task_id = it.id
+  )
+GROUP BY dj.id
+ORDER BY dj.updated_at DESC;

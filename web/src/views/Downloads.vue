@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 import { useEventsStore } from '@/stores/events'
-import { useDownloadJobsStore } from '@/stores/downloadJobs'
+import { useDownloadJobsStore, type DownloadJob } from '@/stores/downloadJobs'
 import DataTable from '@/components/tables/DataTable.vue'
 import {
   downloadJobColumns,
@@ -10,15 +11,53 @@ import {
 } from '@/components/tables/configs/downloadJobsTableConfig'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import DownloadDetailDrawer from '@/components/downloads/DownloadDetailDrawer.vue'
 
 const events = useEventsStore()
 const jobs = useDownloadJobsStore()
 
-const handleCancelJob = (job: ReturnType<typeof useDownloadJobsStore>['jobsSorted'][number]) => {
-  jobs.cancelJob(job.id)
+const handleViewDetails = (job: DownloadJob) => {
+  jobs.openDetailDrawer(job.id)
 }
 
-const jobActions = createDownloadJobActions(handleCancelJob)
+const handleReimport = async (job: DownloadJob, all: boolean) => {
+  try {
+    const result = await jobs.reimportFailed(job.id, all)
+    const count = result?.created_tasks?.length ?? 0
+    if (count > 0) {
+      toast.success(`Created ${count} reimport task${count > 1 ? 's' : ''}`)
+    } else {
+      toast.info('No tasks were reimported')
+    }
+  } catch {
+    toast.error('Failed to reimport tasks')
+  }
+}
+
+const handleCancelJob = async (job: DownloadJob) => {
+  try {
+    await jobs.cancelJob(job.id)
+    toast.success('Download cancelled')
+  } catch {
+    toast.error('Failed to cancel download')
+  }
+}
+
+const handleDrawerReimport = (jobId: string, all: boolean) => {
+  const job = jobs.getJobById(jobId)
+  if (job) {
+    handleReimport(job, all)
+  }
+}
+
+const handleDrawerCancel = (jobId: string) => {
+  const job = jobs.getJobById(jobId)
+  if (job) {
+    handleCancelJob(job)
+  }
+}
+
+const jobActions = createDownloadJobActions(handleViewDetails, handleReimport, handleCancelJob)
 
 onMounted(async () => {
   jobs.connectLive()
@@ -64,5 +103,8 @@ onMounted(async () => {
         :rows="10"
       />
     </div>
+
+    <!-- Detail Drawer -->
+    <DownloadDetailDrawer @reimport="handleDrawerReimport" @cancel="handleDrawerCancel" />
   </div>
 </template>

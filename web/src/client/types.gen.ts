@@ -233,6 +233,40 @@ export type DbgenListDownloadJobsByTmdbSeriesIdRow = {
     updated_at: string;
 };
 
+export type DbgenListDownloadJobsWithImportSummaryRow = {
+    active_imports: number;
+    attempt_count: number;
+    cancelled_imports: number;
+    candidate_link: string;
+    candidate_title: string;
+    completed_imports: number;
+    content_path: string;
+    created_at: string;
+    downloader_external_id: string;
+    downloader_id: string;
+    downloader_status: string;
+    episode_id: string;
+    error_category: string;
+    failed_imports: number;
+    guid: string;
+    id: string;
+    import_status: string;
+    indexer_id: number;
+    last_error: string;
+    library_id: string;
+    media_item_id: string;
+    media_type: string;
+    name_template_id: string;
+    next_run_at: string;
+    pending_imports: number;
+    progress: number;
+    protocol: string;
+    save_path: string;
+    status: string;
+    total_import_tasks: number;
+    updated_at: string;
+};
+
 export type DbgenPolicy = {
     created_at: string;
     description: string;
@@ -1099,6 +1133,11 @@ export type ServiceLatestVersionInfo = {
     version: string;
 };
 
+export type ServiceReimportResult = {
+    created_tasks: Array<DbgenImportTask>;
+    skipped_count: number;
+};
+
 export type ServiceSuggestedMatch = {
     score: number;
     title: string;
@@ -1228,7 +1267,7 @@ export type GetV1DownloadJobsResponses = {
     /**
      * OK
      */
-    200: Array<DbgenDownloadJob>;
+    200: Array<DbgenListDownloadJobsWithImportSummaryRow>;
 };
 
 export type GetV1DownloadJobsResponse = GetV1DownloadJobsResponses[keyof GetV1DownloadJobsResponses];
@@ -1334,6 +1373,49 @@ export type GetV1DownloadJobsByIdImportTasksResponses = {
 };
 
 export type GetV1DownloadJobsByIdImportTasksResponse = GetV1DownloadJobsByIdImportTasksResponses[keyof GetV1DownloadJobsByIdImportTasksResponses];
+
+export type PostV1DownloadJobsByIdReimportData = {
+    body?: never;
+    path: {
+        /**
+         * Job ID (uuid)
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * Reimport all tasks, not just failed ones
+         */
+        all?: boolean;
+    };
+    url: '/v1/download-jobs/{id}/reimport';
+};
+
+export type PostV1DownloadJobsByIdReimportErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Not Found
+     */
+    404: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1DownloadJobsByIdReimportError = PostV1DownloadJobsByIdReimportErrors[keyof PostV1DownloadJobsByIdReimportErrors];
+
+export type PostV1DownloadJobsByIdReimportResponses = {
+    /**
+     * OK
+     */
+    200: ServiceReimportResult;
+};
+
+export type PostV1DownloadJobsByIdReimportResponse = PostV1DownloadJobsByIdReimportResponses[keyof PostV1DownloadJobsByIdReimportResponses];
 
 export type GetV1DownloadJobsByIdTimelineData = {
     body?: never;

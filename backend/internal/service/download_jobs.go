@@ -39,6 +39,11 @@ func (s *DownloadJobsService) List(ctx context.Context) ([]dbgen.DownloadJob, er
 	return s.repo.ListDownloadJobs(ctx)
 }
 
+// ListWithImportSummary returns all download jobs with computed import status summary.
+func (s *DownloadJobsService) ListWithImportSummary(ctx context.Context) ([]dbgen.ListDownloadJobsWithImportSummaryRow, error) {
+	return s.repo.ListDownloadJobsWithImportSummary(ctx)
+}
+
 func (s *DownloadJobsService) ListByMovie(ctx context.Context, tmdbMovieID int64) ([]dbgen.DownloadJob, error) {
 	return s.repo.ListDownloadJobsByTmdbMovieID(ctx, tmdbMovieID)
 }
@@ -66,4 +71,79 @@ func (s *DownloadJobsService) Cancel(ctx context.Context, id pgtype.UUID) (dbgen
 // ListImportTasks returns all import tasks for a download job.
 func (s *DownloadJobsService) ListImportTasks(ctx context.Context, jobID pgtype.UUID) ([]dbgen.ImportTask, error) {
 	return s.repo.ListImportTasksByDownloadJob(ctx, jobID)
+}
+
+// ReimportResult contains the result of a reimport operation.
+type ReimportResult struct {
+	CreatedTasks []dbgen.ImportTask `json:"created_tasks"`
+	SkippedCount int                `json:"skipped_count"`
+}
+
+// ReimportFailed creates new import tasks for failed (or all terminal) tasks of a download job.
+// If all is false, only failed tasks are reimported. If all is true, all terminal tasks (completed, failed, cancelled) are reimported.
+func (s *DownloadJobsService) ReimportFailed(ctx context.Context, jobID pgtype.UUID, all bool) (ReimportResult, error) {
+	tasks, err := s.repo.ListImportTasksByDownloadJob(ctx, jobID)
+	if err != nil {
+		return ReimportResult{}, fmt.Errorf("list import tasks: %w", err)
+	}
+
+	// Filter to root tasks only (no previous_task_id) and terminal states
+	var toReimport []dbgen.ImportTask
+	skippedCount := 0
+	for _, task := range tasks {
+		// Only reimport root tasks
+		if task.PreviousTaskID.Valid {
+			continue
+		}
+
+		// Check status
+		isTerminal := task.Status == "completed" || task.Status == "failed" || task.Status == "cancelled"
+		isFailed := task.Status == "failed"
+
+		if !isTerminal {
+			skippedCount++
+			continue
+		}
+
+		if all || isFailed {
+			toReimport = append(toReimport, task)
+		} else {
+			skippedCount++
+		}
+	}
+
+	var createdTasks []dbgen.ImportTask
+	for _, task := range toReimport {
+		newTask, err := s.repo.CreateImportTask(ctx, dbgen.CreateImportTaskParams{
+			DownloadJobID:  task.DownloadJobID,
+			SourcePath:     task.SourcePath,
+			PreviousTaskID: task.ID,
+			MediaType:      task.MediaType,
+			MediaItemID:    task.MediaItemID,
+			EpisodeID:      task.EpisodeID,
+			LibraryID:      task.LibraryID,
+			NameTemplateID: task.NameTemplateID,
+		})
+		if err != nil {
+			return ReimportResult{}, fmt.Errorf("create reimport task: %w", err)
+		}
+
+		// Log the reimport event
+		msg := fmt.Sprintf("reimport of task %s", task.ID.String())
+		_, _ = s.repo.CreateImportTaskEvent(ctx, dbgen.CreateImportTaskEventParams{
+			ImportTaskID: newTask.ID,
+			EventType:    "reimport_requested",
+			OldStatus:    nil,
+			NewStatus:    nil,
+			Message:      &msg,
+			Metadata:     nil,
+		})
+
+		createdTasks = append(createdTasks, newTask)
+	}
+
+	return ReimportResult{
+		CreatedTasks: createdTasks,
+		SkippedCount: skippedCount,
+	}, nil
 }

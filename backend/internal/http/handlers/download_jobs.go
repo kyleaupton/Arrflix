@@ -18,21 +18,22 @@ func (h *DownloadJobs) RegisterProtected(v1 *echo.Group) {
 	v1.GET("/download-jobs/:id", h.Get)
 	v1.GET("/download-jobs/:id/timeline", h.GetTimeline)
 	v1.GET("/download-jobs/:id/import-tasks", h.ListImportTasks)
+	v1.POST("/download-jobs/:id/reimport", h.Reimport)
 	v1.DELETE("/download-jobs/:id", h.Cancel)
 
 	v1.GET("/movie/:id/download-jobs", h.ListForMovie)
 	v1.GET("/series/:id/download-jobs", h.ListForSeries)
 }
 
-// List download jobs
-// @Summary List download jobs
+// List download jobs with import summary
+// @Summary List download jobs with import status summary
 // @Tags    download-jobs
 // @Produce json
-// @Success 200 {array} dbgen.DownloadJob
+// @Success 200 {array} dbgen.ListDownloadJobsWithImportSummaryRow
 // @Router  /v1/download-jobs [get]
 func (h *DownloadJobs) List(c echo.Context) error {
 	ctx := c.Request().Context()
-	out, err := h.svc.DownloadJobs.List(ctx)
+	out, err := h.svc.DownloadJobs.ListWithImportSummary(ctx)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list"})
 	}
@@ -100,6 +101,32 @@ func (h *DownloadJobs) ListImportTasks(c echo.Context) error {
 	out, err := h.svc.DownloadJobs.ListImportTasks(ctx, id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list"})
+	}
+	return c.JSON(http.StatusOK, out)
+}
+
+// Reimport creates new import tasks for failed (or all) import tasks of a download job
+// @Summary Reimport failed import tasks
+// @Tags    download-jobs
+// @Produce json
+// @Param   id path string true "Job ID (uuid)"
+// @Param   all query bool false "Reimport all tasks, not just failed ones"
+// @Success 200 {object} service.ReimportResult
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router  /v1/download-jobs/{id}/reimport [post]
+func (h *DownloadJobs) Reimport(c echo.Context) error {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
+	}
+
+	all := c.QueryParam("all") == "true"
+
+	ctx := c.Request().Context()
+	out, err := h.svc.DownloadJobs.ReimportFailed(ctx, id, all)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, out)
 }
