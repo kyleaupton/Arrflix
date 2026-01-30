@@ -173,6 +173,11 @@ JOIN name_template nt ON nt.id = it.name_template_id
 LEFT JOIN download_job dj ON dj.id = it.download_job_id
 WHERE it.id = $1;
 
+-- name: UpdateImportTaskSourcePath :exec
+UPDATE import_task
+SET source_path = $2, updated_at = now()
+WHERE id = $1;
+
 -- name: CountImportTasksByStatus :one
 SELECT
   COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,

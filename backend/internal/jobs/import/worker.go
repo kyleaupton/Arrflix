@@ -13,11 +13,13 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
+	"github.com/kyleaupton/arrflix/internal/downloader"
 	apperrors "github.com/kyleaupton/arrflix/internal/errors"
 	"github.com/kyleaupton/arrflix/internal/importer"
 	"github.com/kyleaupton/arrflix/internal/jobs/state"
 	"github.com/kyleaupton/arrflix/internal/logger"
 	"github.com/kyleaupton/arrflix/internal/model"
+	"github.com/kyleaupton/arrflix/internal/pathmapping"
 	"github.com/kyleaupton/arrflix/internal/release"
 	"github.com/kyleaupton/arrflix/internal/repo"
 	"github.com/kyleaupton/arrflix/internal/sse"
@@ -26,10 +28,12 @@ import (
 
 // Worker processes import tasks: hardlinks/copies files from downloads to library.
 type Worker struct {
-	repo   *repo.Repository
-	log    *logger.Logger
-	broker *sse.Broker
-	sm     *state.ImportTaskMachine
+	repo       *repo.Repository
+	dlm        *downloader.Manager
+	pathMapper *pathmapping.Mapper
+	log        *logger.Logger
+	broker     *sse.Broker
+	sm         *state.ImportTaskMachine
 
 	pollInterval time.Duration
 	claimLimit   int32
@@ -53,10 +57,12 @@ func DefaultConfig() Config {
 }
 
 // New creates a new import worker.
-func New(r *repo.Repository, log *logger.Logger, broker *sse.Broker) *Worker {
+func New(r *repo.Repository, dlm *downloader.Manager, log *logger.Logger, broker *sse.Broker) *Worker {
 	cfg := DefaultConfig()
 	return &Worker{
 		repo:         r,
+		dlm:          dlm,
+		pathMapper:   pathmapping.New(),
 		log:          log,
 		broker:       broker,
 		sm:           state.NewImportTaskMachine(),
@@ -110,6 +116,25 @@ func (w *Worker) processTask(ctx context.Context, task dbgen.ImportTask) error {
 		"old_status": "pending",
 		"new_status": "in_progress",
 	})
+
+	// Try to re-derive source path from download job (self-healing)
+	sourcePath, err := w.deriveSourcePath(ctx, task)
+	if err != nil {
+		return err // Already categorized appropriately
+	}
+
+	// Update task if path changed
+	if sourcePath != task.SourcePath {
+		w.log.Info().
+			Str("task_id", task.ID.String()).
+			Str("old_path", task.SourcePath).
+			Str("new_path", sourcePath).
+			Msg("self-healing: updated source path")
+		if err := w.repo.UpdateImportTaskSourcePath(ctx, task.ID, sourcePath); err != nil {
+			w.log.Warn().Err(err).Msg("failed to update source path in DB")
+		}
+		task.SourcePath = sourcePath
+	}
 
 	// Validate source exists
 	srcInfo, err := os.Stat(task.SourcePath)
@@ -375,6 +400,94 @@ func (w *Worker) publishTaskUpdated(taskID pgtype.UUID) {
 		ID:   taskID.String(),
 		Data: nil,
 	})
+}
+
+// deriveSourcePath attempts to re-derive the source path from the download job.
+// This enables self-healing when path mappings change or volume mounts are fixed.
+func (w *Worker) deriveSourcePath(ctx context.Context, task dbgen.ImportTask) (string, error) {
+	// No download job - use stored path (manual import case)
+	if !task.DownloadJobID.Valid {
+		return task.SourcePath, nil
+	}
+
+	// Get download job
+	job, err := w.repo.GetDownloadJob(ctx, task.DownloadJobID)
+	if err != nil {
+		w.log.Debug().Err(err).Msg("failed to get download job, using stored path")
+		return task.SourcePath, nil
+	}
+
+	// Need external ID to query downloader
+	if job.DownloaderExternalID == nil || *job.DownloaderExternalID == "" {
+		return task.SourcePath, nil
+	}
+
+	// Get downloader client
+	client, err := w.dlm.GetClientByID(ctx, job.DownloaderID.String())
+	if err != nil {
+		w.log.Debug().Err(err).Msg("failed to get downloader client, using stored path")
+		return task.SourcePath, nil
+	}
+
+	// Query downloader for files
+	files, err := client.ListFiles(ctx, *job.DownloaderExternalID)
+	if err != nil {
+		w.log.Debug().Err(err).Msg("failed to list files from downloader, using stored path")
+		return task.SourcePath, nil
+	}
+
+	if len(files) == 0 {
+		w.log.Debug().Msg("no files returned from downloader, using stored path")
+		return task.SourcePath, nil
+	}
+
+	// Identify correct file based on media type
+	var rawPath string
+	if task.MediaType == "movie" {
+		mainFile, ok := importer.PickMainMovieFile(files)
+		if !ok {
+			return "", apperrors.AsPermanent(fmt.Errorf("no video files found in download"))
+		}
+		rawPath = mainFile.Path
+	} else {
+		// Series - match to episode
+		if !task.EpisodeID.Valid {
+			return task.SourcePath, nil
+		}
+
+		episode, err := w.repo.GetEpisode(ctx, task.EpisodeID)
+		if err != nil {
+			w.log.Debug().Err(err).Msg("failed to get episode, using stored path")
+			return task.SourcePath, nil
+		}
+
+		season, err := w.repo.GetSeason(ctx, episode.SeasonID)
+		if err != nil {
+			w.log.Debug().Err(err).Msg("failed to get season, using stored path")
+			return task.SourcePath, nil
+		}
+
+		seasonNum := int(season.SeasonNumber)
+		epNum := int(episode.EpisodeNumber)
+		matched := importer.MatchFilesToEpisodes(files, &seasonNum, &epNum)
+
+		if f, ok := matched[epNum]; ok {
+			rawPath = f.Path
+		} else {
+			return "", apperrors.AsPermanent(fmt.Errorf("no file matched episode S%02dE%02d", seasonNum, epNum))
+		}
+	}
+
+	// Build absolute path if relative
+	if !filepath.IsAbs(rawPath) {
+		item, err := client.Get(ctx, *job.DownloaderExternalID)
+		if err == nil && item.SavePath != "" {
+			rawPath = filepath.Join(item.SavePath, rawPath)
+		}
+	}
+
+	// Apply path mapping (stub - returns unchanged for now)
+	return w.pathMapper.Apply(ctx, job.DownloaderID, rawPath), nil
 }
 
 func strPtr(s string) *string {

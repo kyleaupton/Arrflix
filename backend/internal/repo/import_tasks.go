@@ -29,6 +29,7 @@ type ImportTasksRepo interface {
 	CancelImportTask(ctx context.Context, id pgtype.UUID) (dbgen.ImportTask, error)
 	CancelPendingImportTasksForJob(ctx context.Context, downloadJobID pgtype.UUID) error
 	ScheduleImportTaskRetry(ctx context.Context, id pgtype.UUID, lastError string, category apperrors.Category, nextRunAt time.Time) (dbgen.ImportTask, error)
+	UpdateImportTaskSourcePath(ctx context.Context, id pgtype.UUID, sourcePath string) error
 
 	// Event logging
 	CreateImportTaskEvent(ctx context.Context, arg dbgen.CreateImportTaskEventParams) (dbgen.ImportTaskEvent, error)
@@ -124,6 +125,13 @@ func (r *Repository) ScheduleImportTaskRetry(ctx context.Context, id pgtype.UUID
 		LastError:     &lastError,
 		ErrorCategory: &cat,
 		NextRunAt:     nextRunAt,
+	})
+}
+
+func (r *Repository) UpdateImportTaskSourcePath(ctx context.Context, id pgtype.UUID, sourcePath string) error {
+	return r.Q.UpdateImportTaskSourcePath(ctx, dbgen.UpdateImportTaskSourcePathParams{
+		ID:         id,
+		SourcePath: sourcePath,
 	})
 }
 

@@ -884,3 +884,19 @@ func (q *Queries) SetImportTaskInProgress(ctx context.Context, id pgtype.UUID) (
 	)
 	return i, err
 }
+
+const updateImportTaskSourcePath = `-- name: UpdateImportTaskSourcePath :exec
+UPDATE import_task
+SET source_path = $2, updated_at = now()
+WHERE id = $1
+`
+
+type UpdateImportTaskSourcePathParams struct {
+	ID         pgtype.UUID `json:"id"`
+	SourcePath string      `json:"source_path"`
+}
+
+func (q *Queries) UpdateImportTaskSourcePath(ctx context.Context, arg UpdateImportTaskSourcePathParams) error {
+	_, err := q.db.Exec(ctx, updateImportTaskSourcePath, arg.ID, arg.SourcePath)
+	return err
+}

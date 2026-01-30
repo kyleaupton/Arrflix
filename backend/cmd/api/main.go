@@ -72,7 +72,7 @@ func main() {
 	// Download and import workers
 	workerCtx, workerCancel := context.WithCancel(context.Background())
 	dlWorker := downloadworker.New(repo, downloaderManager, logg, broker)
-	impWorker := importworker.New(repo, logg, broker)
+	impWorker := importworker.New(repo, downloaderManager, logg, broker)
 	go dlWorker.Run(workerCtx)
 	go impWorker.Run(workerCtx)
 
