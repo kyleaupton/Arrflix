@@ -3595,6 +3595,7 @@ const docTemplate = `{
                 "progress",
                 "protocol",
                 "save_path",
+                "season_id",
                 "status",
                 "updated_at"
             ],
@@ -3663,6 +3664,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "save_path": {
+                    "type": "string"
+                },
+                "season_id": {
                     "type": "string"
                 },
                 "status": {
@@ -3792,6 +3796,7 @@ const docTemplate = `{
                 "downloader_id",
                 "downloader_status",
                 "episode_id",
+                "episode_number",
                 "error_category",
                 "failed_imports",
                 "guid",
@@ -3808,7 +3813,10 @@ const docTemplate = `{
                 "progress",
                 "protocol",
                 "save_path",
+                "season_id",
+                "season_number",
                 "status",
+                "tmdb_id",
                 "total_import_tasks",
                 "updated_at"
             ],
@@ -3848,6 +3856,9 @@ const docTemplate = `{
                 },
                 "episode_id": {
                     "type": "string"
+                },
+                "episode_number": {
+                    "type": "integer"
                 },
                 "error_category": {
                     "type": "string"
@@ -3897,8 +3908,17 @@ const docTemplate = `{
                 "save_path": {
                     "type": "string"
                 },
+                "season_id": {
+                    "type": "string"
+                },
+                "season_number": {
+                    "type": "integer"
+                },
                 "status": {
                     "type": "string"
+                },
+                "tmdb_id": {
+                    "type": "integer"
                 },
                 "total_import_tasks": {
                     "type": "integer"
@@ -4022,6 +4042,7 @@ const docTemplate = `{
                 "media_item_id",
                 "media_item_type",
                 "media_title",
+                "media_tmdb_id",
                 "media_type",
                 "media_year",
                 "movie_dir_template",
@@ -4096,6 +4117,9 @@ const docTemplate = `{
                 },
                 "media_title": {
                     "type": "string"
+                },
+                "media_tmdb_id": {
+                    "type": "integer"
                 },
                 "media_type": {
                     "type": "string"
@@ -4293,6 +4317,7 @@ const docTemplate = `{
                 "progress",
                 "protocol",
                 "save_path",
+                "season_id",
                 "season_number",
                 "status",
                 "updated_at"
@@ -4367,6 +4392,9 @@ const docTemplate = `{
                 "save_path": {
                     "type": "string"
                 },
+                "season_id": {
+                    "type": "string"
+                },
                 "season_number": {
                     "type": "integer"
                 },
@@ -4393,6 +4421,7 @@ const docTemplate = `{
                 "downloader_id",
                 "downloader_status",
                 "episode_id",
+                "episode_number",
                 "error_category",
                 "failed_imports",
                 "guid",
@@ -4409,7 +4438,10 @@ const docTemplate = `{
                 "progress",
                 "protocol",
                 "save_path",
+                "season_id",
+                "season_number",
                 "status",
+                "tmdb_id",
                 "total_import_tasks",
                 "updated_at"
             ],
@@ -4449,6 +4481,9 @@ const docTemplate = `{
                 },
                 "episode_id": {
                     "type": "string"
+                },
+                "episode_number": {
+                    "type": "integer"
                 },
                 "error_category": {
                     "type": "string"
@@ -4498,8 +4533,17 @@ const docTemplate = `{
                 "save_path": {
                     "type": "string"
                 },
+                "season_id": {
+                    "type": "string"
+                },
+                "season_number": {
+                    "type": "integer"
+                },
                 "status": {
                     "type": "string"
+                },
+                "tmdb_id": {
+                    "type": "integer"
                 },
                 "total_import_tasks": {
                     "type": "integer"

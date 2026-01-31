@@ -149,6 +149,9 @@ RETURNING j.*;
 -- Counts "leaf" tasks (most recent in each reimport chain) to show current state
 SELECT
   dj.*,
+  mi.tmdb_id,
+  ms.season_number,
+  me.episode_number,
   COUNT(it.id)::int AS total_import_tasks,
   COUNT(it.id) FILTER (WHERE it.status = 'pending')::int AS pending_imports,
   COUNT(it.id) FILTER (WHERE it.status = 'in_progress')::int AS active_imports,
@@ -167,13 +170,16 @@ SELECT
     ELSE 'unknown'
   END AS import_status
 FROM download_job dj
+LEFT JOIN media_item mi ON mi.id = dj.media_item_id
+LEFT JOIN media_episode me ON me.id = dj.episode_id
+LEFT JOIN media_season ms ON ms.id = COALESCE(dj.season_id, me.season_id)
 LEFT JOIN import_task it ON it.download_job_id = dj.id
   AND NOT EXISTS (
     SELECT 1 FROM import_task child
     WHERE child.previous_task_id = it.id
   )
 WHERE dj.id = $1
-GROUP BY dj.id;
+GROUP BY dj.id, mi.tmdb_id, ms.season_number, me.episode_number;
 
 -- name: GetDownloadJobTimeline :many
 -- Combined event log for a download job (download events + related import events)
@@ -213,6 +219,9 @@ ORDER BY created_at ASC;
 -- Counts "leaf" tasks (most recent in each reimport chain) to show current state
 SELECT
   dj.*,
+  mi.tmdb_id,
+  ms.season_number,
+  me.episode_number,
   COUNT(it.id)::int AS total_import_tasks,
   COUNT(it.id) FILTER (WHERE it.status = 'pending')::int AS pending_imports,
   COUNT(it.id) FILTER (WHERE it.status = 'in_progress')::int AS active_imports,
@@ -231,10 +240,13 @@ SELECT
     ELSE 'unknown'
   END AS import_status
 FROM download_job dj
+LEFT JOIN media_item mi ON mi.id = dj.media_item_id
+LEFT JOIN media_episode me ON me.id = dj.episode_id
+LEFT JOIN media_season ms ON ms.id = COALESCE(dj.season_id, me.season_id)
 LEFT JOIN import_task it ON it.download_job_id = dj.id
   AND NOT EXISTS (
     SELECT 1 FROM import_task child
     WHERE child.previous_task_id = it.id
   )
-GROUP BY dj.id
+GROUP BY dj.id, mi.tmdb_id, ms.season_number, me.episode_number
 ORDER BY dj.updated_at DESC;

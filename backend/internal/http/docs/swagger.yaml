@@ -90,6 +90,8 @@ definitions:
         type: string
       save_path:
         type: string
+      season_id:
+        type: string
       status:
         type: string
       updated_at:
@@ -117,6 +119,7 @@ definitions:
     - progress
     - protocol
     - save_path
+    - season_id
     - status
     - updated_at
     type: object
@@ -221,6 +224,8 @@ definitions:
         type: string
       episode_id:
         type: string
+      episode_number:
+        type: integer
       error_category:
         type: string
       failed_imports:
@@ -253,8 +258,14 @@ definitions:
         type: string
       save_path:
         type: string
+      season_id:
+        type: string
+      season_number:
+        type: integer
       status:
         type: string
+      tmdb_id:
+        type: integer
       total_import_tasks:
         type: integer
       updated_at:
@@ -272,6 +283,7 @@ definitions:
     - downloader_id
     - downloader_status
     - episode_id
+    - episode_number
     - error_category
     - failed_imports
     - guid
@@ -288,7 +300,10 @@ definitions:
     - progress
     - protocol
     - save_path
+    - season_id
+    - season_number
     - status
+    - tmdb_id
     - total_import_tasks
     - updated_at
     type: object
@@ -401,6 +416,8 @@ definitions:
         type: string
       media_title:
         type: string
+      media_tmdb_id:
+        type: integer
       media_type:
         type: string
       media_year:
@@ -448,6 +465,7 @@ definitions:
     - media_item_id
     - media_item_type
     - media_title
+    - media_tmdb_id
     - media_type
     - media_year
     - movie_dir_template
@@ -604,6 +622,8 @@ definitions:
         type: string
       save_path:
         type: string
+      season_id:
+        type: string
       season_number:
         type: integer
       status:
@@ -634,6 +654,7 @@ definitions:
     - progress
     - protocol
     - save_path
+    - season_id
     - season_number
     - status
     - updated_at
@@ -664,6 +685,8 @@ definitions:
         type: string
       episode_id:
         type: string
+      episode_number:
+        type: integer
       error_category:
         type: string
       failed_imports:
@@ -696,8 +719,14 @@ definitions:
         type: string
       save_path:
         type: string
+      season_id:
+        type: string
+      season_number:
+        type: integer
       status:
         type: string
+      tmdb_id:
+        type: integer
       total_import_tasks:
         type: integer
       updated_at:
@@ -715,6 +744,7 @@ definitions:
     - downloader_id
     - downloader_status
     - episode_id
+    - episode_number
     - error_category
     - failed_imports
     - guid
@@ -731,7 +761,10 @@ definitions:
     - progress
     - protocol
     - save_path
+    - season_id
+    - season_number
     - status
+    - tmdb_id
     - total_import_tasks
     - updated_at
     type: object

@@ -157,10 +157,14 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 		// Add the torrent using appropriate method
 		if isMagnet {
 			// For magnet URLs, use the library's DownloadLinks
+			fmt.Printf("[DEBUG Add] Calling DownloadLinks with URL: %s...\n", torrentURL[:min(len(torrentURL), 80)])
 			err = c.client.DownloadLinks([]string{torrentURL}, opts)
+			fmt.Printf("[DEBUG Add] DownloadLinks returned err: %v\n", err)
 		} else {
 			// For .torrent files, upload bytes directly
+			fmt.Printf("[DEBUG Add] Calling addTorrentFromBytes with filename: %s, bytes len: %d\n", torrentFilename, len(torrentBytes))
 			err = c.addTorrentFromBytes(ctx, torrentBytes, torrentFilename, opts)
+			fmt.Printf("[DEBUG Add] addTorrentFromBytes returned err: %v\n", err)
 		}
 
 		if err != nil {
@@ -194,6 +198,7 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 		const pollAttempts = 10
 		const pollDelay = 500 * time.Millisecond
 
+		fmt.Printf("[DEBUG Add] Polling for new torrent (existing count: %d)\n", len(existing))
 		var newest *qbt.TorrentInfo
 		for poll := 0; poll < pollAttempts; poll++ {
 			if poll > 0 {
@@ -202,14 +207,17 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 
 			torrents, listErr := c.listTorrentsWithAuth(ctx, qbt.TorrentsOptions{})
 			if listErr != nil {
+				fmt.Printf("[DEBUG Add] Poll %d: listTorrentsWithAuth error: %v\n", poll, listErr)
 				continue
 			}
+			fmt.Printf("[DEBUG Add] Poll %d: found %d total torrents\n", poll, len(torrents))
 
 			for i := range torrents {
 				t := &torrents[i]
 				if existing[t.Hash] {
 					continue
 				}
+				fmt.Printf("[DEBUG Add] Poll %d: found NEW torrent hash=%s name=%s\n", poll, t.Hash, t.Name)
 				// First unseen becomes candidate; if multiple, pick newest by AddedOn.
 				if newest == nil || t.AddedOn > newest.AddedOn {
 					newest = t
@@ -222,8 +230,10 @@ func (c *qBittorrentClient) Add(ctx context.Context, req downloader.AddRequest) 
 		}
 
 		if newest == nil {
+			fmt.Printf("[DEBUG Add] FAILED: torrent was uploaded but could not be found after %d polls\n", pollAttempts)
 			return result, fmt.Errorf("torrent was uploaded but could not be found in qBittorrent")
 		}
+		fmt.Printf("[DEBUG Add] SUCCESS: found torrent hash=%s name=%s\n", newest.Hash, newest.Name)
 
 		result.ExternalID = newest.Hash
 		result.Name = newest.Name
@@ -257,7 +267,10 @@ func (c *qBittorrentClient) Get(ctx context.Context, externalID string) (downloa
 		opts := qbt.TorrentsOptions{
 			Hashes: []string{externalID},
 		}
-		torrents, err := c.client.Torrents(opts)
+		fmt.Printf("[DEBUG Get] Looking for hash: %s\n", externalID)
+		var torrents []qbt.TorrentInfo
+		torrents, err = c.client.Torrents(opts)
+		fmt.Printf("[DEBUG Get] Found %d torrents, err: %v\n", len(torrents), err)
 		if err != nil {
 			if strings.Contains(err.Error(), "login") || strings.Contains(err.Error(), "401") || strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "unauthorized") {
 				c.client.Authenticated = false
@@ -267,6 +280,7 @@ func (c *qBittorrentClient) Get(ctx context.Context, externalID string) (downloa
 		}
 
 		if len(torrents) == 0 {
+			fmt.Printf("[DEBUG Get] Torrent not found for hash: %s\n", externalID)
 			return item, fmt.Errorf("torrent not found: %s", externalID)
 		}
 
@@ -461,6 +475,7 @@ func (c *qBittorrentClient) withRetry(ctx context.Context, fn func() error) erro
 // fetchTorrentFile downloads a .torrent file from the given URL (e.g., Prowlarr proxy URL)
 // Returns the torrent bytes and extracted filename
 func (c *qBittorrentClient) fetchTorrentFile(ctx context.Context, torrentURL string) ([]byte, string, error) {
+	fmt.Printf("[DEBUG fetchTorrentFile] Fetching from URL: %s\n", torrentURL)
 	req, err := http.NewRequestWithContext(ctx, "GET", torrentURL, nil)
 	if err != nil {
 		return nil, "", fmt.Errorf("create request: %w", err)
@@ -471,12 +486,15 @@ func (c *qBittorrentClient) fetchTorrentFile(ctx context.Context, torrentURL str
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Printf("[DEBUG fetchTorrentFile] Fetch error: %v\n", err)
 		return nil, "", fmt.Errorf("fetch torrent: %w", err)
 	}
 	defer resp.Body.Close()
 
+	fmt.Printf("[DEBUG fetchTorrentFile] Response status: %d, Content-Type: %s\n", resp.StatusCode, resp.Header.Get("Content-Type"))
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
+		fmt.Printf("[DEBUG fetchTorrentFile] Error body: %s\n", string(body[:min(len(body), 200)]))
 		return nil, "", fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(body))
 	}
 
@@ -543,6 +561,7 @@ func (c *qBittorrentClient) addTorrentFromBytes(ctx context.Context, torrentByte
 
 	// Make HTTP request using the client's cookie jar for auth
 	apiURL := strings.TrimSuffix(c.client.URL, "/") + "/api/v2/torrents/add"
+	fmt.Printf("[DEBUG addTorrentFromBytes] Posting to: %s\n", apiURL)
 	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, &buffer)
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)
@@ -553,15 +572,18 @@ func (c *qBittorrentClient) addTorrentFromBytes(ctx context.Context, torrentByte
 	httpClient := &http.Client{Jar: c.client.Jar}
 	resp, err := httpClient.Do(req)
 	if err != nil {
+		fmt.Printf("[DEBUG addTorrentFromBytes] Request error: %v\n", err)
 		return fmt.Errorf("perform request: %w", err)
 	}
 	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Printf("[DEBUG addTorrentFromBytes] Response status: %d, body: %s\n", resp.StatusCode, string(body))
 
 	if resp.StatusCode == 415 {
 		return fmt.Errorf("torrent file is not valid")
 	}
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(body))
 	}
 

@@ -10,8 +10,8 @@ insert into library (name, type, root_path, enabled, "default")
 values ('Main Series Library', 'series', '/data/tv', true, true);
 
 -- seed name templates
-insert into name_template (name, type, template, series_show_template, series_season_template, "default")
-values ('Main Movie Template', 'movie', '{{.Media.CleanTitle}} ({{.Media.Year}}) {tmdb-{{.Media.TmdbID}}} {{if .Release.Edition}}{edition-{{.Release.Edition}}}{{end}} [{{.Quality.Full}}][{{.MediaInfo.AudioCodec}} {{.MediaInfo.AudioChannels}}][{{.MediaInfo.VideoCodec}}]{{if .Release.ReleaseGroup}}-{{.Release.ReleaseGroup}}{{end}}', null, null, true);
+insert into name_template (name, type, template, movie_dir_template, "default")
+values ('Main Movie Template', 'movie', '{{.Media.CleanTitle}} ({{.Media.Year}}) {tmdb-{{.Media.TmdbID}}} {{if .Release.Edition}}{edition-{{.Release.Edition}}}{{end}} [{{.Quality.Full}}][{{.MediaInfo.AudioCodec}} {{.MediaInfo.AudioChannels}}][{{.MediaInfo.VideoCodec}}]{{if .Release.ReleaseGroup}}-{{.Release.ReleaseGroup}}{{end}}', '{{.Media.CleanTitle}} ({{.Media.Year}}) {tmdb-{{.Media.TmdbID}}}', true);
 
 insert into name_template (name, type, template, series_show_template, series_season_template, "default")
 values ('Main Series Template', 'series', '{{.Media.Title}} - S{{.Media.Season}}E{{.Media.Episode}} - {{clean .Media.EpisodeTitle}} ({{.Media.Year}}) [{{.Quality.Full}}][{{.MediaInfo.AudioCodec}} {{.MediaInfo.AudioChannels}}][{{.MediaInfo.VideoCodec}}]{{if .Release.ReleaseGroup}}-{{.Release.ReleaseGroup}}{{end}}', '{{.Media.Title}} ({{.Media.Year}})', 'Season {{.Media.Season}}', true);

@@ -132,12 +132,20 @@ func (w *Worker) enqueueDownload(ctx context.Context, client downloader.Client, 
 	w.log.Info().
 		Str("job_id", job.ID.String()).
 		Str("protocol", job.Protocol).
+		Str("link", job.CandidateLink).
 		Msg("adding download to client")
 
 	res, err := client.Add(ctx, addReq)
 	if err != nil {
+		w.log.Error().Err(err).Str("job_id", job.ID.String()).Msg("[DEBUG] Add() failed")
 		return fmt.Errorf("downloader add: %w", err)
 	}
+
+	w.log.Info().
+		Str("job_id", job.ID.String()).
+		Str("external_id", res.ExternalID).
+		Str("name", res.Name).
+		Msg("[DEBUG] Add() succeeded")
 
 	updated, err := w.repo.SetDownloadJobEnqueued(ctx, job.ID, res.ExternalID)
 	if err != nil {

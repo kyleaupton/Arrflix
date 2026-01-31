@@ -40,22 +40,72 @@
                     openSeasons[season.seasonNumber] ? 'rotate-90' : '',
                   ]"
                 />
-                <div>
+                <div class="flex items-center gap-2">
                   <h3 class="font-medium">Season {{ season.seasonNumber }}</h3>
-                  <p v-if="season.airDate" class="text-xs text-muted-foreground">
-                    {{ season.airDate }}
-                  </p>
+                  <Badge
+                    v-if="getSeasonStatus(season) === 'available'"
+                    class="bg-green-500/90 text-white hover:bg-green-500"
+                  >
+                    Available
+                  </Badge>
+                  <Badge
+                    v-else-if="getSeasonStatus(season) === 'partial'"
+                    class="bg-amber-500/90 text-white hover:bg-amber-500"
+                  >
+                    Partial
+                  </Badge>
+                  <Badge
+                    v-else-if="getSeasonStatus(season) === 'downloading'"
+                    class="bg-blue-500/90 text-white hover:bg-blue-500"
+                  >
+                    Downloading
+                  </Badge>
+                  <Badge
+                    v-else-if="getSeasonStatus(season) === 'importing'"
+                    class="bg-blue-500/90 text-white hover:bg-blue-500"
+                  >
+                    Importing
+                  </Badge>
                 </div>
+                <p v-if="season.airDate" class="text-xs text-muted-foreground ml-2">
+                  {{ season.airDate }}
+                </p>
               </CollapsibleTrigger>
               <div class="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  @click.stop="searchForSeasonCandidates(season.seasonNumber)"
-                >
-                  <Download class="size-4 mr-2" />
-                  Search
-                </Button>
+                <!-- Season pack downloading -->
+                <template v-if="getSeasonPackJob(season.seasonNumber)">
+                  <CircularProgress
+                    :state="getSeasonProgressState(season.seasonNumber)"
+                    :value="getSeasonProgressValue(season.seasonNumber)"
+                    size="sm"
+                  />
+                </template>
+                <!-- Individual episodes downloading (no season pack) -->
+                <template v-else-if="hasActiveEpisodeDownloads(season)">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <span class="flex items-center">
+                          <CircularProgress state="indeterminate" size="sm" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {{ getActiveEpisodeCount(season) }} episode(s) downloading
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </template>
+                <!-- No active downloads: show search button -->
+                <template v-else>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    @click.stop="searchForSeasonCandidates(season.seasonNumber)"
+                  >
+                    <Download class="size-4 mr-2" />
+                    Search
+                  </Button>
+                </template>
               </div>
             </div>
             <CollapsibleContent>
@@ -77,13 +127,6 @@
                         <h4 class="font-medium text-sm truncate">
                           {{ episode.title || 'Episode ' + episode.episodeNumber }}
                         </h4>
-                        <Badge
-                          v-if="episode.available"
-                          variant="secondary"
-                          class="h-5 text-[10px] px-1.5 uppercase tracking-wider"
-                        >
-                          {{ episode.file?.status || 'Available' }}
-                        </Badge>
                       </div>
                       <p v-if="episode.overview" class="text-xs text-muted-foreground line-clamp-2">
                         {{ episode.overview }}
@@ -92,17 +135,66 @@
                         Aired: {{ episode.airDate }}
                       </p>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      class="h-8 text-xs shrink-0"
-                      @click="
-                        searchForEpisodeCandidates(season.seasonNumber, episode.episodeNumber)
-                      "
-                    >
-                      <Search class="size-3 mr-1.5" />
-                      Snag
-                    </Button>
+                    <!-- Episode action/status area -->
+                    <div class="shrink-0">
+                      <!-- Episode is available and not downloading -->
+                      <template
+                        v-if="
+                          episode.available &&
+                          !getEpisodeJob(season.seasonNumber, episode.episodeNumber) &&
+                          !isPartOfSeasonPack(season.seasonNumber)
+                        "
+                      >
+                        <Badge
+                          variant="secondary"
+                          class="h-8 flex items-center gap-1 text-xs px-2.5"
+                        >
+                          <Check class="size-3" />
+                          Available
+                        </Badge>
+                      </template>
+                      <!-- Episode is downloading individually -->
+                      <template
+                        v-else-if="getEpisodeJob(season.seasonNumber, episode.episodeNumber)"
+                      >
+                        <CircularProgress
+                          :state="
+                            getEpisodeProgressState(season.seasonNumber, episode.episodeNumber)
+                          "
+                          :value="
+                            getEpisodeProgressValue(season.seasonNumber, episode.episodeNumber)
+                          "
+                          size="sm"
+                        />
+                      </template>
+                      <!-- Episode is part of an active season pack download -->
+                      <template v-else-if="isPartOfSeasonPack(season.seasonNumber)">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger as-child>
+                              <span class="flex items-center">
+                                <CircularProgress state="indeterminate" size="sm" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent> Downloading as season pack </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </template>
+                      <!-- Not available: show Snag button -->
+                      <template v-else>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          class="h-8 text-xs"
+                          @click="
+                            searchForEpisodeCandidates(season.seasonNumber, episode.episodeNumber)
+                          "
+                        >
+                          <Search class="size-3 mr-1.5" />
+                          Snag
+                        </Button>
+                      </template>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -121,18 +213,27 @@
 import { computed, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
-import { Download, ChevronRight, Search } from 'lucide-vue-next'
+import { Download, ChevronRight, Search, Check } from 'lucide-vue-next'
 import { getV1SeriesByIdOptions } from '@/client/@tanstack/vue-query.gen'
+import type { ModelSeasonDetail } from '@/client/types.gen'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import CircularProgress from '@/components/ui/progress/CircularProgress.vue'
+import type { CircularProgressState } from '@/components/ui/progress/CircularProgress.vue'
 import MediaHero from '@/components/media/MediaHero.vue'
 import Poster from '@/components/poster/Poster.vue'
 import RailCast from '@/components/rails/RailCast.vue'
 import RailVideos from '@/components/rails/RailVideos.vue'
 import { useModal } from '@/composables/useModal'
-import { useDownloadJobsStore } from '@/stores/downloadJobs'
+import { useDownloadJobsStore, type DownloadJob } from '@/stores/downloadJobs'
 import DownloadCandidatesDialog from '@/components/download-candidates/DownloadCandidatesDialog.vue'
 
 const route = useRoute()
@@ -189,8 +290,136 @@ const sortedSeasons = computed(() => {
   return [...data.value.seasons].sort((a, b) => b.seasonNumber - a.seasonNumber)
 })
 
+// Get all active download jobs for this series
+const activeJobsForSeries = computed(() => {
+  if (!data.value?.tmdbId) return []
+  return Object.values(downloadJobs.jobsById).filter(
+    (job) =>
+      job.media_type === 'series' &&
+      job.tmdb_id === data.value?.tmdbId &&
+      isJobActive(job),
+  )
+})
+
+// Check if a job is considered "active" (not in a terminal state)
+function isJobActive(job: DownloadJob): boolean {
+  // Active download states
+  const activeDownloadStates = ['created', 'enqueued', 'downloading']
+  if (activeDownloadStates.includes(job.status)) return true
+  // Active import states (download completed but still importing)
+  const activeImportStates = ['awaiting_import', 'importing']
+  if (activeImportStates.includes(job.import_status)) return true
+  return false
+}
+
+// Get season pack job (if any) for a season - season packs have no episode_id
+function getSeasonPackJob(seasonNumber: number): DownloadJob | undefined {
+  return activeJobsForSeries.value.find(
+    (job) => job.season_number === seasonNumber && !job.episode_id,
+  )
+}
+
+// Get episode job (if any) for a specific episode
+function getEpisodeJob(seasonNumber: number, episodeNumber: number): DownloadJob | undefined {
+  return activeJobsForSeries.value.find(
+    (job) => job.season_number === seasonNumber && job.episode_number === episodeNumber,
+  )
+}
+
+// Check if season has any individual episode downloads active
+function hasActiveEpisodeDownloads(season: ModelSeasonDetail): boolean {
+  return (
+    season.episodes?.some((ep) => getEpisodeJob(season.seasonNumber, ep.episodeNumber)) ?? false
+  )
+}
+
+// Get count of active episode downloads for a season
+function getActiveEpisodeCount(season: ModelSeasonDetail): number {
+  return (
+    season.episodes?.filter((ep) => getEpisodeJob(season.seasonNumber, ep.episodeNumber)).length ??
+    0
+  )
+}
+
+// Check if an episode is part of an active season pack download
+function isPartOfSeasonPack(seasonNumber: number): boolean {
+  return !!getSeasonPackJob(seasonNumber)
+}
+
+type SeasonStatus = 'available' | 'partial' | 'downloading' | 'importing' | null
+
+function getSeasonStatus(season: ModelSeasonDetail): SeasonStatus {
+  // Check for season pack download first
+  const packJob = getSeasonPackJob(season.seasonNumber)
+  if (packJob) {
+    if (['created', 'enqueued', 'downloading'].includes(packJob.status)) return 'downloading'
+    if (['awaiting_import', 'importing'].includes(packJob.import_status)) return 'importing'
+  }
+
+  // Check for individual episode downloads
+  if (hasActiveEpisodeDownloads(season)) return 'downloading'
+
+  // Check availability
+  const available = season.episodes?.filter((e) => e.available).length ?? 0
+  const total = season.episodes?.length ?? 0
+  if (available === total && total > 0) return 'available'
+  if (available > 0) return 'partial'
+  return null
+}
+
+// Get progress state for season pack
+function getSeasonProgressState(seasonNumber: number): CircularProgressState {
+  const job = getSeasonPackJob(seasonNumber)
+  if (!job) return 'indeterminate'
+
+  // Downloading phase
+  if (['created', 'enqueued', 'downloading'].includes(job.status)) {
+    return job.progress > 0 ? 'progress' : 'indeterminate'
+  }
+  // Import phase
+  if (['awaiting_import', 'importing'].includes(job.import_status)) {
+    return 'indeterminate'
+  }
+  return 'indeterminate'
+}
+
+// Get progress value for season pack (0-100)
+function getSeasonProgressValue(seasonNumber: number): number {
+  const job = getSeasonPackJob(seasonNumber)
+  if (!job) return 0
+  return Math.round(job.progress * 100)
+}
+
+// Get progress state for individual episode
+function getEpisodeProgressState(
+  seasonNumber: number,
+  episodeNumber: number,
+): CircularProgressState {
+  const job = getEpisodeJob(seasonNumber, episodeNumber)
+  if (!job) return 'indeterminate'
+
+  // Downloading phase
+  if (['created', 'enqueued', 'downloading'].includes(job.status)) {
+    return job.progress > 0 ? 'progress' : 'indeterminate'
+  }
+  // Import phase
+  if (['awaiting_import', 'importing'].includes(job.import_status)) {
+    return 'indeterminate'
+  }
+  return 'indeterminate'
+}
+
+// Get progress value for individual episode (0-100)
+function getEpisodeProgressValue(seasonNumber: number, episodeNumber: number): number {
+  const job = getEpisodeJob(seasonNumber, episodeNumber)
+  if (!job) return 0
+  return Math.round(job.progress * 100)
+}
+
 const isDownloading = computed(() => {
-  // Simple check for now: if any episode is in downloading status
+  // Check if any active downloads exist for this series
+  if (activeJobsForSeries.value.length > 0) return true
+  // Fallback: check file status from API response
   return (
     data.value?.seasons?.some((s) => s.episodes?.some((e) => e.file?.status === 'downloading')) ??
     false

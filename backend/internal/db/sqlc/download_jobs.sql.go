@@ -378,6 +378,9 @@ func (q *Queries) GetDownloadJobTimeline(ctx context.Context, downloadJobID pgty
 const getDownloadJobWithImportSummary = `-- name: GetDownloadJobWithImportSummary :one
 SELECT
   dj.id, dj.status, dj.protocol, dj.indexer_id, dj.guid, dj.candidate_title, dj.candidate_link, dj.media_type, dj.media_item_id, dj.season_id, dj.episode_id, dj.library_id, dj.name_template_id, dj.downloader_id, dj.downloader_external_id, dj.downloader_status, dj.progress, dj.save_path, dj.content_path, dj.attempt_count, dj.next_run_at, dj.last_error, dj.error_category, dj.created_at, dj.updated_at,
+  mi.tmdb_id,
+  ms.season_number,
+  me.episode_number,
   COUNT(it.id)::int AS total_import_tasks,
   COUNT(it.id) FILTER (WHERE it.status = 'pending')::int AS pending_imports,
   COUNT(it.id) FILTER (WHERE it.status = 'in_progress')::int AS active_imports,
@@ -396,13 +399,16 @@ SELECT
     ELSE 'unknown'
   END AS import_status
 FROM download_job dj
+LEFT JOIN media_item mi ON mi.id = dj.media_item_id
+LEFT JOIN media_episode me ON me.id = dj.episode_id
+LEFT JOIN media_season ms ON ms.id = COALESCE(dj.season_id, me.season_id)
 LEFT JOIN import_task it ON it.download_job_id = dj.id
   AND NOT EXISTS (
     SELECT 1 FROM import_task child
     WHERE child.previous_task_id = it.id
   )
 WHERE dj.id = $1
-GROUP BY dj.id
+GROUP BY dj.id, mi.tmdb_id, ms.season_number, me.episode_number
 `
 
 type GetDownloadJobWithImportSummaryRow struct {
@@ -431,6 +437,9 @@ type GetDownloadJobWithImportSummaryRow struct {
 	ErrorCategory        *string     `json:"error_category"`
 	CreatedAt            time.Time   `json:"created_at"`
 	UpdatedAt            time.Time   `json:"updated_at"`
+	TmdbID               *int64      `json:"tmdb_id"`
+	SeasonNumber         *int32      `json:"season_number"`
+	EpisodeNumber        *int32      `json:"episode_number"`
 	TotalImportTasks     int32       `json:"total_import_tasks"`
 	PendingImports       int32       `json:"pending_imports"`
 	ActiveImports        int32       `json:"active_imports"`
@@ -471,6 +480,9 @@ func (q *Queries) GetDownloadJobWithImportSummary(ctx context.Context, id pgtype
 		&i.ErrorCategory,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TmdbID,
+		&i.SeasonNumber,
+		&i.EpisodeNumber,
 		&i.TotalImportTasks,
 		&i.PendingImports,
 		&i.ActiveImports,
@@ -732,6 +744,9 @@ func (q *Queries) ListDownloadJobsByTmdbSeriesID(ctx context.Context, tmdbID *in
 const listDownloadJobsWithImportSummary = `-- name: ListDownloadJobsWithImportSummary :many
 SELECT
   dj.id, dj.status, dj.protocol, dj.indexer_id, dj.guid, dj.candidate_title, dj.candidate_link, dj.media_type, dj.media_item_id, dj.season_id, dj.episode_id, dj.library_id, dj.name_template_id, dj.downloader_id, dj.downloader_external_id, dj.downloader_status, dj.progress, dj.save_path, dj.content_path, dj.attempt_count, dj.next_run_at, dj.last_error, dj.error_category, dj.created_at, dj.updated_at,
+  mi.tmdb_id,
+  ms.season_number,
+  me.episode_number,
   COUNT(it.id)::int AS total_import_tasks,
   COUNT(it.id) FILTER (WHERE it.status = 'pending')::int AS pending_imports,
   COUNT(it.id) FILTER (WHERE it.status = 'in_progress')::int AS active_imports,
@@ -750,12 +765,15 @@ SELECT
     ELSE 'unknown'
   END AS import_status
 FROM download_job dj
+LEFT JOIN media_item mi ON mi.id = dj.media_item_id
+LEFT JOIN media_episode me ON me.id = dj.episode_id
+LEFT JOIN media_season ms ON ms.id = COALESCE(dj.season_id, me.season_id)
 LEFT JOIN import_task it ON it.download_job_id = dj.id
   AND NOT EXISTS (
     SELECT 1 FROM import_task child
     WHERE child.previous_task_id = it.id
   )
-GROUP BY dj.id
+GROUP BY dj.id, mi.tmdb_id, ms.season_number, me.episode_number
 ORDER BY dj.updated_at DESC
 `
 
@@ -785,6 +803,9 @@ type ListDownloadJobsWithImportSummaryRow struct {
 	ErrorCategory        *string     `json:"error_category"`
 	CreatedAt            time.Time   `json:"created_at"`
 	UpdatedAt            time.Time   `json:"updated_at"`
+	TmdbID               *int64      `json:"tmdb_id"`
+	SeasonNumber         *int32      `json:"season_number"`
+	EpisodeNumber        *int32      `json:"episode_number"`
 	TotalImportTasks     int32       `json:"total_import_tasks"`
 	PendingImports       int32       `json:"pending_imports"`
 	ActiveImports        int32       `json:"active_imports"`
@@ -831,6 +852,9 @@ func (q *Queries) ListDownloadJobsWithImportSummary(ctx context.Context) ([]List
 			&i.ErrorCategory,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TmdbID,
+			&i.SeasonNumber,
+			&i.EpisodeNumber,
 			&i.TotalImportTasks,
 			&i.PendingImports,
 			&i.ActiveImports,

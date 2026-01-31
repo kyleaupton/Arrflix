@@ -45,6 +45,7 @@ export type DbgenDownloadJob = {
     progress: number;
     protocol: string;
     save_path: string;
+    season_id: string;
     status: string;
     updated_at: string;
 };
@@ -89,6 +90,7 @@ export type DbgenGetDownloadJobWithImportSummaryRow = {
     downloader_id: string;
     downloader_status: string;
     episode_id: string;
+    episode_number: number;
     error_category: string;
     failed_imports: number;
     guid: string;
@@ -105,7 +107,10 @@ export type DbgenGetDownloadJobWithImportSummaryRow = {
     progress: number;
     protocol: string;
     save_path: string;
+    season_id: string;
+    season_number: number;
     status: string;
+    tmdb_id: number;
     total_import_tasks: number;
     updated_at: string;
 };
@@ -155,6 +160,7 @@ export type DbgenGetImportTaskWithDetailsRow = {
     media_item_id: string;
     media_item_type: string;
     media_title: string;
+    media_tmdb_id: number;
     media_type: string;
     media_year: number;
     movie_dir_template: string;
@@ -228,6 +234,7 @@ export type DbgenListDownloadJobsByTmdbSeriesIdRow = {
     progress: number;
     protocol: string;
     save_path: string;
+    season_id: string;
     season_number: number;
     status: string;
     updated_at: string;
@@ -246,6 +253,7 @@ export type DbgenListDownloadJobsWithImportSummaryRow = {
     downloader_id: string;
     downloader_status: string;
     episode_id: string;
+    episode_number: number;
     error_category: string;
     failed_imports: number;
     guid: string;
@@ -262,7 +270,10 @@ export type DbgenListDownloadJobsWithImportSummaryRow = {
     progress: number;
     protocol: string;
     save_path: string;
+    season_id: string;
+    season_number: number;
     status: string;
+    tmdb_id: number;
     total_import_tasks: number;
     updated_at: string;
 };
