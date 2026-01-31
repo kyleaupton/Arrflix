@@ -118,7 +118,7 @@ function getTaskStatusConfig(status: string) {
 
 <template>
   <Sheet :open="isOpen" @update:open="handleOpenChange">
-    <SheetContent side="right" class="w-full sm:max-w-lg flex flex-col">
+    <SheetContent side="right" class="w-full sm:max-w-lg flex flex-col overflow-hidden">
       <SheetHeader class="px-6 pt-6">
         <SheetTitle class="flex items-center gap-3">
           <span class="truncate">{{ job?.candidate_title || 'Download Details' }}</span>
@@ -131,7 +131,7 @@ function getTaskStatusConfig(status: string) {
         </SheetDescription>
       </SheetHeader>
 
-      <ScrollArea class="flex-1 px-6">
+      <ScrollArea class="flex-1 min-h-0 px-6">
         <div class="space-y-6 py-4">
           <!-- Progress Section (during download) -->
           <div v-if="job?.import_status === 'download_pending'" class="space-y-2">
@@ -234,7 +234,10 @@ function getTaskStatusConfig(status: string) {
                 </p>
 
                 <!-- Error for failed tasks -->
-                <div v-if="task.status === 'failed' && task.last_error" class="flex items-start gap-2">
+                <div
+                  v-if="task.status === 'failed' && task.last_error"
+                  class="flex items-start gap-2"
+                >
                   <XCircle class="size-3 text-destructive shrink-0 mt-0.5" />
                   <p class="text-xs text-destructive break-all">
                     {{ task.last_error }}
