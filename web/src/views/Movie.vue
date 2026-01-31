@@ -11,7 +11,7 @@
       <MediaHero
         class="mb-1"
         :title="data.title"
-        :subtitle="releaseYear"
+        :subtitle="movieSubtitle"
         :overview="data.overview"
         :backdrop-url="backdropUrl"
         :chips="movieChips"
@@ -74,6 +74,7 @@ import RailMovie from '@/components/rails/RailMovie.vue'
 import DataTable from '@/components/tables/DataTable.vue'
 import { movieFilesColumns } from '@/components/tables/configs/movieFilesTableConfig'
 import { useModal } from '@/composables/useModal'
+import { buildMetadataSubtitle } from '@/lib/utils'
 import { useDownloadJobsStore } from '@/stores/downloadJobs'
 import DownloadCandidatesDialog from '@/components/download-candidates/DownloadCandidatesDialog.vue'
 import type { ModelFileInfo } from '@/client/types.gen'
@@ -110,9 +111,17 @@ const { isLoading, isError, data } = useQuery(
   computed(() => getV1MovieByIdOptions({ path: { id: id.value } })),
 )
 
-const releaseYear = computed(() =>
-  data.value?.releaseDate ? new Date(data.value.releaseDate).getFullYear().toString() : '',
-)
+const movieSubtitle = computed(() => {
+  if (!data.value) return ''
+  const year = data.value.releaseDate
+    ? new Date(data.value.releaseDate).getFullYear()
+    : undefined
+  return buildMetadataSubtitle({
+    year,
+    certification: data.value.certification,
+    runtime: data.value.runtime,
+  })
+})
 
 const backdropUrl = computed(() =>
   data.value?.backdropPath

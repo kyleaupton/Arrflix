@@ -146,6 +146,50 @@ func (s *MediaService) enrichLibraryItemsConcurrently(ctx context.Context, dbIte
 	return items
 }
 
+// extractMovieCertification extracts US certification (fallback to GB, CA, AU)
+func extractMovieCertification(releaseDates *tmdb.MovieReleaseDates) string {
+	if releaseDates == nil || releaseDates.Results == nil {
+		return ""
+	}
+	priorityCountries := []string{"US", "GB", "CA", "AU"}
+	for _, country := range priorityCountries {
+		for _, result := range releaseDates.Results {
+			if result.Iso3166_1 == country {
+				for _, rd := range result.ReleaseDates {
+					if rd.Certification != "" {
+						return rd.Certification
+					}
+				}
+			}
+		}
+	}
+	return ""
+}
+
+// extractTVCertification extracts US certification (fallback to GB, CA, AU)
+func extractTVCertification(contentRatings *tmdb.TVContentRatings) string {
+	if contentRatings == nil || contentRatings.Results == nil {
+		return ""
+	}
+	priorityCountries := []string{"US", "GB", "CA", "AU"}
+	for _, country := range priorityCountries {
+		for _, result := range contentRatings.Results {
+			if result.Iso3166_1 == country && result.Rating != "" {
+				return result.Rating
+			}
+		}
+	}
+	return ""
+}
+
+// extractEpisodeRuntime returns the first (most common) episode runtime
+func extractEpisodeRuntime(runtimes []int) *int {
+	if len(runtimes) == 0 {
+		return nil
+	}
+	return &runtimes[0]
+}
+
 func transformMovieCredits(tmdbCredits tmdb.MovieCredits) *model.Credits {
 	cast := make([]model.CastMember, 0, len(tmdbCredits.Cast))
 	for _, c := range tmdbCredits.Cast {
@@ -358,6 +402,15 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 		fileInfos = append(fileInfos, downloadJobFiles...)
 	}
 
+	// Fetch certification
+	var certification string
+	releaseDates, err := s.tmdb.GetMovieReleaseDates(ctx, tmdbID)
+	if err != nil {
+		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch movie release dates")
+	} else {
+		certification = extractMovieCertification(&releaseDates)
+	}
+
 	return model.MovieDetail{
 		TmdbID:          tmdbDetails.ID,
 		Title:           tmdbDetails.Title,
@@ -367,6 +420,7 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 		Status:          tmdbDetails.Status,
 		ReleaseDate:     tmdbDetails.ReleaseDate,
 		Runtime:         tmdbDetails.Runtime,
+		Certification:   certification,
 		Genres:          genres,
 		PosterPath:      tmdbDetails.PosterPath,
 		BackdropPath:    tmdbDetails.BackdropPath,
@@ -552,23 +606,37 @@ func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model
 		videos = transformVideos(tmdbVideos)
 	}
 
+	// Fetch certification
+	var certification string
+	contentRatings, err := s.tmdb.GetTVContentRatings(ctx, tmdbID)
+	if err != nil {
+		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch series content ratings")
+	} else {
+		certification = extractTVCertification(&contentRatings)
+	}
+
+	// Extract episode runtime
+	episodeRuntime := extractEpisodeRuntime(tmdbDetails.EpisodeRunTime)
+
 	return model.SeriesDetail{
-		TmdbID:       tmdbDetails.ID,
-		Title:        tmdbDetails.Name,
-		Year:         year,
-		Overview:     tmdbDetails.Overview,
-		Tagline:      tmdbDetails.Tagline,
-		Status:       tmdbDetails.Status,
-		FirstAirDate: tmdbDetails.FirstAirDate,
-		LastAirDate:  tmdbDetails.LastAirDate,
-		InProduction: tmdbDetails.InProduction,
-		Genres:       genres,
-		PosterPath:   tmdbDetails.PosterPath,
-		BackdropPath: tmdbDetails.BackdropPath,
-		Availability: availability,
-		Seasons:      seasons,
-		Credits:      credits,
-		Videos:       videos,
+		TmdbID:         tmdbDetails.ID,
+		Title:          tmdbDetails.Name,
+		Year:           year,
+		Overview:       tmdbDetails.Overview,
+		Tagline:        tmdbDetails.Tagline,
+		Status:         tmdbDetails.Status,
+		FirstAirDate:   tmdbDetails.FirstAirDate,
+		LastAirDate:    tmdbDetails.LastAirDate,
+		InProduction:   tmdbDetails.InProduction,
+		Certification:  certification,
+		EpisodeRuntime: episodeRuntime,
+		Genres:         genres,
+		PosterPath:     tmdbDetails.PosterPath,
+		BackdropPath:   tmdbDetails.BackdropPath,
+		Availability:   availability,
+		Seasons:        seasons,
+		Credits:        credits,
+		Videos:         videos,
 	}, nil
 }
 

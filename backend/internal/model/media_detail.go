@@ -27,14 +27,15 @@ type MovieDetail struct {
 	Title  string `json:"title"`
 	Year   *int32 `json:"year,omitempty"`
 
-	Overview     string  `json:"overview"`
-	Tagline      string  `json:"tagline,omitempty"`
-	Status       string  `json:"status"`
-	ReleaseDate  string  `json:"releaseDate,omitempty"`
-	Runtime      int     `json:"runtime,omitempty"`
-	Genres       []Genre `json:"genres,omitempty"`
-	PosterPath   string  `json:"posterPath,omitempty"`
-	BackdropPath string  `json:"backdropPath,omitempty"`
+	Overview      string  `json:"overview"`
+	Tagline       string  `json:"tagline,omitempty"`
+	Status        string  `json:"status"`
+	ReleaseDate   string  `json:"releaseDate,omitempty"`
+	Runtime       int     `json:"runtime,omitempty"`
+	Certification string  `json:"certification,omitempty"`
+	Genres        []Genre `json:"genres,omitempty"`
+	PosterPath    string  `json:"posterPath,omitempty"`
+	BackdropPath  string  `json:"backdropPath,omitempty"`
 
 	Files           []FileInfo  `json:"files"`
 	Credits         *Credits    `json:"credits,omitempty"`
@@ -66,15 +67,17 @@ type SeriesDetail struct {
 	Title  string `json:"title"`
 	Year   *int32 `json:"year,omitempty"`
 
-	Overview     string  `json:"overview"`
-	Tagline      string  `json:"tagline,omitempty"`
-	Status       string  `json:"status"`
-	FirstAirDate string  `json:"firstAirDate,omitempty"`
-	LastAirDate  string  `json:"lastAirDate,omitempty"`
-	InProduction bool    `json:"inProduction"`
-	Genres       []Genre `json:"genres,omitempty"`
-	PosterPath   string  `json:"posterPath,omitempty"`
-	BackdropPath string  `json:"backdropPath,omitempty"`
+	Overview       string  `json:"overview"`
+	Tagline        string  `json:"tagline,omitempty"`
+	Status         string  `json:"status"`
+	FirstAirDate   string  `json:"firstAirDate,omitempty"`
+	LastAirDate    string  `json:"lastAirDate,omitempty"`
+	InProduction   bool    `json:"inProduction"`
+	Certification  string  `json:"certification,omitempty"`
+	EpisodeRuntime *int    `json:"episodeRuntime,omitempty"`
+	Genres         []Genre `json:"genres,omitempty"`
+	PosterPath     string  `json:"posterPath,omitempty"`
+	BackdropPath   string  `json:"backdropPath,omitempty"`
 
 	Availability Availability   `json:"availability"`
 	Seasons      []SeasonDetail `json:"seasons"`

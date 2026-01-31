@@ -6708,6 +6708,9 @@ const docTemplate = `{
                 "backdropPath": {
                     "type": "string"
                 },
+                "certification": {
+                    "type": "string"
+                },
                 "credits": {
                     "$ref": "#/definitions/model.Credits"
                 },
@@ -7126,8 +7129,14 @@ const docTemplate = `{
                 "backdropPath": {
                     "type": "string"
                 },
+                "certification": {
+                    "type": "string"
+                },
                 "credits": {
                     "$ref": "#/definitions/model.Credits"
+                },
+                "episodeRuntime": {
+                    "type": "integer"
                 },
                 "firstAirDate": {
                     "type": "string"

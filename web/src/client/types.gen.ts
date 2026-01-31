@@ -955,6 +955,7 @@ export type ModelMediaType = 'movie' | 'series';
 
 export type ModelMovieDetail = {
     backdropPath?: string;
+    certification?: string;
     credits?: ModelCredits;
     files: Array<ModelFileInfo>;
     genres?: Array<ModelGenre>;
@@ -1090,7 +1091,9 @@ export type ModelSelectOption = {
 export type ModelSeriesDetail = {
     availability: ModelAvailability;
     backdropPath?: string;
+    certification?: string;
     credits?: ModelCredits;
+    episodeRuntime?: number;
     firstAirDate?: string;
     genres?: Array<ModelGenre>;
     inProduction: boolean;

@@ -188,6 +188,20 @@ func (s *TmdbService) MultiSearch(ctx context.Context, query string, page int) (
 	}, DYNAMIC_TTL)
 }
 
+func (s *TmdbService) GetMovieReleaseDates(ctx context.Context, id int64) (tmdb.MovieReleaseDates, error) {
+	cacheKey := fmt.Sprintf("tmdb_movie_release_dates_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MovieReleaseDates, error) {
+		return s.client.GetMovieReleaseDates(int(id))
+	}, STATIC_TTL)
+}
+
+func (s *TmdbService) GetTVContentRatings(ctx context.Context, id int64) (tmdb.TVContentRatings, error) {
+	cacheKey := fmt.Sprintf("tmdb_tv_content_ratings_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVContentRatings, error) {
+		return s.client.GetTVContentRatings(int(id), map[string]string{})
+	}, STATIC_TTL)
+}
+
 // getOrFetchFromCache encapsulates the pattern of:
 // 1) checking API cache
 // 2) calling the provided fetch function on cache miss

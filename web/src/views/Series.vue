@@ -233,6 +233,7 @@ import Poster from '@/components/poster/Poster.vue'
 import RailCast from '@/components/rails/RailCast.vue'
 import RailVideos from '@/components/rails/RailVideos.vue'
 import { useModal } from '@/composables/useModal'
+import { buildMetadataSubtitle } from '@/lib/utils'
 import { useDownloadJobsStore, type DownloadJob } from '@/stores/downloadJobs'
 import DownloadCandidatesDialog from '@/components/download-candidates/DownloadCandidatesDialog.vue'
 
@@ -262,10 +263,20 @@ const lastAirYear = computed(() =>
   data.value?.lastAirDate ? new Date(data.value.lastAirDate).getFullYear().toString() : '',
 )
 const seriesSubTitle = computed(() => {
+  if (!data.value) return ''
   const first = firstAirYear.value
   const last = lastAirYear.value
-  if (first && last && first !== last) return `${first} - ${last}`
-  return first
+  let yearDisplay: string | undefined
+  if (first && last && first !== last) {
+    yearDisplay = `${first} - ${last}`
+  } else if (first) {
+    yearDisplay = first
+  }
+  return buildMetadataSubtitle({
+    year: yearDisplay,
+    certification: data.value.certification,
+    runtime: data.value.episodeRuntime,
+  })
 })
 
 const backdropUrl = computed(() =>
