@@ -197,6 +197,7 @@ type DownloadJob struct {
 	CandidateLink        string      `json:"candidate_link"`
 	MediaType            string      `json:"media_type"`
 	MediaItemID          pgtype.UUID `json:"media_item_id"`
+	SeasonID             pgtype.UUID `json:"season_id"`
 	EpisodeID            pgtype.UUID `json:"episode_id"`
 	LibraryID            pgtype.UUID `json:"library_id"`
 	NameTemplateID       pgtype.UUID `json:"name_template_id"`

@@ -32,7 +32,7 @@ const (
 // DownloadJobTransitions defines valid state transitions for download jobs.
 var DownloadJobTransitions = map[DownloadJobStatus][]DownloadJobStatus{
 	DownloadCreated:     {DownloadEnqueued, DownloadFailed, DownloadCancelled},
-	DownloadEnqueued:    {DownloadDownloading, DownloadFailed, DownloadCancelled},
+	DownloadEnqueued:    {DownloadDownloading, DownloadCompleted, DownloadFailed, DownloadCancelled}, // completed: torrent may already exist in client
 	DownloadDownloading: {DownloadCompleted, DownloadFailed, DownloadCancelled},
 	DownloadCompleted:   {}, // Terminal
 	DownloadFailed:      {}, // Terminal

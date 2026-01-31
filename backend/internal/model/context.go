@@ -319,8 +319,11 @@ func (ctx *EvaluationContext) ToTemplateData() map[string]any {
 		"Media":     ctx.Media,
 	}
 
+	// Always include MediaInfo (empty struct if not available) to avoid <no value> in templates
 	if ctx.MediaInfo != nil {
 		data["MediaInfo"] = ctx.MediaInfo
+	} else {
+		data["MediaInfo"] = &MediaInfoFields{}
 	}
 
 	return data

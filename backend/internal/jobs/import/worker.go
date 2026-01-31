@@ -18,6 +18,7 @@ import (
 	"github.com/kyleaupton/arrflix/internal/importer"
 	"github.com/kyleaupton/arrflix/internal/jobs/state"
 	"github.com/kyleaupton/arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/mediainfo"
 	"github.com/kyleaupton/arrflix/internal/model"
 	"github.com/kyleaupton/arrflix/internal/pathmapping"
 	"github.com/kyleaupton/arrflix/internal/release"
@@ -34,6 +35,7 @@ type Worker struct {
 	log        *logger.Logger
 	broker     *sse.Broker
 	sm         *state.ImportTaskMachine
+	mediaInfo  *mediainfo.Analyzer
 
 	pollInterval time.Duration
 	claimLimit   int32
@@ -66,6 +68,7 @@ func New(r *repo.Repository, dlm *downloader.Manager, log *logger.Logger, broker
 		log:          log,
 		broker:       broker,
 		sm:           state.NewImportTaskMachine(),
+		mediaInfo:    mediainfo.NewAnalyzer(*log),
 		pollInterval: cfg.PollInterval,
 		claimLimit:   cfg.ClaimLimit,
 		maxAttempts:  cfg.MaxAttempts,
@@ -148,6 +151,12 @@ func (w *Worker) processTask(ctx context.Context, task dbgen.ImportTask) error {
 		return apperrors.AsPermanent(fmt.Errorf("source is a directory, expected file: %s", task.SourcePath))
 	}
 
+	// Extract mediainfo from source file for template rendering
+	mi := w.mediaInfo.Analyze(task.SourcePath)
+	if mi == nil {
+		w.log.Warn().Str("path", task.SourcePath).Msg("failed to extract mediainfo, continuing without it")
+	}
+
 	// Get required data
 	taskDetails, err := w.repo.GetImportTaskWithDetails(ctx, task.ID)
 	if err != nil {
@@ -155,7 +164,7 @@ func (w *Worker) processTask(ctx context.Context, task dbgen.ImportTask) error {
 	}
 
 	// Compute destination path using name template
-	destPath, err := w.computeDestPath(task, taskDetails)
+	destPath, err := w.computeDestPath(task, taskDetails, mi)
 	if err != nil {
 		return apperrors.AsPermanent(fmt.Errorf("compute dest path: %w", err))
 	}
@@ -237,11 +246,11 @@ func (w *Worker) processTask(ctx context.Context, task dbgen.ImportTask) error {
 		"import_method": method,
 	})
 
-	w.publishTaskUpdated(task.ID)
+	w.publishTaskUpdated(ctx, task)
 	return nil
 }
 
-func (w *Worker) computeDestPath(task dbgen.ImportTask, details dbgen.GetImportTaskWithDetailsRow) (string, error) {
+func (w *Worker) computeDestPath(task dbgen.ImportTask, details dbgen.GetImportTaskWithDetailsRow, mi *model.MediaInfoFields) (string, error) {
 	srcExt := filepath.Ext(task.SourcePath)
 
 	// Build evaluation context for template rendering
@@ -261,7 +270,10 @@ func (w *Worker) computeDestPath(task dbgen.ImportTask, details dbgen.GetImportT
 	if details.MediaYear != nil {
 		year = int(*details.MediaYear)
 	}
-	tmdbID := int64(0) // Not available in details
+	tmdbID := int64(0)
+	if details.MediaTmdbID != nil {
+		tmdbID = *details.MediaTmdbID
+	}
 
 	if task.MediaType == "movie" {
 		evalCtx = evalCtx.WithMedia(model.MediaTypeMovie, details.MediaTitle, year, tmdbID)
@@ -277,6 +289,11 @@ func (w *Worker) computeDestPath(task dbgen.ImportTask, details dbgen.GetImportT
 			epNum = &en
 		}
 		evalCtx = evalCtx.WithSeriesInfo(seasonNum, epNum, details.EpisodeTitle)
+	}
+
+	// Add mediainfo if available
+	if mi != nil {
+		evalCtx = evalCtx.WithMediaInfo(mi)
 	}
 
 	templateData := evalCtx.ToTemplateData()
@@ -340,7 +357,7 @@ func (w *Worker) handleError(ctx context.Context, task dbgen.ImportTask, err err
 	// Permanent errors fail immediately
 	if category == apperrors.Permanent {
 		_, _ = w.repo.SetImportTaskFailed(ctx, task.ID, msg, category)
-		w.publishTaskUpdated(task.ID)
+		w.publishTaskUpdated(ctx, task)
 		return
 	}
 
@@ -355,7 +372,7 @@ func (w *Worker) handleError(ctx context.Context, task dbgen.ImportTask, err err
 		_, _ = w.repo.SetImportTaskFailed(ctx, task.ID,
 			fmt.Sprintf("max attempts (%d) exceeded: %s", maxAttempts, msg),
 			apperrors.Transient)
-		w.publishTaskUpdated(task.ID)
+		w.publishTaskUpdated(ctx, task)
 		return
 	}
 
@@ -369,7 +386,7 @@ func (w *Worker) handleError(ctx context.Context, task dbgen.ImportTask, err err
 	})
 
 	_, _ = w.repo.ScheduleImportTaskRetry(ctx, task.ID, msg, category, nextRun)
-	w.publishTaskUpdated(task.ID)
+	w.publishTaskUpdated(ctx, task)
 }
 
 func (w *Worker) logEvent(ctx context.Context, taskID pgtype.UUID, eventType, message string, metadata map[string]any) {
@@ -391,14 +408,40 @@ func (w *Worker) logEvent(ctx context.Context, taskID pgtype.UUID, eventType, me
 	}
 }
 
-func (w *Worker) publishTaskUpdated(taskID pgtype.UUID) {
+func (w *Worker) publishTaskUpdated(ctx context.Context, task dbgen.ImportTask) {
 	if w.broker == nil {
 		return
 	}
+	// Notify about import task update
 	w.broker.Publish(sse.Event{
 		Type: "import_task_updated",
-		ID:   taskID.String(),
+		ID:   task.ID.String(),
 		Data: nil,
+	})
+	// Also notify about parent download job since import_status may have changed
+	if task.DownloadJobID.Valid {
+		w.publishDownloadJobUpdated(ctx, task.DownloadJobID)
+	}
+}
+
+func (w *Worker) publishDownloadJobUpdated(ctx context.Context, jobID pgtype.UUID) {
+	if w.broker == nil {
+		return
+	}
+	// Fetch job with computed import_status for consistent frontend display
+	enriched, err := w.repo.GetDownloadJobWithImportSummary(ctx, jobID)
+	if err != nil {
+		w.log.Warn().Err(err).Str("job_id", jobID.String()).Msg("failed to fetch enriched job for SSE")
+		return
+	}
+	b, err := json.Marshal(enriched)
+	if err != nil {
+		return
+	}
+	w.broker.Publish(sse.Event{
+		Type: "download_job_updated",
+		ID:   jobID.String(),
+		Data: b,
 	})
 }
 

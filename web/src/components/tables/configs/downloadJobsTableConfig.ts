@@ -1,10 +1,29 @@
 import { type TableColumn, type TableAction } from '../types'
 import type { DownloadJob } from '@/stores/downloadJobs'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import { CircularProgress, type CircularProgressState } from '@/components/ui/progress'
 import { h } from 'vue'
 
-// Status color mapping for unified import_status
+function getProgressState(importStatus: string): CircularProgressState {
+  switch (importStatus) {
+    case 'download_pending':
+      return 'progress'
+    case 'importing':
+    case 'awaiting_import':
+      return 'indeterminate'
+    case 'fully_imported':
+      return 'success'
+    case 'import_failed':
+    case 'download_failed':
+    case 'partial_failure':
+      return 'error'
+    case 'download_cancelled':
+      return 'cancelled'
+    default:
+      return 'indeterminate'
+  }
+}
+
 const statusConfig: Record<string, { label: string; class: string }> = {
   download_pending: { label: 'Downloading', class: 'bg-blue-500 text-white' },
   download_failed: { label: 'Download Failed', class: 'bg-red-500 text-white' },
@@ -49,35 +68,19 @@ export const downloadJobColumns: TableColumn<DownloadJob>[] = [
   },
   {
     key: 'progress',
-    label: 'Progress',
-    sortable: true,
-    width: '220px',
+    label: '',
+    sortable: false,
+    width: '50px',
     render: (_value: number | null | undefined, row: DownloadJob) => {
-      // During download phase, show download progress
-      if (row.import_status === 'download_pending') {
-        const progressValue = Math.round((row.progress ?? 0) * 100)
-        return h('div', { class: 'flex items-center gap-2' }, [
-          h(Progress, { modelValue: progressValue, class: 'flex-1' }),
-          h('span', { class: 'text-xs text-muted-foreground min-w-[3ch]' }, `${progressValue}%`),
-        ])
-      }
+      const state = getProgressState(row.import_status)
+      const value =
+        row.import_status === 'download_pending' ? Math.round((row.progress ?? 0) * 100) : undefined
 
-      // After download, show import progress
-      const total = row.total_import_tasks || 0
-      if (total === 0) {
-        return h('span', { class: 'text-xs text-muted-foreground' }, '-')
-      }
-
-      const completed = row.completed_imports || 0
-      const importProgress = Math.round((completed / total) * 100)
-      return h('div', { class: 'flex items-center gap-2' }, [
-        h(Progress, { modelValue: importProgress, class: 'flex-1' }),
-        h(
-          'span',
-          { class: 'text-xs text-muted-foreground whitespace-nowrap' },
-          `${completed}/${total} files`,
-        ),
-      ])
+      return h(CircularProgress, {
+        state,
+        value,
+        size: 'sm',
+      })
     },
   },
 ]

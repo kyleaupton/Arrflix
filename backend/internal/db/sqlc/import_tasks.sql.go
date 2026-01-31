@@ -355,6 +355,7 @@ SELECT
   it.id, it.status, it.download_job_id, it.source_path, it.previous_task_id, it.media_type, it.media_item_id, it.episode_id, it.library_id, it.name_template_id, it.dest_path, it.import_method, it.media_file_id, it.attempt_count, it.max_attempts, it.next_run_at, it.last_error, it.error_category, it.created_at, it.updated_at,
   mi.title AS media_title,
   mi.year AS media_year,
+  mi.tmdb_id AS media_tmdb_id,
   mi.type AS media_item_type,
   me.episode_number,
   me.title AS episode_title,
@@ -399,6 +400,7 @@ type GetImportTaskWithDetailsRow struct {
 	UpdatedAt            time.Time   `json:"updated_at"`
 	MediaTitle           string      `json:"media_title"`
 	MediaYear            *int32      `json:"media_year"`
+	MediaTmdbID          *int64      `json:"media_tmdb_id"`
 	MediaItemType        string      `json:"media_item_type"`
 	EpisodeNumber        *int32      `json:"episode_number"`
 	EpisodeTitle         *string     `json:"episode_title"`
@@ -439,6 +441,7 @@ func (q *Queries) GetImportTaskWithDetails(ctx context.Context, id pgtype.UUID) 
 		&i.UpdatedAt,
 		&i.MediaTitle,
 		&i.MediaYear,
+		&i.MediaTmdbID,
 		&i.MediaItemType,
 		&i.EpisodeNumber,
 		&i.EpisodeTitle,

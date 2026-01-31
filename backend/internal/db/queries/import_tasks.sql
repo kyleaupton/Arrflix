@@ -153,6 +153,7 @@ SELECT
   it.*,
   mi.title AS media_title,
   mi.year AS media_year,
+  mi.tmdb_id AS media_tmdb_id,
   mi.type AS media_item_type,
   me.episode_number,
   me.title AS episode_title,

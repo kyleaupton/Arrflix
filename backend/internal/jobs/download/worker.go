@@ -149,7 +149,7 @@ func (w *Worker) enqueueDownload(ctx context.Context, client downloader.Client, 
 		"new_status": "enqueued",
 	})
 
-	w.publishJobUpdated(updated)
+	w.publishJobUpdated(ctx, updated.ID)
 	return nil
 }
 
@@ -197,7 +197,7 @@ func (w *Worker) pollDownload(ctx context.Context, client downloader.Client, job
 		})
 	}
 
-	w.publishJobUpdated(updated)
+	w.publishJobUpdated(ctx, updated.ID)
 
 	// Handle terminal downloader error
 	if newStatus == "failed" {
@@ -283,18 +283,34 @@ func (w *Worker) spawnSeriesImportTasks(ctx context.Context, client downloader.C
 		return fmt.Errorf("list files: %w", err)
 	}
 
-	// Derive target season and episode from job's episode_id
+	// Derive target season and episode from job
+	// For season packs: job.SeasonID is set, job.EpisodeID is null
+	// For single episodes: both job.SeasonID and job.EpisodeID are set
 	var targetSeason *int
 	var targetEpisode *int
+
+	// First check SeasonID (always set for series downloads after schema update)
+	if job.SeasonID.Valid {
+		season, err := w.repo.GetSeason(ctx, job.SeasonID)
+		if err == nil {
+			sNum := int(season.SeasonNumber)
+			targetSeason = &sNum
+		}
+	}
+
+	// Then check EpisodeID for single-episode downloads
 	if job.EpisodeID.Valid {
 		episode, err := w.repo.GetEpisode(ctx, job.EpisodeID)
 		if err == nil {
 			eNum := int(episode.EpisodeNumber)
 			targetEpisode = &eNum
-			season, err := w.repo.GetSeason(ctx, episode.SeasonID)
-			if err == nil {
-				sNum := int(season.SeasonNumber)
-				targetSeason = &sNum
+			// If we didn't get season from SeasonID, derive from episode
+			if targetSeason == nil {
+				season, err := w.repo.GetSeason(ctx, episode.SeasonID)
+				if err == nil {
+					sNum := int(season.SeasonNumber)
+					targetSeason = &sNum
+				}
 			}
 		}
 	}
@@ -436,17 +452,23 @@ func (w *Worker) logEvent(ctx context.Context, jobID pgtype.UUID, eventType, mes
 	}
 }
 
-func (w *Worker) publishJobUpdated(job dbgen.DownloadJob) {
+func (w *Worker) publishJobUpdated(ctx context.Context, jobID pgtype.UUID) {
 	if w.broker == nil {
 		return
 	}
-	b, err := json.Marshal(job)
+	// Fetch job with computed import_status for consistent frontend display
+	enriched, err := w.repo.GetDownloadJobWithImportSummary(ctx, jobID)
+	if err != nil {
+		w.log.Warn().Err(err).Str("job_id", jobID.String()).Msg("failed to fetch enriched job for SSE")
+		return
+	}
+	b, err := json.Marshal(enriched)
 	if err != nil {
 		return
 	}
 	w.broker.Publish(sse.Event{
 		Type: "download_job_updated",
-		ID:   job.ID.String(),
+		ID:   jobID.String(),
 		Data: b,
 	})
 }

@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS download_job (
   -- Target media (for spawning import tasks)
   media_type TEXT NOT NULL CHECK (media_type IN ('movie', 'series')),
   media_item_id UUID NOT NULL REFERENCES media_item(id) ON DELETE RESTRICT,
+  season_id UUID REFERENCES media_season(id) ON DELETE RESTRICT,
   episode_id UUID REFERENCES media_episode(id) ON DELETE RESTRICT,
   library_id UUID NOT NULL REFERENCES library(id) ON DELETE RESTRICT,
   name_template_id UUID NOT NULL REFERENCES name_template(id) ON DELETE RESTRICT,
@@ -57,6 +58,7 @@ CREATE INDEX IF NOT EXISTS idx_download_job_status ON download_job(status);
 CREATE INDEX IF NOT EXISTS idx_download_job_next_run ON download_job(next_run_at)
   WHERE status IN ('created', 'enqueued', 'downloading');
 CREATE INDEX IF NOT EXISTS idx_download_job_media ON download_job(media_item_id);
+CREATE INDEX IF NOT EXISTS idx_download_job_season ON download_job(season_id);
 CREATE INDEX IF NOT EXISTS idx_download_job_episode ON download_job(episode_id);
 CREATE INDEX IF NOT EXISTS idx_download_job_created ON download_job(created_at DESC);
 
