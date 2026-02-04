@@ -19,14 +19,16 @@ export function formatRuntime(minutes: number | undefined | null): string {
 }
 
 /**
- * Builds metadata subtitle with bullet separators (e.g., "2008 • PG-13 • 2h 32m")
+ * Builds metadata subtitle with bullet separators (e.g., "Movie • 2008 • PG-13 • 2h 32m")
  */
 export function buildMetadataSubtitle(parts: {
+  mediaType?: 'movie' | 'series'
   year?: string | number
   certification?: string
   runtime?: number | null
 }): string {
   const segments: string[] = []
+  if (parts.mediaType) segments.push(parts.mediaType === 'series' ? 'Series' : 'Movie')
   if (parts.year) segments.push(String(parts.year))
   if (parts.certification) segments.push(parts.certification)
   if (parts.runtime) {

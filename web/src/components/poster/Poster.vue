@@ -32,7 +32,7 @@
     <div class="poster-overlay">
       <div class="poster-info">
         <span class="poster-title">{{ item.title }}</span>
-        <span class="poster-year">{{ item.year }}</span>
+        <span class="poster-meta">{{ mediaTypeLabel }} · {{ item.year }}</span>
       </div>
     </div>
   </component>
@@ -111,6 +111,17 @@ const isInLibrary = computed(() => {
 })
 
 const showLibraryBadge = computed(() => !props.isDownloading && isInLibrary.value)
+
+const mediaTypeLabel = computed(() => {
+  if ('mediaType' in props.item && props.item.mediaType) {
+    return props.item.mediaType === 'series' ? 'Series' : 'Movie'
+  }
+  // Fallback: check for series-specific fields
+  if ('numberOfSeasons' in props.item || 'seasons' in props.item) {
+    return 'Series'
+  }
+  return 'Movie'
+})
 
 const posterPath = computed(() => {
   const sizeConfig = POSTER_SIZES[props.size]
@@ -267,7 +278,7 @@ const onError = () => {
   overflow: hidden;
 }
 
-.poster-year {
+.poster-meta {
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.7);
 }

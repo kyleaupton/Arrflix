@@ -91,12 +91,12 @@ const openTrailerModal = () => {
 .backdrop-overlay {
   position: absolute;
   inset: 0;
-  /* Dark-ish, readable, preserves image detail */
+  /* Darker overlay for better text readability */
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.5),
-    rgba(0, 0, 0, 0.25) 45%,
-    rgba(0, 0, 0, 0.6)
+    rgba(0, 0, 0, 0.7),
+    rgba(0, 0, 0, 0.5) 45%,
+    rgba(0, 0, 0, 0.8)
   );
 }
 

@@ -23,7 +23,7 @@
         <template #actions>
           <Button @click="searchForDownloadCandidates">
             <Download class="mr-2 size-4" />
-            Snag
+              Download
           </Button>
         </template>
       </MediaHero>
@@ -120,6 +120,7 @@ const movieSubtitle = computed(() => {
     ? new Date(data.value.releaseDate).getFullYear()
     : undefined
   return buildMetadataSubtitle({
+    mediaType: 'movie',
     year,
     certification: data.value.certification,
     runtime: data.value.runtime,

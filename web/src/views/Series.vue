@@ -276,6 +276,7 @@ const seriesSubTitle = computed(() => {
     yearDisplay = first
   }
   return buildMetadataSubtitle({
+    mediaType: 'series',
     year: yearDisplay,
     certification: data.value.certification,
     runtime: data.value.episodeRuntime,
