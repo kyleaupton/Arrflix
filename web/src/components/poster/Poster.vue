@@ -1,24 +1,39 @@
 <template>
-  <component :is="to ? 'router-link' : 'div'" :to="to" class="poster-wrap" :class="sizeClass">
-    <img
-      class="poster"
-      :class="{ 'is-loaded': !isLoading, 'cursor-pointer': clickable }"
-      :src="posterPath"
-      :alt="item.title"
-      loading="lazy"
-      decoding="async"
-      @load="onLoad"
-      @error="onError"
-    />
-    <Skeleton v-if="isLoading" class="poster-skeleton" />
-    <!-- Show download status badge when downloading, otherwise show library badge -->
-    <div v-if="isDownloading" class="status-badge download-badge">
-      <Loader2 class="size-4 animate-spin" aria-hidden="true" />
-      <span>Downloading</span>
+  <component
+    :is="to ? 'router-link' : 'div'"
+    :to="to"
+    class="poster-outer"
+    :class="sizeClass"
+  >
+    <!-- Inner container: scales on hover, clips image to rounded corners -->
+    <div class="poster-inner">
+      <img
+        class="poster"
+        :class="{ 'is-loaded': !isLoading, 'cursor-pointer': clickable }"
+        :src="posterPath"
+        :alt="item.title"
+        loading="lazy"
+        decoding="async"
+        @load="onLoad"
+        @error="onError"
+      />
+      <Skeleton v-if="isLoading" class="poster-skeleton" />
+      <!-- Status badges stay with the image -->
+      <div v-if="isDownloading" class="status-badge download-badge">
+        <Loader2 class="size-4 animate-spin" aria-hidden="true" />
+        <span>Downloading</span>
+      </div>
+      <div v-else-if="showLibraryBadge" class="status-badge library-badge">
+        <CheckCircle2 class="size-4" aria-hidden="true" />
+        <span>In library</span>
+      </div>
     </div>
-    <div v-else-if="showLibraryBadge" class="status-badge library-badge">
-      <CheckCircle2 class="size-4" aria-hidden="true" />
-      <span>In library</span>
+    <!-- Overlay: sibling to inner, not clipped by it -->
+    <div class="poster-overlay">
+      <div class="poster-info">
+        <span class="poster-title">{{ item.title }}</span>
+        <span class="poster-year">{{ item.year }}</span>
+      </div>
     </div>
   </component>
 </template>
@@ -33,7 +48,6 @@ import {
   type ModelMovieDetail,
   type ModelMovieRail,
   type ModelSeriesDetail,
-  type ModelSeriesRail,
 } from '@/client/types.gen'
 
 /**
@@ -71,7 +85,7 @@ type PosterSize = keyof typeof POSTER_SIZES
 
 const props = withDefaults(
   defineProps<{
-    item: ModelMovieDetail | ModelSeriesDetail | ModelHydratedTitle | ModelMovieRail | ModelSeriesRail | ModelLibraryItem
+    item: ModelMovieDetail | ModelSeriesDetail | ModelHydratedTitle | ModelMovieRail |  ModelLibraryItem
     size?: PosterSize
     to?: { path: string } | string
     clickable?: boolean
@@ -118,16 +132,30 @@ const onError = () => {
 </script>
 
 <style scoped>
-.poster-wrap {
+/* Outer container: handles sizing, is the clickable link, no clipping */
+.poster-outer {
   display: block;
   width: 100%;
-  aspect-ratio: 2 / 3; /* common movie/TV poster ratio */
+  aspect-ratio: 2 / 3;
   position: relative;
-  border-radius: 8px !important;
-  overflow: hidden;
-  background-color: #111827; /* neutral placeholder while loading */
   text-decoration: none;
   color: inherit;
+}
+
+/* Inner container: scales on hover, clips image to rounded corners */
+.poster-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #111827;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.poster-outer:hover .poster-inner {
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 10;
 }
 
 .poster {
@@ -138,7 +166,6 @@ const onError = () => {
   object-fit: cover;
   opacity: 0;
   transition: opacity 150ms ease;
-  border-radius: 8px !important;
 }
 
 .poster.is-loaded {
@@ -168,11 +195,11 @@ const onError = () => {
 }
 
 .library-badge svg {
-  color: #22c55e; /* emerald-500 */
+  color: #22c55e;
 }
 
 .download-badge svg {
-  color: #3b82f6; /* blue-500 */
+  color: #3b82f6;
 }
 
 .poster-skeleton {
@@ -180,24 +207,68 @@ const onError = () => {
   inset: 0;
   width: 100%;
   height: 100%;
-  border-radius: 8px !important;
 }
 
 .poster--sm {
-  --poster-width: 8rem; /* ~128px */
+  --poster-width: 8rem;
   width: var(--poster-width);
   max-width: var(--poster-width);
 }
 
 .poster--md {
-  --poster-width: 11rem; /* ~176px */
+  --poster-width: 11rem;
   width: var(--poster-width);
   max-width: var(--poster-width);
 }
 
 .poster--lg {
-  --poster-width: 16rem; /* ~256px */
+  --poster-width: 16rem;
   width: var(--poster-width);
   max-width: var(--poster-width);
+}
+
+/* Overlay: sibling to inner, not clipped by it */
+.poster-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 40%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0.75rem;
+}
+
+.poster-outer:hover .poster-overlay {
+  opacity: 1;
+  transform: scale(1.05);
+  z-index: 20;
+}
+
+/* Info text at bottom */
+.poster-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.poster-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  color: white;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.poster-year {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 </style>

@@ -27,7 +27,7 @@
     <div class="rail-body relative">
       <div
         ref="scroller"
-        class="scroller flex gap-3 overflow-x-auto overflow-y-hidden pb-4"
+        class="scroller flex gap-3 overflow-x-auto overflow-y-hidden pt-4 pb-8 px-4 -mx-4"
         @scroll="onScroll"
       >
         <slot />
