@@ -53,11 +53,33 @@ func (s *TmdbService) GetMovieDetails(ctx context.Context, id int64) (tmdb.Movie
 	}, STATIC_TTL)
 }
 
+// GetMovieDetailsWithExtras fetches movie details with appended release dates and watch providers.
+// Uses DYNAMIC_TTL (1 hour) since watch providers can change frequently.
+func (s *TmdbService) GetMovieDetailsWithExtras(ctx context.Context, id int64) (tmdb.MovieDetails, error) {
+	cacheKey := fmt.Sprintf("tmdb_movie_details_extras_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.MovieDetails, error) {
+		return s.client.GetMovieDetails(int(id), map[string]string{
+			"append_to_response": "release_dates,watch/providers",
+		})
+	}, DYNAMIC_TTL)
+}
+
 func (s *TmdbService) GetSeriesDetails(ctx context.Context, id int64) (tmdb.TVDetails, error) {
 	cacheKey := fmt.Sprintf("tmdb_series_details_%d", id)
 	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVDetails, error) {
 		return s.client.GetTVDetails(int(id), map[string]string{})
 	}, STATIC_TTL)
+}
+
+// GetSeriesDetailsWithExtras fetches series details with appended content ratings and watch providers.
+// Uses DYNAMIC_TTL (1 hour) since watch providers can change frequently.
+func (s *TmdbService) GetSeriesDetailsWithExtras(ctx context.Context, id int64) (tmdb.TVDetails, error) {
+	cacheKey := fmt.Sprintf("tmdb_series_details_extras_%d", id)
+	return getOrFetchFromCache(ctx, s.repo, s.logger, cacheKey, func() (*tmdb.TVDetails, error) {
+		return s.client.GetTVDetails(int(id), map[string]string{
+			"append_to_response": "content_ratings,watch/providers",
+		})
+	}, DYNAMIC_TTL)
 }
 
 func (s *TmdbService) GetTVSeasonDetails(ctx context.Context, id int64, seasonNumber int) (tmdb.TVSeasonDetails, error) {

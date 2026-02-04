@@ -2309,6 +2309,8 @@ definitions:
         items:
           $ref: '#/definitions/model.Video'
         type: array
+      watchProviders:
+        $ref: '#/definitions/model.WatchProviders'
       year:
         type: integer
     required:
@@ -2599,6 +2601,8 @@ definitions:
         items:
           $ref: '#/definitions/model.Video'
         type: array
+      watchProviders:
+        $ref: '#/definitions/model.WatchProviders'
       year:
         type: integer
     required:
@@ -2640,6 +2644,39 @@ definitions:
     - size
     - tmdbId
     - type
+    type: object
+  model.WatchProvider:
+    properties:
+      displayPriority:
+        type: integer
+      logoPath:
+        type: string
+      providerId:
+        type: integer
+      providerName:
+        type: string
+    required:
+    - displayPriority
+    - logoPath
+    - providerId
+    - providerName
+    type: object
+  model.WatchProviders:
+    properties:
+      buy:
+        items:
+          $ref: '#/definitions/model.WatchProvider'
+        type: array
+      flatrate:
+        items:
+          $ref: '#/definitions/model.WatchProvider'
+        type: array
+      link:
+        type: string
+      rent:
+        items:
+          $ref: '#/definitions/model.WatchProvider'
+        type: array
     type: object
   service.CurrentVersionInfo:
     properties:

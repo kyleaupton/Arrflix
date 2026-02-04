@@ -39,7 +39,8 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 	tmdb := NewTmdbService(r, l)
 	indexer := NewIndexerService(r, l, c)
 	indexerSource := prowlarradapter.New(indexer.Client(), l)
-	media := NewMediaService(r, l, tmdb)
+	settings := NewSettingsService(r)
+	media := NewMediaService(r, l, tmdb, settings)
 	policies := NewPoliciesService(r, l)
 	policyEngine := policy.NewEngine(r, l)
 	users := NewUsersService(r)
@@ -58,7 +59,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 		NameTemplates:      NewNameTemplatesService(r),
 		Policies:           policies,
 		Scanner:            NewScannerService(r, l, tmdb),
-		Settings:           NewSettingsService(r),
+		Settings:           settings,
 		Setup:              NewSetupService(r, users),
 		Tmdb:               tmdb,
 		UnmatchedFiles:     NewUnmatchedFilesService(r, l, tmdb),

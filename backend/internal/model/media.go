@@ -159,3 +159,17 @@ const (
 	MediaTypeMovie  MediaType = "movie"
 	MediaTypeSeries MediaType = "series"
 )
+
+type WatchProvider struct {
+	ProviderID      int    `json:"providerId"`
+	ProviderName    string `json:"providerName"`
+	LogoPath        string `json:"logoPath"`
+	DisplayPriority int    `json:"displayPriority"`
+}
+
+type WatchProviders struct {
+	Link     string          `json:"link,omitempty"`
+	Flatrate []WatchProvider `json:"flatrate,omitempty"`
+	Rent     []WatchProvider `json:"rent,omitempty"`
+	Buy      []WatchProvider `json:"buy,omitempty"`
+}

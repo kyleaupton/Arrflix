@@ -6762,6 +6762,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Video"
                     }
                 },
+                "watchProviders": {
+                    "$ref": "#/definitions/model.WatchProviders"
+                },
                 "year": {
                     "type": "integer"
                 }
@@ -7183,6 +7186,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Video"
                     }
                 },
+                "watchProviders": {
+                    "$ref": "#/definitions/model.WatchProviders"
+                },
                 "year": {
                     "type": "integer"
                 }
@@ -7227,6 +7233,55 @@ const docTemplate = `{
                 "type": {
                     "description": "\"Trailer\", \"Teaser\", \"Clip\", etc.",
                     "type": "string"
+                }
+            }
+        },
+        "model.WatchProvider": {
+            "type": "object",
+            "required": [
+                "displayPriority",
+                "logoPath",
+                "providerId",
+                "providerName"
+            ],
+            "properties": {
+                "displayPriority": {
+                    "type": "integer"
+                },
+                "logoPath": {
+                    "type": "string"
+                },
+                "providerId": {
+                    "type": "integer"
+                },
+                "providerName": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.WatchProviders": {
+            "type": "object",
+            "properties": {
+                "buy": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WatchProvider"
+                    }
+                },
+                "flatrate": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WatchProvider"
+                    }
+                },
+                "link": {
+                    "type": "string"
+                },
+                "rent": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WatchProvider"
+                    }
                 }
             }
         },

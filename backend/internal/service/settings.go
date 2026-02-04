@@ -62,6 +62,12 @@ func (s *SettingsService) GetAll(ctx context.Context) (map[string]any, error) {
 }
 
 // Set validates and persists a single key/value according to the registry.
+// GetUserRegion returns the user's region code for watch provider lookups.
+// TODO: Make this configurable via user settings.
+func (s *SettingsService) GetUserRegion(ctx context.Context) string {
+	return "US"
+}
+
 func (s *SettingsService) Set(ctx context.Context, key string, val any) error {
 	spec, ok := Registry[key]
 	if !ok {

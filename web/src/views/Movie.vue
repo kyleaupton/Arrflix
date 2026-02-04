@@ -28,6 +28,8 @@
         </template>
       </MediaHero>
 
+      <WatchProviders :providers="data.watchProviders" />
+
       <div v-if="data.files?.length" class="space-y-4">
         <h2 class="text-xl font-semibold">Local Files</h2>
         <DataTable
@@ -71,6 +73,7 @@ import Poster from '@/components/poster/Poster.vue'
 import RailCast from '@/components/rails/RailCast.vue'
 import RailVideos from '@/components/rails/RailVideos.vue'
 import RailMovie from '@/components/rails/RailMovie.vue'
+import WatchProviders from '@/components/media/WatchProviders.vue'
 import DataTable from '@/components/tables/DataTable.vue'
 import { movieFilesColumns } from '@/components/tables/configs/movieFilesTableConfig'
 import { useModal } from '@/composables/useModal'

@@ -37,10 +37,11 @@ type MovieDetail struct {
 	PosterPath    string  `json:"posterPath,omitempty"`
 	BackdropPath  string  `json:"backdropPath,omitempty"`
 
-	Files           []FileInfo  `json:"files"`
-	Credits         *Credits    `json:"credits,omitempty"`
-	Videos          []Video     `json:"videos,omitempty"`
-	Recommendations []MovieRail `json:"recommendations,omitempty"`
+	Files           []FileInfo      `json:"files"`
+	Credits         *Credits        `json:"credits,omitempty"`
+	Videos          []Video         `json:"videos,omitempty"`
+	Recommendations []MovieRail     `json:"recommendations,omitempty"`
+	WatchProviders  *WatchProviders `json:"watchProviders,omitempty"`
 }
 
 type EpisodeAvailability struct {
@@ -79,8 +80,9 @@ type SeriesDetail struct {
 	PosterPath     string  `json:"posterPath,omitempty"`
 	BackdropPath   string  `json:"backdropPath,omitempty"`
 
-	Availability Availability   `json:"availability"`
-	Seasons      []SeasonDetail `json:"seasons"`
-	Credits      *Credits       `json:"credits,omitempty"`
-	Videos       []Video        `json:"videos,omitempty"`
+	Availability   Availability    `json:"availability"`
+	Seasons        []SeasonDetail  `json:"seasons"`
+	Credits        *Credits        `json:"credits,omitempty"`
+	Videos         []Video         `json:"videos,omitempty"`
+	WatchProviders *WatchProviders `json:"watchProviders,omitempty"`
 }

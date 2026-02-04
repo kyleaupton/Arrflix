@@ -16,13 +16,14 @@ import (
 )
 
 type MediaService struct {
-	repo   *repo.Repository
-	logger *logger.Logger
-	tmdb   *TmdbService
+	repo     *repo.Repository
+	logger   *logger.Logger
+	tmdb     *TmdbService
+	settings *SettingsService
 }
 
-func NewMediaService(r *repo.Repository, l *logger.Logger, tmdb *TmdbService) *MediaService {
-	return &MediaService{repo: r, logger: l, tmdb: tmdb}
+func NewMediaService(r *repo.Repository, l *logger.Logger, tmdb *TmdbService, settings *SettingsService) *MediaService {
+	return &MediaService{repo: r, logger: l, tmdb: tmdb, settings: settings}
 }
 
 func (s *MediaService) ListLibraryItems(ctx context.Context) ([]dbgen.MediaItem, error) {
@@ -190,6 +191,68 @@ func extractEpisodeRuntime(runtimes []int) *int {
 	return &runtimes[0]
 }
 
+// extractWatchProviders extracts watch providers for a specific region from TMDB results
+func extractWatchProviders(results *tmdb.WatchProviderResults, region string) *model.WatchProviders {
+	if results == nil || results.Results == nil {
+		return nil
+	}
+
+	regionData, ok := results.Results[region]
+	if !ok {
+		return nil
+	}
+
+	wp := &model.WatchProviders{
+		Link: regionData.Link,
+	}
+
+	// Extract flatrate (streaming) providers
+	if regionData.Flatrate != nil {
+		wp.Flatrate = make([]model.WatchProvider, len(*regionData.Flatrate))
+		for i, p := range *regionData.Flatrate {
+			wp.Flatrate[i] = model.WatchProvider{
+				ProviderID:      p.ProviderID,
+				ProviderName:    p.ProviderName,
+				LogoPath:        p.LogoPath,
+				DisplayPriority: p.DisplayPriority,
+			}
+		}
+	}
+
+	// Extract rent providers
+	if regionData.Rent != nil {
+		wp.Rent = make([]model.WatchProvider, len(*regionData.Rent))
+		for i, p := range *regionData.Rent {
+			wp.Rent[i] = model.WatchProvider{
+				ProviderID:      p.ProviderID,
+				ProviderName:    p.ProviderName,
+				LogoPath:        p.LogoPath,
+				DisplayPriority: p.DisplayPriority,
+			}
+		}
+	}
+
+	// Extract buy providers
+	if regionData.Buy != nil {
+		wp.Buy = make([]model.WatchProvider, len(*regionData.Buy))
+		for i, p := range *regionData.Buy {
+			wp.Buy[i] = model.WatchProvider{
+				ProviderID:      p.ProviderID,
+				ProviderName:    p.ProviderName,
+				LogoPath:        p.LogoPath,
+				DisplayPriority: p.DisplayPriority,
+			}
+		}
+	}
+
+	// Return nil if no providers found
+	if len(wp.Flatrate) == 0 && len(wp.Rent) == 0 && len(wp.Buy) == 0 {
+		return nil
+	}
+
+	return wp
+}
+
 func transformMovieCredits(tmdbCredits tmdb.MovieCredits) *model.Credits {
 	cast := make([]model.CastMember, 0, len(tmdbCredits.Cast))
 	for _, c := range tmdbCredits.Cast {
@@ -345,7 +408,8 @@ func (s *MediaService) GetMovie(ctx context.Context, id int64) (model.Movie, err
 }
 
 func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.MovieDetail, error) {
-	tmdbDetails, err := s.tmdb.GetMovieDetails(ctx, tmdbID)
+	// Use extended fetch to get release dates and watch providers in one call
+	tmdbDetails, err := s.tmdb.GetMovieDetailsWithExtras(ctx, tmdbID)
 	if err != nil {
 		return model.MovieDetail{}, err
 	}
@@ -402,13 +466,17 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 		fileInfos = append(fileInfos, downloadJobFiles...)
 	}
 
-	// Fetch certification
+	// Extract certification from appended release dates
 	var certification string
-	releaseDates, err := s.tmdb.GetMovieReleaseDates(ctx, tmdbID)
-	if err != nil {
-		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch movie release dates")
-	} else {
-		certification = extractMovieCertification(&releaseDates)
+	if tmdbDetails.MovieReleaseDatesAppend != nil && tmdbDetails.ReleaseDates != nil {
+		certification = extractMovieCertification(tmdbDetails.ReleaseDates)
+	}
+
+	// Extract watch providers for user's region
+	region := s.settings.GetUserRegion(ctx)
+	var watchProviders *model.WatchProviders
+	if tmdbDetails.MovieWatchProvidersAppend != nil {
+		watchProviders = extractWatchProviders(tmdbDetails.WatchProviders, region)
 	}
 
 	return model.MovieDetail{
@@ -428,6 +496,7 @@ func (s *MediaService) GetMovieDetail(ctx context.Context, tmdbID int64) (model.
 		Credits:         credits,
 		Videos:          videos,
 		Recommendations: recommendations,
+		WatchProviders:  watchProviders,
 	}, nil
 }
 
@@ -494,7 +563,8 @@ func (s *MediaService) GetSeries(ctx context.Context, id int64) (model.Series, e
 }
 
 func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model.SeriesDetail, error) {
-	tmdbDetails, err := s.tmdb.GetSeriesDetails(ctx, tmdbID)
+	// Use extended fetch to get content ratings and watch providers in one call
+	tmdbDetails, err := s.tmdb.GetSeriesDetailsWithExtras(ctx, tmdbID)
 	if err != nil {
 		return model.SeriesDetail{}, err
 	}
@@ -606,17 +676,21 @@ func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model
 		videos = transformVideos(tmdbVideos)
 	}
 
-	// Fetch certification
+	// Extract certification from appended content ratings
 	var certification string
-	contentRatings, err := s.tmdb.GetTVContentRatings(ctx, tmdbID)
-	if err != nil {
-		s.logger.Debug().Err(err).Int64("tmdb_id", tmdbID).Msg("Failed to fetch series content ratings")
-	} else {
-		certification = extractTVCertification(&contentRatings)
+	if tmdbDetails.TVContentRatingsAppend != nil && tmdbDetails.ContentRatings != nil {
+		certification = extractTVCertification(tmdbDetails.ContentRatings)
 	}
 
 	// Extract episode runtime
 	episodeRuntime := extractEpisodeRuntime(tmdbDetails.EpisodeRunTime)
+
+	// Extract watch providers for user's region
+	region := s.settings.GetUserRegion(ctx)
+	var watchProviders *model.WatchProviders
+	if tmdbDetails.TVWatchProvidersAppend != nil {
+		watchProviders = extractWatchProviders(tmdbDetails.WatchProviders, region)
+	}
 
 	return model.SeriesDetail{
 		TmdbID:         tmdbDetails.ID,
@@ -637,6 +711,7 @@ func (s *MediaService) GetSeriesDetail(ctx context.Context, tmdbID int64) (model
 		Seasons:        seasons,
 		Credits:        credits,
 		Videos:         videos,
+		WatchProviders: watchProviders,
 	}, nil
 }
 

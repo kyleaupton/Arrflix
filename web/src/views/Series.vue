@@ -21,6 +21,8 @@
         </template>
       </MediaHero>
 
+      <WatchProviders :providers="data.watchProviders" />
+
       <div v-if="data.seasons?.length" class="space-y-4">
         <h2 class="text-xl font-semibold">Seasons</h2>
         <div class="space-y-2">
@@ -232,6 +234,7 @@ import MediaHero from '@/components/media/MediaHero.vue'
 import Poster from '@/components/poster/Poster.vue'
 import RailCast from '@/components/rails/RailCast.vue'
 import RailVideos from '@/components/rails/RailVideos.vue'
+import WatchProviders from '@/components/media/WatchProviders.vue'
 import { useModal } from '@/composables/useModal'
 import { buildMetadataSubtitle } from '@/lib/utils'
 import { useDownloadJobsStore, type DownloadJob } from '@/stores/downloadJobs'

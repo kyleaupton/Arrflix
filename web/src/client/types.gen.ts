@@ -969,6 +969,7 @@ export type ModelMovieDetail = {
     title: string;
     tmdbId: number;
     videos?: Array<ModelVideo>;
+    watchProviders?: ModelWatchProviders;
     year?: number;
 };
 
@@ -1106,6 +1107,7 @@ export type ModelSeriesDetail = {
     title: string;
     tmdbId: number;
     videos?: Array<ModelVideo>;
+    watchProviders?: ModelWatchProviders;
     year?: number;
 };
 
@@ -1130,6 +1132,20 @@ export type ModelVideo = {
      * "Trailer", "Teaser", "Clip", etc.
      */
     type: string;
+};
+
+export type ModelWatchProvider = {
+    displayPriority: number;
+    logoPath: string;
+    providerId: number;
+    providerName: string;
+};
+
+export type ModelWatchProviders = {
+    buy?: Array<ModelWatchProvider>;
+    flatrate?: Array<ModelWatchProvider>;
+    link?: string;
+    rent?: Array<ModelWatchProvider>;
 };
 
 export type ServiceCurrentVersionInfo = {
