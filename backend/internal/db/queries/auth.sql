@@ -75,3 +75,9 @@ SELECT * FROM role WHERE name = $1;
 
 -- name: CountUsersByRole :one
 SELECT COUNT(*) FROM user_role WHERE role_id = $1;
+
+-- name: GetIdentityByProviderSubject :one
+SELECT * FROM user_identity WHERE provider = $1 AND subject = $2;
+
+-- name: GetUserByID :one
+SELECT * FROM app_user WHERE id = $1;

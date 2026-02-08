@@ -2,9 +2,15 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/jackc/pgx/v5/pgtype"
+	dbgen "github.com/kyleaupton/arrflix/internal/db/sqlc"
 	pw "github.com/kyleaupton/arrflix/internal/password"
 	"github.com/kyleaupton/arrflix/internal/repo"
 )
@@ -12,10 +18,25 @@ import (
 type AuthService struct {
 	repo      *repo.Repository
 	jwtSecret string
+	settings  *SettingsService
+	invites   *InvitesService
 }
 
-func NewAuthService(r *repo.Repository, cfg *cfg) *AuthService {
-	return &AuthService{repo: r, jwtSecret: cfg.jwtSecret}
+func NewAuthService(r *repo.Repository, cfg *cfg, settings *SettingsService, invites *InvitesService) *AuthService {
+	return &AuthService{repo: r, jwtSecret: cfg.jwtSecret, settings: settings, invites: invites}
+}
+
+// IssueToken generates a JWT for the given user.
+func (s *AuthService) IssueToken(userID pgtype.UUID, email *string, username string) (string, error) {
+	claims := jwt.MapClaims{
+		"sub":   userID.String(),
+		"email": email,
+		"name":  username,
+		"exp":   time.Now().Add(24 * time.Hour).Unix(),
+		"iat":   time.Now().Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(s.jwtSecret))
 }
 
 func (s *AuthService) Login(ctx context.Context, login, password string) (string, error) {
@@ -36,15 +57,87 @@ func (s *AuthService) Login(ctx context.Context, login, password string) (string
 		}
 	}
 
-	claims := jwt.MapClaims{
-		"sub":   user.ID.String(),
-		"email": user.Email,
-		"name":  user.Username,
-		"exp":   time.Now().Add(24 * time.Hour).Unix(),
-		"iat":   time.Now().Unix(),
+	return s.IssueToken(user.ID, user.Email, user.Username)
+}
+
+// LoginWithPlex handles the Plex SSO login flow. It finds or creates a user
+// based on the Plex identity, respecting the signup strategy for new users.
+func (s *AuthService) LoginWithPlex(ctx context.Context, plexSubject, email, username, plexToken string, raw json.RawMessage) (string, error) {
+	// Check if this Plex identity already exists (returning user)
+	identity, err := s.repo.GetIdentityByProviderSubject(ctx, dbgen.AuthProviderPlex, plexSubject)
+	if err == nil {
+		// Returning user — get their account
+		user, err := s.repo.GetUserByID(ctx, identity.UserID)
+		if err != nil {
+			return "", fmt.Errorf("failed to get user: %w", err)
+		}
+		if !user.IsActive {
+			return "", errors.New("account is disabled")
+		}
+
+		// Update identity with fresh token
+		s.upsertIdentity(ctx, user.ID, plexSubject, username, plexToken, raw)
+
+		return s.IssueToken(user.ID, user.Email, user.Username)
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.jwtSecret))
+
+	// Check if an existing local account matches the Plex email
+	existingUser, err := s.repo.GetUserByEmail(ctx, email)
+	if err == nil {
+		// Existing active user found — link Plex identity to their account
+		s.upsertIdentity(ctx, existingUser.ID, plexSubject, username, plexToken, raw)
+		return s.IssueToken(existingUser.ID, existingUser.Email, existingUser.Username)
+	}
+
+	// New user — check signup strategy
+	all, err := s.settings.GetAll(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to read settings: %w", err)
+	}
+	strategy, _ := all["auth.signup_strategy"].(string)
+	if strategy == "" {
+		strategy = "invite_only"
+	}
+
+	if strategy == "invite_only" {
+		if err := s.invites.CheckAndClaim(ctx, email); err != nil {
+			return "", fmt.Errorf("no invite found for %s", email)
+		}
+	}
+
+	// Create user without password
+	user, err := s.repo.CreateUserNoPassword(ctx, email, username, true)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "unique") {
+			return "", errors.New("email or username already exists")
+		}
+		return "", fmt.Errorf("failed to create user: %w", err)
+	}
+
+	// Assign default role
+	role, err := s.repo.GetRoleByName(ctx, "user")
+	if err == nil {
+		_ = s.repo.AssignRole(ctx, user.ID, role.ID)
+	}
+
+	// Link Plex identity
+	s.upsertIdentity(ctx, user.ID, plexSubject, username, plexToken, raw)
+
+	return s.IssueToken(user.ID, user.Email, user.Username)
+}
+
+func (s *AuthService) upsertIdentity(ctx context.Context, userID pgtype.UUID, plexSubject, username, plexToken string, raw json.RawMessage) {
+	_ = func() error {
+		_, err := s.repo.UpsertIdentity(ctx, dbgen.UpsertIdentityParams{
+			UserID:      userID,
+			Provider:    dbgen.AuthProviderPlex,
+			Subject:     plexSubject,
+			Username:    &username,
+			AccessToken: &plexToken,
+			Column8:     raw,
+		})
+		return err
+	}()
 }
 
 var ErrInvalidCredentials = jwt.ErrInvalidKey

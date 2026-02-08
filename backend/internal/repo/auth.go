@@ -10,11 +10,13 @@ import (
 type AuthRepo interface {
 	GetUserByEmail(ctx context.Context, email string) (dbgen.AppUser, error)
 	GetUserByLogin(ctx context.Context, login string) (dbgen.AppUser, error)
+	GetUserByID(ctx context.Context, id pgtype.UUID) (dbgen.AppUser, error)
 	UpdateUserPassword(ctx context.Context, userID pgtype.UUID, newHash string) error
 	// User CRUD
 	ListUsers(ctx context.Context) ([]dbgen.ListUsersRow, error)
 	GetUser(ctx context.Context, id pgtype.UUID) (dbgen.GetUserRow, error)
 	CreateUser(ctx context.Context, email, username, passwordHash string, isActive bool) (dbgen.AppUser, error)
+	CreateUserNoPassword(ctx context.Context, email, username string, isActive bool) (dbgen.AppUser, error)
 	UpdateUser(ctx context.Context, id pgtype.UUID, email, username string, isActive bool) (dbgen.AppUser, error)
 	DeleteUser(ctx context.Context, id pgtype.UUID) error
 	// Role Management
@@ -24,6 +26,9 @@ type AuthRepo interface {
 	AssignRole(ctx context.Context, userID, roleID pgtype.UUID) error
 	UnassignAllRoles(ctx context.Context, userID pgtype.UUID) error
 	CountUsersByRole(ctx context.Context, roleID pgtype.UUID) (int64, error)
+	// Identity
+	GetIdentityByProviderSubject(ctx context.Context, provider dbgen.AuthProvider, subject string) (dbgen.UserIdentity, error)
+	UpsertIdentity(ctx context.Context, params dbgen.UpsertIdentityParams) (dbgen.UserIdentity, error)
 }
 
 func (r *Repository) GetUserByEmail(ctx context.Context, email string) (dbgen.AppUser, error) {
@@ -97,4 +102,30 @@ func (r *Repository) UnassignAllRoles(ctx context.Context, userID pgtype.UUID) e
 
 func (r *Repository) CountUsersByRole(ctx context.Context, roleID pgtype.UUID) (int64, error) {
 	return r.Q.CountUsersByRole(ctx, roleID)
+}
+
+func (r *Repository) GetUserByID(ctx context.Context, id pgtype.UUID) (dbgen.AppUser, error) {
+	return r.Q.GetUserByID(ctx, id)
+}
+
+func (r *Repository) CreateUserNoPassword(ctx context.Context, email, username string, isActive bool) (dbgen.AppUser, error) {
+	return r.Q.CreateUser(ctx, dbgen.CreateUserParams{
+		Email:        &email,
+		Username:     username,
+		PasswordHash: nil,
+		IsActive:     isActive,
+	})
+}
+
+// Identity implementations
+
+func (r *Repository) GetIdentityByProviderSubject(ctx context.Context, provider dbgen.AuthProvider, subject string) (dbgen.UserIdentity, error) {
+	return r.Q.GetIdentityByProviderSubject(ctx, dbgen.GetIdentityByProviderSubjectParams{
+		Provider: provider,
+		Subject:  subject,
+	})
+}
+
+func (r *Repository) UpsertIdentity(ctx context.Context, params dbgen.UpsertIdentityParams) (dbgen.UserIdentity, error) {
+	return r.Q.UpsertIdentity(ctx, params)
 }

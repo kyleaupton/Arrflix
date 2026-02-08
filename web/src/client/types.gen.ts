@@ -448,6 +448,14 @@ export type HandlersPatchRequest = {
     value: unknown;
 };
 
+export type HandlersPlexExchangeRequest = {
+    pin_id: number;
+};
+
+export type HandlersPlexExchangeResponse = {
+    token: string;
+};
+
 export type HandlersPolicyCreateRequest = {
     description: string;
     enabled: boolean;
@@ -1258,6 +1266,54 @@ export type PostV1AuthLoginResponses = {
 };
 
 export type PostV1AuthLoginResponse = PostV1AuthLoginResponses[keyof PostV1AuthLoginResponses];
+
+export type PostV1AuthPlexExchangeData = {
+    /**
+     * Plex exchange request
+     */
+    body: HandlersPlexExchangeRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/auth/plex/exchange';
+};
+
+export type PostV1AuthPlexExchangeErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Unauthorized
+     */
+    401: {
+        [key: string]: string;
+    };
+    /**
+     * Forbidden
+     */
+    403: {
+        [key: string]: string;
+    };
+    /**
+     * Conflict
+     */
+    409: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1AuthPlexExchangeError = PostV1AuthPlexExchangeErrors[keyof PostV1AuthPlexExchangeErrors];
+
+export type PostV1AuthPlexExchangeResponses = {
+    /**
+     * OK
+     */
+    200: HandlersPlexExchangeResponse;
+};
+
+export type PostV1AuthPlexExchangeResponse = PostV1AuthPlexExchangeResponses[keyof PostV1AuthPlexExchangeResponses];
 
 export type GetV1AuthProfileData = {
     body?: never;

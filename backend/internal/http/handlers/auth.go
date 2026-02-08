@@ -1,12 +1,17 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kyleaupton/arrflix/internal/config"
 	"github.com/kyleaupton/arrflix/internal/logger"
+	"github.com/kyleaupton/arrflix/internal/plex"
 	"github.com/kyleaupton/arrflix/internal/service"
 	"github.com/labstack/echo/v4"
 )
@@ -21,6 +26,8 @@ type Auth struct {
 func (h *Auth) RegisterPublic(v1 *echo.Group) {
 	v1.POST("/auth/login", h.Login)
 	v1.POST("/auth/signup", h.Signup)
+	v1.GET("/auth/plex/start", h.PlexStart)
+	v1.POST("/auth/plex/exchange", h.PlexExchange)
 }
 
 func (h *Auth) RegisterProtected(v1 *echo.Group) {
@@ -120,6 +127,96 @@ func (h *Auth) Signup(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, SignupResponse{Success: true})
+}
+
+// PlexStart initiates the Plex SSO flow by creating a PIN and redirecting to Plex.
+func (h *Auth) PlexStart(c echo.Context) error {
+	redirectURI := c.QueryParam("redirect_uri")
+	if redirectURI == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "redirect_uri required"})
+	}
+
+	pc := plex.NewClient()
+	pin, err := pc.CreatePin()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to create plex pin"})
+	}
+
+	// Build forward URL: append pinId to the frontend callback
+	sep := "?"
+	if strings.Contains(redirectURI, "?") {
+		sep = "&"
+	}
+	forwardURL := fmt.Sprintf("%s%spinId=%d", redirectURI, sep, pin.ID)
+
+	authURL := plex.AuthURL(pin.Code, forwardURL)
+	return c.Redirect(http.StatusFound, authURL)
+}
+
+type PlexExchangeRequest struct {
+	PinID int `json:"pin_id" validate:"required"`
+}
+
+type PlexExchangeResponse struct {
+	Token string `json:"token" validate:"required"`
+}
+
+// @Summary  Exchange Plex PIN for JWT
+// @Tags     auth
+// @Accept   json
+// @Produce  json
+// @Param    payload body PlexExchangeRequest true "Plex exchange request"
+// @Success  200 {object} PlexExchangeResponse
+// @Failure  400 {object} map[string]string
+// @Failure  401 {object} map[string]string
+// @Failure  403 {object} map[string]string
+// @Failure  409 {object} map[string]string
+// @Router   /v1/auth/plex/exchange [post]
+func (h *Auth) PlexExchange(c echo.Context) error {
+	var req PlexExchangeRequest
+	if err := c.Bind(&req); err != nil || req.PinID == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "pin_id required"})
+	}
+
+	pc := plex.NewClient()
+
+	// Check if the PIN has been claimed
+	pin, err := pc.CheckPin(req.PinID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "failed to check plex pin"})
+	}
+	if pin.AuthToken == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "plex authorization not completed"})
+	}
+
+	// Get Plex user info
+	plexUser, err := pc.GetUser(pin.AuthToken)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to get plex user info"})
+	}
+
+	// Marshal raw Plex user data for storage
+	raw, _ := json.Marshal(plexUser)
+
+	plexSubject := strconv.Itoa(plexUser.ID)
+	ctx := c.Request().Context()
+
+	signed, err := h.svc.Auth.LoginWithPlex(ctx, plexSubject, plexUser.Email, plexUser.Username, pin.AuthToken, raw)
+	if err != nil {
+		msg := err.Error()
+		if strings.Contains(msg, "no invite") {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": msg})
+		}
+		if strings.Contains(msg, "already exists") {
+			return c.JSON(http.StatusConflict, map[string]string{"error": msg})
+		}
+		if strings.Contains(msg, "disabled") {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": msg})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "login failed"})
+	}
+
+	return c.JSON(http.StatusOK, PlexExchangeResponse{Token: signed})
 }
 
 type MeResponse struct {

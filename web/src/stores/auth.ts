@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { client } from '@/client/client.gen'
-import { postV1AuthLogin } from '@/client/sdk.gen'
+import { postV1AuthLogin, postV1AuthPlexExchange } from '@/client/sdk.gen'
 
 type Nullable<T> = T | null
 
@@ -119,13 +119,35 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function completeSsoFromCallback(params: URLSearchParams): Promise<boolean> {
-    // Prefer token; optionally could handle `code` with a future exchange
+    // Direct token (future use)
     const fromToken = params.get('token')
     if (fromToken) {
       setToken(fromToken)
       await fetchMe()
       return true
     }
+
+    // Plex PIN exchange
+    const pinId = params.get('pinId')
+    if (pinId) {
+      try {
+        const res = await postV1AuthPlexExchange<true>({
+          throwOnError: true,
+          body: { pin_id: Number(pinId) },
+        })
+        const nextToken = res.data.token
+        if (nextToken) {
+          setToken(nextToken)
+          await fetchMe()
+          return true
+        }
+      } catch (err: unknown) {
+        const error = err as { body?: { error?: string } }
+        errorMessage.value = error?.body?.error || 'Plex login failed'
+      }
+      return false
+    }
+
     return false
   }
 

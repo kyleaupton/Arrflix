@@ -1147,6 +1147,20 @@ definitions:
     - key
     - value
     type: object
+  handlers.PlexExchangeRequest:
+    properties:
+      pin_id:
+        type: integer
+    required:
+    - pin_id
+    type: object
+  handlers.PlexExchangeResponse:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
   handlers.PolicyCreateRequest:
     properties:
       description:
@@ -2871,6 +2885,51 @@ paths:
           schema:
             $ref: '#/definitions/handlers.LoginResponse'
       summary: Login
+      tags:
+      - auth
+  /v1/auth/plex/exchange:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Plex exchange request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PlexExchangeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.PlexExchangeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Exchange Plex PIN for JWT
       tags:
       - auth
   /v1/auth/profile:

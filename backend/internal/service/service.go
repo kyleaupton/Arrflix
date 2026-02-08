@@ -45,13 +45,14 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 	policies := NewPoliciesService(r, l)
 	policyEngine := policy.NewEngine(r, l)
 	users := NewUsersService(r)
+	invites := NewInvitesService(r)
 
 	return &Services{
-		Auth:               NewAuthService(r, cfg),
+		Auth:               NewAuthService(r, cfg, settings, invites),
 		Downloaders:        NewDownloadersService(r),
 		DownloadCandidates: NewDownloadCandidatesService(r, l, indexerSource, media, policyEngine),
 		DownloadJobs:       NewDownloadJobsService(r),
-		Invites:            NewInvitesService(r),
+		Invites:            invites,
 		Feed:               NewFeedService(r, l, tmdb),
 		Import:             NewImportService(r, l),
 		ImportTasks:        NewImportTasksService(r),

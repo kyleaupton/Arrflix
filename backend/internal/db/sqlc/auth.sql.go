@@ -66,6 +66,33 @@ func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const getIdentityByProviderSubject = `-- name: GetIdentityByProviderSubject :one
+SELECT id, user_id, provider, subject, username, access_token, refresh_token, token_expires_at, raw, created_at FROM user_identity WHERE provider = $1 AND subject = $2
+`
+
+type GetIdentityByProviderSubjectParams struct {
+	Provider AuthProvider `json:"provider"`
+	Subject  string       `json:"subject"`
+}
+
+func (q *Queries) GetIdentityByProviderSubject(ctx context.Context, arg GetIdentityByProviderSubjectParams) (UserIdentity, error) {
+	row := q.db.QueryRow(ctx, getIdentityByProviderSubject, arg.Provider, arg.Subject)
+	var i UserIdentity
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Provider,
+		&i.Subject,
+		&i.Username,
+		&i.AccessToken,
+		&i.RefreshToken,
+		&i.TokenExpiresAt,
+		&i.Raw,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getRoleByName = `-- name: GetRoleByName :one
 SELECT id, name, description, built_in, created_at FROM role WHERE name = $1
 `
@@ -133,6 +160,26 @@ SELECT id, email, username, avatar_url, password_hash, is_active, created_at, up
 
 func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (AppUser, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, lower)
+	var i AppUser
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.AvatarUrl,
+		&i.PasswordHash,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, email, username, avatar_url, password_hash, is_active, created_at, updated_at FROM app_user WHERE id = $1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (AppUser, error) {
+	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i AppUser
 	err := row.Scan(
 		&i.ID,
