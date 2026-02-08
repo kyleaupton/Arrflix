@@ -2744,15 +2744,6 @@ definitions:
           $ref: '#/definitions/model.WatchProvider'
         type: array
     type: object
-  service.CurrentVersionInfo:
-    properties:
-      commit:
-        type: string
-      version:
-        type: string
-    required:
-    - version
-    type: object
   service.LatestVersionInfo:
     properties:
       commit:
@@ -2805,10 +2796,8 @@ definitions:
     - tmdbId
     - type
     type: object
-  service.UpdateInfo:
+  service.UpdateDetails:
     properties:
-      current:
-        $ref: '#/definitions/service.CurrentVersionInfo'
       latest:
         $ref: '#/definitions/service.LatestVersionInfo'
       reason:
@@ -2816,7 +2805,6 @@ definitions:
       status:
         $ref: '#/definitions/service.UpdateStatus'
     required:
-    - current
     - status
     type: object
   service.UpdateStatus:
@@ -2829,7 +2817,7 @@ definitions:
     - StatusUpToDate
     - StatusUpdateAvailable
     - StatusUnknown
-  versioninfo.BuildInfo:
+  service.VersionInfo:
     properties:
       buildDate:
         type: string
@@ -2839,9 +2827,12 @@ definitions:
         additionalProperties:
           type: string
         type: object
+      update:
+        $ref: '#/definitions/service.UpdateDetails'
       version:
         type: string
     required:
+    - update
     - version
     type: object
 info:
@@ -5050,18 +5041,6 @@ paths:
       summary: Refresh match suggestions
       tags:
       - unmatched-files
-  /v1/update:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/service.UpdateInfo'
-      summary: Check for updates
-      tags:
-      - version
   /v1/users:
     get:
       produces:
@@ -5196,8 +5175,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/versioninfo.BuildInfo'
-      summary: Get version information
+            $ref: '#/definitions/service.VersionInfo'
+      summary: Get version and update information
       tags:
       - version
 swagger: "2.0"

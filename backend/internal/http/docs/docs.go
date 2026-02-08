@@ -3400,25 +3400,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/update": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "version"
-                ],
-                "summary": "Check for updates",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/service.UpdateInfo"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/users": {
             "get": {
                 "produces": [
@@ -3621,12 +3602,12 @@ const docTemplate = `{
                 "tags": [
                     "version"
                 ],
-                "summary": "Get version information",
+                "summary": "Get version and update information",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/versioninfo.BuildInfo"
+                            "$ref": "#/definitions/service.VersionInfo"
                         }
                     }
                 }
@@ -7509,20 +7490,6 @@ const docTemplate = `{
                 }
             }
         },
-        "service.CurrentVersionInfo": {
-            "type": "object",
-            "required": [
-                "version"
-            ],
-            "properties": {
-                "commit": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                }
-            }
-        },
         "service.LatestVersionInfo": {
             "type": "object",
             "required": [
@@ -7599,16 +7566,12 @@ const docTemplate = `{
                 }
             }
         },
-        "service.UpdateInfo": {
+        "service.UpdateDetails": {
             "type": "object",
             "required": [
-                "current",
                 "status"
             ],
             "properties": {
-                "current": {
-                    "$ref": "#/definitions/service.CurrentVersionInfo"
-                },
                 "latest": {
                     "$ref": "#/definitions/service.LatestVersionInfo"
                 },
@@ -7633,9 +7596,10 @@ const docTemplate = `{
                 "StatusUnknown"
             ]
         },
-        "versioninfo.BuildInfo": {
+        "service.VersionInfo": {
             "type": "object",
             "required": [
+                "update",
                 "version"
             ],
             "properties": {
@@ -7650,6 +7614,9 @@ const docTemplate = `{
                     "additionalProperties": {
                         "type": "string"
                     }
+                },
+                "update": {
+                    "$ref": "#/definitions/service.UpdateDetails"
                 },
                 "version": {
                     "type": "string"

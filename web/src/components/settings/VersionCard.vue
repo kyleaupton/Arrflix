@@ -1,112 +1,63 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { getV1Version, getV1Update } from '@/client/sdk.gen'
+import { getV1Version } from '@/client/sdk.gen'
+import type { ServiceVersionInfo } from '@/client/types.gen'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
+import { CheckCircle2, ArrowUpCircle, ExternalLink, RefreshCw } from 'lucide-vue-next'
 
-type BuildInfo = {
-  version: string
-  commit?: string
-  buildDate?: string
-  components?: Record<string, string>
-}
+const isLoading = ref(true)
+const isRefreshing = ref(false)
+const error = ref<string | null>(null)
+const data = ref<ServiceVersionInfo | null>(null)
 
-type UpdateInfo = {
-  status: 'up_to_date' | 'update_available' | 'unknown'
-  reason?: string
-  current: {
-    version: string
-    commit?: string
+async function load(refreshing = false) {
+  if (refreshing) {
+    isRefreshing.value = true
+  } else {
+    isLoading.value = true
   }
-  latest?: {
-    version: string
-    tag: string
-    url: string
-    publishedAt?: string
-    notes?: string
-    commit?: string
-    ref?: string
-  }
-}
-
-const isLoadingVersion = ref(true)
-const isLoadingUpdate = ref(false)
-const versionError = ref<string | null>(null)
-const updateError = ref<string | null>(null)
-
-const buildInfo = ref<BuildInfo | null>(null)
-const updateInfo = ref<UpdateInfo | null>(null)
-
-async function loadVersion() {
-  isLoadingVersion.value = true
-  versionError.value = null
+  error.value = null
   try {
     const res = await getV1Version<true>({ throwOnError: true })
-    buildInfo.value = res.data as BuildInfo
-  } catch (err) {
-    versionError.value = 'Failed to load version information'
-    console.error(err)
+    data.value = res.data as ServiceVersionInfo
+  } catch {
+    error.value = 'Failed to load version information'
   } finally {
-    isLoadingVersion.value = false
+    isLoading.value = false
+    isRefreshing.value = false
   }
 }
 
-async function checkUpdate() {
-  isLoadingUpdate.value = true
-  updateError.value = null
-  try {
-    const res = await getV1Update<true>({ throwOnError: true })
-    updateInfo.value = res.data as UpdateInfo
-  } catch (err) {
-    updateError.value = 'Failed to check for updates'
-    console.error(err)
-  } finally {
-    isLoadingUpdate.value = false
-  }
-}
+onMounted(() => load())
 
-onMounted(async () => {
-  await loadVersion()
-  await checkUpdate()
+const isDev = computed(() => {
+  return data.value?.update.status === 'unknown' && data.value?.update.reason === 'dev_build'
 })
 
-const statusBadgeVariant = computed(() => {
-  if (!updateInfo.value) return 'secondary'
-  switch (updateInfo.value.status) {
-    case 'up_to_date':
-      return 'outline'
-    case 'update_available':
-      return 'default'
-    case 'unknown':
-      return 'secondary'
-    default:
-      return 'secondary'
-  }
+const isUpdateAvailable = computed(() => {
+  return data.value?.update.status === 'update_available'
 })
 
-const statusText = computed(() => {
-  if (!updateInfo.value) return 'Unknown'
-  switch (updateInfo.value.status) {
-    case 'up_to_date':
-      return 'Up to date'
-    case 'update_available':
-      return 'Update available'
-    case 'unknown':
-      return 'Unknown'
-    default:
-      return 'Unknown'
-  }
+const isUpToDate = computed(() => {
+  return data.value?.update.status === 'up_to_date'
 })
 
 const formattedBuildDate = computed(() => {
-  if (!buildInfo.value?.buildDate) return null
+  if (!data.value?.buildDate) return null
   try {
-    return new Date(buildInfo.value.buildDate).toLocaleString()
+    return new Date(data.value.buildDate).toLocaleDateString()
   } catch {
-    return buildInfo.value.buildDate
+    return data.value.buildDate
   }
+})
+
+const secondaryInfo = computed(() => {
+  const parts: string[] = []
+  if (data.value?.commit) parts.push(data.value.commit)
+  if (formattedBuildDate.value) parts.push(formattedBuildDate.value)
+  return parts.join(' \u00b7 ')
 })
 </script>
 
@@ -116,98 +67,117 @@ const formattedBuildDate = computed(() => {
       <CardTitle>Version</CardTitle>
     </CardHeader>
     <CardContent>
-      <div v-if="versionError" class="text-sm text-destructive">
-        {{ versionError }}
+      <!-- Loading -->
+      <div v-if="isLoading" class="space-y-3">
+        <Skeleton class="h-8 w-24" />
+        <Skeleton class="h-4 w-48" />
       </div>
-      <div v-else-if="isLoadingVersion" class="space-y-2">
-        <Skeleton class="h-4 w-full" />
-        <Skeleton class="h-4 w-3/4" />
+
+      <!-- Error -->
+      <div v-else-if="error" class="text-sm text-destructive">
+        {{ error }}
       </div>
-      <div v-else class="space-y-4">
-        <!-- Current Version -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-muted-foreground">Current version</span>
-            <span class="font-mono text-sm font-medium">{{ buildInfo?.version }}</span>
+
+      <!-- Loaded -->
+      <div v-else-if="data" class="space-y-4">
+        <!-- Hero version -->
+        <div>
+          <div class="text-2xl font-semibold font-mono tracking-tight">
+            {{ data.version }}
           </div>
-          <div v-if="buildInfo?.commit" class="flex items-center justify-between">
-            <span class="text-sm text-muted-foreground">Commit</span>
-            <span class="font-mono text-sm">{{ buildInfo.commit }}</span>
-          </div>
-          <div v-if="formattedBuildDate" class="flex items-center justify-between">
-            <span class="text-sm text-muted-foreground">Build date</span>
-            <span class="text-sm">{{ formattedBuildDate }}</span>
-          </div>
-          <div v-if="buildInfo?.components?.prowlarr" class="flex items-center justify-between">
-            <span class="text-sm text-muted-foreground">Prowlarr</span>
-            <span class="font-mono text-sm">{{ buildInfo.components.prowlarr }}</span>
+          <div v-if="secondaryInfo" class="text-xs text-muted-foreground font-mono mt-1">
+            {{ secondaryInfo }}
           </div>
         </div>
 
-        <!-- Update Status -->
-        <div class="border-t pt-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-sm text-muted-foreground">Update status</span>
-            <Badge :variant="statusBadgeVariant">{{ statusText }}</Badge>
+        <!-- Up to date -->
+        <div v-if="isUpToDate" class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 class="size-4" />
+            <span>Up to date</span>
           </div>
-
-          <div v-if="updateError" class="text-sm text-destructive mb-3">
-            {{ updateError }}
-          </div>
-
-          <!-- Update Available Info -->
-          <div
-            v-if="updateInfo?.status === 'update_available' && updateInfo.latest"
-            class="space-y-2 mb-3"
-          >
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-muted-foreground">Latest version</span>
-              <span class="font-mono text-sm font-medium">{{ updateInfo.latest.version }}</span>
-            </div>
-            <div v-if="updateInfo.latest.publishedAt" class="flex items-center justify-between">
-              <span class="text-sm text-muted-foreground">Published</span>
-              <span class="text-sm">{{
-                new Date(updateInfo.latest.publishedAt).toLocaleDateString()
-              }}</span>
-            </div>
-            <div v-if="updateInfo.latest.notes" class="mt-3">
-              <div class="text-sm text-muted-foreground mb-2">Release notes</div>
-              <div
-                class="text-sm bg-muted p-3 rounded-md max-h-48 overflow-y-auto whitespace-pre-wrap"
-              >
-                {{ updateInfo.latest.notes }}
-              </div>
-            </div>
-            <Button
-              v-if="updateInfo.latest.url"
-              as="a"
-              :href="updateInfo.latest.url"
-              target="_blank"
-              variant="outline"
-              size="sm"
-              class="w-full mt-2"
-            >
-              View on GitHub
-            </Button>
-          </div>
-
-          <!-- Unknown Status Reason -->
-          <div
-            v-if="updateInfo?.status === 'unknown' && updateInfo.reason"
-            class="text-sm text-muted-foreground mb-3"
-          >
-            {{ updateInfo.reason.replace(/_/g, ' ') }}
-          </div>
-
           <Button
-            @click="checkUpdate"
-            :disabled="isLoadingUpdate"
-            variant="outline"
+            variant="ghost"
             size="sm"
-            class="w-full"
+            class="h-7 px-2 text-xs text-muted-foreground"
+            :disabled="isRefreshing"
+            @click="load(true)"
           >
-            {{ isLoadingUpdate ? 'Checking...' : 'Check for updates' }}
+            <RefreshCw class="size-3 mr-1" :class="{ 'animate-spin': isRefreshing }" />
+            Check again
           </Button>
+        </div>
+
+        <!-- Update available -->
+        <div v-else-if="isUpdateAvailable && data.update.latest" class="space-y-3">
+          <div
+            class="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/50 p-3 space-y-2"
+          >
+            <div class="flex items-center gap-1.5">
+              <ArrowUpCircle class="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span class="text-sm font-medium text-blue-900 dark:text-blue-100">
+                {{ data.update.latest.version }} available
+              </span>
+            </div>
+            <div
+              v-if="data.update.latest.notes"
+              class="text-xs text-blue-800 dark:text-blue-200/80 max-h-32 overflow-y-auto whitespace-pre-wrap pl-[22px]"
+            >
+              {{ data.update.latest.notes }}
+            </div>
+            <div class="flex items-center gap-2 pl-[22px]">
+              <Button
+                v-if="data.update.latest.url"
+                as="a"
+                :href="data.update.latest.url"
+                target="_blank"
+                variant="outline"
+                size="sm"
+                class="h-7 px-2 text-xs"
+              >
+                View on GitHub
+                <ExternalLink class="size-3 ml-1" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="h-7 px-2 text-xs text-muted-foreground"
+                :disabled="isRefreshing"
+                @click="load(true)"
+              >
+                <RefreshCw class="size-3 mr-1" :class="{ 'animate-spin': isRefreshing }" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dev build -->
+        <div v-else-if="isDev" class="text-xs text-muted-foreground">
+          Development build
+        </div>
+
+        <!-- Other unknown -->
+        <div v-else class="flex items-center justify-between">
+          <span class="text-xs text-muted-foreground"> Unable to determine update status </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-7 px-2 text-xs text-muted-foreground"
+            :disabled="isRefreshing"
+            @click="load(true)"
+          >
+            <RefreshCw class="size-3 mr-1" :class="{ 'animate-spin': isRefreshing }" />
+            Check again
+          </Button>
+        </div>
+
+        <!-- Prowlarr footnote -->
+        <div
+          v-if="data.components?.prowlarr"
+          class="text-xs text-muted-foreground border-t pt-3"
+        >
+          Prowlarr {{ data.components.prowlarr }}
         </div>
       </div>
     </CardContent>

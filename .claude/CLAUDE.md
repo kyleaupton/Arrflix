@@ -207,8 +207,7 @@ Arrflix includes a built-in version tracking and update check system:
 - Stable releases use semantic versioning and compare against GitHub releases
 
 **API Endpoints:**
-- `GET /api/v1/version` - Returns current build information
-- `GET /api/v1/update` - Checks GitHub for available updates (cached 15 minutes)
+- `GET /api/v1/version` - Returns build information and update status (cached 15 minutes)
 
 **Implementation:**
 - `backend/internal/versioninfo/` - Reads environment variables

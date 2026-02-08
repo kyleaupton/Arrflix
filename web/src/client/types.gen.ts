@@ -1180,11 +1180,6 @@ export type ModelWatchProviders = {
     rent?: Array<ModelWatchProvider>;
 };
 
-export type ServiceCurrentVersionInfo = {
-    commit?: string;
-    version: string;
-};
-
 export type ServiceLatestVersionInfo = {
     commit?: string;
     notes?: string;
@@ -1211,8 +1206,7 @@ export type ServiceSuggestedMatch = {
     year?: number;
 };
 
-export type ServiceUpdateInfo = {
-    current: ServiceCurrentVersionInfo;
+export type ServiceUpdateDetails = {
     latest?: ServiceLatestVersionInfo;
     reason?: string;
     status: ServiceUpdateStatus;
@@ -1220,12 +1214,13 @@ export type ServiceUpdateInfo = {
 
 export type ServiceUpdateStatus = 'up_to_date' | 'update_available' | 'unknown';
 
-export type VersioninfoBuildInfo = {
+export type ServiceVersionInfo = {
     buildDate?: string;
     commit?: string;
     components?: {
         [key: string]: string;
     };
+    update: ServiceUpdateDetails;
     version: string;
 };
 
@@ -3845,22 +3840,6 @@ export type PostV1UnmatchedFilesByIdRefreshResponses = {
 
 export type PostV1UnmatchedFilesByIdRefreshResponse = PostV1UnmatchedFilesByIdRefreshResponses[keyof PostV1UnmatchedFilesByIdRefreshResponses];
 
-export type GetV1UpdateData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/v1/update';
-};
-
-export type GetV1UpdateResponses = {
-    /**
-     * OK
-     */
-    200: ServiceUpdateInfo;
-};
-
-export type GetV1UpdateResponse = GetV1UpdateResponses[keyof GetV1UpdateResponses];
-
 export type GetV1UsersData = {
     body?: never;
     path?: never;
@@ -4013,7 +3992,7 @@ export type GetV1VersionResponses = {
     /**
      * OK
      */
-    200: VersioninfoBuildInfo;
+    200: ServiceVersionInfo;
 };
 
 export type GetV1VersionResponse = GetV1VersionResponses[keyof GetV1VersionResponses];
