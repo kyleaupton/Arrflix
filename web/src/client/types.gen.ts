@@ -326,6 +326,24 @@ export type HandlersActionUpdateRequest = {
     value: string;
 };
 
+export type HandlersBootstrapConfig = {
+    signupStrategy: string;
+    siteTitle: string;
+    version: string;
+};
+
+export type HandlersBootstrapResponse = {
+    config: HandlersBootstrapConfig;
+    initialized: boolean;
+    user: HandlersBootstrapUser;
+};
+
+export type HandlersBootstrapUser = {
+    email: string;
+    id: string;
+    username: string;
+};
+
 export type HandlersDownloadCandidateResponse = {
     job: DbgenDownloadJob;
     trace: ModelEvaluationTrace;
@@ -1297,6 +1315,22 @@ export type PutV1AuthProfilePasswordResponses = {
 };
 
 export type PutV1AuthProfilePasswordResponse = PutV1AuthProfilePasswordResponses[keyof PutV1AuthProfilePasswordResponses];
+
+export type GetV1BootstrapData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/bootstrap';
+};
+
+export type GetV1BootstrapResponses = {
+    /**
+     * OK
+     */
+    200: HandlersBootstrapResponse;
+};
+
+export type GetV1BootstrapResponse = GetV1BootstrapResponses[keyof GetV1BootstrapResponses];
 
 export type GetV1DownloadJobsData = {
     body?: never;

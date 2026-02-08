@@ -5,7 +5,9 @@ import { VueQueryPlugin } from '@tanstack/vue-query'
 import App from '@/App.vue'
 import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
+import { useAppStore } from '@/stores/app'
 import { client } from '@/client/client.gen'
+import { getV1Bootstrap } from '@/client/sdk.gen'
 import '@/main.css'
 
 const app = createApp(App)
@@ -32,8 +34,24 @@ client.interceptors.response.use(async (response) => {
 // Force dark mode globally
 document.documentElement.classList.add('dark')
 
-// Rehydrate auth before mount so guards/UI have token
+// Restore token from localStorage (no HTTP call)
 const auth = useAuthStore()
-await auth.rehydrate()
+auth.rehydrateToken()
+
+// Single bootstrap request populates auth + app state
+const appStore = useAppStore()
+try {
+  const res = await getV1Bootstrap<true>({ throwOnError: true })
+  appStore.setFromBootstrap({ initialized: res.data.initialized, config: res.data.config })
+  if (res.data.user) {
+    auth.setUserFromBootstrap(res.data.user)
+  } else if (auth.token) {
+    // Token was present but server says invalid — clear it
+    auth.logout()
+  }
+} catch {
+  // Bootstrap failed — app will show in default state
+}
+appStore.isReady = true
 
 app.mount('#app')

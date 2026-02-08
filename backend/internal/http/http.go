@@ -40,6 +40,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	nameTemplates := handlers.NewNameTemplates(services)
 	policies := handlers.NewPolicies(services)
 	settings := handlers.NewSettings(services)
+	bootstrap := handlers.NewBootstrap(cfg, services)
 	setup := handlers.NewSetup(services)
 	unmatchedFiles := handlers.NewUnmatchedFiles(services)
 	users := handlers.NewUsers(services)
@@ -53,6 +54,7 @@ func NewServer(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, servic
 	protected := v1.Group("", middlewares.JWT(cfg.JWTSecret))
 
 	// Public routes
+	bootstrap.RegisterPublic(v1)
 	auth.RegisterPublic(v1)
 	health.RegisterPublic(e)
 	setup.RegisterPublic(v1)

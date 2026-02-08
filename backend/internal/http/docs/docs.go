@@ -147,6 +147,25 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/bootstrap": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bootstrap"
+                ],
+                "summary": "Bootstrap application",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BootstrapResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/download-jobs": {
             "get": {
                 "produces": [
@@ -4795,6 +4814,63 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BootstrapConfig": {
+            "type": "object",
+            "required": [
+                "signupStrategy",
+                "siteTitle",
+                "version"
+            ],
+            "properties": {
+                "signupStrategy": {
+                    "type": "string"
+                },
+                "siteTitle": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BootstrapResponse": {
+            "type": "object",
+            "required": [
+                "config",
+                "initialized",
+                "user"
+            ],
+            "properties": {
+                "config": {
+                    "$ref": "#/definitions/handlers.BootstrapConfig"
+                },
+                "initialized": {
+                    "type": "boolean"
+                },
+                "user": {
+                    "$ref": "#/definitions/handlers.BootstrapUser"
+                }
+            }
+        },
+        "handlers.BootstrapUser": {
+            "type": "object",
+            "required": [
+                "email",
+                "id",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

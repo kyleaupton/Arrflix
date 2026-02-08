@@ -90,13 +90,8 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to) => {
+router.beforeEach((to) => {
   const auth = useAuthStore()
-
-  // Rehydrate auth token if needed
-  if (!auth.token) {
-    await auth.rehydrate()
-  }
 
   // Public routes (login, setup, auth callback)
   if (to.meta.public) {

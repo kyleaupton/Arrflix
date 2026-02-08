@@ -26,8 +26,8 @@ func SetupMode(services *service.Services) echo.MiddlewareFunc {
 			// Setup routes: /api/v1/setup/*
 			isSetupRoute := strings.HasPrefix(path, "/api/v1/setup/")
 
-			// Health check is always allowed
-			if path == "/health" {
+			// Health check and bootstrap are always allowed
+			if path == "/health" || path == "/api/v1/bootstrap" {
 				return next(c)
 			}
 

@@ -61,6 +61,26 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /** Restore token from localStorage without making any HTTP calls. */
+  function rehydrateToken(): boolean {
+    const stored = localStorage.getItem(AUTH_TOKEN_KEY)
+    if (!stored) {
+      setToken(null)
+      return false
+    }
+    setToken(stored)
+    return true
+  }
+
+  /** Set user state directly from bootstrap response data. */
+  function setUserFromBootstrap(u: { id: string; email?: string | null; username?: string | null }) {
+    user.value = {
+      sub: u.id,
+      email: u.email,
+      name: u.username,
+    }
+  }
+
   async function rehydrate(): Promise<void> {
     const stored = localStorage.getItem(AUTH_TOKEN_KEY)
     if (!stored) {
@@ -122,6 +142,8 @@ export const useAuthStore = defineStore('auth', () => {
     errorMessage,
     isAuthenticated,
     // actions
+    rehydrateToken,
+    setUserFromBootstrap,
     rehydrate,
     loginWithPassword,
     startPlexSso,
