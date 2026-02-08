@@ -2,7 +2,6 @@
 import { ref, inject, watch, computed } from 'vue'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import {
-  postV1UsersMutation,
   putV1UsersByIdMutation,
   putV1UsersByIdRoleMutation,
   getV1RolesOptions,
@@ -22,14 +21,13 @@ import {
 } from '@/components/ui/select'
 
 interface Props {
-  user?: User | null
+  user: User
 }
 
 const props = defineProps<Props>()
 
 const dialogRef = inject('dialogRef') as { value: { close: (data?: unknown) => void } }
 
-const createUserMutation = useMutation(postV1UsersMutation())
 const updateUserMutation = useMutation(putV1UsersByIdMutation())
 const updateRoleMutation = useMutation(putV1UsersByIdRoleMutation())
 
@@ -39,7 +37,6 @@ const { data: roles } = useQuery(getV1RolesOptions())
 const userForm = ref({
   email: '',
   username: '',
-  password: '',
   role: 'user',
   is_active: true,
 })
@@ -50,35 +47,24 @@ const userError = ref<string | null>(null)
 watch(
   () => props.user,
   (user) => {
-    if (user) {
-      // Extract role name from roles JSONB
-      let roleName = 'user'
-      if (user.roles) {
-        try {
-          const rolesArray = typeof user.roles === 'string' ? JSON.parse(user.roles) : user.roles
-          if (Array.isArray(rolesArray) && rolesArray.length > 0) {
-            roleName = rolesArray[0].name || 'user'
-          }
-        } catch {
-          roleName = 'user'
+    // Extract role name from roles JSONB
+    let roleName = 'user'
+    if (user.roles) {
+      try {
+        const rolesArray = typeof user.roles === 'string' ? JSON.parse(user.roles) : user.roles
+        if (Array.isArray(rolesArray) && rolesArray.length > 0) {
+          roleName = rolesArray[0].name || 'user'
         }
+      } catch {
+        roleName = 'user'
       }
+    }
 
-      userForm.value = {
-        email: user.email || '',
-        username: user.username || '',
-        password: '', // Don't populate password on edit
-        role: roleName,
-        is_active: user.is_active ?? true,
-      }
-    } else {
-      userForm.value = {
-        email: '',
-        username: '',
-        password: '',
-        role: 'user',
-        is_active: true,
-      }
+    userForm.value = {
+      email: user.email || '',
+      username: user.username || '',
+      role: roleName,
+      is_active: user.is_active ?? true,
     }
     userError.value = null
   },
@@ -91,57 +77,38 @@ const handleSave = async () => {
     return
   }
 
-  // Password required on create, optional on update
-  if (!props.user && !userForm.value.password) {
-    userError.value = 'Password is required'
-    return
-  }
-
   try {
-    if (props.user?.id) {
-      // Update user
-      await updateUserMutation.mutateAsync({
-        path: { id: props.user.id },
-        body: {
-          email: userForm.value.email,
-          username: userForm.value.username,
-          is_active: userForm.value.is_active,
-        },
-      })
+    await updateUserMutation.mutateAsync({
+      path: { id: props.user.id },
+      body: {
+        email: userForm.value.email,
+        username: userForm.value.username,
+        is_active: userForm.value.is_active,
+      },
+    })
 
-      // Extract current role
-      let currentRole = 'user'
-      if (props.user.roles) {
-        try {
-          const rolesArray =
-            typeof props.user.roles === 'string' ? JSON.parse(props.user.roles) : props.user.roles
-          if (Array.isArray(rolesArray) && rolesArray.length > 0) {
-            currentRole = rolesArray[0].name || 'user'
-          }
-        } catch {
-          currentRole = 'user'
+    // Extract current role
+    let currentRole = 'user'
+    if (props.user.roles) {
+      try {
+        const rolesArray =
+          typeof props.user.roles === 'string' ? JSON.parse(props.user.roles) : props.user.roles
+        if (Array.isArray(rolesArray) && rolesArray.length > 0) {
+          currentRole = rolesArray[0].name || 'user'
         }
+      } catch {
+        currentRole = 'user'
       }
+    }
 
-      // If role changed, update role separately
-      if (currentRole !== userForm.value.role) {
-        await updateRoleMutation.mutateAsync({
-          path: { id: props.user.id },
-          body: { role: userForm.value.role },
-        })
-      }
-    } else {
-      // Create user
-      await createUserMutation.mutateAsync({
-        body: {
-          email: userForm.value.email,
-          username: userForm.value.username,
-          password: userForm.value.password,
-          role: userForm.value.role,
-          is_active: userForm.value.is_active,
-        },
+    // If role changed, update role separately
+    if (currentRole !== userForm.value.role) {
+      await updateRoleMutation.mutateAsync({
+        path: { id: props.user.id },
+        body: { role: userForm.value.role },
       })
     }
+
     userError.value = null
     dialogRef.value.close({ saved: true })
   } catch (err: any) {
@@ -155,14 +122,13 @@ const handleCancel = () => {
 
 const isLoading = computed(
   () =>
-    createUserMutation.isPending.value ||
     updateUserMutation.isPending.value ||
     updateRoleMutation.isPending.value,
 )
 </script>
 
 <template>
-  <BaseDialog :title="user ? 'Edit User' : 'Add User'">
+  <BaseDialog title="Edit User">
     <div class="flex flex-col gap-4">
       <div
         v-if="userError"
@@ -177,17 +143,6 @@ const isLoading = computed(
       <div class="flex flex-col gap-2">
         <Label for="user-username">Username</Label>
         <Input id="user-username" v-model="userForm.username" />
-      </div>
-      <div class="flex flex-col gap-2">
-        <Label for="user-password"
-          >Password {{ user ? '(leave blank to keep current)' : '' }}</Label
-        >
-        <Input
-          id="user-password"
-          v-model="userForm.password"
-          type="password"
-          :placeholder="user ? 'Leave blank to keep current password' : 'Minimum 8 characters'"
-        />
       </div>
       <div class="flex flex-col gap-2">
         <Label for="user-role">Role</Label>

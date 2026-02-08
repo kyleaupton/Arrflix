@@ -116,7 +116,7 @@ async function handleSubmit(e: Event) {
                   </Button>
                   <FieldDescription class="text-center">
                     Don't have an account?
-                    <a href="#"> Sign up </a>
+                    <router-link to="/signup"> Sign up </router-link>
                   </FieldDescription>
                 </Field>
               </FieldGroup>

@@ -1235,6 +1235,26 @@ definitions:
     required:
     - initialized
     type: object
+  handlers.SignupRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  handlers.SignupResponse:
+    properties:
+      success:
+        type: boolean
+    required:
+    - success
+    type: object
   handlers.UnmatchedFileMatchRequest:
     properties:
       episode:
@@ -1248,25 +1268,6 @@ definitions:
     required:
     - tmdbId
     - type
-    type: object
-  handlers.UserCreateRequest:
-    properties:
-      email:
-        type: string
-      is_active:
-        type: boolean
-      password:
-        type: string
-      role:
-        type: string
-      username:
-        type: string
-    required:
-    - email
-    - is_active
-    - password
-    - role
-    - username
     type: object
   handlers.UserPasswordUpdateRequest:
     properties:
@@ -2930,6 +2931,45 @@ paths:
           schema:
             type: string
       summary: Update current user password
+      tags:
+      - auth
+  /v1/auth/signup:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Signup request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.SignupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Signup
       tags:
       - auth
   /v1/bootstrap:
@@ -5034,32 +5074,6 @@ paths:
               $ref: '#/definitions/handlers.userSwagger'
             type: array
       summary: List users
-      tags:
-      - users
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Create user
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UserCreateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/handlers.userSwagger'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Create user
       tags:
       - users
   /v1/users/{id}:

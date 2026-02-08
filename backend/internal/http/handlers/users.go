@@ -16,7 +16,6 @@ func NewUsers(s *service.Services) *Users { return &Users{svc: s} }
 func (h *Users) RegisterProtected(v1 *echo.Group) {
 	// Admin endpoints
 	v1.GET("/users", h.List)
-	v1.POST("/users", h.Create)
 	v1.GET("/users/:id", h.Get)
 	v1.PUT("/users/:id", h.Update)
 	v1.DELETE("/users/:id", h.Delete)
@@ -41,14 +40,6 @@ type userSwagger struct {
 	Roles       []string `json:"roles"`
 	CreatedAt   string   `json:"created_at"`
 	UpdatedAt   string   `json:"updated_at"`
-}
-
-type UserCreateRequest struct {
-	Email       string `json:"email"`
-	Username string `json:"username"`
-	Password    string `json:"password"`
-	Role        string `json:"role"`
-	IsActive    bool   `json:"is_active"`
 }
 
 type UserUpdateRequest struct {
@@ -78,30 +69,6 @@ func (h *Users) List(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list users"})
 	}
 	return c.JSON(http.StatusOK, users)
-}
-
-// Create user
-// @Summary Create user
-// @Tags    users
-// @Accept  json
-// @Produce json
-// @Param   payload body handlers.UserCreateRequest true "Create user"
-// @Success 201 {object} handlers.userSwagger
-// @Failure 400 {object} map[string]string
-// @Router  /v1/users [post]
-func (h *Users) Create(c echo.Context) error {
-	var req UserCreateRequest
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
-	}
-
-	ctx := c.Request().Context()
-	user, err := h.svc.Users.Create(ctx, req.Email, req.Username, req.Password, req.Role, req.IsActive)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-	}
-
-	return c.JSON(http.StatusCreated, user)
 }
 
 // Get user

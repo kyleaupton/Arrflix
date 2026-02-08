@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useQuery, useMutation } from '@tanstack/vue-query'
-import { Plus } from 'lucide-vue-next'
+import { Plus, X } from 'lucide-vue-next'
 import {
   getV1UsersOptions,
   deleteV1UsersByIdMutation,
+  getV1InvitesOptions,
+  deleteV1InvitesByIdMutation,
 } from '@/client/@tanstack/vue-query.gen'
 import type { User } from '@/components/tables/configs/userTableConfig'
 import DataTable from '@/components/tables/DataTable.vue'
@@ -17,25 +19,25 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import UserDialog from '@/components/modals/UserDialog.vue'
+import InviteDialog from '@/components/modals/InviteDialog.vue'
 
 // Data queries
 const { data: users, isLoading, refetch } = useQuery(getV1UsersOptions())
+const { data: invites, isLoading: invitesLoading, refetch: refetchInvites } = useQuery(getV1InvitesOptions())
 const modal = useModal()
 
 // Mutations
 const deleteUserMutation = useMutation(deleteV1UsersByIdMutation())
+const deleteInviteMutation = useMutation(deleteV1InvitesByIdMutation())
 
 // State
 const userError = ref<string | null>(null)
 
 // Handlers
-const handleAddUser = () => {
-  modal.open(UserDialog, {
-    props: {
-      user: null,
-    },
+const handleInviteUser = () => {
+  modal.open(InviteDialog, {
     onClose: () => {
-      refetch()
+      refetchInvites()
     },
   })
 }
@@ -67,11 +69,90 @@ const handleDeleteUser = async (user: User) => {
   }
 }
 
+const handleDeleteInvite = async (invite: any) => {
+  const confirmed = await modal.confirm({
+    title: 'Revoke Invite',
+    message: `Are you sure you want to revoke the invite for "${invite.email}"?`,
+    severity: 'danger',
+  })
+  if (!confirmed) return
+  try {
+    await deleteInviteMutation.mutateAsync({ path: { id: invite.id } })
+    refetchInvites()
+  } catch (err) {
+    userError.value = err instanceof Error ? err.message : 'Failed to revoke invite'
+  }
+}
+
 const userActions = createUserActions(handleEditUser, handleDeleteUser)
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString()
+}
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
+    <!-- Pending Invites -->
+    <Card v-if="invitesLoading || (invites && invites.length > 0)">
+      <CardHeader>
+        <div class="flex items-center justify-between">
+          <div>
+            <CardTitle class="text-xl font-semibold mb-2">Invites</CardTitle>
+            <p class="text-sm text-muted-foreground">
+              Pending and claimed invitations.
+            </p>
+          </div>
+          <Button @click="handleInviteUser">
+            <Plus class="mr-2 size-4" />
+            Invite User
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div v-if="invitesLoading" class="space-y-3">
+          <Skeleton class="h-10 w-full" />
+          <Skeleton class="h-10 w-full" />
+        </div>
+        <div v-else-if="invites && invites.length > 0" class="space-y-2">
+          <div
+            v-for="invite in invites"
+            :key="invite.id"
+            class="flex items-center justify-between rounded-lg border p-3"
+          >
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-medium">{{ invite.email }}</span>
+              <span
+                v-if="invite.claimed_at"
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              >
+                Claimed
+              </span>
+              <span
+                v-else
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+              >
+                Pending
+              </span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-muted-foreground">{{ formatDate(invite.created_at) }}</span>
+              <Button
+                v-if="!invite.claimed_at"
+                variant="ghost"
+                size="icon"
+                class="size-8"
+                @click="handleDeleteInvite(invite)"
+              >
+                <X class="size-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- Users -->
     <Card>
       <CardHeader>
         <div class="flex items-center justify-between">
@@ -81,9 +162,9 @@ const userActions = createUserActions(handleEditUser, handleDeleteUser)
               Manage application users and their roles.
             </p>
           </div>
-          <Button @click="handleAddUser">
+          <Button v-if="!invites || invites.length === 0" @click="handleInviteUser">
             <Plus class="mr-2 size-4" />
-            Add User
+            Invite User
           </Button>
         </div>
       </CardHeader>

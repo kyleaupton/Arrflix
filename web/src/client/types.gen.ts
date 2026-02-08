@@ -492,19 +492,21 @@ export type HandlersSetupStatusResponse = {
     initialized: boolean;
 };
 
+export type HandlersSignupRequest = {
+    email: string;
+    password: string;
+    username: string;
+};
+
+export type HandlersSignupResponse = {
+    success: boolean;
+};
+
 export type HandlersUnmatchedFileMatchRequest = {
     episode?: number;
     season?: number;
     tmdbId: number;
     type: string;
-};
-
-export type HandlersUserCreateRequest = {
-    email: string;
-    is_active: boolean;
-    password: string;
-    role: string;
-    username: string;
 };
 
 export type HandlersUserPasswordUpdateRequest = {
@@ -1315,6 +1317,48 @@ export type PutV1AuthProfilePasswordResponses = {
 };
 
 export type PutV1AuthProfilePasswordResponse = PutV1AuthProfilePasswordResponses[keyof PutV1AuthProfilePasswordResponses];
+
+export type PostV1AuthSignupData = {
+    /**
+     * Signup request
+     */
+    body: HandlersSignupRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/auth/signup';
+};
+
+export type PostV1AuthSignupErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+    /**
+     * Forbidden
+     */
+    403: {
+        [key: string]: string;
+    };
+    /**
+     * Conflict
+     */
+    409: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1AuthSignupError = PostV1AuthSignupErrors[keyof PostV1AuthSignupErrors];
+
+export type PostV1AuthSignupResponses = {
+    /**
+     * Created
+     */
+    201: HandlersSignupResponse;
+};
+
+export type PostV1AuthSignupResponse = PostV1AuthSignupResponses[keyof PostV1AuthSignupResponses];
 
 export type GetV1BootstrapData = {
     body?: never;
@@ -3832,36 +3876,6 @@ export type GetV1UsersResponses = {
 };
 
 export type GetV1UsersResponse = GetV1UsersResponses[keyof GetV1UsersResponses];
-
-export type PostV1UsersData = {
-    /**
-     * Create user
-     */
-    body: HandlersUserCreateRequest;
-    path?: never;
-    query?: never;
-    url: '/v1/users';
-};
-
-export type PostV1UsersErrors = {
-    /**
-     * Bad Request
-     */
-    400: {
-        [key: string]: string;
-    };
-};
-
-export type PostV1UsersError = PostV1UsersErrors[keyof PostV1UsersErrors];
-
-export type PostV1UsersResponses = {
-    /**
-     * Created
-     */
-    201: HandlersUserSwagger;
-};
-
-export type PostV1UsersResponse = PostV1UsersResponses[keyof PostV1UsersResponses];
 
 export type DeleteV1UsersByIdData = {
     body?: never;

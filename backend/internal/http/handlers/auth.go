@@ -20,6 +20,7 @@ type Auth struct {
 
 func (h *Auth) RegisterPublic(v1 *echo.Group) {
 	v1.POST("/auth/login", h.Login)
+	v1.POST("/auth/signup", h.Signup)
 }
 
 func (h *Auth) RegisterProtected(v1 *echo.Group) {
@@ -61,6 +62,64 @@ func (h *Auth) Login(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
 	}
 	return c.JSON(http.StatusOK, LoginResponse{Token: signed})
+}
+
+type SignupRequest struct {
+	Email    string `json:"email" validate:"required"`
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
+type SignupResponse struct {
+	Success bool `json:"success"`
+}
+
+// @Summary  Signup
+// @Tags     auth
+// @Accept   json
+// @Produce  json
+// @Param    payload body SignupRequest true "Signup request"
+// @Success  201 {object} SignupResponse
+// @Failure  400 {object} map[string]string
+// @Failure  403 {object} map[string]string
+// @Failure  409 {object} map[string]string
+// @Router   /v1/auth/signup [post]
+func (h *Auth) Signup(c echo.Context) error {
+	var req SignupRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
+	}
+	if req.Email == "" || req.Username == "" || req.Password == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "email, username, and password are required"})
+	}
+
+	ctx := c.Request().Context()
+
+	// Check signup strategy
+	all, err := h.svc.Settings.GetAll(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to read settings"})
+	}
+	strategy, _ := all["auth.signup_strategy"].(string)
+	if strategy == "" {
+		strategy = "invite_only"
+	}
+
+	if strategy == "invite_only" {
+		if err := h.svc.Invites.CheckAndClaim(ctx, req.Email); err != nil {
+			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
+		}
+	}
+
+	_, err = h.svc.Users.Create(ctx, req.Email, req.Username, req.Password, "user", true)
+	if err != nil {
+		if err.Error() == "email or username already exists" {
+			return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusCreated, SignupResponse{Success: true})
 }
 
 type MeResponse struct {

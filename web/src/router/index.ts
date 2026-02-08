@@ -64,6 +64,11 @@ const router = createRouter({
       meta: { public: true, layout: 'auth' },
     },
     {
+      path: '/signup',
+      component: () => import('@/views/Signup.vue'),
+      meta: { public: true, layout: 'auth' },
+    },
+    {
       path: '/setup',
       component: () => import('@/views/Setup.vue'),
       meta: { public: true, layout: 'auth', setup: true },
