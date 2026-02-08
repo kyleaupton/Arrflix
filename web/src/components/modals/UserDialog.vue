@@ -38,7 +38,7 @@ const { data: roles } = useQuery(getV1RolesOptions())
 
 const userForm = ref({
   email: '',
-  display_name: '',
+  username: '',
   password: '',
   role: 'user',
   is_active: true,
@@ -66,7 +66,7 @@ watch(
 
       userForm.value = {
         email: user.email || '',
-        display_name: user.display_name || '',
+        username: user.username || '',
         password: '', // Don't populate password on edit
         role: roleName,
         is_active: user.is_active ?? true,
@@ -74,7 +74,7 @@ watch(
     } else {
       userForm.value = {
         email: '',
-        display_name: '',
+        username: '',
         password: '',
         role: 'user',
         is_active: true,
@@ -86,8 +86,8 @@ watch(
 )
 
 const handleSave = async () => {
-  if (!userForm.value.email || !userForm.value.display_name) {
-    userError.value = 'Email and display name are required'
+  if (!userForm.value.email || !userForm.value.username) {
+    userError.value = 'Email and username are required'
     return
   }
 
@@ -104,7 +104,7 @@ const handleSave = async () => {
         path: { id: props.user.id },
         body: {
           email: userForm.value.email,
-          display_name: userForm.value.display_name,
+          username: userForm.value.username,
           is_active: userForm.value.is_active,
         },
       })
@@ -135,7 +135,7 @@ const handleSave = async () => {
       await createUserMutation.mutateAsync({
         body: {
           email: userForm.value.email,
-          display_name: userForm.value.display_name,
+          username: userForm.value.username,
           password: userForm.value.password,
           role: userForm.value.role,
           is_active: userForm.value.is_active,
@@ -175,8 +175,8 @@ const isLoading = computed(
         <Input id="user-email" v-model="userForm.email" type="email" />
       </div>
       <div class="flex flex-col gap-2">
-        <Label for="user-display-name">Display Name</Label>
-        <Input id="user-display-name" v-model="userForm.display_name" />
+        <Label for="user-username">Username</Label>
+        <Input id="user-username" v-model="userForm.username" />
       </div>
       <div class="flex flex-col gap-2">
         <Label for="user-password"

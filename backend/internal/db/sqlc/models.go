@@ -171,7 +171,7 @@ type AppSetting struct {
 type AppUser struct {
 	ID           pgtype.UUID `json:"id"`
 	Email        *string     `json:"email"`
-	DisplayName  *string     `json:"display_name"`
+	Username     string      `json:"username"`
 	AvatarUrl    *string     `json:"avatar_url"`
 	PasswordHash *string     `json:"password_hash"`
 	IsActive     bool        `json:"is_active"`
@@ -423,6 +423,14 @@ type UserIdentity struct {
 	TokenExpiresAt pgtype.Timestamptz `json:"token_expires_at"`
 	Raw            []byte             `json:"raw"`
 	CreatedAt      time.Time          `json:"created_at"`
+}
+
+type UserInvite struct {
+	ID        pgtype.UUID        `json:"id"`
+	Email     string             `json:"email"`
+	InvitedBy pgtype.UUID        `json:"invited_by"`
+	CreatedAt time.Time          `json:"created_at"`
+	ClaimedAt pgtype.Timestamptz `json:"claimed_at"`
 }
 
 type UserRole struct {

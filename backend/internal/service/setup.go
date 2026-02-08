@@ -36,7 +36,7 @@ func (s *SetupService) IsInitialized(ctx context.Context) (bool, error) {
 // 3. Assign admin role
 // 4. Mark system as initialized
 // All operations occur in a single transaction for atomicity.
-func (s *SetupService) Initialize(ctx context.Context, email, displayName, password string) error {
+func (s *SetupService) Initialize(ctx context.Context, email, username, password string) error {
 	// Start transaction for atomicity
 	tx, err := s.repo.Pool.BeginTx(ctx, pgx.TxOptions{
 		IsoLevel: pgx.Serializable, // Highest isolation to prevent concurrent setup
@@ -58,12 +58,12 @@ func (s *SetupService) Initialize(ctx context.Context, email, displayName, passw
 
 	// Validate input
 	email = strings.TrimSpace(email)
-	displayName = strings.TrimSpace(displayName)
+	username = strings.TrimSpace(username)
 	if email == "" {
 		return errors.New("email required")
 	}
-	if displayName == "" {
-		return errors.New("display_name required")
+	if username == "" {
+		return errors.New("username required")
 	}
 	if password == "" {
 		return errors.New("password required")
@@ -81,7 +81,7 @@ func (s *SetupService) Initialize(ctx context.Context, email, displayName, passw
 	// Create admin user within transaction
 	user, err := txQueries.CreateUser(ctx, dbgen.CreateUserParams{
 		Email:        &email,
-		DisplayName:  &displayName,
+		Username:     username,
 		PasswordHash: &passwordHash,
 		IsActive:     true,
 	})

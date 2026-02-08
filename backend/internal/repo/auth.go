@@ -9,12 +9,13 @@ import (
 
 type AuthRepo interface {
 	GetUserByEmail(ctx context.Context, email string) (dbgen.AppUser, error)
+	GetUserByLogin(ctx context.Context, login string) (dbgen.AppUser, error)
 	UpdateUserPassword(ctx context.Context, userID pgtype.UUID, newHash string) error
 	// User CRUD
 	ListUsers(ctx context.Context) ([]dbgen.ListUsersRow, error)
 	GetUser(ctx context.Context, id pgtype.UUID) (dbgen.GetUserRow, error)
-	CreateUser(ctx context.Context, email, displayName, passwordHash string, isActive bool) (dbgen.AppUser, error)
-	UpdateUser(ctx context.Context, id pgtype.UUID, email, displayName string, isActive bool) (dbgen.AppUser, error)
+	CreateUser(ctx context.Context, email, username, passwordHash string, isActive bool) (dbgen.AppUser, error)
+	UpdateUser(ctx context.Context, id pgtype.UUID, email, username string, isActive bool) (dbgen.AppUser, error)
 	DeleteUser(ctx context.Context, id pgtype.UUID) error
 	// Role Management
 	ListRoles(ctx context.Context) ([]dbgen.Role, error)
@@ -27,6 +28,10 @@ type AuthRepo interface {
 
 func (r *Repository) GetUserByEmail(ctx context.Context, email string) (dbgen.AppUser, error) {
 	return r.Q.GetUserByEmail(ctx, email)
+}
+
+func (r *Repository) GetUserByLogin(ctx context.Context, login string) (dbgen.AppUser, error) {
+	return r.Q.GetUserByLogin(ctx, login)
 }
 
 func (r *Repository) UpdateUserPassword(ctx context.Context, userID pgtype.UUID, newHash string) error {
@@ -43,21 +48,21 @@ func (r *Repository) GetUser(ctx context.Context, id pgtype.UUID) (dbgen.GetUser
 	return r.Q.GetUser(ctx, id)
 }
 
-func (r *Repository) CreateUser(ctx context.Context, email, displayName, passwordHash string, isActive bool) (dbgen.AppUser, error) {
+func (r *Repository) CreateUser(ctx context.Context, email, username, passwordHash string, isActive bool) (dbgen.AppUser, error) {
 	return r.Q.CreateUser(ctx, dbgen.CreateUserParams{
 		Email:        &email,
-		DisplayName:  &displayName,
+		Username:     username,
 		PasswordHash: &passwordHash,
 		IsActive:     isActive,
 	})
 }
 
-func (r *Repository) UpdateUser(ctx context.Context, id pgtype.UUID, email, displayName string, isActive bool) (dbgen.AppUser, error) {
+func (r *Repository) UpdateUser(ctx context.Context, id pgtype.UUID, email, username string, isActive bool) (dbgen.AppUser, error) {
 	return r.Q.UpdateUser(ctx, dbgen.UpdateUserParams{
-		ID:          id,
-		Email:       &email,
-		DisplayName: &displayName,
-		IsActive:    isActive,
+		ID:       id,
+		Email:    &email,
+		Username: username,
+		IsActive: isActive,
 	})
 }
 

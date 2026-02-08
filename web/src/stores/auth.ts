@@ -71,20 +71,20 @@ export const useAuthStore = defineStore('auth', () => {
     await fetchMe()
   }
 
-  async function loginWithPassword(email: string, password: string): Promise<boolean> {
+  async function loginWithPassword(login: string, password: string): Promise<boolean> {
     isLoading.value = true
     errorMessage.value = null
     try {
       const res = await postV1AuthLogin<true>({
         throwOnError: true,
-        body: { email, password },
+        body: { login, password },
       })
       const nextToken = res.data.token
       setToken(nextToken)
       await fetchMe()
       return true
     } catch {
-      errorMessage.value = 'Invalid email or password'
+      errorMessage.value = 'Invalid credentials'
       return false
     } finally {
       isLoading.value = false

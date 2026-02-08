@@ -36,7 +36,7 @@ func (h *Users) RegisterProtected(v1 *echo.Group) {
 type userSwagger struct {
 	ID          string   `json:"id"`
 	Email       string   `json:"email"`
-	DisplayName string   `json:"display_name"`
+	Username string   `json:"username"`
 	IsActive    bool     `json:"is_active"`
 	Roles       []string `json:"roles"`
 	CreatedAt   string   `json:"created_at"`
@@ -45,7 +45,7 @@ type userSwagger struct {
 
 type UserCreateRequest struct {
 	Email       string `json:"email"`
-	DisplayName string `json:"display_name"`
+	Username string `json:"username"`
 	Password    string `json:"password"`
 	Role        string `json:"role"`
 	IsActive    bool   `json:"is_active"`
@@ -53,7 +53,7 @@ type UserCreateRequest struct {
 
 type UserUpdateRequest struct {
 	Email       string `json:"email"`
-	DisplayName string `json:"display_name"`
+	Username string `json:"username"`
 	IsActive    bool   `json:"is_active"`
 }
 
@@ -96,7 +96,7 @@ func (h *Users) Create(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	user, err := h.svc.Users.Create(ctx, req.Email, req.DisplayName, req.Password, req.Role, req.IsActive)
+	user, err := h.svc.Users.Create(ctx, req.Email, req.Username, req.Password, req.Role, req.IsActive)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -148,7 +148,7 @@ func (h *Users) Update(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	user, err := h.svc.Users.Update(ctx, id, req.Email, req.DisplayName, req.IsActive)
+	user, err := h.svc.Users.Update(ctx, id, req.Email, req.Username, req.IsActive)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -307,7 +307,7 @@ func (h *Users) UpdateProfile(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "user not found"})
 	}
 
-	user, err := h.svc.Users.Update(ctx, userID, req.Email, req.DisplayName, currentUser.IsActive)
+	user, err := h.svc.Users.Update(ctx, userID, req.Email, req.Username, currentUser.IsActive)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

@@ -1,8 +1,13 @@
 -- name: GetUserByEmail :one
 SELECT * FROM app_user WHERE lower(email) = lower($1) AND is_active = true;
 
+-- name: GetUserByLogin :one
+SELECT * FROM app_user
+WHERE (lower(email) = lower($1) OR lower(username) = lower($1))
+  AND is_active = true;
+
 -- name: CreateUser :one
-INSERT INTO app_user (email, display_name, password_hash, is_active)
+INSERT INTO app_user (email, username, password_hash, is_active)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
 
@@ -50,7 +55,7 @@ GROUP BY u.id;
 -- name: UpdateUser :one
 UPDATE app_user
 SET email = $2,
-    display_name = $3,
+    username = $3,
     is_active = $4,
     updated_at = now()
 WHERE id = $1

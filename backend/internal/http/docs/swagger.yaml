@@ -987,6 +987,13 @@ definitions:
     - guid
     - indexerId
     type: object
+  handlers.InviteCreateRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   handlers.LibraryCreateRequest:
     properties:
       default:
@@ -1027,12 +1034,12 @@ definitions:
     type: object
   handlers.LoginRequest:
     properties:
-      email:
+      login:
         type: string
       password:
         type: string
     required:
-    - email
+    - login
     - password
     type: object
   handlers.LoginResponse:
@@ -1164,16 +1171,16 @@ definitions:
     type: object
   handlers.SetupInitializeRequest:
     properties:
-      display_name:
-        type: string
       email:
         type: string
       password:
         type: string
+      username:
+        type: string
     required:
-    - display_name
     - email
     - password
+    - username
     type: object
   handlers.SetupInitializeResponse:
     properties:
@@ -1205,8 +1212,6 @@ definitions:
     type: object
   handlers.UserCreateRequest:
     properties:
-      display_name:
-        type: string
       email:
         type: string
       is_active:
@@ -1215,12 +1220,14 @@ definitions:
         type: string
       role:
         type: string
+      username:
+        type: string
     required:
-    - display_name
     - email
     - is_active
     - password
     - role
+    - username
     type: object
   handlers.UserPasswordUpdateRequest:
     properties:
@@ -1238,16 +1245,35 @@ definitions:
     type: object
   handlers.UserUpdateRequest:
     properties:
-      display_name:
-        type: string
       email:
         type: string
       is_active:
         type: boolean
+      username:
+        type: string
     required:
-    - display_name
     - email
     - is_active
+    - username
+    type: object
+  handlers.inviteSwagger:
+    properties:
+      claimed_at:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      invited_by:
+        type: string
+    required:
+    - claimed_at
+    - created_at
+    - email
+    - id
+    - invited_by
     type: object
   handlers.librarySwagger:
     properties:
@@ -1355,8 +1381,6 @@ definitions:
     properties:
       created_at:
         type: string
-      display_name:
-        type: string
       email:
         type: string
       id:
@@ -1369,14 +1393,16 @@ definitions:
         type: array
       updated_at:
         type: string
+      username:
+        type: string
     required:
     - created_at
-    - display_name
     - email
     - id
     - is_active
     - roles
     - updated_at
+    - username
     type: object
   model.ActionInfo:
     properties:
@@ -3646,6 +3672,62 @@ paths:
       summary: Test all indexers
       tags:
       - indexers
+  /v1/invites:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.inviteSwagger'
+            type: array
+      summary: List invites
+      tags:
+      - invites
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create invite
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.InviteCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.inviteSwagger'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create invite
+      tags:
+      - invites
+  /v1/invites/{id}:
+    delete:
+      parameters:
+      - description: Invite ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+      summary: Delete invite
+      tags:
+      - invites
   /v1/libraries:
     get:
       produces:

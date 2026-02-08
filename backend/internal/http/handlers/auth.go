@@ -31,7 +31,7 @@ func NewAuth(cfg config.Config, log *logger.Logger, pool *pgxpool.Pool, svc *ser
 }
 
 type LoginRequest struct {
-	Email    string `json:"email" validate:"required"`
+	Login    string `json:"login" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
@@ -51,12 +51,12 @@ func (h *Auth) Login(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid body"})
 	}
-	if req.Email == "" || req.Password == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "email and password required"})
+	if req.Login == "" || req.Password == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "login and password required"})
 	}
 
 	ctx := c.Request().Context()
-	signed, err := h.svc.Auth.Login(ctx, req.Email, req.Password)
+	signed, err := h.svc.Auth.Login(ctx, req.Login, req.Password)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
 	}
@@ -64,9 +64,9 @@ func (h *Auth) Login(c echo.Context) error {
 }
 
 type MeResponse struct {
-	ID          string  `json:"id" validate:"required"`
-	Email       *string `json:"email" validate:"required"`
-	DisplayName *string `json:"display_name" validate:"required"`
+	ID       string  `json:"id" validate:"required"`
+	Email    *string `json:"email" validate:"required"`
+	Username *string `json:"username" validate:"required"`
 }
 
 func (h *Auth) Me(c echo.Context) error {

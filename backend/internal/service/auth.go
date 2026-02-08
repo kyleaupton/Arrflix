@@ -18,10 +18,10 @@ func NewAuthService(r *repo.Repository, cfg *cfg) *AuthService {
 	return &AuthService{repo: r, jwtSecret: cfg.jwtSecret}
 }
 
-func (s *AuthService) Login(ctx context.Context, email, password string) (string, error) {
-	user, err := s.repo.GetUserByEmail(ctx, email)
+func (s *AuthService) Login(ctx context.Context, login, password string) (string, error) {
+	user, err := s.repo.GetUserByLogin(ctx, login)
 	if err != nil {
-		return "", err
+		return "", ErrInvalidCredentials
 	}
 
 	ok, err := pw.Verify(password, deref(user.PasswordHash))
@@ -39,7 +39,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 	claims := jwt.MapClaims{
 		"sub":   user.ID.String(),
 		"email": user.Email,
-		"name":  user.DisplayName,
+		"name":  user.Username,
 		"exp":   time.Now().Add(24 * time.Hour).Unix(),
 		"iat":   time.Now().Unix(),
 	}

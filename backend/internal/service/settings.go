@@ -100,6 +100,13 @@ func (s *SettingsService) Set(ctx context.Context, key string, val any) error {
 	case SettingJSON:
 		// any
 	}
+	// Value-level validation for specific settings
+	if key == "auth.signup_strategy" {
+		v, _ := val.(string)
+		if v != "invite_only" && v != "open" {
+			return fmt.Errorf("auth.signup_strategy must be 'invite_only' or 'open'")
+		}
+	}
 	if b, err = json.Marshal(val); err != nil {
 		return err
 	}

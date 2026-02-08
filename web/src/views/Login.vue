@@ -23,12 +23,12 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
-const email = ref('')
+const login = ref('')
 const password = ref('')
 
 async function handleSubmit(e: Event) {
   e.preventDefault()
-  const success = await authStore.loginWithPassword(email.value, password.value)
+  const success = await authStore.loginWithPassword(login.value, password.value)
   if (success) {
     const redirectParam = route.query.redirect
     const redirectValue = Array.isArray(redirectParam) ? redirectParam[0] : redirectParam
@@ -85,12 +85,12 @@ async function handleSubmit(e: Event) {
                   </FieldDescription>
                 </Field>
                 <Field>
-                  <FieldLabel for="email"> Email </FieldLabel>
+                  <FieldLabel for="login"> Email or Username </FieldLabel>
                   <Input
-                    id="email"
-                    v-model="email"
-                    type="email"
-                    placeholder="email@example.com"
+                    id="login"
+                    v-model="login"
+                    type="text"
+                    placeholder="email or username"
                     required
                     :disabled="authStore.isLoading"
                   />

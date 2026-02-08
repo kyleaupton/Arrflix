@@ -376,6 +376,10 @@ export type HandlersEnqueueCandidateRequest = {
     season?: number;
 };
 
+export type HandlersInviteCreateRequest = {
+    email: string;
+};
+
 export type HandlersLibraryCreateRequest = {
     default: boolean;
     enabled: boolean;
@@ -393,7 +397,7 @@ export type HandlersLibraryUpdateRequest = {
 };
 
 export type HandlersLoginRequest = {
-    email: string;
+    login: string;
     password: string;
 };
 
@@ -457,9 +461,9 @@ export type HandlersSettingsListResponse = {
 };
 
 export type HandlersSetupInitializeRequest = {
-    display_name: string;
     email: string;
     password: string;
+    username: string;
 };
 
 export type HandlersSetupInitializeResponse = {
@@ -478,11 +482,11 @@ export type HandlersUnmatchedFileMatchRequest = {
 };
 
 export type HandlersUserCreateRequest = {
-    display_name: string;
     email: string;
     is_active: boolean;
     password: string;
     role: string;
+    username: string;
 };
 
 export type HandlersUserPasswordUpdateRequest = {
@@ -494,9 +498,17 @@ export type HandlersUserRoleUpdateRequest = {
 };
 
 export type HandlersUserUpdateRequest = {
-    display_name: string;
     email: string;
     is_active: boolean;
+    username: string;
+};
+
+export type HandlersInviteSwagger = {
+    claimed_at: string;
+    created_at: string;
+    email: string;
+    id: string;
+    invited_by: string;
 };
 
 export type HandlersLibrarySwagger = {
@@ -541,12 +553,12 @@ export type HandlersUnmatchedFilesListResponse = {
 
 export type HandlersUserSwagger = {
     created_at: string;
-    display_name: string;
     email: string;
     id: string;
     is_active: boolean;
     roles: Array<string>;
     updated_at: string;
+    username: string;
 };
 
 export type ModelActionInfo = {
@@ -2244,6 +2256,73 @@ export type GetV1IndexersByIdResponses = {
 };
 
 export type GetV1IndexersByIdResponse = GetV1IndexersByIdResponses[keyof GetV1IndexersByIdResponses];
+
+export type GetV1InvitesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/invites';
+};
+
+export type GetV1InvitesResponses = {
+    /**
+     * OK
+     */
+    200: Array<HandlersInviteSwagger>;
+};
+
+export type GetV1InvitesResponse = GetV1InvitesResponses[keyof GetV1InvitesResponses];
+
+export type PostV1InvitesData = {
+    /**
+     * Create invite
+     */
+    body: HandlersInviteCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/invites';
+};
+
+export type PostV1InvitesErrors = {
+    /**
+     * Bad Request
+     */
+    400: {
+        [key: string]: string;
+    };
+};
+
+export type PostV1InvitesError = PostV1InvitesErrors[keyof PostV1InvitesErrors];
+
+export type PostV1InvitesResponses = {
+    /**
+     * Created
+     */
+    201: HandlersInviteSwagger;
+};
+
+export type PostV1InvitesResponse = PostV1InvitesResponses[keyof PostV1InvitesResponses];
+
+export type DeleteV1InvitesByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Invite ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/invites/{id}';
+};
+
+export type DeleteV1InvitesByIdResponses = {
+    /**
+     * No Content
+     */
+    204: string;
+};
+
+export type DeleteV1InvitesByIdResponse = DeleteV1InvitesByIdResponses[keyof DeleteV1InvitesByIdResponses];
 
 export type GetV1LibrariesData = {
     body?: never;

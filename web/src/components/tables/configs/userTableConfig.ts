@@ -4,7 +4,7 @@ import { type TableColumn, type TableAction } from '../types'
 export interface User {
   id: string
   email: string | null
-  display_name: string | null
+  username: string | null
   is_active: boolean
   roles?: any // JSONB from database
   created_at: string
@@ -19,8 +19,8 @@ export const userColumns: TableColumn<User>[] = [
     filterable: true,
   },
   {
-    key: 'display_name',
-    label: 'Display Name',
+    key: 'username',
+    label: 'Username',
     sortable: true,
     filterable: true,
   },

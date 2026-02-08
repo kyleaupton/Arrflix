@@ -27,7 +27,7 @@ const props = defineProps<{
 const router = useRouter()
 
 const email = ref('')
-const displayName = ref('')
+const username = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const isLoading = ref(false)
@@ -38,7 +38,7 @@ async function handleSubmit(e: Event) {
   errorMessage.value = null
 
   // Validation
-  if (!email.value || !displayName.value || !password.value) {
+  if (!email.value || !username.value || !password.value) {
     errorMessage.value = 'All fields are required'
     return
   }
@@ -58,7 +58,7 @@ async function handleSubmit(e: Event) {
       url: '/v1/setup/initialize',
       body: {
         email: email.value,
-        display_name: displayName.value,
+        username: username.value,
         password: password.value,
       },
     })
@@ -114,12 +114,12 @@ async function handleSubmit(e: Event) {
                   />
                 </Field>
                 <Field>
-                  <FieldLabel for="displayName"> Display Name </FieldLabel>
+                  <FieldLabel for="username"> Username </FieldLabel>
                   <Input
-                    id="displayName"
-                    v-model="displayName"
+                    id="username"
+                    v-model="username"
                     type="text"
-                    placeholder="Admin User"
+                    placeholder="admin"
                     required
                     :disabled="isLoading"
                   />

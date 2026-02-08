@@ -1346,6 +1346,93 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/invites": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "invites"
+                ],
+                "summary": "List invites",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.inviteSwagger"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "invites"
+                ],
+                "summary": "Create invite",
+                "parameters": [
+                    {
+                        "description": "Create invite",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.InviteCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.inviteSwagger"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/invites/{id}": {
+            "delete": {
+                "tags": [
+                    "invites"
+                ],
+                "summary": "Delete invite",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invite ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/libraries": {
             "get": {
                 "produces": [
@@ -4864,6 +4951,17 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.InviteCreateRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.LibraryCreateRequest": {
             "type": "object",
             "required": [
@@ -4921,11 +5019,11 @@ const docTemplate = `{
         "handlers.LoginRequest": {
             "type": "object",
             "required": [
-                "email",
+                "login",
                 "password"
             ],
             "properties": {
-                "email": {
+                "login": {
                     "type": "string"
                 },
                 "password": {
@@ -5118,18 +5216,18 @@ const docTemplate = `{
         "handlers.SetupInitializeRequest": {
             "type": "object",
             "required": [
-                "display_name",
                 "email",
-                "password"
+                "password",
+                "username"
             ],
             "properties": {
-                "display_name": {
-                    "type": "string"
-                },
                 "email": {
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -5180,16 +5278,13 @@ const docTemplate = `{
         "handlers.UserCreateRequest": {
             "type": "object",
             "required": [
-                "display_name",
                 "email",
                 "is_active",
                 "password",
-                "role"
+                "role",
+                "username"
             ],
             "properties": {
-                "display_name": {
-                    "type": "string"
-                },
                 "email": {
                     "type": "string"
                 },
@@ -5200,6 +5295,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -5229,19 +5327,46 @@ const docTemplate = `{
         "handlers.UserUpdateRequest": {
             "type": "object",
             "required": [
-                "display_name",
                 "email",
-                "is_active"
+                "is_active",
+                "username"
             ],
             "properties": {
-                "display_name": {
-                    "type": "string"
-                },
                 "email": {
                     "type": "string"
                 },
                 "is_active": {
                     "type": "boolean"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.inviteSwagger": {
+            "type": "object",
+            "required": [
+                "claimed_at",
+                "created_at",
+                "email",
+                "id",
+                "invited_by"
+            ],
+            "properties": {
+                "claimed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "invited_by": {
+                    "type": "string"
                 }
             }
         },
@@ -5393,18 +5518,15 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "created_at",
-                "display_name",
                 "email",
                 "id",
                 "is_active",
                 "roles",
-                "updated_at"
+                "updated_at",
+                "username"
             ],
             "properties": {
                 "created_at": {
-                    "type": "string"
-                },
-                "display_name": {
                     "type": "string"
                 },
                 "email": {
@@ -5423,6 +5545,9 @@ const docTemplate = `{
                     }
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

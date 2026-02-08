@@ -24,14 +24,14 @@ func (q *Queries) CountUsersByRole(ctx context.Context, roleID pgtype.UUID) (int
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO app_user (email, display_name, password_hash, is_active)
+INSERT INTO app_user (email, username, password_hash, is_active)
 VALUES ($1, $2, $3, $4)
-RETURNING id, email, display_name, avatar_url, password_hash, is_active, created_at, updated_at
+RETURNING id, email, username, avatar_url, password_hash, is_active, created_at, updated_at
 `
 
 type CreateUserParams struct {
 	Email        *string `json:"email"`
-	DisplayName  *string `json:"display_name"`
+	Username     string  `json:"username"`
 	PasswordHash *string `json:"password_hash"`
 	IsActive     bool    `json:"is_active"`
 }
@@ -39,7 +39,7 @@ type CreateUserParams struct {
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AppUser, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.Email,
-		arg.DisplayName,
+		arg.Username,
 		arg.PasswordHash,
 		arg.IsActive,
 	)
@@ -47,7 +47,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AppUser
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
-		&i.DisplayName,
+		&i.Username,
 		&i.AvatarUrl,
 		&i.PasswordHash,
 		&i.IsActive,
@@ -84,7 +84,7 @@ func (q *Queries) GetRoleByName(ctx context.Context, name string) (Role, error) 
 }
 
 const getUser = `-- name: GetUser :one
-SELECT u.id, u.email, u.display_name, u.avatar_url, u.password_hash, u.is_active, u.created_at, u.updated_at,
+SELECT u.id, u.email, u.username, u.avatar_url, u.password_hash, u.is_active, u.created_at, u.updated_at,
   COALESCE(
     json_agg(
       json_build_object('id', r.id, 'name', r.name, 'description', r.description)
@@ -101,7 +101,7 @@ GROUP BY u.id
 type GetUserRow struct {
 	ID           pgtype.UUID `json:"id"`
 	Email        *string     `json:"email"`
-	DisplayName  *string     `json:"display_name"`
+	Username     string      `json:"username"`
 	AvatarUrl    *string     `json:"avatar_url"`
 	PasswordHash *string     `json:"password_hash"`
 	IsActive     bool        `json:"is_active"`
@@ -116,7 +116,7 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (GetUserRow, erro
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
-		&i.DisplayName,
+		&i.Username,
 		&i.AvatarUrl,
 		&i.PasswordHash,
 		&i.IsActive,
@@ -128,7 +128,7 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (GetUserRow, erro
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, display_name, avatar_url, password_hash, is_active, created_at, updated_at FROM app_user WHERE lower(email) = lower($1) AND is_active = true
+SELECT id, email, username, avatar_url, password_hash, is_active, created_at, updated_at FROM app_user WHERE lower(email) = lower($1) AND is_active = true
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (AppUser, error) {
@@ -137,7 +137,29 @@ func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (AppUser, er
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
-		&i.DisplayName,
+		&i.Username,
+		&i.AvatarUrl,
+		&i.PasswordHash,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserByLogin = `-- name: GetUserByLogin :one
+SELECT id, email, username, avatar_url, password_hash, is_active, created_at, updated_at FROM app_user
+WHERE (lower(email) = lower($1) OR lower(username) = lower($1))
+  AND is_active = true
+`
+
+func (q *Queries) GetUserByLogin(ctx context.Context, lower string) (AppUser, error) {
+	row := q.db.QueryRow(ctx, getUserByLogin, lower)
+	var i AppUser
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
 		&i.AvatarUrl,
 		&i.PasswordHash,
 		&i.IsActive,
@@ -178,7 +200,7 @@ func (q *Queries) ListRoles(ctx context.Context) ([]Role, error) {
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT u.id, u.email, u.display_name, u.avatar_url, u.password_hash, u.is_active, u.created_at, u.updated_at,
+SELECT u.id, u.email, u.username, u.avatar_url, u.password_hash, u.is_active, u.created_at, u.updated_at,
   COALESCE(
     json_agg(
       json_build_object('id', r.id, 'name', r.name, 'description', r.description)
@@ -195,7 +217,7 @@ ORDER BY u.created_at DESC
 type ListUsersRow struct {
 	ID           pgtype.UUID `json:"id"`
 	Email        *string     `json:"email"`
-	DisplayName  *string     `json:"display_name"`
+	Username     string      `json:"username"`
 	AvatarUrl    *string     `json:"avatar_url"`
 	PasswordHash *string     `json:"password_hash"`
 	IsActive     bool        `json:"is_active"`
@@ -216,7 +238,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Email,
-			&i.DisplayName,
+			&i.Username,
 			&i.AvatarUrl,
 			&i.PasswordHash,
 			&i.IsActive,
@@ -246,32 +268,32 @@ func (q *Queries) UnassignAllRoles(ctx context.Context, userID pgtype.UUID) erro
 const updateUser = `-- name: UpdateUser :one
 UPDATE app_user
 SET email = $2,
-    display_name = $3,
+    username = $3,
     is_active = $4,
     updated_at = now()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, password_hash, is_active, created_at, updated_at
+RETURNING id, email, username, avatar_url, password_hash, is_active, created_at, updated_at
 `
 
 type UpdateUserParams struct {
-	ID          pgtype.UUID `json:"id"`
-	Email       *string     `json:"email"`
-	DisplayName *string     `json:"display_name"`
-	IsActive    bool        `json:"is_active"`
+	ID       pgtype.UUID `json:"id"`
+	Email    *string     `json:"email"`
+	Username string      `json:"username"`
+	IsActive bool        `json:"is_active"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (AppUser, error) {
 	row := q.db.QueryRow(ctx, updateUser,
 		arg.ID,
 		arg.Email,
-		arg.DisplayName,
+		arg.Username,
 		arg.IsActive,
 	)
 	var i AppUser
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
-		&i.DisplayName,
+		&i.Username,
 		&i.AvatarUrl,
 		&i.PasswordHash,
 		&i.IsActive,

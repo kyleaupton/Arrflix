@@ -19,6 +19,6 @@ type SettingSpec struct {
 // Extend this map as your application grows.
 var Registry = map[string]SettingSpec{
 	"site.title":            {Key: "site.title", Type: SettingText, Default: "Arrflix"},
-	"auth.allow_signups":    {Key: "auth.allow_signups", Type: SettingBool, Default: false},
+	"auth.signup_strategy":  {Key: "auth.signup_strategy", Type: SettingText, Default: "invite_only"},
 	"requests.max_per_user": {Key: "requests.max_per_user", Type: SettingInt, Default: int64(5)},
 }

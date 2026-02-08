@@ -30,16 +30,16 @@ func (s *UsersService) Get(ctx context.Context, id pgtype.UUID) (dbgen.GetUserRo
 }
 
 // Create creates a new user with password and role assignment
-func (s *UsersService) Create(ctx context.Context, email, displayName, password string, roleName string, isActive bool) (dbgen.AppUser, error) {
+func (s *UsersService) Create(ctx context.Context, email, username, password string, roleName string, isActive bool) (dbgen.AppUser, error) {
 	// Validation
 	email = strings.TrimSpace(email)
-	displayName = strings.TrimSpace(displayName)
+	username = strings.TrimSpace(username)
 
 	if email == "" {
 		return dbgen.AppUser{}, errors.New("email required")
 	}
-	if displayName == "" {
-		return dbgen.AppUser{}, errors.New("display_name required")
+	if username == "" {
+		return dbgen.AppUser{}, errors.New("username required")
 	}
 	if password == "" {
 		return dbgen.AppUser{}, errors.New("password required")
@@ -58,10 +58,10 @@ func (s *UsersService) Create(ctx context.Context, email, displayName, password 
 	}
 
 	// Create user
-	user, err := s.repo.CreateUser(ctx, email, displayName, passwordHash, isActive)
+	user, err := s.repo.CreateUser(ctx, email, username, passwordHash, isActive)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "unique") {
-			return dbgen.AppUser{}, errors.New("email already exists")
+			return dbgen.AppUser{}, errors.New("email or username already exists")
 		}
 		return dbgen.AppUser{}, err
 	}
@@ -79,18 +79,18 @@ func (s *UsersService) Create(ctx context.Context, email, displayName, password 
 }
 
 // Update updates user fields (not password)
-func (s *UsersService) Update(ctx context.Context, id pgtype.UUID, email, displayName string, isActive bool) (dbgen.AppUser, error) {
+func (s *UsersService) Update(ctx context.Context, id pgtype.UUID, email, username string, isActive bool) (dbgen.AppUser, error) {
 	email = strings.TrimSpace(email)
-	displayName = strings.TrimSpace(displayName)
+	username = strings.TrimSpace(username)
 
 	if email == "" {
 		return dbgen.AppUser{}, errors.New("email required")
 	}
-	if displayName == "" {
-		return dbgen.AppUser{}, errors.New("display_name required")
+	if username == "" {
+		return dbgen.AppUser{}, errors.New("username required")
 	}
 
-	return s.repo.UpdateUser(ctx, id, email, displayName, isActive)
+	return s.repo.UpdateUser(ctx, id, email, username, isActive)
 }
 
 // UpdatePassword changes a user's password

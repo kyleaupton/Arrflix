@@ -13,6 +13,7 @@ type Services struct {
 	Downloaders        *DownloadersService
 	DownloadCandidates *DownloadCandidatesService
 	DownloadJobs       *DownloadJobsService
+	Invites            *InvitesService
 	Feed               *FeedService
 	Import             *ImportService
 	ImportTasks        *ImportTasksService
@@ -50,6 +51,7 @@ func New(r *repo.Repository, l *logger.Logger, c *config.Config, opts ...Option)
 		Downloaders:        NewDownloadersService(r),
 		DownloadCandidates: NewDownloadCandidatesService(r, l, indexerSource, media, policyEngine),
 		DownloadJobs:       NewDownloadJobsService(r),
+		Invites:            NewInvitesService(r),
 		Feed:               NewFeedService(r, l, tmdb),
 		Import:             NewImportService(r, l),
 		ImportTasks:        NewImportTasksService(r),

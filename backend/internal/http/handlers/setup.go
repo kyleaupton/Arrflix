@@ -26,9 +26,9 @@ type SetupStatusResponse struct {
 }
 
 type SetupInitializeRequest struct {
-	Email       string `json:"email" validate:"required"`
-	DisplayName string `json:"display_name" validate:"required"`
-	Password    string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required"`
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 type SetupInitializeResponse struct {
@@ -67,7 +67,7 @@ func (h *Setup) Initialize(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	err := h.svc.Setup.Initialize(ctx, req.Email, req.DisplayName, req.Password)
+	err := h.svc.Setup.Initialize(ctx, req.Email, req.Username, req.Password)
 	if err != nil {
 		if err == service.ErrAlreadyInitialized {
 			return c.JSON(http.StatusConflict, map[string]string{"error": "system already initialized"})

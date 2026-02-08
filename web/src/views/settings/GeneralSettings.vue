@@ -45,10 +45,10 @@ const siteTitle = computed({
   set: (v: string) => saveSetting('site.title', v),
 })
 
-// const allowSignups = computed({
-//   get: () => Boolean(settings.value['auth.allow_signups'] ?? false),
-//   set: (v: boolean) => saveSetting('auth.allow_signups', v),
-// })
+const signupStrategy = computed({
+  get: () => String(settings.value['auth.signup_strategy'] ?? 'invite_only'),
+  set: (v: string) => saveSetting('auth.signup_strategy', v),
+})
 
 // const maxPerUser = computed({
 //   get: () => Number(settings.value['requests.max_per_user'] ?? 0),

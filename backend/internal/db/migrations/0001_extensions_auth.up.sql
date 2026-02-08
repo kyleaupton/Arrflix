@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS app_user (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE,
-  display_name TEXT,
+  username TEXT NOT NULL UNIQUE,
   avatar_url TEXT,
   password_hash TEXT,
   is_active BOOLEAN NOT NULL DEFAULT true,
@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS app_user (
 
 CREATE INDEX IF NOT EXISTS idx_app_user_email_ci
   ON app_user (lower(email));
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_app_user_username_ci
+  ON app_user (lower(username));
 
 -- External identities (Plex, etc.)
 CREATE TYPE auth_provider AS ENUM ('local','plex');
@@ -86,6 +89,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_permission_grant_natural
     coalesce(resource_type,'*'),
     coalesce(resource_id::text,'00000000-0000-0000-0000-000000000000')
   );
+
+-- User invites (for invite_only signup strategy)
+CREATE TABLE IF NOT EXISTS user_invite (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT NOT NULL UNIQUE,
+  invited_by UUID NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  claimed_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_invite_email_ci
+  ON user_invite (lower(email));
 
 -- Audit trail
 CREATE TABLE IF NOT EXISTS auth_audit (
